@@ -1,6 +1,7 @@
 import { useIsAuthenticated } from '@azure/msal-react'
 import { LoginButton } from './components/LoginButton'
 import { ProfileCard } from './components/ProfileCard'
+import { UserSearch } from './components/UserSearch'
 import './App.css'
 
 function App() {
@@ -11,7 +12,10 @@ function App() {
       {!isAuthenticated ? (
         <LoginButton />
       ) : (
-        <ProfileCard />
+        <>
+          <ProfileCard />
+          <UserSearch />
+        </>
       )}
     </div>
   )

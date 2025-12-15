@@ -32,6 +32,7 @@ export const ProfileCard = () => {
           const response = await instance.acquireTokenSilent({
             scopes: [
                 "User.Read",
+                "User.ReadBasic.All",
                 "GroupMember.Read.All",
                 "Group.Read.All"
             ],

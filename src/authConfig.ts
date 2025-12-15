@@ -23,6 +23,7 @@ export const msalConfig = {
 export const loginRequest: PopupRequest = {
   scopes: [
     "User.Read",              // Benutzerprofil lesen
+    "User.ReadBasic.All",     // Basis-Infos aller Benutzer lesen
     "GroupMember.Read.All",   // Gruppenmitgliedschaften des Benutzers lesen
     "Group.Read.All",         // Alle Gruppen in der Organisation lesen
   ],
