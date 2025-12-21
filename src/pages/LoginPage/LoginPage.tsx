@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Container, Title, Text, Button, Paper, Stack, CopyButton, ActionIcon, Tooltip, Group, Code } from '@mantine/core';
-import { IconCopy, IconCheck, IconLogin, IconLogout } from '@tabler/icons-react';
+import { Container, Title, Text, Button, Paper, Stack, CopyButton, ActionIcon, Tooltip, Group, Code, Grid } from '@mantine/core';
+import { IconCopy, IconCheck, IconLogin, IconLogout, IconRobot, IconBrain, IconNetwork, IconShield, IconUsers, IconSparkles } from '@tabler/icons-react';
 import { useAuth } from '../../auth';
 import classes from './LoginPage.module.css';
 
@@ -54,35 +54,94 @@ export const LoginPage = () => {
     return `${start}...${end}`;
   };
 
-  return (
-    <Container size="sm" className={classes.container}>
-      <Stack gap="xl" align="center">
-        <Title order={1} className={classes.title}>
-          unified-ui
-        </Title>
+  // Features für die Landing-Section
+  const features = [
+    { icon: IconRobot, title: 'Multi-Agent', description: 'Integration verschiedener AI-Agent-Systeme' },
+    { icon: IconUsers, title: 'Multi-Tenant', description: 'Strikte Tenant-Isolation mit RBAC' },
+    { icon: IconShield, title: 'Sicher', description: 'Enterprise-ready mit Audit-Logging' },
+    { icon: IconNetwork, title: 'Skalierbar', description: 'Flexible Infrastruktur-Integration' },
+  ];
 
+  return (
+    <div className={classes.pageWrapper}>
+      {/* Animated Background */}
+      <div className={classes.animatedBackground}>
+        <div className={classes.gradientOrb1}></div>
+        <div className={classes.gradientOrb2}></div>
+        <div className={classes.gradientOrb3}></div>
+      </div>
+
+      {/* Floating AI Icons */}
+      <div className={classes.floatingIcons}>
+        <IconBrain className={`${classes.floatingIcon} ${classes.icon1}`} size={40} stroke={1} />
+        <IconRobot className={`${classes.floatingIcon} ${classes.icon2}`} size={50} stroke={1} />
+        <IconNetwork className={`${classes.floatingIcon} ${classes.icon3}`} size={35} stroke={1} />
+        <IconSparkles className={`${classes.floatingIcon} ${classes.icon4}`} size={45} stroke={1} />
+        <IconShield className={`${classes.floatingIcon} ${classes.icon5}`} size={38} stroke={1} />
+      </div>
+
+      <Container size="lg" className={classes.container}>
         {!isAuthenticated ? (
-          <Paper shadow="md" radius="md" p="xl" className={classes.loginCard}>
-            <Stack gap="md">
-              <Text size="lg" ta="center" fw={500}>
-                Willkommen bei unified-ui
+          <Stack gap="xl" align="center" className={classes.landingContent}>
+            {/* Hero Section */}
+            <Stack gap="md" align="center" ta="center" maw={800}>
+              <Title order={1} className={classes.heroTitle}>
+                AI Hub
+              </Title>
+              <Text size="xl" c="dimmed" className={classes.heroSubtitle}>
+                Die Multi-Tenant Plattform für AI-Agent-Integration
               </Text>
-              <Text size="sm" c="dimmed" ta="center">
-                Bitte melde dich mit deinem Microsoft-Konto an
+              <Text size="md" c="dimmed" maw={600} className={classes.heroDescription}>
+                Verbinde und verwalte verschiedene AI-Agent-Systeme zentral. 
+                Mit rollenbasierter Zugriffskontrolle, umfassendem Audit-Logging 
+                und Enterprise-ready Sicherheit.
               </Text>
-              <Button
-                leftSection={<IconLogin size={20} />}
-                size="lg"
-                onClick={handleLogin}
-                loading={isLoading}
-                fullWidth
-              >
-                Mit Microsoft anmelden
-              </Button>
             </Stack>
-          </Paper>
+
+            {/* Features Grid */}
+            <Grid gutter="lg" maw={900} className={classes.featuresGrid}>
+              {features.map((feature, index) => (
+                <Grid.Col span={{ base: 12, sm: 6 }} key={index}>
+                  <Paper p="lg" radius="md" className={classes.featureCard}>
+                    <Group gap="md">
+                      <div className={classes.featureIconWrapper}>
+                        <feature.icon size={28} stroke={1.5} />
+                      </div>
+                      <div>
+                        <Text fw={600} size="md">{feature.title}</Text>
+                        <Text size="sm" c="dimmed">{feature.description}</Text>
+                      </div>
+                    </Group>
+                  </Paper>
+                </Grid.Col>
+              ))}
+            </Grid>
+
+            {/* Login Card */}
+            <Paper shadow="xl" radius="lg" p="xl" className={classes.loginCard}>
+              <Stack gap="lg">
+                <Stack gap="xs" ta="center">
+                  <Title order={3}>Willkommen</Title>
+                  <Text size="sm" c="dimmed">
+                    Melde dich an, um auf deine AI-Agents zuzugreifen
+                  </Text>
+                </Stack>
+                <Button
+                  leftSection={<IconLogin size={20} />}
+                  size="lg"
+                  onClick={handleLogin}
+                  loading={isLoading}
+                  fullWidth
+                  variant="gradient"
+                  gradient={{ from: 'primary.6', to: 'secondary.6', deg: 45 }}
+                >
+                  Mit Microsoft anmelden
+                </Button>
+              </Stack>
+            </Paper>
+          </Stack>
         ) : (
-          <Stack gap="lg" w="100%">
+          <Stack gap="lg" w="100%" maw={800} className={classes.authenticatedContent}>
             <Paper shadow="md" radius="md" p="xl" className={classes.successCard}>
               <Stack gap="md">
                 <Group justify="space-between" align="center">
@@ -145,7 +204,7 @@ export const LoginPage = () => {
             )}
           </Stack>
         )}
-      </Stack>
-    </Container>
+      </Container>
+    </div>
   );
 };

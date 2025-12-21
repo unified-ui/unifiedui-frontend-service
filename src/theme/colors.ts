@@ -14,7 +14,7 @@ export const colors = {
     '#1976d2',   // 7 - Hover
     '#1565c0',   // 8
     '#0d47a1',   // 9 - Sehr dunkel
-  ],
+  ] as const,
 
   // Secondary Brand Color (Material Purple)
   secondary: [
@@ -28,7 +28,7 @@ export const colors = {
     '#7b1fa2',   // 7 - Hover
     '#6a1b9a',   // 8
     '#4a148c',   // 9
-  ],
+  ] as const,
 
   // Success (Material Green)
   success: [
@@ -42,7 +42,7 @@ export const colors = {
     '#388e3c',   // 7 - Hover
     '#2e7d32',   // 8
     '#1b5e20',   // 9
-  ],
+  ] as const,
 
   // Warning (Material Orange)
   warning: [
@@ -56,7 +56,7 @@ export const colors = {
     '#f57c00',   // 7 - Hover
     '#ef6c00',   // 8
     '#e65100',   // 9
-  ],
+  ] as const,
 
   // Error/Danger (Material Red)
   error: [
@@ -70,7 +70,7 @@ export const colors = {
     '#d32f2f',   // 7 - Hover
     '#c62828',   // 8
     '#b71c1c',   // 9
-  ],
+  ] as const,
 
   // Info (Material Light Blue)
   info: [
@@ -84,7 +84,7 @@ export const colors = {
     '#0288d1',   // 7 - Hover
     '#0277bd',   // 8
     '#01579b',   // 9
-  ],
+  ] as const,
 
   // Gray Scale (Neutral Colors)
   gray: [
@@ -99,7 +99,7 @@ export const colors = {
     '#616161',   // 8 - Dark Backgrounds
     '#424242',   // 9 - Card Background (Dark)
     '#212121',   // 10 - Primary Text (Light), App BG (Dark) - EXTRA INDEX!
-  ],
+  ] as const,
 };
 
 // Semantic Color Mappings für einfacheren Zugriff
