@@ -11,6 +11,9 @@ import App from './App.tsx';
 // Mantine Core Styles
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
+
+// Custom Styles
+import './styles/variables.css';
 import './index.css';
 
 // MSAL-Instanz erstellen
