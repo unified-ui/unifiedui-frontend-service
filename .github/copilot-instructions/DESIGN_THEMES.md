@@ -2,6 +2,54 @@
 
 Diese Datei definiert die Design-Tokens und Theme-Konfigurationen für die AI Hub Applikation.
 
+## ⚠️ WICHTIG: CSS Custom Properties verwenden
+
+**Niemals Design-Werte in CSS/SCSS hard-coden!**
+
+Alle Design-Tokens sind als **CSS Custom Properties** in `src/styles/variables.css` definiert und müssen verwendet werden.
+
+### Warum CSS Custom Properties?
+
+1. **Light/Dark Mode**: Automatische Anpassung ohne Code-Änderungen
+2. **Konsistenz**: Ein zentraler Ort für alle Design-Werte
+3. **Wartbarkeit**: Änderungen im Theme wirken sich sofort app-weit aus
+4. **Keine Magic Numbers**: Semantische Namen statt roher Werte
+
+### Verwendung
+
+```css
+/* ✅ RICHTIG: CSS Custom Properties verwenden */
+.myComponent {
+  color: var(--color-primary-600);
+  background: var(--bg-paper);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  gap: var(--spacing-lg);
+}
+
+/* ❌ FALSCH: Hard-coded Werte */
+.myComponent {
+  color: #1e88e5;           /* Niemals! */
+  background: #ffffff;      /* Niemals! */
+  padding: 16px;           /* Niemals! */
+  border-radius: 8px;      /* Niemals! */
+  gap: 24px;               /* Niemals! */
+}
+```
+
+### Verfügbare Custom Properties
+
+Siehe vollständige Liste in `src/styles/variables.css`:
+- **Farben**: `--color-primary-{50-900}`, `--color-gray-{0-900}`, etc.
+- **Semantic**: `--bg-app`, `--text-primary`, `--border-default`, etc.
+- **Spacing**: `--spacing-xs` bis `--spacing-3xl`
+- **Radius**: `--radius-xs` bis `--radius-full`
+- **Typography**: `--font-size-xs` bis `--font-size-4xl`, `--font-weight-*`
+- **Shadows**: `--shadow-xs` bis `--shadow-xl`
+- **Z-Index**: `--z-dropdown`, `--z-modal`, etc.
+
+---
+
 ## Theme-Struktur Übersicht
 
 Ein vollständiges Design Theme für AI Hub sollte folgende Kategorien umfassen:

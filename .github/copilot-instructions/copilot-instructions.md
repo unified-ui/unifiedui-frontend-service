@@ -182,6 +182,48 @@ const spacing = theme.spacing.md;
 
 ### 4. Styling Guidelines
 
+#### **CRITICAL: Always Use CSS Custom Properties**
+
+**Never hard-code design values in CSS/SCSS!** Always use CSS Custom Properties from `src/styles/variables.css`.
+
+```css
+/* ✅ DO: Use CSS Custom Properties */
+.myComponent {
+  color: var(--color-primary-600);
+  background-color: var(--bg-paper);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-bold);
+  gap: var(--spacing-lg);
+}
+
+/* ❌ DON'T: Hard-code values */
+.myComponent {
+  color: #1e88e5;              /* ❌ Use var(--color-primary-600) */
+  background-color: #ffffff;    /* ❌ Use var(--bg-paper) */
+  padding: 16px;               /* ❌ Use var(--spacing-md) */
+  border-radius: 8px;          /* ❌ Use var(--radius-md) */
+  font-weight: 700;            /* ❌ Use var(--font-weight-bold) */
+  gap: 24px;                   /* ❌ Use var(--spacing-lg) */
+}
+```
+
+**Available CSS Custom Properties:**
+- **Colors**: `var(--color-primary-{50-900})`, `var(--color-secondary-{50-900})`, `var(--color-gray-{0-900})`, `var(--color-success/warning/error/info-{50-900})`
+- **Semantic Colors**: `var(--bg-app)`, `var(--bg-paper)`, `var(--text-primary)`, `var(--text-secondary)`, `var(--border-default)`, etc.
+- **Spacing**: `var(--spacing-xs/sm/md/lg/xl/2xl/3xl)` (4px, 8px, 16px, 24px, 32px, 48px, 64px)
+- **Border Radius**: `var(--radius-xs/sm/md/lg/xl/full)` (2px, 4px, 8px, 12px, 16px, 9999px)
+- **Font Weight**: `var(--font-weight-light/regular/medium/semibold/bold)` (300, 400, 500, 600, 700)
+- **Font Size**: `var(--font-size-xs/sm/md/lg/xl/2xl/3xl/4xl)`
+- **Shadows**: `var(--shadow-xs/sm/md/lg/xl)`
+- **Z-Index**: `var(--z-dropdown/sticky/overlay/modal/notification/max)`
+
+**Benefits:**
+- ✅ Light/Dark Mode works automatically
+- ✅ Consistent design across the app
+- ✅ Easy theme updates (change once, applies everywhere)
+- ✅ No hard-coded "magic numbers"
+
 #### CSS Modules
 ```typescript
 // MyComponent.module.css
