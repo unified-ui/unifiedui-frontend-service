@@ -1,0 +1,18 @@
+.sidebar {
+  position: fixed;
+  top: 60px; /* Below header */
+  left: 0;
+  bottom: 0;
+  width: 250px;
+  background: var(--bg-paper);
+  border-right: 1px solid var(--border-default);
+  overflow-y: auto;
+  z-index: var(--z-dropdown);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+}

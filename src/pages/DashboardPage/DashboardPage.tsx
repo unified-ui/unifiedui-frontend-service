@@ -1,14 +1,17 @@
 import type { FC } from 'react';
-import { Container, Title, Text, Stack } from '@mantine/core';
-import classes from './DashboardPage.module.css';
+import { Title, Text, Stack } from '@mantine/core';
+import { MainLayout } from '../../components/layout/MainLayout';
 
 export const DashboardPage: FC = () => {
   return (
-    <Container size="xl" className={classes.container}>
+    <MainLayout>
       <Stack gap="lg">
         <Title order={1}>Dashboard</Title>
-        <Text>Dashboard Page - Coming Soon</Text>
+        <Text>Dashboard Page - Content Area</Text>
+        <Text size="sm" c="dimmed">
+          Dies ist der Hauptinhaltsbereich. Header ist oben fix, Sidebar links fix.
+        </Text>
       </Stack>
-    </Container>
+    </MainLayout>
   );
 };

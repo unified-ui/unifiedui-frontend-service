@@ -1,0 +1,27 @@
+.layout {
+  min-height: 100vh;
+  width: 100%;
+  background: var(--bg-app);
+}
+
+.content {
+  margin-top: 60px; /* Header height */
+  margin-left: 250px; /* Sidebar width */
+  min-height: calc(100vh - 60px);
+  padding: var(--spacing-xl);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .content {
+    margin-left: 200px; /* Smaller sidebar on mobile */
+    padding: var(--spacing-md);
+  }
+}
+
+@media (max-width: 576px) {
+  .content {
+    margin-left: 0; /* No sidebar on very small screens */
+    padding: var(--spacing-sm);
+  }
+}

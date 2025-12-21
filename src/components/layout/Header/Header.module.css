@@ -1,0 +1,99 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  padding: 0 var(--spacing-lg);
+  background: var(--bg-paper);
+  border-bottom: 1px solid var(--border-default);
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+}
+
+/* Logo Section */
+.logo {
+  flex-shrink: 0;
+}
+
+.logoIcon {
+  color: var(--primary-600);
+}
+
+[data-mantine-color-scheme='dark'] .logoIcon {
+  color: var(--primary-400);
+}
+
+.logoText {
+  color: var(--primary-600); /* Fallback */
+  background: linear-gradient(135deg, var(--primary-600), var(--secondary-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+/* Fallback for browsers that don't support background-clip */
+@supports not (background-clip: text) {
+  .logoText {
+    color: var(--primary-600);
+  }
+}
+
+[data-mantine-color-scheme='dark'] .logoText {
+  color: var(--primary-400); /* Fallback */
+  background: linear-gradient(135deg, var(--primary-400), var(--secondary-400));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+/* Fallback for dark mode */
+@supports not (background-clip: text) {
+  [data-mantine-color-scheme='dark'] .logoText {
+    color: var(--primary-400);
+  }
+}
+
+/* Search Bar */
+.search {
+  flex: 1;
+  max-width: 600px;
+}
+
+/* User Account */
+.userAccount {
+  cursor: pointer;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-xl);
+  transition: background-color var(--transition-fast) ease;
+}
+
+.userAccount:hover {
+  background-color: var(--gray-100);
+}
+
+[data-mantine-color-scheme='dark'] .userAccount:hover {
+  background-color: var(--gray-800);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .search {
+    max-width: 300px;
+  }
+  
+  .logoText {
+    display: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .search {
+    display: none;
+  }
+}
