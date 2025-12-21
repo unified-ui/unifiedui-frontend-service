@@ -1,0 +1,43 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--mantine-spacing-md);
+}
+
+.title {
+  background: linear-gradient(45deg, var(--mantine-color-primary-6), var(--mantine-color-secondary-6));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: var(--mantine-spacing-xl);
+}
+
+.loginCard {
+  width: 100%;
+  max-width: 400px;
+}
+
+.successCard {
+  width: 100%;
+  border-left: 4px solid var(--mantine-color-green-6);
+}
+
+.tokenCard {
+  width: 100%;
+  background-color: var(--mantine-color-gray-0);
+}
+
+[data-mantine-color-scheme='dark'] .tokenCard {
+  background-color: var(--mantine-color-dark-6);
+}
+
+.tokenDisplay {
+  max-height: 200px;
+  overflow-y: auto;
+  word-break: break-all;
+  font-size: 0.75rem;
+}
