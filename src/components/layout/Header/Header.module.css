@@ -17,6 +17,8 @@
 /* Logo Section */
 .logo {
   flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
 }
 
 .logoIcon {

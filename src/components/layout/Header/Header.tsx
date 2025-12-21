@@ -1,11 +1,13 @@
 import type { FC } from 'react';
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Group, TextInput, Indicator, ActionIcon, Avatar, Text, useMantineColorScheme, Stack, Paper, Button } from '@mantine/core';
 import { IconSearch, IconBell, IconSparkles, IconSun, IconMoon, IconLogout } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
 import classes from './Header.module.css';
 
 export const Header: FC = () => {
+  const navigate = useNavigate();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const { account, logout } = useAuth();
   const isDark = colorScheme === 'dark';
@@ -35,7 +37,7 @@ export const Header: FC = () => {
   return (
     <header className={classes.header}>
       {/* Left: Logo + Title */}
-      <Group gap="sm" className={classes.logo}>
+      <Group gap="sm" className={classes.logo} onClick={() => navigate('/dashboard')}>
         <IconSparkles size={32} className={classes.logoIcon} />
         <Text size="xl" fw={700} className={classes.logoText}>
           unified-ui
