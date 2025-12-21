@@ -1,11 +1,36 @@
 import type { FC } from 'react';
-import { Group, TextInput, Indicator, ActionIcon, Avatar, Text, useMantineColorScheme } from '@mantine/core';
+import { useState, useRef, useEffect } from 'react';
+import { Group, TextInput, Indicator, ActionIcon, Avatar, Text, useMantineColorScheme, Stack, Paper } from '@mantine/core';
 import { IconSearch, IconBell, IconSparkles, IconSun, IconMoon } from '@tabler/icons-react';
+import { useAuth } from '../../../auth';
 import classes from './Header.module.css';
 
 export const Header: FC = () => {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+  const { account } = useAuth();
   const isDark = colorScheme === 'dark';
+  const [userDropdownOpened, setUserDropdownOpened] = useState(false);
+  const userAccountRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userAccountRef.current && !userAccountRef.current.contains(event.target as Node)) {
+        setUserDropdownOpened(false);
+      }
+    };
+
+    if (userDropdownOpened) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [userDropdownOpened]);
+
+  const userName = account?.name || 'User';
+  const displayName = userName.length > 20 ? userName.substring(0, 20) + '…' : userName;
 
   return (
     <header className={classes.header}>
@@ -43,10 +68,25 @@ export const Header: FC = () => {
           </ActionIcon>
         </Indicator>
         
-        <Group gap="xs" className={classes.userAccount}>
-          <Avatar radius="xl" size="sm" color="primary" />
-          <Text size="sm" fw={500}>User Account</Text>
-        </Group>
+        <div ref={userAccountRef} className={classes.userAccountWrapper}>
+          <Group 
+            gap="xs" 
+            className={classes.userAccount}
+            onClick={() => setUserDropdownOpened(!userDropdownOpened)}
+          >
+            <Avatar radius="xl" size="md" color="primary" />
+            <Stack gap={0}>
+              <Text size="sm" fw={700}>{displayName}</Text>
+              <Text size="xs" c="dimmed">TenantName</Text>
+            </Stack>
+          </Group>
+
+          {userDropdownOpened && (
+            <Paper className={classes.userDropdown} shadow="md" radius="md" p="md">
+              {/* Dropdown content will be added later */}
+            </Paper>
+          )}
+        </div>
       </Group>
     </header>
   );

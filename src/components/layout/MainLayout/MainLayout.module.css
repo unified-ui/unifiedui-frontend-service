@@ -5,9 +5,9 @@
 }
 
 .content {
-  margin-top: 60px; /* Header height */
+  margin-top: 70px; /* Header height */
   margin-left: 250px; /* Sidebar width */
-  min-height: calc(100vh - 60px);
+  min-height: calc(100vh - 70px);
   padding: var(--spacing-xl);
 }
 
