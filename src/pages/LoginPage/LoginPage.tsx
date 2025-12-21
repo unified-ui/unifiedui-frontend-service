@@ -58,14 +58,14 @@ export const LoginPage = () => {
     <Container size="sm" className={classes.container}>
       <Stack gap="xl" align="center">
         <Title order={1} className={classes.title}>
-          AI Hub
+          unified-ui
         </Title>
 
         {!isAuthenticated ? (
           <Paper shadow="md" radius="md" p="xl" className={classes.loginCard}>
             <Stack gap="md">
               <Text size="lg" ta="center" fw={500}>
-                Willkommen bei AI Hub
+                Willkommen bei unified-ui
               </Text>
               <Text size="sm" c="dimmed" ta="center">
                 Bitte melde dich mit deinem Microsoft-Konto an
