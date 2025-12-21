@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Container, Title, Text, Button, Paper, Stack, CopyButton, ActionIcon, Tooltip, Group, Code, Grid } from '@mantine/core';
 import { IconCopy, IconCheck, IconLogin, IconLogout, IconRobot, IconBrain, IconNetwork, IconShield, IconUsers, IconSparkles } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth';
 import classes from './LoginPage.module.css';
 
@@ -8,6 +9,14 @@ export const LoginPage = () => {
   const { isAuthenticated, login, logout, getAccessToken, account } = useAuth();
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     if (isAuthenticated) {
