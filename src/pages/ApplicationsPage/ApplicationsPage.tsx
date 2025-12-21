@@ -1,14 +1,14 @@
 import type { FC } from 'react';
-import { Container, Title, Text, Stack } from '@mantine/core';
-import classes from './ApplicationsPage.module.css';
+import { Title, Text, Stack } from '@mantine/core';
+import { MainLayout } from '../../components/layout/MainLayout';
 
 export const ApplicationsPage: FC = () => {
   return (
-    <Container size="xl" className={classes.container}>
+    <MainLayout>
       <Stack gap="lg">
         <Title order={1}>Applications</Title>
         <Text>Applications Page - Coming Soon</Text>
       </Stack>
-    </Container>
+    </MainLayout>
   );
 };

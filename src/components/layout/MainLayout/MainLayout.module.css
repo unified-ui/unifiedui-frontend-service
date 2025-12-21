@@ -6,22 +6,15 @@
 
 .content {
   margin-top: 70px; /* Header height */
-  margin-left: 250px; /* Sidebar width */
+  margin-left: 100px; /* Sidebar width */
   min-height: calc(100vh - 70px);
   padding: var(--spacing-xl);
 }
 
 /* Mobile responsive */
-@media (max-width: 768px) {
-  .content {
-    margin-left: 200px; /* Smaller sidebar on mobile */
-    padding: var(--spacing-md);
-  }
-}
-
 @media (max-width: 576px) {
   .content {
-    margin-left: 0; /* No sidebar on very small screens */
-    padding: var(--spacing-sm);
+    margin-left: 60px; /* Narrower sidebar on mobile */
+    padding: var(--spacing-md);
   }
 }

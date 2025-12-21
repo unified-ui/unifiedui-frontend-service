@@ -8,6 +8,7 @@ import { ApplicationsPage } from '../pages/ApplicationsPage';
 import { ConversationsPage } from '../pages/ConversationsPage';
 import { AutonomousAgentsPage } from '../pages/AutonomousAgentsPage';
 import { WidgetDesignerPage } from '../pages/WidgetDesignerPage';
+import { DevelopmentPage } from '../pages/DevelopmentPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 
 export const AppRoutes = () => {
@@ -25,6 +26,7 @@ export const AppRoutes = () => {
         <Route path="/conversations" element={<ProtectedRoute><ConversationsPage /></ProtectedRoute>} />
         <Route path="/autonomous-agents" element={<ProtectedRoute><AutonomousAgentsPage /></ProtectedRoute>} />
         <Route path="/widget-designer" element={<ProtectedRoute><WidgetDesignerPage /></ProtectedRoute>} />
+        <Route path="/development" element={<ProtectedRoute><DevelopmentPage /></ProtectedRoute>} />
         
         {/* Redirects */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
