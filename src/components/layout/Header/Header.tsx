@@ -1,13 +1,13 @@
 import type { FC } from 'react';
 import { useState, useRef, useEffect } from 'react';
-import { Group, TextInput, Indicator, ActionIcon, Avatar, Text, useMantineColorScheme, Stack, Paper } from '@mantine/core';
-import { IconSearch, IconBell, IconSparkles, IconSun, IconMoon } from '@tabler/icons-react';
+import { Group, TextInput, Indicator, ActionIcon, Avatar, Text, useMantineColorScheme, Stack, Paper, Button } from '@mantine/core';
+import { IconSearch, IconBell, IconSparkles, IconSun, IconMoon, IconLogout } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
 import classes from './Header.module.css';
 
 export const Header: FC = () => {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
-  const { account } = useAuth();
+  const { account, logout } = useAuth();
   const isDark = colorScheme === 'dark';
   const [userDropdownOpened, setUserDropdownOpened] = useState(false);
   const userAccountRef = useRef<HTMLDivElement>(null);
@@ -83,7 +83,17 @@ export const Header: FC = () => {
 
           {userDropdownOpened && (
             <Paper className={classes.userDropdown} shadow="md" radius="md" p="md">
-              {/* Dropdown content will be added later */}
+              <Stack gap="sm">
+                <Button 
+                  leftSection={<IconLogout size={16} />}
+                  variant="light" 
+                  color="red"
+                  fullWidth
+                  onClick={logout}
+                >
+                  Logout
+                </Button>
+              </Stack>
             </Paper>
           )}
         </div>

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ProtectedRoute } from './ProtectedRoute';
 import { LoginPage } from '../pages/LoginPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { CredentialsPage } from '../pages/CredentialsPage';
@@ -17,13 +18,13 @@ export const AppRoutes = () => {
         <Route path="/login" element={<LoginPage />} />
         
         {/* Protected Routes */}
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/credentials" element={<CredentialsPage />} />
-        <Route path="/tenant-settings" element={<TenantSettingsPage />} />
-        <Route path="/applications" element={<ApplicationsPage />} />
-        <Route path="/conversations" element={<ConversationsPage />} />
-        <Route path="/autonomous-agents" element={<AutonomousAgentsPage />} />
-        <Route path="/widget-designer" element={<WidgetDesignerPage />} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/credentials" element={<ProtectedRoute><CredentialsPage /></ProtectedRoute>} />
+        <Route path="/tenant-settings" element={<ProtectedRoute><TenantSettingsPage /></ProtectedRoute>} />
+        <Route path="/applications" element={<ProtectedRoute><ApplicationsPage /></ProtectedRoute>} />
+        <Route path="/conversations" element={<ProtectedRoute><ConversationsPage /></ProtectedRoute>} />
+        <Route path="/autonomous-agents" element={<ProtectedRoute><AutonomousAgentsPage /></ProtectedRoute>} />
+        <Route path="/widget-designer" element={<ProtectedRoute><WidgetDesignerPage /></ProtectedRoute>} />
         
         {/* Redirects */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
