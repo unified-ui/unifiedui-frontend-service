@@ -16,6 +16,54 @@
     #0a0a0a 100%);
 }
 
+/* Header */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-sticky);
+  padding: var(--spacing-md) 0;
+  background: transparent;
+}
+
+[data-mantine-color-scheme='light'] .header {
+  background: transparent;
+}
+
+.logoWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500));
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.headerTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, 
+    var(--color-primary-300) 0%, 
+    var(--color-secondary-300) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+[data-mantine-color-scheme='light'] .headerTitle {
+  background: linear-gradient(135deg, 
+    var(--color-primary-600) 0%, 
+    var(--color-secondary-600) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 /* Animated Gradient Orbs */
 .animatedBackground {
   position: absolute;
@@ -148,6 +196,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--spacing-xl);
+  padding-top: 100px; /* Account for header */
 }
 
 /* Landing Content */
@@ -210,6 +259,7 @@
   font-size: 1rem;
   line-height: 1.6;
   color: rgba(255, 255, 255, 0.95);
+  max-width: 800px;
 }
 
 [data-mantine-color-scheme='light'] .heroDescription {

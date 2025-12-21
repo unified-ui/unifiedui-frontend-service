@@ -64,6 +64,20 @@ export const LoginPage = () => {
 
   return (
     <div className={classes.pageWrapper}>
+      {/* Header */}
+      <header className={classes.header}>
+        <Container fluid px="xl">
+          <Group gap="md" justify="flex-start">
+            <div className={classes.logoWrapper}>
+              <IconBrain size={32} stroke={2} />
+            </div>
+            <Title order={2} className={classes.headerTitle}>
+              unified-ui
+            </Title>
+          </Group>
+        </Container>
+      </header>
+
       {/* Animated Background */}
       <div className={classes.animatedBackground}>
         <div className={classes.gradientOrb1}></div>
@@ -84,14 +98,14 @@ export const LoginPage = () => {
         {!isAuthenticated ? (
           <Stack gap="xl" align="center" className={classes.landingContent}>
             {/* Hero Section */}
-            <Stack gap="md" align="center" ta="center" maw={800}>
+            <Stack gap="md" align="center" ta="center">
               <Title order={1} className={classes.heroTitle}>
                 AI Hub
               </Title>
               <Text size="xl" c="dimmed" className={classes.heroSubtitle}>
                 Die Multi-Tenant Plattform für AI-Agent-Integration
               </Text>
-              <Text size="md" c="dimmed" maw={600} className={classes.heroDescription}>
+              <Text size="md" c="dimmed" className={classes.heroDescription}>
                 Verbinde und verwalte verschiedene AI-Agent-Systeme zentral. 
                 Mit rollenbasierter Zugriffskontrolle, umfassendem Audit-Logging 
                 und Enterprise-ready Sicherheit.
@@ -99,7 +113,7 @@ export const LoginPage = () => {
             </Stack>
 
             {/* Features Grid */}
-            <Grid gutter="lg" maw={900} className={classes.featuresGrid}>
+            <Grid gutter="lg" className={classes.featuresGrid}>
               {features.map((feature, index) => (
                 <Grid.Col span={{ base: 12, sm: 6 }} key={index}>
                   <Paper p="lg" radius="md" className={classes.featureCard}>
@@ -141,7 +155,7 @@ export const LoginPage = () => {
             </Paper>
           </Stack>
         ) : (
-          <Stack gap="lg" w="100%" maw={800} className={classes.authenticatedContent}>
+          <Stack gap="lg" w="100%" className={classes.authenticatedContent}>
             <Paper shadow="md" radius="md" p="xl" className={classes.successCard}>
               <Stack gap="md">
                 <Group justify="space-between" align="center">
