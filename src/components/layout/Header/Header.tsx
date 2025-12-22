@@ -1,8 +1,8 @@
 import type { FC } from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Group, TextInput, Indicator, ActionIcon, Avatar, Text, useMantineColorScheme, Stack, Paper, Button } from '@mantine/core';
-import { IconSearch, IconBell, IconSparkles, IconSun, IconMoon, IconLogout } from '@tabler/icons-react';
+import { Group, TextInput, Indicator, ActionIcon, Avatar, Text, useMantineColorScheme, Stack, Paper, Button, Divider, Select, UnstyledButton } from '@mantine/core';
+import { IconSearch, IconBell, IconSparkles, IconSun, IconMoon, IconLogout, IconExternalLink } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
 import classes from './Header.module.css';
 
@@ -12,6 +12,7 @@ export const Header: FC = () => {
   const { account, logout } = useAuth();
   const isDark = colorScheme === 'dark';
   const [userDropdownOpened, setUserDropdownOpened] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState('TenantName');
   const userAccountRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -32,7 +33,17 @@ export const Header: FC = () => {
   }, [userDropdownOpened]);
 
   const userName = account?.name || 'User';
+  const userEmail = account?.username || 'user@example.com';
   const displayName = userName.length > 20 ? userName.substring(0, 20) + '…' : userName;
+
+  const tenantOptions = [
+    'TenantName',
+    'Acme Corporation',
+    'Tech Solutions Ltd',
+    'Global Ventures Inc',
+    'Innovation Labs',
+    'Enterprise Systems'
+  ];
 
   return (
     <header className={classes.header}>
@@ -85,7 +96,60 @@ export const Header: FC = () => {
 
           {userDropdownOpened && (
             <Paper className={classes.userDropdown} shadow="md" radius="md" p="md">
-              <Stack gap="sm">
+              <Stack gap="md">
+                {/* User Info */}
+                <Stack gap={4}>
+                  <Text size="sm" fw={700}>{userName}</Text>
+                  <Text size="xs" c="dimmed">{userEmail}</Text>
+                </Stack>
+
+                <Divider />
+
+                {/* Tenant Selection */}
+                <Stack gap="xs">
+                  <Text size="xs" fw={700}>Tenant Name:</Text>
+                  <Select
+                    data={tenantOptions}
+                    value={selectedTenant}
+                    onChange={(value) => setSelectedTenant(value || 'TenantName')}
+                    searchable
+                    size="xs"
+                  />
+                </Stack>
+
+                {/* License Info */}
+                <Stack gap={4}>
+                  <Text size="xs" fw={700}>License:</Text>
+                  <Text size="xs" c="dimmed">Standard</Text>
+                </Stack>
+
+                <Divider />
+
+                {/* Management Links */}
+                <Stack gap="xs">
+                  <UnstyledButton className={classes.menuLink}>
+                    <Group gap="xs" justify="space-between">
+                      <Text size="sm">Manage Account</Text>
+                      <IconExternalLink size={16} />
+                    </Group>
+                  </UnstyledButton>
+                  <UnstyledButton className={classes.menuLink}>
+                    <Group gap="xs" justify="space-between">
+                      <Text size="sm">Manage Tenant</Text>
+                      <IconExternalLink size={16} />
+                    </Group>
+                  </UnstyledButton>
+                  <UnstyledButton className={classes.menuLink}>
+                    <Group gap="xs" justify="space-between">
+                      <Text size="sm">Manage Licence</Text>
+                      <IconExternalLink size={16} />
+                    </Group>
+                  </UnstyledButton>
+                </Stack>
+
+                <Divider />
+
+                {/* Logout Button */}
                 <Button 
                   leftSection={<IconLogout size={16} />}
                   variant="light" 

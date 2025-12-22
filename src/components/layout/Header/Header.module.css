@@ -67,10 +67,25 @@
   position: absolute;
   top: calc(100% + var(--spacing-xs));
   right: 0;
-  min-width: 250px;
+  min-width: 280px;
   background: var(--bg-paper);
   border: 1px solid var(--border-default);
   z-index: var(--z-dropdown);
+}
+
+.menuLink {
+  width: 100%;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast) ease;
+}
+
+.menuLink:hover {
+  background-color: var(--gray-100);
+}
+
+[data-mantine-color-scheme='dark'] .menuLink:hover {
+  background-color: var(--gray-800);
 }
 
 /* Responsive */
