@@ -51,14 +51,10 @@ export const Header: FC = () => {
     : [{ value: '', label: 'Keine Tenants verfügbar' }];
 
   const handleTenantChange = (value: string | null) => {
-    console.log('handleTenantChange called with:', value);
     if (value && value !== '') {
-      console.log('Calling selectTenant with:', value);
       selectTenant(value);
     }
   };
-
-  console.log('Header render - selectedTenant:', selectedTenant?.id, 'tenantOptions:', tenantOptions);
 
   return (
     <header className={classes.header}>
@@ -132,15 +128,11 @@ export const Header: FC = () => {
                   <Select
                     data={tenantOptions}
                     value={selectedTenant?.id || null}
-                    onChange={(value) => {
-                      console.log('Select onChange triggered with:', value);
-                      handleTenantChange(value);
-                    }}
+                    onChange={handleTenantChange}
                     searchable
                     size="xs"
                     placeholder="Tenant auswählen"
                     disabled={tenants.length === 0}
-                    onClick={() => console.log('Select clicked')}
                   />
                 </Stack>
 
