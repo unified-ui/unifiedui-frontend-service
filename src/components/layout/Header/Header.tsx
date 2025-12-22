@@ -4,15 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import { Group, TextInput, Indicator, ActionIcon, Avatar, Text, useMantineColorScheme, Stack, Paper, Button, Divider, Select, UnstyledButton } from '@mantine/core';
 import { IconSearch, IconBell, IconSparkles, IconSun, IconMoon, IconLogout, IconExternalLink } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
+import { useIdentity } from '../../../contexts';
 import classes from './Header.module.css';
 
 export const Header: FC = () => {
   const navigate = useNavigate();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const { account, logout } = useAuth();
+  const { user, tenants, selectedTenant, selectTenant } = useIdentity();
   const isDark = colorScheme === 'dark';
   const [userDropdownOpened, setUserDropdownOpened] = useState(false);
-  const [selectedTenant, setSelectedTenant] = useState('TenantName');
   const userAccountRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -32,18 +33,20 @@ export const Header: FC = () => {
     };
   }, [userDropdownOpened]);
 
-  const userName = account?.name || 'User';
-  const userEmail = account?.username || 'user@example.com';
+  const userName = user?.display_name || account?.name || 'User';
+  const userEmail = user?.mail || account?.username || 'user@example.com';
   const displayName = userName.length > 20 ? userName.substring(0, 20) + '…' : userName;
+  
+  const tenantDisplayName = selectedTenant?.name || 'Kein Tenant';
+  const tenantOptions = tenants.length > 0 
+    ? tenants.map(t => ({ value: t.id, label: t.name }))
+    : [{ value: '', label: 'Keine Tenants verfügbar' }];
 
-  const tenantOptions = [
-    'TenantName',
-    'Acme Corporation',
-    'Tech Solutions Ltd',
-    'Global Ventures Inc',
-    'Innovation Labs',
-    'Enterprise Systems'
-  ];
+  const handleTenantChange = (value: string | null) => {
+    if (value && value !== '') {
+      selectTenant(value);
+    }
+  };
 
   return (
     <header className={classes.header}>
@@ -90,7 +93,7 @@ export const Header: FC = () => {
             <Avatar radius="xl" size="md" color="primary" />
             <Stack gap={0}>
               <Text size="sm" fw={700}>{displayName}</Text>
-              <Text size="xs" c="dimmed">TenantName</Text>
+              <Text size="xs" c="dimmed">{tenantDisplayName}</Text>
             </Stack>
           </Group>
 
@@ -107,21 +110,27 @@ export const Header: FC = () => {
 
                 {/* Tenant Selection */}
                 <Stack gap="xs">
-                  <Text size="xs" fw={700}>Tenant Name:</Text>
+                  <Text size="xs" fw={700}>Tenant:</Text>
                   <Select
                     data={tenantOptions}
-                    value={selectedTenant}
-                    onChange={(value) => setSelectedTenant(value || 'TenantName')}
+                    value={selectedTenant?.id || null}
+                    onChange={handleTenantChange}
                     searchable
                     size="xs"
+                    placeholder="Tenant auswählen"
+                    disabled={tenants.length === 0}
                   />
                 </Stack>
 
-                {/* License Info */}
-                <Stack gap={4}>
-                  <Text size="xs" fw={700}>License:</Text>
-                  <Text size="xs" c="dimmed">Standard</Text>
-                </Stack>
+                {/* Tenant Info */}
+                {selectedTenant && (
+                  <Stack gap={4}>
+                    <Text size="xs" fw={700}>Tenant ID:</Text>
+                    <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>
+                      {selectedTenant.id}
+                    </Text>
+                  </Stack>
+                )}
 
                 <Divider />
 

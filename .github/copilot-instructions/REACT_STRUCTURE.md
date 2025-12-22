@@ -137,15 +137,21 @@ src/
 │   ├── useApi.ts              # API Hook
 │   └── useLocalStorage.ts     # Local Storage Hook
 │
-├── services/                   # API Services
+├── api/                        # API Client & Types
+│   ├── types.ts               # TypeScript Types für alle API Endpoints
+│   ├── client.ts              # UnifiedUIAPIClient
+│   ├── index.ts               # Exports
+│   └── README.md              # API Client Dokumentation
+│
+├── contexts/                   # React Contexts
+│   ├── IdentityContext.tsx    # Global Identity State (User, Tenants)
+│   └── index.ts               # Context Exports
+│
+├── services/                   # Legacy API Services (DEPRECATED - use api/)
 │   ├── api.ts                 # Base API Configuration
 │   ├── userService.ts         # User-related API calls
 │   └── authService.ts         # Auth-related API calls
 │
-├── types/                      # TypeScript Types
-│   ├── index.ts               # Type Exports
-│   ├── user.types.ts          # User Types
-│   └── api.types.ts           # API Response Types
 │
 ├── utils/                      # Utility Functions
 │   ├── constants.ts           # App Constants
@@ -285,6 +291,252 @@ export const theme: MantineThemeOverride = {
 };
 ```
 
+## API Client & Identity Management
+
+### UnifiedUIAPIClient (`src/api/`)
+
+Der zentrale API-Client für alle Backend-Kommunikation.
+
+#### Struktur
+```typescript
+src/api/
+├── types.ts      # Alle Request/Response Types
+├── client.ts     # UnifiedUIAPIClient Implementation
+├── index.ts      # Exports
+└── README.md     # Ausführliche Dokumentation
+```
+
+#### Verwendung
+
+**Via Identity Context (empfohlen):**
+```typescript
+import { useIdentity } from '../contexts';
+
+const MyComponent = () => {
+  const { apiClient, user, tenants, selectedTenant } = useIdentity();
+  
+  const loadData = async () => {
+    const apps = await apiClient?.listApplications();
+  };
+};
+```
+
+**Direkt initialisieren:**
+```typescript
+import { UnifiedUIAPIClient } from '../api';
+
+const client = new UnifiedUIAPIClient({
+  baseURL: 'http://localhost:8000',
+  getAccessToken: async () => await msalInstance.acquireToken(),
+  onError: (error) => {
+    notifications.show({ 
+      title: 'Fehler', 
+      message: error.message, 
+      color: 'red' 
+    });
+  },
+  onSuccess: (message) => {
+    notifications.show({ 
+      title: 'Erfolg', 
+      message, 
+      color: 'green' 
+    });
+  },
+});
+```
+
+#### Unterstützte Endpoints
+
+**Identity:**
+- `getMe()` - Aktueller User + Tenants + Rollen
+- `getUsers(params)` - User-Suche
+- `getGroups(params)` - Security Groups
+
+**Tenants:**
+- `listTenants()`, `getTenant(id)`, `createTenant(data)`, `updateTenant(id, data)`, `deleteTenant(id)`
+- `getTenantPrincipals(id)`, `setTenantPrincipal(id, data)`, `deleteTenantPrincipal(id, data)`
+
+**Applications:**
+- `listApplications()`, `getApplication(id)`, `createApplication(data)`, `updateApplication(id, data)`, `deleteApplication(id)`
+- `getApplicationPrincipals(id)`, `setApplicationPermission(id, data)`, `deleteApplicationPermission(id, ...)`
+
+**Autonomous Agents:**
+- `listAutonomousAgents()`, `getAutonomousAgent(id)`, `createAutonomousAgent(data)`, etc.
+- Permission-Management analog zu Applications
+
+**Conversations:**
+- `listConversations()`, `getConversation(id)`, `createConversation(data)`, etc.
+- Permission-Management analog zu Applications
+
+**Credentials:**
+- `listCredentials()`, `getCredential(id)`, `createCredential(data)`, `updateCredential(id, data)`, `deleteCredential(id)`
+- Permission-Management analog zu Applications
+
+**Custom Groups:**
+- `listCustomGroups()`, `getCustomGroup(id)`, `createCustomGroup(data)`, etc.
+- Principal-Management
+
+#### Features
+
+✅ **MSAL Token Integration** - Automatischer Token-Abruf
+✅ **Error-Handling** - Automatische Toast-Benachrichtigungen
+✅ **Success-Messages** - Toast bei erfolgreichen Operationen
+✅ **Type-Safe** - Vollständige TypeScript-Unterstützung
+✅ **Singleton Pattern** - Ein Client für die ganze App (via Context)
+
+### Identity Context (`src/contexts/IdentityContext.tsx`)
+
+Globaler State für User und Tenants.
+
+#### Features
+
+✅ **Auto-Load nach Login** - `/me` wird automatisch nach Login aufgerufen
+✅ **Auto-Tenant-Creation** - Erstellt "default" Tenant, wenn keiner vorhanden
+✅ **Tenant-Switching** - Wechsel zwischen Tenants mit Toast-Benachrichtigung
+✅ **LocalStorage Persistierung** - Letzter Tenant wird gespeichert
+✅ **API-Client global** - Alle Components können auf denselben Client zugreifen
+
+#### Verwendung
+
+```typescript
+import { useIdentity } from '../contexts';
+
+const MyComponent = () => {
+  const { 
+    user,              // IdentityUser - Aktueller Benutzer
+    tenants,           // TenantResponse[] - Alle verfügbaren Tenants
+    selectedTenant,    // TenantResponse | null - Aktuell gewählter Tenant
+    apiClient,         // UnifiedUIAPIClient | null
+    selectTenant,      // (tenantId: string) => void
+    refreshIdentity,   // () => Promise<void>
+    isLoading          // boolean
+  } = useIdentity();
+  
+  // Tenant wechseln
+  const switchTenant = () => {
+    selectTenant(tenants[0].id);
+    // → Toast: "Sie haben zu 'TenantName' gewechselt"
+  };
+  
+  // Identity neu laden
+  const reload = async () => {
+    await refreshIdentity();
+  };
+};
+```
+
+#### API Response Structure
+
+**GET /api/v1/identity/me Response:**
+```typescript
+{
+  id: string;
+  identity_provider: string;
+  identity_tenant_id: string;
+  display_name: string;
+  firstname: string;
+  lastname: string;
+  mail: string;
+  tenants: [
+    {
+      tenant: {
+        id: string;
+        name: string;
+        description?: string;
+        created_at: string;
+        updated_at: string;
+        created_by: string;
+        updated_by: string;
+      },
+      roles: string[];  // z.B. ["GLOBAL_ADMIN"]
+    }
+  ];
+  groups: IdentityGroup[];
+  custom_groups: unknown[];
+}
+```
+
+**Context Transformation:**
+- `user` = Top-level User-Felder (id, display_name, mail, etc.)
+- `tenants` = `response.tenants.map(t => t.tenant)` (extrahiert nur Tenant-Objekte)
+- `selectedTenant` = Aus localStorage oder erster Tenant
+
+### Toast-Benachrichtigungen
+
+**Mantine Notifications** sind bereits eingerichtet:
+
+```typescript
+// In main.tsx
+<Notifications position="top-right" />
+```
+
+**Automatische Toasts via API Client:**
+- ✅ Erfolgreiche Operationen → Grüner Toast
+- ❌ Fehler → Roter Toast
+- ℹ️ Tenant-Wechsel → Blauer Toast
+
+**Manuell:**
+```typescript
+import { notifications } from '@mantine/notifications';
+
+notifications.show({
+  title: 'Titel',
+  message: 'Nachricht',
+  color: 'green', // 'red', 'blue', 'yellow'
+  position: 'top-right',
+});
+```
+
+### Environment-Konfiguration
+
+**.env File:**
+```env
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+**Verwendung:**
+```typescript
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+```
+
+### Provider-Hierarchie
+
+Korrekte Reihenfolge in `main.tsx`:
+
+```tsx
+<MantineProvider>
+  <Notifications position="top-right" />
+  <MsalProvider instance={msalInstance}>
+    <AuthProvider>              {/* MSAL Auth Wrapper */}
+      <IdentityProvider>        {/* Verwendet useAuth() */}
+        <App />
+      </IdentityProvider>
+    </AuthProvider>
+  </MsalProvider>
+</MantineProvider>
+```
+
+### Migration von altem Code
+
+**Alt (DEPRECATED):**
+```typescript
+// services/userService.ts
+export const getUsers = async () => { ... }
+
+// In Component
+import { getUsers } from '../services/userService';
+const users = await getUsers();
+```
+
+**Neu (EMPFOHLEN):**
+```typescript
+// In Component
+import { useIdentity } from '../contexts';
+
+const { apiClient } = useIdentity();
+const users = await apiClient?.getUsers();
+```
+
 ## Best Practices
 - **Mantine Components nutzen**: Baue auf Mantine's Component-Library auf
 - **Theme-System verwenden**: Greife immer auf `theme.*` zu, nie hardcoded
@@ -292,3 +544,6 @@ export const theme: MantineThemeOverride = {
 - **Type Safety**: Vollständige TypeScript-Nutzung
 - **Lazy Loading**: Code-Splitting für bessere Performance
 - **Accessibility**: Nutze Mantine's eingebaute A11y-Features
+- **API Client verwenden**: Nutze `useIdentity()` Hook für API-Zugriff
+- **Toast-System nutzen**: Automatische Benachrichtigungen via API Client
+- **Tenant-Context nutzen**: Greife auf `selectedTenant` zu, nicht auf lokalen State

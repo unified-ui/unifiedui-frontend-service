@@ -1,24 +1,26 @@
 import { useState, useEffect } from 'react';
-import { Container, Title, Text, Button, Paper, Stack, CopyButton, ActionIcon, Tooltip, Group, Code, Grid } from '@mantine/core';
+import { Container, Title, Text, Button, Paper, Stack, CopyButton, ActionIcon, Tooltip, Group, Code, Grid, Loader } from '@mantine/core';
 import { IconCopy, IconCheck, IconLogin, IconLogout, IconRobot, IconBrain, IconNetwork, IconShield, IconUsers, IconSparkles } from '@tabler/icons-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../auth';
+import { useIdentity } from '../../contexts';
 import classes from './LoginPage.module.css';
 
 export const LoginPage = () => {
   const { isAuthenticated, login, logout, getAccessToken, account } = useAuth();
+  const { user, tenants, selectedTenant, isLoading: identityLoading } = useIdentity();
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Redirect to original URL or dashboard if already authenticated
+  // Redirect to original URL or dashboard if already authenticated AND identity is loaded
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !identityLoading && user) {
       const redirectUrl = searchParams.get('redirect') || '/dashboard';
       navigate(redirectUrl, { replace: true });
     }
-  }, [isAuthenticated, navigate, searchParams]);
+  }, [isAuthenticated, identityLoading, user, navigate, searchParams]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -167,29 +169,65 @@ export const LoginPage = () => {
           </Stack>
         ) : (
           <Stack gap="lg" w="100%" className={classes.authenticatedContent}>
-            <Paper shadow="md" radius="md" p="xl" className={classes.successCard}>
-              <Stack gap="md">
-                <Group justify="space-between" align="center">
-                  <div>
-                    <Text size="lg" fw={500} c="green">
-                      ✓ Erfolgreich angemeldet
-                    </Text>
-                    <Text size="sm" c="dimmed">
-                      Angemeldet als: {account?.username || 'Unbekannt'}
-                    </Text>
-                  </div>
-                  <Button
-                    leftSection={<IconLogout size={18} />}
-                    color="red"
-                    variant="light"
-                    onClick={handleLogout}
-                    loading={isLoading}
-                  >
-                    Abmelden
-                  </Button>
-                </Group>
-              </Stack>
-            </Paper>
+            {identityLoading ? (
+              <Paper shadow="md" radius="md" p="xl" className={classes.successCard}>
+                <Stack gap="md" align="center">
+                  <Loader size="lg" />
+                  <Text size="md" c="dimmed">
+                    Identity-Daten werden geladen...
+                  </Text>
+                </Stack>
+              </Paper>
+            ) : (
+              <>
+                <Paper shadow="md" radius="md" p="xl" className={classes.successCard}>
+                  <Stack gap="md">
+                    <Group justify="space-between" align="center">
+                      <div>
+                        <Text size="lg" fw={500} c="green">
+                          ✓ Erfolgreich angemeldet
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          Angemeldet als: {user?.mail || user?.display_name || account?.username || 'Unbekannt'}
+                        </Text>
+                        {selectedTenant && (
+                          <Text size="sm" c="dimmed">
+                            Aktueller Tenant: {selectedTenant.name}
+                          </Text>
+                        )}
+                      </div>
+                      <Button
+                        leftSection={<IconLogout size={18} />}
+                        color="red"
+                        variant="light"
+                        onClick={handleLogout}
+                        loading={isLoading}
+                      >
+                        Abmelden
+                      </Button>
+                    </Group>
+
+                    {tenants.length > 0 && (
+                      <Stack gap="xs">
+                        <Text size="sm" fw={500}>
+                          Verfügbare Tenants ({tenants.length}):
+                        </Text>
+                        <Group gap="xs">
+                          {tenants.map((tenant) => (
+                            <Paper key={tenant.id} p="xs" withBorder>
+                              <Text size="xs" fw={500}>{tenant.name}</Text>
+                              <Text size="xs" c="dimmed">
+                                {tenant.id ? `${tenant.id.substring(0, 8)}...` : 'Keine ID'}
+                              </Text>
+                            </Paper>
+                          ))}
+                        </Group>
+                      </Stack>
+                    )}
+                  </Stack>
+                </Paper>
+              </>
+            )}
 
             {token && (
               <Paper shadow="md" radius="md" p="xl" className={classes.tokenCard}>
