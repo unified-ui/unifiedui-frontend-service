@@ -19,8 +19,16 @@ export const Header: FC = () => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (userAccountRef.current && !userAccountRef.current.contains(event.target as Node)) {
-        setUserDropdownOpened(false);
+      const target = event.target as Node;
+      
+      // Check if click is outside userAccountRef
+      if (userAccountRef.current && !userAccountRef.current.contains(target)) {
+        // Check if click is on a Mantine portal element (dropdown, select options, etc.)
+        const isPortalElement = (target as Element).closest?.('[data-portal]');
+        
+        if (!isPortalElement) {
+          setUserDropdownOpened(false);
+        }
       }
     };
 
@@ -43,10 +51,14 @@ export const Header: FC = () => {
     : [{ value: '', label: 'Keine Tenants verfügbar' }];
 
   const handleTenantChange = (value: string | null) => {
+    console.log('handleTenantChange called with:', value);
     if (value && value !== '') {
+      console.log('Calling selectTenant with:', value);
       selectTenant(value);
     }
   };
+
+  console.log('Header render - selectedTenant:', selectedTenant?.id, 'tenantOptions:', tenantOptions);
 
   return (
     <header className={classes.header}>
@@ -98,7 +110,13 @@ export const Header: FC = () => {
           </Group>
 
           {userDropdownOpened && (
-            <Paper className={classes.userDropdown} shadow="md" radius="md" p="md">
+            <Paper 
+              className={classes.userDropdown} 
+              shadow="md" 
+              radius="md" 
+              p="md"
+              onClick={(e) => e.stopPropagation()}
+            >
               <Stack gap="md">
                 {/* User Info */}
                 <Stack gap={4}>
@@ -114,11 +132,15 @@ export const Header: FC = () => {
                   <Select
                     data={tenantOptions}
                     value={selectedTenant?.id || null}
-                    onChange={handleTenantChange}
+                    onChange={(value) => {
+                      console.log('Select onChange triggered with:', value);
+                      handleTenantChange(value);
+                    }}
                     searchable
                     size="xs"
                     placeholder="Tenant auswählen"
                     disabled={tenants.length === 0}
+                    onClick={() => console.log('Select clicked')}
                   />
                 </Stack>
 
