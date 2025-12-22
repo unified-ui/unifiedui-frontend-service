@@ -32,7 +32,6 @@ Before working on this project, **read these instruction files**:
 
 1. **[REACT_STRUCTURE.md](./REACT_STRUCTURE.md)** - Complete project structure and folder organization
 2. **[DESIGN_THEMES.md](./DESIGN_THEMES.md)** - Design system, color palettes, typography, spacing
-3. **[PAGES.md](./PAGES.md)** - Detailed page specifications and component structure
 
 ---
 

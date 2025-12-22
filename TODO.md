@@ -11,6 +11,11 @@
     - hier noch mehr content u.a. kurze projektbeschreiung
     - geiles background mit animation bezogen auf ai und bewegt sich
 
+**Design**
+- Wenn man in Application reingeht -> direkt chat öffnen
+- Wenn man in Conversations reingeht -> direkt in chat öffnen
+- Chat hat oben einen header
+    - dort kann man in DropDown feld auch die Application Wechseln (dann automatisch neuer Chat)
 
 **Frontend Entwicklung**
 

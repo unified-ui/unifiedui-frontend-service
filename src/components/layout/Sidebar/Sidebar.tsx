@@ -4,6 +4,7 @@ import {
   IconHome, IconHomeFilled,
   IconRobot,
   IconMessages, IconMessageFilled,
+  IconBrain,
   IconKey, IconKeyFilled,
   IconCode,
   IconSettings, IconSettingsFilled 
@@ -22,6 +23,7 @@ const mainNavItems: NavItem[] = [
   { icon: IconHome, iconFilled: IconHomeFilled, label: 'Home', path: '/dashboard' },
   { icon: IconRobot, label: 'Applications', path: '/applications' },
   { icon: IconMessages, iconFilled: IconMessageFilled, label: 'Conversations', path: '/conversations' },
+  { icon: IconBrain, label: 'Autonomous\nAgents', path: '/autonomous-agents' },
   { icon: IconKey, iconFilled: IconKeyFilled, label: 'Credentials', path: '/credentials' },
   { icon: IconCode, label: 'Development', path: '/development' },
 ];
