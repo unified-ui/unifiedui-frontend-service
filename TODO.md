@@ -1,5 +1,4 @@
-
-**TODOs:**
+## Done
 1. Design Themes vorbereiten
 2. copilot-instructions:
     - projektbeschreibung hinzufügen
@@ -10,6 +9,21 @@
 3. LoginPage erweiter
     - hier noch mehr content u.a. kurze projektbeschreiung
     - geiles background mit animation bezogen auf ai und bewegt sich
+
+## TODOs
+
+- Login-Logik
+    - copilot soll unified-ui-core-api-client initialisieren (mit allen routes)
+    - wenn user (/me) keine tenants hat, tenant erstellen und erneut /me aufrufen
+    - dann user objekt überall verfügbar sein
+    - dann soll user dropdown die tenants und der aktive tenant angezeigt werden
+        - lokal soll gespeichert sein, welcher tenant ausgewählt ist
+    - selected tenant objekt muss auch überall verfügbar sein
+    - ApplicationsPage designen
+        - applications fetchen und anzeigen
+            - mit search, pagination, create
+        - ApplicationsDetailPage
+        -
 
 **Design**
 - Wenn man in Application reingeht -> direkt chat öffnen

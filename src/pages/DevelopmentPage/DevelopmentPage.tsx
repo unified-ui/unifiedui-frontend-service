@@ -1,14 +1,17 @@
 import type { FC } from 'react';
-import { Title, Text, Stack } from '@mantine/core';
 import { MainLayout } from '../../components/layout/MainLayout';
+import classes from './DevelopmentPage.module.css';
 
 export const DevelopmentPage: FC = () => {
   return (
     <MainLayout>
-      <Stack gap="lg">
-        <Title order={1}>Development</Title>
-        <Text>Development Page - Coming Soon</Text>
-      </Stack>
+      <div className={classes.container}>
+        <iframe 
+          src="http://localhost:5678/home/workflows"
+          className={classes.iframe}
+          title="Development Environment"
+        />
+      </div>
     </MainLayout>
   );
 };
