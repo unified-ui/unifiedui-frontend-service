@@ -10,8 +10,6 @@
     - hier noch mehr content u.a. kurze projektbeschreiung
     - geiles background mit animation bezogen auf ai und bewegt sich
 
-## TODOs
-
 - Login-Logik
     - copilot soll unified-ui-core-api-client initialisieren (mit allen routes)
     - wenn user (/me) keine tenants hat, tenant erstellen und erneut /me aufrufen
@@ -19,6 +17,9 @@
     - dann soll user dropdown die tenants und der aktive tenant angezeigt werden
         - lokal soll gespeichert sein, welcher tenant ausgewählt ist
     - selected tenant objekt muss auch überall verfügbar sein
+## TODOs
+
+- Login-Logik
     - ApplicationsPage designen
         - applications fetchen und anzeigen
             - mit search, pagination, create

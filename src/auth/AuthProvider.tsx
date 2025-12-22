@@ -5,6 +5,7 @@ import type { AccountInfo } from '@azure/msal-browser';
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  isLoading: boolean;
   account: AccountInfo | null;
   login: () => Promise<void>;
   logout: () => Promise<void>;
@@ -26,8 +27,9 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const { instance, accounts } = useMsal();
+  const { instance, accounts, inProgress } = useMsal();
   const isAuthenticated = useIsAuthenticated();
+  const isLoading = inProgress !== 'none';
 
   const login = async () => {
     try {
@@ -65,6 +67,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const value: AuthContextType = {
+    isLoading,
     isAuthenticated,
     account: accounts[0] || null,
     login,
