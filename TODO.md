@@ -23,13 +23,23 @@
     - wenn man mehr als 0,3s über einem Item mit List hovert, soll neben sidebar ein fester wie bei PowerBI Workspace aufgehen mit Search und Liste, sodass man super schnell, ohne wechseln der seite, seine App, Agent, Credential oder sonst was auswählen kann
     - das als component implementieren, in welche man liste mitgibt und OnSearch action und OnSelect action...
     - BE: wenn Search filter -> search nicht cachen! das wäre zu viel! Also wenn Search Query param gegeben ist, soll nicht gecacht werden
-    - bei applications, credentials, autonom agents etc etc gehen wir davon aus, dass es keine mehrere tausend einträge sind, daher: EINMAL mit top 999 fetchen; dann im Frontend filtern!
+    - bei applications, credentials, autonom agents, development gehen wir davon aus, dass es keine mehrere tausend einträge sind, daher: EINMAL mit top 999 fetchen; dann im Frontend filtern!
+    - Component:
+        - Header titel + icon
+        - SearchBar
+        - Liste
+        - Create Button
+            - Create Dialog
+                - inkl. IAM
 - CredentialsPage designen
 - ApplicationsPage designen
     - applications fetchen und anzeigen
         - mit search, pagination, create
     - ApplicationsDetailPage
-    -
+- ConversationsPage
+    - hier direkt in einen Chat rein
+        - oben im Chat -> Applications DropDown
+
 
 **Design**
 - Wenn man in Application reingeht -> direkt chat öffnen
