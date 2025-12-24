@@ -12,6 +12,11 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIdentity } from '../../../contexts';
 import { SidebarDataList, type DataListItem } from './SidebarDataList';
+import {
+  CreateApplicationDialog,
+  CreateAutonomousAgentDialog,
+  CreateCredentialDialog,
+} from '../../dialogs';
 import type { ApplicationResponse, AutonomousAgentResponse, CredentialResponse } from '../../../api/types';
 import classes from './Sidebar.module.css';
 
@@ -82,6 +87,11 @@ export const Sidebar: FC = () => {
   // Timeout refs for hover delay
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Dialog states
+  const [isApplicationDialogOpen, setIsApplicationDialogOpen] = useState(false);
+  const [isAutonomousAgentDialogOpen, setIsAutonomousAgentDialogOpen] = useState(false);
+  const [isCredentialDialogOpen, setIsCredentialDialogOpen] = useState(false);
 
   // Fetch data functions
   const fetchApplications = useCallback(async () => {
@@ -281,6 +291,39 @@ export const Sidebar: FC = () => {
     setIsDataListExpanded(prev => !prev);
   }, []);
 
+  // Handle add button click for each entity type
+  const handleAddClick = useCallback(() => {
+    if (!activeEntity) return;
+    
+    switch (activeEntity) {
+      case 'applications':
+        setIsApplicationDialogOpen(true);
+        break;
+      case 'autonomous-agents':
+        setIsAutonomousAgentDialogOpen(true);
+        break;
+      case 'credentials':
+        setIsCredentialDialogOpen(true);
+        break;
+      case 'development':
+        // No dialog for development yet
+        break;
+    }
+  }, [activeEntity]);
+
+  // Handle successful creation - refresh the data list
+  const handleApplicationCreated = useCallback(() => {
+    fetchApplications();
+  }, [fetchApplications]);
+
+  const handleAutonomousAgentCreated = useCallback(() => {
+    fetchAutonomousAgents();
+  }, [fetchAutonomousAgents]);
+
+  const handleCredentialCreated = useCallback(() => {
+    fetchCredentials();
+  }, [fetchCredentials]);
+
   // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
@@ -324,6 +367,9 @@ export const Sidebar: FC = () => {
   // Get active entity config
   const activeConfig = activeEntity ? entityConfigs[activeEntity] : null;
 
+  // Check if add button should be enabled for current entity
+  const isAddEnabled = activeEntity !== 'development';
+
   return (
     <>
       <aside className={classes.sidebar}>
@@ -350,9 +396,26 @@ export const Sidebar: FC = () => {
           onMouseEnter={handleDataListHoverEnter}
           onMouseLeave={handleDataListHoverLeave}
           addButtonLabel={activeConfig.addButtonLabel}
-          onAdd={undefined} // Will be implemented later
+          onAdd={isAddEnabled ? handleAddClick : undefined}
         />
       )}
+
+      {/* Create Dialogs */}
+      <CreateApplicationDialog
+        opened={isApplicationDialogOpen}
+        onClose={() => setIsApplicationDialogOpen(false)}
+        onSuccess={handleApplicationCreated}
+      />
+      <CreateAutonomousAgentDialog
+        opened={isAutonomousAgentDialogOpen}
+        onClose={() => setIsAutonomousAgentDialogOpen(false)}
+        onSuccess={handleAutonomousAgentCreated}
+      />
+      <CreateCredentialDialog
+        opened={isCredentialDialogOpen}
+        onClose={() => setIsCredentialDialogOpen(false)}
+        onSuccess={handleCredentialCreated}
+      />
     </>
   );
 };

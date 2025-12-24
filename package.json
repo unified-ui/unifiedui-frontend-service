@@ -13,6 +13,7 @@
     "@azure/msal-browser": "^4.27.0",
     "@azure/msal-react": "^3.0.23",
     "@mantine/core": "^8.3.10",
+    "@mantine/form": "^8.3.10",
     "@mantine/hooks": "^8.3.10",
     "@mantine/notifications": "^8.3.10",
     "@tabler/icons-react": "^3.36.0",
