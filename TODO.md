@@ -17,9 +17,6 @@
     - dann soll user dropdown die tenants und der aktive tenant angezeigt werden
         - lokal soll gespeichert sein, welcher tenant ausgewählt ist
     - selected tenant objekt muss auch überall verfügbar sein
-## TODOs
-
----
 Entwerfe eine Component in layout/sidebar.
 Nenne dieses Component SidebarDataList.
 
@@ -54,7 +51,7 @@ wenn der benutzer auf das X Klickt, soll das component geschlossen werden
 - info: das component soll natürlich rechts neben der sidebar und "über" dem maincontent zusehen sein und nichts verschieben
 
 Ziel ist es, bei diesen Entitäten es zu ermöglichen, dem benutzer ohne die seite zu wechseln, eine liste bekommt und schnell wechseln, aber auch nicht wechseln kann
----
+
 
 - SideBar Hover
     - wenn man mehr als 0,3s über einem Item mit List hovert, soll neben sidebar ein fester wie bei PowerBI Workspace aufgehen mit Search und Liste, sodass man super schnell, ohne wechseln der seite, seine App, Agent, Credential oder sonst was auswählen kann
@@ -72,8 +69,35 @@ Ziel ist es, bei diesen Entitäten es zu ermöglichen, dem benutzer ohne die sei
 - loading icon flash
 - tenant hinzufügen
     - im user dropdwon> tenant dropdown
+## TODOs
 
-- CredentialsPage designen
+- Standard Page designen
+    - bei n8n inspirieren lassen
+    - Filter
+        - Search
+        - Sort DropDown
+            - last updated
+            - created
+            - Sort by Name A-Z
+            - Sort by Name Z-A
+        - FilterIcon DropDown
+            - Tags
+                - multi tag filter select
+            - status
+
+- Backend:
+    - development-platforms als Entity und Routes hinzufügen
+    - Felder einführen:
+        - status (is active)
+        - tags
+    - order_by als query param überall mitgeben
+- im FE implementieren
+    - tags
+    - default status: disabled ()
+
+- Standard Pages implementieren
+    - ApplicationsPage
+    - CredentialsPage designen
 - ApplicationsPage designen
     - applications fetchen und anzeigen
         - mit search, pagination, create
@@ -81,6 +105,11 @@ Ziel ist es, bei diesen Entitäten es zu ermöglichen, dem benutzer ohne die sei
 - ConversationsPage
     - hier direkt in einen Chat rein
         - oben im Chat -> Applications DropDown
+- SettingsPage
+    - tenant settings
+    - IAM
+    - Custom Groups
+    - => über **TabNavigation** oder SideBar?
 
 
 **Design**
