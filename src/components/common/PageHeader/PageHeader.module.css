@@ -1,5 +1,11 @@
 .header {
-  margin-bottom: var(--spacing-lg);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background-color: var(--bg-app);
+  padding: var(--spacing-lg) 0;
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .title {
