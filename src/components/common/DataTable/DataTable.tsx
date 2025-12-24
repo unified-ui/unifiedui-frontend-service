@@ -159,7 +159,7 @@ export const DataTable: FC<DataTableProps> = ({
   }
 
   return (
-    <Stack gap="md">
+    <div className={classes.wrapper}>
       <DataTableToolbar
         searchPlaceholder={searchPlaceholder}
         searchValue={searchValue}
@@ -172,30 +172,32 @@ export const DataTable: FC<DataTableProps> = ({
         showFilter={true}
       />
 
-      <Stack gap="xs" className={classes.tableBody}>
-        {paginatedItems.length === 0 ? (
-          <Center py="xl">
-            <Stack align="center" gap="sm">
-              <IconInbox size={48} stroke={1} className={classes.emptyIcon} />
-              <Text c="dimmed">{emptyMessage}</Text>
-            </Stack>
-          </Center>
-        ) : (
-          paginatedItems.map((item) => (
-            <DataTableRow
-              key={item.id}
-              item={item}
-              showStatus={showStatus}
-              onStatusChange={onStatusChange}
-              onOpen={onOpen}
-              onShare={onShare}
-              onDuplicate={onDuplicate}
-              onDelete={onDelete}
-              icon={renderIcon?.(item)}
-            />
-          ))
-        )}
-      </Stack>
+      <div className={classes.scrollArea}>
+        <Stack gap="xs" className={classes.tableBody}>
+          {paginatedItems.length === 0 ? (
+            <Center py="xl">
+              <Stack align="center" gap="sm">
+                <IconInbox size={48} stroke={1} className={classes.emptyIcon} />
+                <Text c="dimmed">{emptyMessage}</Text>
+              </Stack>
+            </Center>
+          ) : (
+            paginatedItems.map((item) => (
+              <DataTableRow
+                key={item.id}
+                item={item}
+                showStatus={showStatus}
+                onStatusChange={onStatusChange}
+                onOpen={onOpen}
+                onShare={onShare}
+                onDuplicate={onDuplicate}
+                onDelete={onDelete}
+                icon={renderIcon?.(item)}
+              />
+            ))
+          )}
+        </Stack>
+      </div>
 
       {processedItems.length > 0 && (
         <DataTablePagination
@@ -206,6 +208,6 @@ export const DataTable: FC<DataTableProps> = ({
           onPageSizeChange={handlePageSizeChange}
         />
       )}
-    </Stack>
+    </div>
   );
 };

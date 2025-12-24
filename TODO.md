@@ -138,6 +138,7 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
     - wenn einmal gefetcht, nicht nochmal fetchen (erst nach Create)
     - aber ein Refresh-Button rechts neben Search
 
+- Divider zwischen credential und chat-widgets/dev-platform
 ## TODOs
 
 - Development-Platform
@@ -147,8 +148,6 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
 - Chat-Widgets
     - Page hinzufügen (comming soon)
     - SidebarItem hinzufügen
-
-- Divider zwischen credential und chat-widgets/dev-platform
 
 - Paginierung raus und dafür Doom-Scroll bis liste leer ist
 - Search implementieren (soll wirklich gegen API search gehen)

@@ -11,8 +11,10 @@
   margin-top: 70px; /* Header height */
   margin-left: 100px; /* Sidebar width */
   height: calc(100vh - 70px); /* Fixed height */
-  overflow-y: auto; /* Only content scrolls */
+  overflow: hidden; /* Children handle their own scroll */
   padding: var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Mobile responsive */
