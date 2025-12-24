@@ -210,6 +210,7 @@ export const TagInput: FC<TagInputProps> = ({
             className={classes.dropdown} 
             shadow="md" 
             withBorder
+            p={4}
             style={{
               top: dropdownPosition.top,
               left: dropdownPosition.left,

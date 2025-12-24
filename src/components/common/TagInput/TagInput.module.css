@@ -120,7 +120,11 @@
 }
 
 .input::placeholder {
-  color: var(--text-secondary);
+  color: #868e96;
+}
+
+[data-mantine-color-scheme="dark"] .input::placeholder {
+  color: #5c5f66;
 }
 
 .input:disabled {
