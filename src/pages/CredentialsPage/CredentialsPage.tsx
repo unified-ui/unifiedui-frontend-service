@@ -6,11 +6,12 @@ import { MainLayout } from '../../components/layout/MainLayout';
 import { PageContainer, PageHeader, DataTable, ConfirmDeleteDialog } from '../../components/common';
 import type { DataTableItem } from '../../components/common';
 import { CreateCredentialDialog } from '../../components/dialogs';
-import { useIdentity } from '../../contexts';
+import { useIdentity, useSidebarData } from '../../contexts';
 
 export const CredentialsPage: FC = () => {
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
+  const { refreshCredentials } = useSidebarData();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
   const [isDeleting, setIsDeleting] = useState(false);
@@ -74,16 +75,18 @@ export const CredentialsPage: FC = () => {
       await apiClient.deleteCredential(selectedTenant.id, deleteDialog.id);
       setDeleteDialog({ open: false, id: '', name: '' });
       fetchCredentials();
+      refreshCredentials(); // Update sidebar cache
     } catch (err) {
       console.error('Error deleting credential:', err);
     } finally {
       setIsDeleting(false);
     }
-  }, [apiClient, selectedTenant, deleteDialog.id, fetchCredentials]);
+  }, [apiClient, selectedTenant, deleteDialog.id, fetchCredentials, refreshCredentials]);
 
   const handleCreateSuccess = useCallback(() => {
     fetchCredentials();
-  }, [fetchCredentials]);
+    refreshCredentials(); // Update sidebar cache
+  }, [fetchCredentials, refreshCredentials]);
 
   const renderIcon = useCallback(() => (
     <IconKey size={20} />

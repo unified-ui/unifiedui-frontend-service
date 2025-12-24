@@ -6,11 +6,12 @@ import { MainLayout } from '../../components/layout/MainLayout';
 import { PageContainer, PageHeader, DataTable, ConfirmDeleteDialog } from '../../components/common';
 import type { DataTableItem } from '../../components/common';
 import { CreateAutonomousAgentDialog } from '../../components/dialogs';
-import { useIdentity } from '../../contexts';
+import { useIdentity, useSidebarData } from '../../contexts';
 
 export const AutonomousAgentsPage: FC = () => {
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
+  const { refreshAutonomousAgents } = useSidebarData();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
   const [isDeleting, setIsDeleting] = useState(false);
@@ -74,16 +75,18 @@ export const AutonomousAgentsPage: FC = () => {
       await apiClient.deleteAutonomousAgent(selectedTenant.id, deleteDialog.id);
       setDeleteDialog({ open: false, id: '', name: '' });
       fetchAutonomousAgents();
+      refreshAutonomousAgents(); // Update sidebar cache
     } catch (err) {
       console.error('Error deleting autonomous agent:', err);
     } finally {
       setIsDeleting(false);
     }
-  }, [apiClient, selectedTenant, deleteDialog.id, fetchAutonomousAgents]);
+  }, [apiClient, selectedTenant, deleteDialog.id, fetchAutonomousAgents, refreshAutonomousAgents]);
 
   const handleCreateSuccess = useCallback(() => {
     fetchAutonomousAgents();
-  }, [fetchAutonomousAgents]);
+    refreshAutonomousAgents(); // Update sidebar cache
+  }, [fetchAutonomousAgents, refreshAutonomousAgents]);
 
   const renderIcon = useCallback(() => (
     <IconRobot size={20} />

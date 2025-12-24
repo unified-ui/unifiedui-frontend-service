@@ -6,11 +6,12 @@ import { MainLayout } from '../../components/layout/MainLayout';
 import { PageContainer, PageHeader, DataTable, ConfirmDeleteDialog } from '../../components/common';
 import type { DataTableItem } from '../../components/common';
 import { CreateApplicationDialog } from '../../components/dialogs';
-import { useIdentity } from '../../contexts';
+import { useIdentity, useSidebarData } from '../../contexts';
 
 export const ApplicationsPage: FC = () => {
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
+  const { refreshApplications } = useSidebarData();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
   const [isDeleting, setIsDeleting] = useState(false);
@@ -74,16 +75,18 @@ export const ApplicationsPage: FC = () => {
       await apiClient.deleteApplication(selectedTenant.id, deleteDialog.id);
       setDeleteDialog({ open: false, id: '', name: '' });
       fetchApplications();
+      refreshApplications(); // Update sidebar cache
     } catch (err) {
       console.error('Error deleting application:', err);
     } finally {
       setIsDeleting(false);
     }
-  }, [apiClient, selectedTenant, deleteDialog.id, fetchApplications]);
+  }, [apiClient, selectedTenant, deleteDialog.id, fetchApplications, refreshApplications]);
 
   const handleCreateSuccess = useCallback(() => {
     fetchApplications();
-  }, [fetchApplications]);
+    refreshApplications(); // Update sidebar cache
+  }, [fetchApplications, refreshApplications]);
 
   const renderIcon = useCallback(() => (
     <IconSparkles size={20} />
