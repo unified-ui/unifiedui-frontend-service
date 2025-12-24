@@ -9,7 +9,7 @@ import {
   Text,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconRobot } from '@tabler/icons-react';
+import { IconSparkles } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
 
 interface CreateApplicationDialogProps {
@@ -85,8 +85,8 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
       onClose={handleClose}
       title={
         <Group gap="sm">
-          <IconRobot size={24} />
-          <Text fw={600} size="lg">Application erstellen</Text>
+          <IconSparkles size={24} />
+          <Text fw={600} size="lg">Chat Agent erstellen</Text>
         </Group>
       }
       size="md"
@@ -100,6 +100,7 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
             required
             withAsterisk
             maxLength={255}
+            data-autofocus
             {...form.getInputProps('name')}
           />
 

@@ -130,6 +130,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
             required
             withAsterisk
             maxLength={255}
+            data-autofocus
             {...form.getInputProps('name')}
           />
 

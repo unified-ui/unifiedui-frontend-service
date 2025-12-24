@@ -3,8 +3,8 @@ import { Stack, UnstyledButton, Text, Tooltip } from '@mantine/core';
 import { 
   IconHome, IconHomeFilled,
   IconRobot,
-  IconMessages, IconMessageFilled, IconSparkles,
-  IconBrain,
+  IconMessages, IconMessageFilled,
+  IconSparkles,
   IconKey, IconKeyFilled,
   IconCode,
   IconSettings, IconSettingsFilled 
@@ -139,15 +139,15 @@ export const Sidebar: FC = () => {
   // Entity configurations
   const entityConfigs: Record<EntityType, EntityConfig> = useMemo(() => ({
     applications: {
-      title: 'Applications',
-      icon: <IconRobot size={24} />,
-      addButtonLabel: 'Add Application',
+      title: 'Chat Agents',
+      icon: <IconSparkles size={24} />,
+      addButtonLabel: 'Add Chat Agent',
       fetchData: fetchApplications,
       getLink: (id) => `/applications/${id}`,
     },
     'autonomous-agents': {
       title: 'Autonomous Agents',
-      icon: <IconBrain size={24} />,
+      icon: <IconRobot size={24} />,
       addButtonLabel: 'Add Autonomous Agent',
       fetchData: fetchAutonomousAgents,
       getLink: (id) => `/autonomous-agents/${id}`,
@@ -178,14 +178,14 @@ export const Sidebar: FC = () => {
           id: app.id,
           name: app.name,
           link: entityConfigs.applications.getLink(app.id),
-          icon: <IconRobot size={16} />,
+          icon: <IconSparkles size={16} />,
         }));
       case 'autonomous-agents':
         return autonomousAgents.map(agent => ({
           id: agent.id,
           name: agent.name,
           link: entityConfigs['autonomous-agents'].getLink(agent.id),
-          icon: <IconBrain size={16} />,
+          icon: <IconRobot size={16} />,
         }));
       case 'credentials':
         return credentials.map(cred => ({

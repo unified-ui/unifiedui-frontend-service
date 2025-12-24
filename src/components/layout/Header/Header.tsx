@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Group, TextInput, Indicator, ActionIcon, Avatar, Text, useMantineColorScheme, Stack, Paper, Button, Divider, Select, UnstyledButton } from '@mantine/core';
+import { Group, TextInput, Indicator, ActionIcon, Avatar, Text, Title, useMantineColorScheme, Stack, Paper, Button, Divider, Select, UnstyledButton } from '@mantine/core';
 import { IconSearch, IconBell, IconBrain, IconSun, IconMoon, IconLogout, IconExternalLink, IconPlus } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
 import { useIdentity } from '../../../contexts';
@@ -65,9 +65,9 @@ export const Header: FC = () => {
         <div className={classes.logoWrapper}>
           <IconBrain size={22} stroke={2} />
         </div>
-        <Text size="xl" fw={700} className={classes.logoText}>
+        <Title order={2} className={classes.logoText}>
           unified-ui
-        </Text>
+        </Title>
       </Group>
 
       {/* Center: Search Bar */}

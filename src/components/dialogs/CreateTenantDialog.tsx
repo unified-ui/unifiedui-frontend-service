@@ -102,6 +102,7 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
             required
             withAsterisk
             maxLength={255}
+            data-autofocus
             {...form.getInputProps('name')}
           />
 

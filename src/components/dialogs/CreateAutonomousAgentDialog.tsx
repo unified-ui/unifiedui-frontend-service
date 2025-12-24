@@ -9,7 +9,7 @@ import {
   Text,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconBrain } from '@tabler/icons-react';
+import { IconRobot } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
 
 interface CreateAutonomousAgentDialogProps {
@@ -85,7 +85,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
       onClose={handleClose}
       title={
         <Group gap="sm">
-          <IconBrain size={24} />
+          <IconRobot size={24} />
           <Text fw={600} size="lg">Autonomous Agent erstellen</Text>
         </Group>
       }
@@ -100,6 +100,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
             required
             withAsterisk
             maxLength={255}
+            data-autofocus
             {...form.getInputProps('name')}
           />
 
