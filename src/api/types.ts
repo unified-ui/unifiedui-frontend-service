@@ -12,6 +12,10 @@ export const TenantPermissionEnum = {
   CREDENTIALS_CREATOR: 'CREDENTIALS_CREATOR',
   CUSTOM_GROUP_CREATOR: 'CUSTOM_GROUP_CREATOR',
   CUSTOM_GROUPS_ADMIN: 'CUSTOM_GROUPS_ADMIN',
+  DEVELOPMENT_PLATFORMS_ADMIN: 'DEVELOPMENT_PLATFORMS_ADMIN',
+  DEVELOPMENT_PLATFORMS_CREATOR: 'DEVELOPMENT_PLATFORMS_CREATOR',
+  CHAT_WIDGETS_ADMIN: 'CHAT_WIDGETS_ADMIN',
+  CHAT_WIDGETS_CREATOR: 'CHAT_WIDGETS_CREATOR',
 } as const;
 
 export type TenantPermissionEnum = typeof TenantPermissionEnum[keyof typeof TenantPermissionEnum];
@@ -31,6 +35,66 @@ export const PrincipalTypeEnum = {
 } as const;
 
 export type PrincipalTypeEnum = typeof PrincipalTypeEnum[keyof typeof PrincipalTypeEnum];
+
+export const ApplicationTypeEnum = {
+  N8N: 'N8N',
+  MICROSOFT_FOUNDRY: 'MICROSOFT_FOUNDRY',
+  REST_API: 'REST_API',
+} as const;
+
+export type ApplicationTypeEnum = typeof ApplicationTypeEnum[keyof typeof ApplicationTypeEnum];
+
+export const ChatWidgetTypeEnum = {
+  IFRAME: 'IFRAME',
+  FORM: 'FORM',
+} as const;
+
+export type ChatWidgetTypeEnum = typeof ChatWidgetTypeEnum[keyof typeof ChatWidgetTypeEnum];
+
+export const FavoriteResourceTypeEnum = {
+  APPLICATION: 'application',
+  AUTONOMOUS_AGENT: 'autonomous_agent',
+  CONVERSATION: 'conversation',
+  DEVELOPMENT_PLATFORM: 'development_platform',
+} as const;
+
+export type FavoriteResourceTypeEnum = typeof FavoriteResourceTypeEnum[keyof typeof FavoriteResourceTypeEnum];
+
+// ========== Tag Types ==========
+
+export interface TagSummary {
+  id: number;
+  name: string;
+}
+
+export interface TagResponse {
+  id: number;
+  tenant_id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+export interface TagListResponse {
+  tags: TagResponse[];
+  total: number;
+}
+
+export interface ResourceTagsResponse {
+  resource_id: string;
+  resource_type: string;
+  tags: TagSummary[];
+}
+
+export interface CreateTagRequest {
+  name: string;
+}
+
+export interface SetResourceTagsRequest {
+  tags: string[];
+}
 
 // ========== Identity Types ==========
 
@@ -101,7 +165,8 @@ export interface TenantResponse {
   description?: string;
   created_at: string;
   updated_at: string;
-  created_by: string;
+  created_by?: string;
+  updated_by?: string;
 }
 
 export interface CreateTenantRequest {
@@ -145,48 +210,58 @@ export interface ApplicationResponse {
   tenant_id: string;
   name: string;
   description?: string;
+  type: ApplicationTypeEnum;
+  config: Record<string, unknown>;
+  is_active: boolean;
+  tags: TagSummary[];
   created_at: string;
   updated_at: string;
-  created_by: string;
+  created_by?: string;
+  updated_by?: string;
 }
 
 export interface CreateApplicationRequest {
   name: string;
   description?: string;
+  type: ApplicationTypeEnum;
+  config?: Record<string, unknown>;
+  is_active?: boolean;
 }
 
 export interface UpdateApplicationRequest {
   name?: string;
   description?: string;
+  type?: ApplicationTypeEnum;
+  config?: Record<string, unknown>;
+  is_active?: boolean;
 }
 
 export interface SetApplicationPermissionRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
-  permission: PermissionActionEnum;
+  role: PermissionActionEnum;
 }
 
 export interface ApplicationPermissionResponse {
+  id: string;
   application_id: string;
+  tenant_id: string;
   principal_id: string;
   principal_type: PrincipalTypeEnum;
-  permission: PermissionActionEnum;
+  role: PermissionActionEnum;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PrincipalPermissionsResponse {
+  principal_id: string;
+  principal_type: PrincipalTypeEnum;
+  permissions: ApplicationPermissionResponse[];
 }
 
 export interface ApplicationPrincipalsResponse {
   application_id: string;
   principals: PrincipalPermissionsResponse[];
-}
-
-export interface PrincipalPermissionsResponse {
-  application_id?: string;
-  autonomous_agent_id?: string;
-  conversation_id?: string;
-  credential_id?: string;
-  custom_group_id?: string;
-  principal_id: string;
-  principal_type: PrincipalTypeEnum;
-  permissions: ApplicationPermissionResponse[];
 }
 
 // ========== Autonomous Agent Types ==========
@@ -196,32 +271,44 @@ export interface AutonomousAgentResponse {
   tenant_id: string;
   name: string;
   description?: string;
+  config: Record<string, unknown>;
+  is_active: boolean;
+  tags: TagSummary[];
   created_at: string;
   updated_at: string;
-  created_by: string;
+  created_by?: string;
+  updated_by?: string;
 }
 
 export interface CreateAutonomousAgentRequest {
   name: string;
   description?: string;
+  config?: Record<string, unknown>;
+  is_active?: boolean;
 }
 
 export interface UpdateAutonomousAgentRequest {
   name?: string;
   description?: string;
+  config?: Record<string, unknown>;
+  is_active?: boolean;
 }
 
 export interface SetAutonomousAgentPermissionRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
-  permission: PermissionActionEnum;
+  role: PermissionActionEnum;
 }
 
 export interface AutonomousAgentPermissionResponse {
+  id: string;
   autonomous_agent_id: string;
+  tenant_id: string;
   principal_id: string;
   principal_type: PrincipalTypeEnum;
-  permission: PermissionActionEnum;
+  role: PermissionActionEnum;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface AutonomousAgentPrincipalsResponse {
@@ -236,32 +323,40 @@ export interface ConversationResponse {
   tenant_id: string;
   name: string;
   description?: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
-  created_by: string;
+  created_by?: string;
+  updated_by?: string;
 }
 
 export interface CreateConversationRequest {
   name: string;
   description?: string;
+  is_active?: boolean;
 }
 
 export interface UpdateConversationRequest {
   name?: string;
   description?: string;
+  is_active?: boolean;
 }
 
 export interface SetConversationPermissionRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
-  permission: PermissionActionEnum;
+  role: PermissionActionEnum;
 }
 
 export interface ConversationPermissionResponse {
+  id: string;
   conversation_id: string;
+  tenant_id: string;
   principal_id: string;
   principal_type: PrincipalTypeEnum;
-  permission: PermissionActionEnum;
+  role: PermissionActionEnum;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ConversationPrincipalsResponse {
@@ -276,10 +371,15 @@ export interface CredentialResponse {
   tenant_id: string;
   name: string;
   description?: string;
-  credential_type: string;
+  type: string;
+  source: string;
+  credential_uri: string;
+  is_active: boolean;
+  tags: TagSummary[];
   created_at: string;
   updated_at: string;
-  created_by: string;
+  created_by?: string;
+  updated_by?: string;
 }
 
 export interface CreateCredentialRequest {
@@ -287,29 +387,152 @@ export interface CreateCredentialRequest {
   description?: string;
   credential_type: string;
   secret_value: string;
+  source?: string;
+  metadata?: Record<string, unknown>;
+  is_active?: boolean;
 }
 
 export interface UpdateCredentialRequest {
   name?: string;
   description?: string;
   secret_value?: string;
+  source?: string;
+  metadata?: Record<string, unknown>;
+  is_active?: boolean;
 }
 
 export interface SetCredentialPermissionRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
-  permission: PermissionActionEnum;
+  role: PermissionActionEnum;
 }
 
 export interface CredentialPermissionResponse {
+  id: string;
   credential_id: string;
+  tenant_id: string;
   principal_id: string;
   principal_type: PrincipalTypeEnum;
-  permission: PermissionActionEnum;
+  role: PermissionActionEnum;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CredentialPrincipalsResponse {
   credential_id: string;
+  principals: PrincipalPermissionsResponse[];
+}
+
+// ========== Development Platform Types ==========
+
+export interface DevelopmentPlatformResponse {
+  id: string;
+  tenant_id: string;
+  name: string;
+  description?: string;
+  type?: string;
+  iframe_url: string;
+  config: Record<string, unknown>;
+  is_active: boolean;
+  tags: TagSummary[];
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+export interface CreateDevelopmentPlatformRequest {
+  name: string;
+  description?: string;
+  type?: string;
+  iframe_url: string;
+  config?: Record<string, unknown>;
+  is_active?: boolean;
+}
+
+export interface UpdateDevelopmentPlatformRequest {
+  name?: string;
+  description?: string;
+  type?: string;
+  iframe_url?: string;
+  config?: Record<string, unknown>;
+  is_active?: boolean;
+}
+
+export interface SetDevelopmentPlatformPermissionRequest {
+  principal_id: string;
+  principal_type: PrincipalTypeEnum;
+  role: PermissionActionEnum;
+}
+
+export interface DevelopmentPlatformPermissionResponse {
+  id: string;
+  development_platform_id: string;
+  tenant_id: string;
+  principal_id: string;
+  principal_type: PrincipalTypeEnum;
+  role: PermissionActionEnum;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DevelopmentPlatformPrincipalsResponse {
+  development_platform_id: string;
+  principals: PrincipalPermissionsResponse[];
+}
+
+// ========== Chat Widget Types ==========
+
+export interface ChatWidgetResponse {
+  id: string;
+  tenant_id: string;
+  name: string;
+  description?: string;
+  type?: ChatWidgetTypeEnum;
+  config: Record<string, unknown>;
+  is_active: boolean;
+  tags: TagSummary[];
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+export interface CreateChatWidgetRequest {
+  name: string;
+  description?: string;
+  type?: ChatWidgetTypeEnum;
+  config: Record<string, unknown>;
+  is_active?: boolean;
+}
+
+export interface UpdateChatWidgetRequest {
+  name?: string;
+  description?: string;
+  type?: ChatWidgetTypeEnum;
+  config?: Record<string, unknown>;
+  is_active?: boolean;
+}
+
+export interface SetChatWidgetPermissionRequest {
+  principal_id: string;
+  principal_type: PrincipalTypeEnum;
+  role: PermissionActionEnum;
+}
+
+export interface ChatWidgetPermissionResponse {
+  id: string;
+  chat_widget_id: string;
+  tenant_id: string;
+  principal_id: string;
+  principal_type: PrincipalTypeEnum;
+  role: PermissionActionEnum;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatWidgetPrincipalsResponse {
+  chat_widget_id: string;
   principals: PrincipalPermissionsResponse[];
 }
 
@@ -322,7 +545,8 @@ export interface CustomGroupResponse {
   description?: string;
   created_at: string;
   updated_at: string;
-  created_by: string;
+  created_by?: string;
+  updated_by?: string;
 }
 
 export interface CreateCustomGroupRequest {
@@ -352,6 +576,24 @@ export interface CustomGroupPrincipalsResponse {
   principals: PrincipalPermissionsResponse[];
 }
 
+// ========== User Favorites Types ==========
+
+export interface UserFavoriteResponse {
+  tenant_id: string;
+  user_id: string;
+  resource_id: string;
+  resource_type: string;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+export interface UserFavoritesListResponse {
+  favorites: UserFavoriteResponse[];
+  total: number;
+}
+
 // ========== Health Check Types ==========
 
 export interface HealthCheckResponse {
@@ -371,4 +613,9 @@ export interface SearchParams {
   search?: string;
   top?: number;
   next_link?: string;
+}
+
+export interface OrderParams {
+  order_by?: string;
+  order_direction?: 'asc' | 'desc';
 }

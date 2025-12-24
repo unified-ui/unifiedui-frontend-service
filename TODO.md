@@ -69,7 +69,6 @@ Ziel ist es, bei diesen Entitäten es zu ermöglichen, dem benutzer ohne die sei
 - loading icon flash
 - tenant hinzufügen
     - im user dropdwon> tenant dropdown
-## TODOs
 
 Entwickle modular mehrere Components.
 Diese Komponenten sollen gemeinsam eine Standard Page abbilden, aber auch einzeln einsetzbar sein.
@@ -105,25 +104,38 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
             - Tags
                 - multi tag filter select
             - status
+## TODOs
 
 - Backend:
-    - development-platforms als Entity und Routes hinzufügen
+    - development_platforms als Entity und Routes hinzufügen
         - name, description, type (Freitext, optional), iframe_url
+    - chat_widgets
+        - name, descriptions, type (enum: [iframe, form], required), config (json, required) + metadatenfelder
     - Felder einführen:
-        - status (is active)
+        - status (is_active)
         - tags
+        - checken: ist auth wirklich in routes und nicht in den handlern?
+            - tags -> hier muss man anpassen!
+        - principal_favorites -> auf applications, autonome agents, conversations, development_platforms
+    - search query param überall rein
+        - wenn search-qp -> kein Caching
+    - pagination ordentlich implementieren
+        - default top = 100; max 999
     - Applications:
-        - neues Pflichtfeld: type (enum: N8N, Micosoft Foundry, REST API)
-    - order_by als query param überall mitgeben
+        - neues Pflichtfeld: type (enum: N8N, MICROSOFT_FOUNDRY, REST_API)
+    - order_by als query param überall mitgeben (einfach order_by=created_at&sort=ASC)
         - last updated
         - last created
         - Sort by Name A-Z
         - Sort by Name Z-A
-    - pagination ordentlich implementieren
-        - es soll ein struktur zurückgegeben werden mit total_count=100; count=25; value=[...]
-- im FE implementieren
+
+- Frontend:
     - tags
+        - hier neues Tag-Component
+    - Create-Dialoge updaten
+    - Paginierung raus und dafür Doom-Scroll bis liste leer ist
     - default status: disabled ()
+
 
 - Standard Pages implementieren
     - ApplicationsPage
@@ -134,8 +146,11 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
     - ApplicationsDetailPage
 - SettingsPage
     - tenant settings
+        - name -> rename
+        - Delete Tenant
     - IAM
     - Custom Groups
+    - Billing & Licence
     - => über **TabNavigation** oder SideBar?
 
 - Backend:
