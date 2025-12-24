@@ -159,6 +159,11 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
     - hover -> Hand
     - beim skrollen -> oben sieht man die liste...
 - UserDropdown > Tenants nach A-Z sortieren
+
+
+- Backend:
+    - für die Principals soll noch jeweils der Name gefetcht werden!
+
 - SettingsPage
     - tenant settings
         - name -> rename
@@ -171,9 +176,6 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
     - ApplicationsDetailPage
         - IAM
         - UPDATE
-
-- Backend:
-    - für die Principals soll noch jeweils der Name gefetcht werden!
 
 - AB HIER: CHAT UND INTEGRATION
 - ConversationsPage
