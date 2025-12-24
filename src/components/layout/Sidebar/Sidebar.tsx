@@ -1,5 +1,5 @@
 import { type FC, useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { Stack, UnstyledButton, Text, Tooltip } from '@mantine/core';
+import { Stack, UnstyledButton, Text, Tooltip, Divider } from '@mantine/core';
 import { 
   IconHome, IconHomeFilled,
   IconRobot,
@@ -28,12 +28,15 @@ interface NavItem {
   entityType?: 'applications' | 'autonomous-agents' | 'credentials' | 'development';
 }
 
-const mainNavItems: NavItem[] = [
+const mainNavItemsTop: NavItem[] = [
   { icon: IconHome, iconFilled: IconHomeFilled, label: 'Home', path: '/dashboard' },
   { icon: IconMessages, iconFilled: IconMessageFilled, label: 'Conversations', path: '/conversations' },
   { icon: IconSparkles, label: 'Chat Agents', path: '/applications', hasDataList: true, entityType: 'applications' },
   { icon: IconRobot, label: 'Autonomous\nAgents', path: '/autonomous-agents', hasDataList: true, entityType: 'autonomous-agents' },
   { icon: IconKey, iconFilled: IconKeyFilled, label: 'Credentials', path: '/credentials', hasDataList: true, entityType: 'credentials' },
+];
+
+const mainNavItemsBottom: NavItem[] = [
   { icon: IconCode, label: 'Development', path: '/development', hasDataList: true, entityType: 'development' },
 ];
 
@@ -336,7 +339,9 @@ export const Sidebar: FC = () => {
     <>
       <aside className={classes.sidebar}>
         <Stack gap="xs" className={classes.navMain}>
-          {mainNavItems.map(renderNavItem)}
+          {mainNavItemsTop.map(renderNavItem)}
+          <Divider className={classes.navDivider} />
+          {mainNavItemsBottom.map(renderNavItem)}
         </Stack>
         
         <Stack gap="xs" className={classes.navBottom}>

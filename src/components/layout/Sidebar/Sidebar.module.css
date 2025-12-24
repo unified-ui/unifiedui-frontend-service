@@ -25,6 +25,16 @@
   gap: var(--spacing-lg);
 }
 
+.navDivider {
+  width: 50%;
+  margin: var(--spacing-sm) auto;
+  border-color: var(--color-gray-500) !important;
+}
+
+[data-mantine-color-scheme='dark'] .navDivider {
+  border-color: var(--color-gray-500) !important;
+}
+
 .navItem {
   display: flex !important;
   flex-direction: column;

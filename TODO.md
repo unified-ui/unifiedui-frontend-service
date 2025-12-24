@@ -133,11 +133,22 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
     - ApplicationsPage
     - CredentialsPage designen
 
+- sidebarDataList
+    - die list-resultate sollen global verfügbar bleiben
+    - wenn einmal gefetcht, nicht nochmal fetchen (erst nach Create)
+    - aber ein Refresh-Button rechts neben Search
+
 ## TODOs
 
 - Development-Platform
     - Dialog erstellen
     - Page erstellen
+
+- Chat-Widgets
+    - Page hinzufügen (comming soon)
+    - SidebarItem hinzufügen
+
+- Divider zwischen credential und chat-widgets/dev-platform
 
 - Paginierung raus und dafür Doom-Scroll bis liste leer ist
 - Search implementieren (soll wirklich gegen API search gehen)
@@ -149,10 +160,6 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
     - hover -> Hand
     - beim skrollen -> oben sieht man die liste...
 - UserDropdown > Tenants nach A-Z sortieren
-- sidebarDataList
-    - die list-resultate sollen global verfügbar bleiben
-    - wenn einmal gefetcht, nicht nochmal fetchen (erst nach Create)
-    - aber ein Refresh-Button rechts neben Search
 - SettingsPage
     - tenant settings
         - name -> rename
