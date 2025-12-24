@@ -76,7 +76,30 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [showLoading, setShowLoading] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Delay showing loading indicator to avoid flickering
+  useEffect(() => {
+    if (isLoading) {
+      loadingTimeoutRef.current = setTimeout(() => {
+        setShowLoading(true);
+      }, 300);
+    } else {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
+      setShowLoading(false);
+    }
+
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, [isLoading]);
 
   // Filter items based on search query
   const filteredItems = useMemo(() => {
@@ -201,7 +224,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
 
       {/* Content Area */}
       <div className={classes.content}>
-        {isLoading ? (
+        {showLoading ? (
           <Center className={classes.centerContent}>
             <Stack align="center" gap="sm">
               <Loader size="md" />
