@@ -88,13 +88,21 @@ src/
 │   │   └── Overlay/
 │   │       ├── Overlay.tsx    # Für Access-Dialoge
 │   │       └── Overlay.module.css
+│   ├── dialogs/               # Modal Dialogs für CRUD-Operationen
+│   │   ├── index.ts           # Exports
+│   │   ├── CreateApplicationDialog.tsx
+│   │   ├── CreateAutonomousAgentDialog.tsx
+│   │   ├── CreateCredentialDialog.tsx
+│   │   └── CreateTenantDialog.tsx
 │   ├── layout/                # Layout Components
 │   │   ├── Header/
 │   │   │   ├── Header.tsx
 │   │   │   └── Header.module.css
 │   │   ├── Sidebar/
-│   │   │   ├── Sidebar.tsx
-│   │   │   └── Sidebar.module.css
+│   │   │   ├── Sidebar.tsx           # Navigation + DataList Integration
+│   │   │   ├── Sidebar.module.css
+│   │   │   ├── SidebarDataList.tsx   # PowerBI-like Entity-Liste
+│   │   │   └── SidebarDataList.module.css
 │   │   └── MainLayout/
 │   │       ├── MainLayout.tsx
 │   │       └── MainLayout.module.css
@@ -139,7 +147,7 @@ src/
 │
 ├── api/                        # API Client & Types
 │   ├── types.ts               # TypeScript Types für alle API Endpoints
-│   ├── client.ts              # UnifiedUIAPIClient
+│   ├── client.ts              # UnifiedUIAPIClient (Tenant-basierte Pfade)
 │   ├── index.ts               # Exports
 │   └── README.md              # API Client Dokumentation
 │
@@ -147,20 +155,10 @@ src/
 │   ├── IdentityContext.tsx    # Global Identity State (User, Tenants)
 │   └── index.ts               # Context Exports
 │
-├── services/                   # Legacy API Services (DEPRECATED - use api/)
-│   ├── api.ts                 # Base API Configuration
-│   ├── userService.ts         # User-related API calls
-│   └── authService.ts         # Auth-related API calls
-│
-│
 ├── utils/                      # Utility Functions
 │   ├── constants.ts           # App Constants
 │   ├── helpers.ts             # Helper Functions
 │   └── validators.ts          # Validation Functions
-│
-├── context/                    # React Contexts
-│   ├── ThemeContext.tsx       # Theme Context
-│   └── AppContext.tsx         # Global App State
 │
 └── assets/                     # Static Assets
     ├── images/
@@ -547,3 +545,162 @@ const users = await apiClient?.getUsers();
 - **API Client verwenden**: Nutze `useIdentity()` Hook für API-Zugriff
 - **Toast-System nutzen**: Automatische Benachrichtigungen via API Client
 - **Tenant-Context nutzen**: Greife auf `selectedTenant` zu, nicht auf lokalen State
+
+---
+
+## SidebarDataList Komponente
+
+Die `SidebarDataList` ist eine PowerBI-inspirierte Komponente, die beim Hover über Sidebar-Items erscheint.
+
+### Features
+- **Hover-Trigger**: Erscheint beim Hover über Applications, Autonomous Agents, Credentials
+- **Auto-Close**: Schließt automatisch nach 300ms wenn Maus die Komponente verlässt
+- **Search**: Integrierte Suchfunktion mit Client-Side-Filtering
+- **Pagination**: Infinite-Scroll mit 20 Items pro Seite
+- **Loading-Delay**: Loading-Indicator erscheint erst nach 300ms (verhindert Flackern)
+- **Expand/Collapse**: Breite wechselt zwischen 320px und 450px
+- **Entity-Icons**: Jedes Item zeigt sein Entity-Icon (Robot, Brain, Key)
+
+### Props
+```typescript
+interface SidebarDataListProps {
+  title: string;
+  icon: React.ReactNode;
+  items: DataListItem[];
+  isLoading?: boolean;
+  error?: string | null;
+  onAdd?: () => void;
+  onClose: () => void;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+  addButtonLabel?: string;
+}
+
+interface DataListItem {
+  id: string;
+  name: string;
+  link: string;
+  icon?: React.ReactNode;
+}
+```
+
+### Verwendung in Sidebar
+Die Sidebar integriert SidebarDataList mit folgender Logik:
+- Hover über Nav-Item → Data-Fetch starten + Panel öffnen
+- Hover verlassen → 300ms Timeout → Panel schließen
+- Klick auf Item → Navigation + Panel schließen
+- Add-Button → Öffnet entsprechenden Create-Dialog
+
+---
+
+## Dialog-Komponenten (`components/dialogs/`)
+
+Alle Dialogs nutzen `@mantine/form` für Validierung und `useIdentity()` für API-Zugriff.
+
+### CreateApplicationDialog
+```typescript
+// Props
+interface CreateApplicationDialogProps {
+  opened: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+// Felder
+- name: string (required, max 255)
+- description: string (optional, max 2000)
+```
+
+### CreateAutonomousAgentDialog
+```typescript
+// Gleiche Props wie CreateApplicationDialog
+// Gleiche Felder wie CreateApplicationDialog
+```
+
+### CreateCredentialDialog
+```typescript
+// Props: gleich wie oben
+// Felder
+- name: string (required, max 255)
+- credential_type: string (required, Select mit Optionen)
+- secret_value: string (required, PasswordInput)
+- description: string (optional, max 2000)
+
+// Credential-Typen
+const CREDENTIAL_TYPES = [
+  { value: 'API_KEY', label: 'API Key' },
+  { value: 'PASSWORD', label: 'Password' },
+  { value: 'TOKEN', label: 'Token' },
+  { value: 'SECRET', label: 'Secret' },
+  { value: 'CONNECTION_STRING', label: 'Connection String' },
+  { value: 'CERTIFICATE', label: 'Certificate' },
+  { value: 'OTHER', label: 'Sonstiges' },
+];
+```
+
+### CreateTenantDialog
+```typescript
+// Props: gleich wie oben
+// Felder: name, description (wie Application)
+// Besonderheit: Ruft refreshIdentity() nach Erstellung auf
+```
+
+### Dialog-Pattern
+```typescript
+import { CreateApplicationDialog } from '../../components/dialogs';
+
+const [opened, setOpened] = useState(false);
+
+<CreateApplicationDialog
+  opened={opened}
+  onClose={() => setOpened(false)}
+  onSuccess={() => {
+    // Refresh data
+    fetchApplications();
+  }}
+/>
+```
+
+---
+
+## API Client - Tenant-basierte Pfade
+
+**WICHTIG**: Alle Entity-Endpoints verwenden tenant-basierte Pfade!
+
+### Endpoint-Struktur
+```
+/api/v1/tenants/{tenantId}/applications
+/api/v1/tenants/{tenantId}/autonomous-agents
+/api/v1/tenants/{tenantId}/credentials
+/api/v1/tenants/{tenantId}/conversations
+/api/v1/tenants/{tenantId}/custom-groups
+```
+
+### API-Client Methoden
+```typescript
+// Alle Entity-Methoden erfordern tenantId als ersten Parameter
+apiClient.listApplications(tenantId, { limit: 999 })
+apiClient.createApplication(tenantId, { name, description })
+apiClient.getApplication(tenantId, applicationId)
+apiClient.updateApplication(tenantId, applicationId, data)
+apiClient.deleteApplication(tenantId, applicationId)
+
+// Gleiche Struktur für:
+// - Autonomous Agents
+// - Credentials
+// - Conversations
+// - Custom Groups
+```
+
+### Verwendung mit selectedTenant
+```typescript
+const { apiClient, selectedTenant } = useIdentity();
+
+const fetchData = async () => {
+  if (!apiClient || !selectedTenant) return;
+  
+  const apps = await apiClient.listApplications(selectedTenant.id, { limit: 999 });
+};
+```

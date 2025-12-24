@@ -109,9 +109,10 @@ const MyComponent = () => {
     isLoading          // Loading-Status
   } = useIdentity();
   
-  // API aufrufen
+  // API aufrufen (WICHTIG: tenantId als erster Parameter!)
   const loadData = async () => {
-    const apps = await apiClient?.listApplications();
+    if (!selectedTenant) return;
+    const apps = await apiClient?.listApplications(selectedTenant.id, { limit: 999 });
     console.log(apps);
   };
   
@@ -128,9 +129,9 @@ const MyComponent = () => {
 import { useIdentity } from './contexts';
 
 const MyComponent = () => {
-  const { apiClient } = useIdentity();
+  const { apiClient, selectedTenant } = useIdentity();
   
-  // Tenant erstellen
+  // Tenant erstellen (kein tenantId nötig)
   const createTenant = async () => {
     await apiClient?.createTenant({
       name: 'My New Tenant',
@@ -139,9 +140,10 @@ const MyComponent = () => {
     // Toast wird automatisch angezeigt: "Tenant 'My New Tenant' wurde erfolgreich erstellt"
   };
   
-  // Application erstellen
+  // Application erstellen (tenantId erforderlich!)
   const createApp = async () => {
-    await apiClient?.createApplication({
+    if (!selectedTenant) return;
+    await apiClient?.createApplication(selectedTenant.id, {
       name: 'My App',
       description: 'Optional',
     });
@@ -149,6 +151,52 @@ const MyComponent = () => {
   
   // Fehler werden automatisch als Toast angezeigt
 };
+```
+
+## Tenant-basierte API-Pfade
+
+**WICHTIG**: Alle Entity-Endpoints (außer Tenants selbst) verwenden tenant-basierte Pfade!
+
+### Endpoint-Struktur
+```
+/api/v1/tenants/{tenantId}/applications
+/api/v1/tenants/{tenantId}/autonomous-agents
+/api/v1/tenants/{tenantId}/credentials
+/api/v1/tenants/{tenantId}/conversations
+/api/v1/tenants/{tenantId}/custom-groups
+```
+
+### API-Client Methoden (tenantId erforderlich)
+```typescript
+// Applications
+apiClient.listApplications(tenantId, { limit: 999 })
+apiClient.createApplication(tenantId, { name, description })
+apiClient.getApplication(tenantId, applicationId)
+apiClient.updateApplication(tenantId, applicationId, data)
+apiClient.deleteApplication(tenantId, applicationId)
+
+// Autonomous Agents
+apiClient.listAutonomousAgents(tenantId, { limit: 999 })
+apiClient.createAutonomousAgent(tenantId, { name, description })
+apiClient.getAutonomousAgent(tenantId, agentId)
+apiClient.updateAutonomousAgent(tenantId, agentId, data)
+apiClient.deleteAutonomousAgent(tenantId, agentId)
+
+// Credentials
+apiClient.listCredentials(tenantId, { limit: 999 })
+apiClient.createCredential(tenantId, { name, credential_type, secret_value, description })
+apiClient.getCredential(tenantId, credentialId)
+apiClient.updateCredential(tenantId, credentialId, data)
+apiClient.deleteCredential(tenantId, credentialId)
+
+// Conversations
+apiClient.listConversations(tenantId, { limit: 999 })
+apiClient.createConversation(tenantId, data)
+apiClient.getConversation(tenantId, conversationId)
+
+// Custom Groups
+apiClient.listCustomGroups(tenantId, { limit: 999 })
+apiClient.createCustomGroup(tenantId, data)
 ```
 
 ## Automatische Features
