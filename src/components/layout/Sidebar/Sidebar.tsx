@@ -3,7 +3,7 @@ import { Stack, UnstyledButton, Text, Tooltip } from '@mantine/core';
 import { 
   IconHome, IconHomeFilled,
   IconRobot,
-  IconMessages, IconMessageFilled,
+  IconMessages, IconMessageFilled, IconSparkles,
   IconBrain,
   IconKey, IconKeyFilled,
   IconCode,
@@ -32,8 +32,8 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { icon: IconHome, iconFilled: IconHomeFilled, label: 'Home', path: '/dashboard' },
   { icon: IconMessages, iconFilled: IconMessageFilled, label: 'Conversations', path: '/conversations' },
-  { icon: IconRobot, label: 'Applications', path: '/applications', hasDataList: true, entityType: 'applications' },
-  { icon: IconBrain, label: 'Autonomous\nAgents', path: '/autonomous-agents', hasDataList: true, entityType: 'autonomous-agents' },
+  { icon: IconSparkles, label: 'Chat Agents', path: '/applications', hasDataList: true, entityType: 'applications' },
+  { icon: IconRobot, label: 'Autonomous\nAgents', path: '/autonomous-agents', hasDataList: true, entityType: 'autonomous-agents' },
   { icon: IconKey, iconFilled: IconKeyFilled, label: 'Credentials', path: '/credentials', hasDataList: true, entityType: 'credentials' },
   { icon: IconCode, label: 'Development', path: '/development', hasDataList: true, entityType: 'development' },
 ];
