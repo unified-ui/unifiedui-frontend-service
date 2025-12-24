@@ -4,6 +4,7 @@ import {
   Group,
   TextInput,
   Select,
+  ActionIcon,
   Button,
   Popover,
   Stack,
@@ -130,23 +131,29 @@ export const DataTableToolbar: FC<DataTableToolbarProps> = ({
             width={300}
           >
             <Popover.Target>
-              <Button
+              <ActionIcon
                 variant="default"
-                leftSection={<IconFilter size={16} />}
-                rightSection={
-                  activeFilterCount > 0 ? (
-                    <Badge size="xs" circle>
-                      {activeFilterCount}
-                    </Badge>
-                  ) : null
-                }
+                size="lg"
+                w={42}
                 onClick={() => setFilterOpened((o) => !o)}
+                pos="relative"
               >
-                Filter
-              </Button>
+                <IconFilter size={18} />
+                {activeFilterCount > 0 && (
+                  <Badge 
+                    size="xs" 
+                    circle 
+                    pos="absolute" 
+                    top={-4} 
+                    right={-4}
+                  >
+                    {activeFilterCount}
+                  </Badge>
+                )}
+              </ActionIcon>
             </Popover.Target>
 
-            <Popover.Dropdown>
+            <Popover.Dropdown py="md">
               <Stack gap="md">
                 <div>
                   <Text size="sm" fw={500} mb={4}>

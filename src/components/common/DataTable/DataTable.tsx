@@ -169,7 +169,7 @@ export const DataTable: FC<DataTableProps> = ({
         availableTags={tagsForFilter}
         filters={filters}
         onFilterChange={handleFilterChange}
-        showFilter={showStatus || tagsForFilter.length > 0}
+        showFilter={true}
       />
 
       <Stack gap="xs" className={classes.tableBody}>
