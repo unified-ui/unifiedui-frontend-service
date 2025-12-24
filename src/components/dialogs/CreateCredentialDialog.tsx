@@ -13,6 +13,7 @@ import {
 import { useForm } from '@mantine/form';
 import { IconKey } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
+import { TagInput } from '../common';
 
 interface CreateCredentialDialogProps {
   opened: boolean;
@@ -25,6 +26,7 @@ interface FormValues {
   description: string;
   credential_type: string;
   secret_value: string;
+  tags: string[];
 }
 
 const CREDENTIAL_TYPES = [
@@ -51,6 +53,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
       description: '',
       credential_type: '',
       secret_value: '',
+      tags: [],
     },
     validate: {
       name: (value) => {
@@ -88,12 +91,26 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
 
     setIsSubmitting(true);
     try {
-      await apiClient.createCredential(selectedTenant.id, {
+      const credential = await apiClient.createCredential(selectedTenant.id, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
         credential_type: values.credential_type,
         secret_value: values.secret_value,
       });
+
+      // If tags were added, save them to the credential
+      if (values.tags.length > 0) {
+        try {
+          await apiClient.setCredentialTags(
+            selectedTenant.id,
+            credential.id,
+            values.tags
+          );
+        } catch (tagError) {
+          console.error('Failed to save tags:', tagError);
+        }
+      }
+
       form.reset();
       onSuccess?.();
       onClose();
@@ -150,6 +167,13 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
             required
             withAsterisk
             {...form.getInputProps('secret_value')}
+          />
+
+          <TagInput
+            label="Tags"
+            placeholder="Tag eingeben und mit Space bestätigen..."
+            value={form.values.tags}
+            onChange={(tags) => form.setFieldValue('tags', tags)}
           />
 
           <Textarea

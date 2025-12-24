@@ -129,14 +129,12 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
         - Sort by Name A-Z
         - Sort by Name Z-A
 
-- Frontend:
-    - tags
-        - hier neues Tag-Component
-    - Create-Dialoge updaten
-    - Paginierung raus und dafür Doom-Scroll bis liste leer ist
-    - default status: disabled ()
+- tags
+    - hier neues Tag-Component
+- Create-Dialoge updaten
 
-
+- Paginierung raus und dafür Doom-Scroll bis liste leer ist
+- default status: disabled ()
 - Standard Pages implementieren
     - ApplicationsPage
     - CredentialsPage designen

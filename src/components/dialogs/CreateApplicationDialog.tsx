@@ -149,6 +149,13 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
             {...form.getInputProps('type')}
           />
 
+          <TagInput
+            label="Tags"
+            placeholder="Tag eingeben und mit Space bestätigen..."
+            value={form.values.tags}
+            onChange={(tags) => form.setFieldValue('tags', tags)}
+          />
+
           <Textarea
             label="Beschreibung"
             placeholder="Optionale Beschreibung"
@@ -157,13 +164,6 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
             maxRows={6}
             autosize
             {...form.getInputProps('description')}
-          />
-
-          <TagInput
-            label="Tags"
-            placeholder="Tag eingeben und mit Space bestätigen..."
-            value={form.values.tags}
-            onChange={(tags) => form.setFieldValue('tags', tags)}
           />
 
           <Group justify="flex-end" mt="md">

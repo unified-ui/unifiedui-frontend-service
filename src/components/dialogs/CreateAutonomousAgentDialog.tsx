@@ -11,6 +11,7 @@ import {
 import { useForm } from '@mantine/form';
 import { IconRobot } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
+import { TagInput } from '../common';
 
 interface CreateAutonomousAgentDialogProps {
   opened: boolean;
@@ -21,6 +22,7 @@ interface CreateAutonomousAgentDialogProps {
 interface FormValues {
   name: string;
   description: string;
+  tags: string[];
 }
 
 export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> = ({
@@ -35,6 +37,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
     initialValues: {
       name: '',
       description: '',
+      tags: [],
     },
     validate: {
       name: (value) => {
@@ -60,10 +63,24 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
 
     setIsSubmitting(true);
     try {
-      await apiClient.createAutonomousAgent(selectedTenant.id, {
+      const agent = await apiClient.createAutonomousAgent(selectedTenant.id, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
       });
+
+      // If tags were added, save them to the agent
+      if (values.tags.length > 0) {
+        try {
+          await apiClient.setAutonomousAgentTags(
+            selectedTenant.id,
+            agent.id,
+            values.tags
+          );
+        } catch (tagError) {
+          console.error('Failed to save tags:', tagError);
+        }
+      }
+
       form.reset();
       onSuccess?.();
       onClose();
@@ -102,6 +119,13 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
             maxLength={255}
             data-autofocus
             {...form.getInputProps('name')}
+          />
+
+          <TagInput
+            label="Tags"
+            placeholder="Tag eingeben und mit Space bestätigen..."
+            value={form.values.tags}
+            onChange={(tags) => form.setFieldValue('tags', tags)}
           />
 
           <Textarea
