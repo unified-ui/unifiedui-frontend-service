@@ -7,10 +7,18 @@ import {
   Group,
   Stack,
   Text,
+  Select,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconSparkles } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
+import { ApplicationTypeEnum } from '../../api/types';
+
+const APPLICATION_TYPES = [
+  { value: ApplicationTypeEnum.N8N, label: 'n8n' },
+  { value: ApplicationTypeEnum.MICROSOFT_FOUNDRY, label: 'Microsoft Foundry' },
+  { value: ApplicationTypeEnum.REST_API, label: 'REST API' },
+];
 
 interface CreateApplicationDialogProps {
   opened: boolean;
@@ -20,6 +28,7 @@ interface CreateApplicationDialogProps {
 
 interface FormValues {
   name: string;
+  type: string;
   description: string;
 }
 
@@ -34,6 +43,7 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
   const form = useForm<FormValues>({
     initialValues: {
       name: '',
+      type: '',
       description: '',
     },
     validate: {
@@ -43,6 +53,12 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
         }
         if (value.length > 255) {
           return 'Name darf maximal 255 Zeichen lang sein';
+        }
+        return null;
+      },
+      type: (value) => {
+        if (!value) {
+          return 'Typ ist erforderlich';
         }
         return null;
       },
@@ -62,6 +78,7 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
     try {
       await apiClient.createApplication(selectedTenant.id, {
         name: values.name.trim(),
+        type: values.type as ApplicationTypeEnum,
         description: values.description?.trim() || undefined,
       });
       form.reset();
@@ -102,6 +119,15 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
             maxLength={255}
             data-autofocus
             {...form.getInputProps('name')}
+          />
+
+          <Select
+            label="Typ"
+            placeholder="Wählen Sie einen Typ"
+            required
+            withAsterisk
+            data={APPLICATION_TYPES}
+            {...form.getInputProps('type')}
           />
 
           <Textarea
