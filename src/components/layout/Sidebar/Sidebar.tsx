@@ -10,14 +10,13 @@ import {
   IconSettings, IconSettingsFilled 
 } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useIdentity } from '../../../contexts';
+import { useSidebarData, type EntityType } from '../../../contexts';
 import { SidebarDataList, type DataListItem } from './SidebarDataList';
 import {
   CreateApplicationDialog,
   CreateAutonomousAgentDialog,
   CreateCredentialDialog,
 } from '../../dialogs';
-import type { ApplicationResponse, AutonomousAgentResponse, CredentialResponse } from '../../../api/types';
 import classes from './Sidebar.module.css';
 
 interface NavItem {
@@ -42,8 +41,6 @@ const bottomNavItems: NavItem[] = [
   { icon: IconSettings, iconFilled: IconSettingsFilled, label: 'Settings', path: '/tenant-settings' },
 ];
 
-type EntityType = 'applications' | 'autonomous-agents' | 'credentials' | 'development';
-
 interface EntityConfig {
   title: string;
   icon: React.ReactNode;
@@ -55,34 +52,27 @@ interface EntityConfig {
 export const Sidebar: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { apiClient, selectedTenant } = useIdentity();
+  
+  // Use global sidebar data context
+  const {
+    applications,
+    autonomousAgents,
+    credentials,
+    loadingStates,
+    errorStates,
+    fetchEntityData,
+    refreshEntityData,
+    refreshApplications,
+    refreshAutonomousAgents,
+    refreshCredentials,
+  } = useSidebarData();
   
   // State for data list panel
   const [activeEntity, setActiveEntity] = useState<EntityType | null>(null);
   const [isDataListExpanded, setIsDataListExpanded] = useState(false);
   const [isHoveringDataList, setIsHoveringDataList] = useState(false);
   const [isHoveringNavItem, setIsHoveringNavItem] = useState(false);
-  
-  // Data cache state
-  const [applications, setApplications] = useState<ApplicationResponse[]>([]);
-  const [autonomousAgents, setAutonomousAgents] = useState<AutonomousAgentResponse[]>([]);
-  const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
-  
-  // Loading states
-  const [loadingStates, setLoadingStates] = useState<Record<EntityType, boolean>>({
-    applications: false,
-    'autonomous-agents': false,
-    credentials: false,
-    development: false,
-  });
-  
-  // Error states
-  const [errorStates, setErrorStates] = useState<Record<EntityType, string | null>>({
-    applications: null,
-    'autonomous-agents': null,
-    credentials: null,
-    development: null,
-  });
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Timeout refs for hover delay
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -93,70 +83,27 @@ export const Sidebar: FC = () => {
   const [isAutonomousAgentDialogOpen, setIsAutonomousAgentDialogOpen] = useState(false);
   const [isCredentialDialogOpen, setIsCredentialDialogOpen] = useState(false);
 
-  // Fetch data functions
-  const fetchApplications = useCallback(async () => {
-    if (!apiClient || !selectedTenant) return;
-    setLoadingStates(prev => ({ ...prev, applications: true }));
-    setErrorStates(prev => ({ ...prev, applications: null }));
-    try {
-      const data = await apiClient.listApplications(selectedTenant.id, { limit: 999 });
-      setApplications(data);
-    } catch (error) {
-      setErrorStates(prev => ({ ...prev, applications: 'Fehler beim Laden der Applications' }));
-    } finally {
-      setLoadingStates(prev => ({ ...prev, applications: false }));
-    }
-  }, [apiClient, selectedTenant]);
-
-  const fetchAutonomousAgents = useCallback(async () => {
-    if (!apiClient || !selectedTenant) return;
-    setLoadingStates(prev => ({ ...prev, 'autonomous-agents': true }));
-    setErrorStates(prev => ({ ...prev, 'autonomous-agents': null }));
-    try {
-      const data = await apiClient.listAutonomousAgents(selectedTenant.id, { limit: 999 });
-      setAutonomousAgents(data);
-    } catch (error) {
-      setErrorStates(prev => ({ ...prev, 'autonomous-agents': 'Fehler beim Laden der Autonomous Agents' }));
-    } finally {
-      setLoadingStates(prev => ({ ...prev, 'autonomous-agents': false }));
-    }
-  }, [apiClient, selectedTenant]);
-
-  const fetchCredentials = useCallback(async () => {
-    if (!apiClient || !selectedTenant) return;
-    setLoadingStates(prev => ({ ...prev, credentials: true }));
-    setErrorStates(prev => ({ ...prev, credentials: null }));
-    try {
-      const data = await apiClient.listCredentials(selectedTenant.id, { limit: 999 });
-      setCredentials(data);
-    } catch (error) {
-      setErrorStates(prev => ({ ...prev, credentials: 'Fehler beim Laden der Credentials' }));
-    } finally {
-      setLoadingStates(prev => ({ ...prev, credentials: false }));
-    }
-  }, [apiClient, selectedTenant]);
-
   // Entity configurations
   const entityConfigs: Record<EntityType, EntityConfig> = useMemo(() => ({
     applications: {
       title: 'Chat Agents',
       icon: <IconSparkles size={24} />,
       addButtonLabel: 'Add Chat Agent',
-      fetchData: fetchApplications,
+      fetchData: () => fetchEntityData('applications'),
       getLink: (id) => `/applications/${id}`,
     },
     'autonomous-agents': {
       title: 'Autonomous Agents',
       icon: <IconRobot size={24} />,
       addButtonLabel: 'Add Autonomous Agent',
-      fetchData: fetchAutonomousAgents,
+      fetchData: () => fetchEntityData('autonomous-agents'),
       getLink: (id) => `/autonomous-agents/${id}`,
     },
     credentials: {
       title: 'Credentials',
       icon: <IconKey size={24} />,
       addButtonLabel: 'Add Credential',
-      fetchData: fetchCredentials,
+      fetchData: () => fetchEntityData('credentials'),
       getLink: (id) => `/credentials/${id}`,
     },
     development: {
@@ -166,7 +113,7 @@ export const Sidebar: FC = () => {
       fetchData: async () => {}, // No data to fetch
       getLink: () => '/development',
     },
-  }), [fetchApplications, fetchAutonomousAgents, fetchCredentials]);
+  }), [fetchEntityData]);
 
   // Get data items for active entity
   const dataListItems: DataListItem[] = useMemo(() => {
@@ -314,18 +261,30 @@ export const Sidebar: FC = () => {
     }
   }, [activeEntity]);
 
-  // Handle successful creation - refresh the data list
+  // Handle successful creation - refresh the data list (using refresh to bypass cache)
   const handleApplicationCreated = useCallback(() => {
-    fetchApplications();
-  }, [fetchApplications]);
+    refreshApplications();
+  }, [refreshApplications]);
 
   const handleAutonomousAgentCreated = useCallback(() => {
-    fetchAutonomousAgents();
-  }, [fetchAutonomousAgents]);
+    refreshAutonomousAgents();
+  }, [refreshAutonomousAgents]);
 
   const handleCredentialCreated = useCallback(() => {
-    fetchCredentials();
-  }, [fetchCredentials]);
+    refreshCredentials();
+  }, [refreshCredentials]);
+
+  // Handle refresh button click (bypasses cache)
+  const handleRefresh = useCallback(async () => {
+    if (!activeEntity || activeEntity === 'development') return;
+    
+    setIsRefreshing(true);
+    try {
+      await refreshEntityData(activeEntity);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [activeEntity, refreshEntityData]);
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -400,6 +359,8 @@ export const Sidebar: FC = () => {
           onMouseLeave={handleDataListHoverLeave}
           addButtonLabel={activeConfig.addButtonLabel}
           onAdd={isAddEnabled ? handleAddClick : undefined}
+          onRefresh={activeEntity !== 'development' ? handleRefresh : undefined}
+          isRefreshing={isRefreshing}
         />
       )}
 

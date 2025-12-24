@@ -19,6 +19,7 @@ import {
   IconX,
   IconPlus,
   IconInbox,
+  IconRefresh,
 } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import classes from './SidebarDataList.module.css';
@@ -55,6 +56,10 @@ export interface SidebarDataListProps {
   onMouseLeave?: () => void;
   /** Add button label */
   addButtonLabel?: string;
+  /** Callback when refresh button is clicked */
+  onRefresh?: () => void;
+  /** Whether refresh is in progress */
+  isRefreshing?: boolean;
 }
 
 const ITEMS_PER_PAGE = 20;
@@ -72,6 +77,8 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
   onMouseEnter,
   onMouseLeave,
   addButtonLabel = 'Add',
+  onRefresh,
+  isRefreshing = false,
 }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -201,25 +208,39 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
 
       {/* Search Bar */}
       <div className={classes.searchContainer}>
-        <TextInput
-          placeholder="Suchen..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-          leftSection={<IconSearch size={16} />}
-          rightSection={
-            searchQuery ? (
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                size="sm"
-                onClick={handleClearSearch}
-              >
-                <IconX size={14} />
-              </ActionIcon>
-            ) : null
-          }
-          className={classes.searchInput}
-        />
+        <Group gap="xs" wrap="nowrap">
+          <TextInput
+            placeholder="Suchen..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            leftSection={<IconSearch size={16} />}
+            rightSection={
+              searchQuery ? (
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  onClick={handleClearSearch}
+                >
+                  <IconX size={14} />
+                </ActionIcon>
+              ) : null
+            }
+            className={classes.searchInput}
+            style={{ flex: 1 }}
+          />
+          {onRefresh && (
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              onClick={onRefresh}
+              loading={isRefreshing}
+              title="Daten neu laden"
+            >
+              <IconRefresh size={18} />
+            </ActionIcon>
+          )}
+        </Group>
       </div>
 
       {/* Content Area */}

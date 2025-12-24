@@ -102,7 +102,8 @@ export class UnifiedUIAPIClient {
     method: string,
     path: string,
     body?: unknown,
-    successMessage?: string
+    successMessage?: string,
+    options?: { noCache?: boolean }
   ): Promise<T> {
     try {
       const token = await this.getAccessToken();
@@ -112,6 +113,11 @@ export class UnifiedUIAPIClient {
 
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      // Add X-Use-Cache header when noCache is true
+      if (options?.noCache) {
+        headers['X-Use-Cache'] = 'false';
       }
 
       const response = await fetch(`${this.baseURL}${path}`, {
@@ -219,9 +225,9 @@ export class UnifiedUIAPIClient {
 
   // ========== Application Endpoints ==========
 
-  async listApplications(tenantId: string, params?: PaginationParams): Promise<ApplicationResponse[]> {
+  async listApplications(tenantId: string, params?: PaginationParams, options?: { noCache?: boolean }): Promise<ApplicationResponse[]> {
     const query = this.buildQueryString(params || {});
-    return this.request<ApplicationResponse[]>('GET', `/api/v1/tenants/${tenantId}/applications${query}`);
+    return this.request<ApplicationResponse[]>('GET', `/api/v1/tenants/${tenantId}/applications${query}`, undefined, undefined, options);
   }
 
   async getApplication(tenantId: string, applicationId: string): Promise<ApplicationResponse> {
@@ -267,9 +273,9 @@ export class UnifiedUIAPIClient {
 
   // ========== Autonomous Agent Endpoints ==========
 
-  async listAutonomousAgents(tenantId: string, params?: PaginationParams): Promise<AutonomousAgentResponse[]> {
+  async listAutonomousAgents(tenantId: string, params?: PaginationParams, options?: { noCache?: boolean }): Promise<AutonomousAgentResponse[]> {
     const query = this.buildQueryString(params || {});
-    return this.request<AutonomousAgentResponse[]>('GET', `/api/v1/tenants/${tenantId}/autonomous-agents${query}`);
+    return this.request<AutonomousAgentResponse[]>('GET', `/api/v1/tenants/${tenantId}/autonomous-agents${query}`, undefined, undefined, options);
   }
 
   async getAutonomousAgent(tenantId: string, agentId: string): Promise<AutonomousAgentResponse> {
@@ -363,9 +369,9 @@ export class UnifiedUIAPIClient {
 
   // ========== Credential Endpoints ==========
 
-  async listCredentials(tenantId: string, params?: PaginationParams): Promise<CredentialResponse[]> {
+  async listCredentials(tenantId: string, params?: PaginationParams, options?: { noCache?: boolean }): Promise<CredentialResponse[]> {
     const query = this.buildQueryString(params || {});
-    return this.request<CredentialResponse[]>('GET', `/api/v1/tenants/${tenantId}/credentials${query}`);
+    return this.request<CredentialResponse[]>('GET', `/api/v1/tenants/${tenantId}/credentials${query}`, undefined, undefined, options);
   }
 
   async getCredential(tenantId: string, credentialId: string): Promise<CredentialResponse> {
