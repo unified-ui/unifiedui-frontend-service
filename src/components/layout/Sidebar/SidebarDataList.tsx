@@ -241,6 +241,10 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
               </Text>
             </Stack>
           </Center>
+        ) : isLoading ? (
+          // Still loading but not showing indicator yet (within 300ms delay)
+          // Show nothing to avoid flickering empty state
+          null
         ) : filteredItems.length === 0 ? (
           <Center className={classes.centerContent}>
             <Stack align="center" gap="sm">
