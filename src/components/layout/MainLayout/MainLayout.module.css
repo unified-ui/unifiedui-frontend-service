@@ -1,13 +1,17 @@
 .layout {
-  min-height: 100vh;
+  height: 100vh;
   width: 100%;
   background: var(--bg-app);
+  overflow: hidden; /* Prevent page scroll */
+  display: flex;
+  flex-direction: column;
 }
 
 .content {
   margin-top: 70px; /* Header height */
   margin-left: 100px; /* Sidebar width */
-  min-height: calc(100vh - 70px);
+  height: calc(100vh - 70px); /* Fixed height */
+  overflow-y: auto; /* Only content scrolls */
   padding: var(--spacing-xl);
 }
 

@@ -162,7 +162,7 @@ export const Sidebar: FC = () => {
     development: {
       title: 'Development',
       icon: <IconCode size={24} />,
-      addButtonLabel: 'Add Platform hinzufügen',
+      addButtonLabel: 'Add Platform',
       fetchData: async () => {}, // No data to fetch
       getLink: () => '/development',
     },

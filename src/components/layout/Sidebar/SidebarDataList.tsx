@@ -71,7 +71,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
   onToggleExpand,
   onMouseEnter,
   onMouseLeave,
-  addButtonLabel = 'Hinzufügen',
+  addButtonLabel = 'Add',
 }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
