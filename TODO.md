@@ -71,6 +71,26 @@ Ziel ist es, bei diesen Entitäten es zu ermöglichen, dem benutzer ohne die sei
     - im user dropdwon> tenant dropdown
 ## TODOs
 
+Entwickle modular mehrere Components.
+Diese Komponenten sollen gemeinsam eine Standard Page abbilden, aber auch einzeln einsetzbar sein.
+
+1. Es soll ein Container geben, der normalen responsve design pattern folgt, aber nicht über die gesamte page geht. mit gesamte page werde ich meinen, die pages werden in das layout als content (zwischen header und sidebar) eingebaut und der rest ist content. aber der container soll eine max width haben und dann sich entsprechend der breite anpassen.
+2. PageHeader: Dieser besteht aus
+- links oben einem titel in groß und dick; darunter eine beschreibung der seite (alles englisch).
+- einem Create {Entity} button rechts auf höhe des titels
+3. Einer Art Tabelle. diese soll listen einträge haben. links soll der Name und die description untereinander sein. Name in dick und recht groß, description darunter als secondary. die nächste spalte (oder wie auch immer du es designst) ist der Typ (column: type). Typ kann aber auch nicht gegeben sein, also im interface für die übergabe der daten, ist typ und description optional. Dann kann das item mehrere tags haben. diese sollen auch in so kästen mit angezeigt werden. aber maximal 3 und dann "..." und beim hovern soll man alle in einer art tool tip sehen können. zudem kann es ein Status (is_active) geben, welcher is_active. Hierfür sollte ein Switch-Button (also True False) als nächstes erscheinen. Ganz rechts drei punkte typbol für einen dialog. im dialog soll "öffnen", "Share", "Duplicate" und "Delete" stehen.
+Du hast jetzt gehört, was in die tabelle soll. Wenn du eine sehr gute idee für einen sauberen, kurzen überblick hast, kannst du auch eine alternative struktur bauen.
+4. über der tabelle soll eien search bar sein (erstmal ohne logik), daneben ein sort dropdown (mit den einträgen "Sort by last updated" (default), "Sort by last created", "Sort by name A-Z" und "Sort by name Z-A") und daneben ein Filter-Button, bei welchem ein dialog aufgehet (also direkt unter dem button) mit den filtern: "tags" (ein multi-select searchable dropdown) und "status" dropdown ("All" (default), "Active", "Passiv")
+5. unter der Tabelle dann eine typische pagination:
+- total count (on page), pages, go to next/prev; go to first/last) und dropdown mit "25/page" "50/page" (default), "100/page"
+
+die tabellen-componenten sollen in eine component und die pageheader component brauche ich. den container haben wir mit dem ui framework ja, musst du nur implementieren.
+
+so. baue nun diese komponenten und richte sie auf den Seiten:
+- applications (chat agents)
+- Autonomous Agents
+- und credentials ein
+
 - Standard Page designen
     - bei n8n inspirieren lassen
     - Filter
@@ -87,10 +107,17 @@ Ziel ist es, bei diesen Entitäten es zu ermöglichen, dem benutzer ohne die sei
 
 - Backend:
     - development-platforms als Entity und Routes hinzufügen
+        - name, description, type (Freitext, optional), iframe_url
     - Felder einführen:
         - status (is active)
         - tags
+    - Applications:
+        - neues Pflichtfeld: type (enum: N8N, Micosoft Foundry, REST API)
     - order_by als query param überall mitgeben
+        - last updated
+        - last created
+        - Sort by Name A-Z
+        - Sort by Name Z-A
 - im FE implementieren
     - tags
     - default status: disabled ()
@@ -102,15 +129,21 @@ Ziel ist es, bei diesen Entitäten es zu ermöglichen, dem benutzer ohne die sei
     - applications fetchen und anzeigen
         - mit search, pagination, create
     - ApplicationsDetailPage
-- ConversationsPage
-    - hier direkt in einen Chat rein
-        - oben im Chat -> Applications DropDown
 - SettingsPage
     - tenant settings
     - IAM
     - Custom Groups
     - => über **TabNavigation** oder SideBar?
 
+- Backend:
+    - für die Principals soll noch jeweils der Name gefetcht werden!
+
+- AB HIER: CHAT UND INTEGRATION
+- ConversationsPage
+    - hier direkt in einen Chat rein
+        - oben im Chat -> Applications DropDown
+
+- Widget Registry
 
 **Design**
 - Wenn man in Application reingeht -> direkt chat öffnen
@@ -119,7 +152,6 @@ Ziel ist es, bei diesen Entitäten es zu ermöglichen, dem benutzer ohne die sei
     - dort kann man in DropDown feld auch die Application Wechseln (dann automatisch neuer Chat)
 
 **Frontend Entwicklung**
-
 
 - Ein Design in einer FRONTEND/* mit Copilot ausarbeiten
     - mehrere Dateien, sodass man nach und nach implementieren und updaten kann
