@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Group, TextInput, Indicator, ActionIcon, Avatar, Text, useMantineColorScheme, Stack, Paper, Button, Divider, Select, UnstyledButton } from '@mantine/core';
-import { IconSearch, IconBell, IconSparkles, IconSun, IconMoon, IconLogout, IconExternalLink, IconPlus } from '@tabler/icons-react';
+import { IconSearch, IconBell, IconBrain, IconSun, IconMoon, IconLogout, IconExternalLink, IconPlus } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
 import { useIdentity } from '../../../contexts';
 import { CreateTenantDialog } from '../../dialogs';
@@ -62,7 +62,9 @@ export const Header: FC = () => {
     <header className={classes.header}>
       {/* Left: Logo + Title */}
       <Group gap="sm" className={classes.logo} onClick={() => navigate('/dashboard')}>
-        <IconSparkles size={32} className={classes.logoIcon} />
+        <div className={classes.logoWrapper}>
+          <IconBrain size={22} stroke={2} />
+        </div>
         <Text size="xl" fw={700} className={classes.logoText}>
           unified-ui
         </Text>

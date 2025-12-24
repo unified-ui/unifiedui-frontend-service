@@ -21,20 +21,35 @@
   user-select: none;
 }
 
-.logoIcon {
-  color: var(--primary-600);
-}
-
-[data-mantine-color-scheme='dark'] .logoIcon {
-  color: var(--primary-400);
+.logoWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500));
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .logoText {
-  color: var(--primary-600);
+  font-weight: 700;
+  background: linear-gradient(135deg, 
+    var(--color-primary-600) 0%, 
+    var(--color-secondary-600) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 [data-mantine-color-scheme='dark'] .logoText {
-  color: var(--primary-400);
+  background: linear-gradient(135deg, 
+    var(--color-primary-400) 0%, 
+    var(--color-secondary-400) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Search Bar */
