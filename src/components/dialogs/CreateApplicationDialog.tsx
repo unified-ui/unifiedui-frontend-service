@@ -13,6 +13,7 @@ import { useForm } from '@mantine/form';
 import { IconSparkles } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
 import { ApplicationTypeEnum } from '../../api/types';
+import { TagInput } from '../common';
 
 const APPLICATION_TYPES = [
   { value: ApplicationTypeEnum.N8N, label: 'n8n' },
@@ -30,6 +31,7 @@ interface FormValues {
   name: string;
   type: string;
   description: string;
+  tags: string[];
 }
 
 export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
@@ -45,6 +47,7 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
       name: '',
       type: '',
       description: '',
+      tags: [],
     },
     validate: {
       name: (value) => {
@@ -76,11 +79,27 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
 
     setIsSubmitting(true);
     try {
-      await apiClient.createApplication(selectedTenant.id, {
+      // Create the application
+      const application = await apiClient.createApplication(selectedTenant.id, {
         name: values.name.trim(),
         type: values.type as ApplicationTypeEnum,
         description: values.description?.trim() || undefined,
       });
+
+      // If tags were added, save them to the application
+      if (values.tags.length > 0) {
+        try {
+          await apiClient.setApplicationTags(
+            selectedTenant.id,
+            application.id,
+            values.tags
+          );
+        } catch (tagError) {
+          console.error('Failed to save tags:', tagError);
+          // Application was created successfully, just tags failed
+        }
+      }
+
       form.reset();
       onSuccess?.();
       onClose();
@@ -138,6 +157,13 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
             maxRows={6}
             autosize
             {...form.getInputProps('description')}
+          />
+
+          <TagInput
+            label="Tags"
+            placeholder="Tag eingeben und mit Space bestätigen..."
+            value={form.values.tags}
+            onChange={(tags) => form.setFieldValue('tags', tags)}
           />
 
           <Group justify="flex-end" mt="md">

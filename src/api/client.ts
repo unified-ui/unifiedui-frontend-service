@@ -564,11 +564,53 @@ export class UnifiedUIAPIClient {
   // ========== Resource Tags ==========
 
   async getResourceTags(tenantId: string, resourceType: string, resourceId: string): Promise<ResourceTagsResponse> {
-    return this.request<ResourceTagsResponse>('GET', `/api/v1/tenants/${tenantId}/tags/${resourceType}/${resourceId}`);
+    return this.request<ResourceTagsResponse>('GET', `/api/v1/tenants/${tenantId}/${resourceType}/${resourceId}/tags`);
   }
 
   async setResourceTags(tenantId: string, resourceType: string, resourceId: string, data: SetResourceTagsRequest): Promise<ResourceTagsResponse> {
-    return this.request<ResourceTagsResponse>('PUT', `/api/v1/tenants/${tenantId}/tags/${resourceType}/${resourceId}`, data, 'Tags updated successfully');
+    return this.request<ResourceTagsResponse>('PUT', `/api/v1/tenants/${tenantId}/${resourceType}/${resourceId}/tags`, data, 'Tags updated successfully');
+  }
+
+  // ========== Convenience Methods for Resource Tags ==========
+
+  async getApplicationTags(tenantId: string, applicationId: string): Promise<ResourceTagsResponse> {
+    return this.getResourceTags(tenantId, 'applications', applicationId);
+  }
+
+  async setApplicationTags(tenantId: string, applicationId: string, tags: string[]): Promise<ResourceTagsResponse> {
+    return this.setResourceTags(tenantId, 'applications', applicationId, { tags });
+  }
+
+  async getAutonomousAgentTags(tenantId: string, agentId: string): Promise<ResourceTagsResponse> {
+    return this.getResourceTags(tenantId, 'autonomous-agents', agentId);
+  }
+
+  async setAutonomousAgentTags(tenantId: string, agentId: string, tags: string[]): Promise<ResourceTagsResponse> {
+    return this.setResourceTags(tenantId, 'autonomous-agents', agentId, { tags });
+  }
+
+  async getCredentialTags(tenantId: string, credentialId: string): Promise<ResourceTagsResponse> {
+    return this.getResourceTags(tenantId, 'credentials', credentialId);
+  }
+
+  async setCredentialTags(tenantId: string, credentialId: string, tags: string[]): Promise<ResourceTagsResponse> {
+    return this.setResourceTags(tenantId, 'credentials', credentialId, { tags });
+  }
+
+  async getDevelopmentPlatformTags(tenantId: string, platformId: string): Promise<ResourceTagsResponse> {
+    return this.getResourceTags(tenantId, 'development-platforms', platformId);
+  }
+
+  async setDevelopmentPlatformTags(tenantId: string, platformId: string, tags: string[]): Promise<ResourceTagsResponse> {
+    return this.setResourceTags(tenantId, 'development-platforms', platformId, { tags });
+  }
+
+  async getChatWidgetTags(tenantId: string, widgetId: string): Promise<ResourceTagsResponse> {
+    return this.getResourceTags(tenantId, 'chat-widgets', widgetId);
+  }
+
+  async setChatWidgetTags(tenantId: string, widgetId: string, tags: string[]): Promise<ResourceTagsResponse> {
+    return this.setResourceTags(tenantId, 'chat-widgets', widgetId, { tags });
   }
 
   // ========== User Favorites Endpoints ==========
