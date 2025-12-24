@@ -26,8 +26,8 @@ interface NavItem {
 
 const mainNavItems: NavItem[] = [
   { icon: IconHome, iconFilled: IconHomeFilled, label: 'Home', path: '/dashboard' },
-  { icon: IconRobot, label: 'Applications', path: '/applications', hasDataList: true, entityType: 'applications' },
   { icon: IconMessages, iconFilled: IconMessageFilled, label: 'Conversations', path: '/conversations' },
+  { icon: IconRobot, label: 'Applications', path: '/applications', hasDataList: true, entityType: 'applications' },
   { icon: IconBrain, label: 'Autonomous\nAgents', path: '/autonomous-agents', hasDataList: true, entityType: 'autonomous-agents' },
   { icon: IconKey, iconFilled: IconKeyFilled, label: 'Credentials', path: '/credentials', hasDataList: true, entityType: 'credentials' },
   { icon: IconCode, label: 'Development', path: '/development', hasDataList: true, entityType: 'development' },
@@ -131,28 +131,28 @@ export const Sidebar: FC = () => {
     applications: {
       title: 'Applications',
       icon: <IconRobot size={24} />,
-      addButtonLabel: 'Application hinzufügen',
+      addButtonLabel: 'Add Application',
       fetchData: fetchApplications,
       getLink: (id) => `/applications/${id}`,
     },
     'autonomous-agents': {
       title: 'Autonomous Agents',
       icon: <IconBrain size={24} />,
-      addButtonLabel: 'Agent hinzufügen',
+      addButtonLabel: 'Add Autonomous Agent',
       fetchData: fetchAutonomousAgents,
       getLink: (id) => `/autonomous-agents/${id}`,
     },
     credentials: {
       title: 'Credentials',
       icon: <IconKey size={24} />,
-      addButtonLabel: 'Credential hinzufügen',
+      addButtonLabel: 'Add Credential',
       fetchData: fetchCredentials,
       getLink: (id) => `/credentials/${id}`,
     },
     development: {
       title: 'Development',
       icon: <IconCode size={24} />,
-      addButtonLabel: 'Item hinzufügen',
+      addButtonLabel: 'Add Platform hinzufügen',
       fetchData: async () => {}, // No data to fetch
       getLink: () => '/development',
     },

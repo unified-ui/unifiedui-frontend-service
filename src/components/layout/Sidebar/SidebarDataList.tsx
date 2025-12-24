@@ -14,7 +14,8 @@ import {
 } from '@mantine/core';
 import {
   IconSearch,
-  IconArrowsHorizontal,
+  IconSquareArrowRight,
+  IconSquareArrowLeft,
   IconX,
   IconPlus,
   IconInbox,
@@ -159,7 +160,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
             onClick={onToggleExpand}
             title={isExpanded ? 'Verkleinern' : 'Erweitern'}
           >
-            <IconArrowsHorizontal size={18} />
+            {isExpanded ? <IconSquareArrowLeft size={18} /> : <IconSquareArrowRight size={18} />}
           </ActionIcon>
           <ActionIcon
             variant="subtle"
