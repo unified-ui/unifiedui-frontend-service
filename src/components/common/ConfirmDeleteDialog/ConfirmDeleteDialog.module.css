@@ -4,11 +4,11 @@
 }
 
 .body {
-  padding-top: var(--spacing-md);
+  padding-top: var(--spacing-sm);
 }
 
 .warning {
-  padding: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-sm);
   background-color: var(--color-error-50);
   border-radius: var(--radius-sm);
   border-left: 3px solid var(--color-error-500);
