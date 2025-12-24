@@ -63,6 +63,27 @@ src/
 │
 ├── components/                 # Reusable Components
 │   ├── common/                # Generic Components (basierend auf Mantine)
+│   │   ├── PageContainer/     # Responsive page wrapper
+│   │   │   ├── PageContainer.tsx
+│   │   │   ├── PageContainer.module.css
+│   │   │   └── index.ts
+│   │   ├── PageHeader/        # Page title + actions
+│   │   │   ├── PageHeader.tsx
+│   │   │   ├── PageHeader.module.css
+│   │   │   └── index.ts
+│   │   ├── DataTable/         # Feature-rich data table
+│   │   │   ├── DataTable.tsx
+│   │   │   ├── DataTableToolbar.tsx
+│   │   │   ├── DataTableRow.tsx
+│   │   │   ├── DataTablePagination.tsx
+│   │   │   ├── DataTable.module.css
+│   │   │   ├── DataTableToolbar.module.css
+│   │   │   ├── DataTablePagination.module.css
+│   │   │   └── index.ts
+│   │   ├── ConfirmDeleteDialog/  # Delete confirmation modal
+│   │   │   ├── ConfirmDeleteDialog.tsx
+│   │   │   ├── ConfirmDeleteDialog.module.css
+│   │   │   └── index.ts
 │   │   ├── Button/
 │   │   │   ├── Button.tsx
 │   │   │   └── Button.module.css
@@ -85,9 +106,10 @@ src/
 │   │   ├── Card/
 │   │   │   ├── Card.tsx
 │   │   │   └── Card.module.css
-│   │   └── Overlay/
-│   │       ├── Overlay.tsx    # Für Access-Dialoge
-│   │       └── Overlay.module.css
+│   │   ├── Overlay/
+│   │   │   ├── Overlay.tsx    # Für Access-Dialoge
+│   │   │   └── Overlay.module.css
+│   │   └── index.ts           # Barrel exports
 │   ├── dialogs/               # Modal Dialogs für CRUD-Operationen
 │   │   ├── index.ts           # Exports
 │   │   ├── CreateApplicationDialog.tsx
@@ -222,6 +244,145 @@ src/
 - **ToggleButton**: Toggle/Switch Components
 - **TextBox**: Input-Felder verschiedener Typen
 - **Overlay**: Modal/Dialog für Access-Management
+
+#### Page Building Blocks (`src/components/common/`)
+
+Modulare Komponenten für einheitliche Entity-Pages:
+
+##### PageContainer
+Responsive Container mit max-width Constraints.
+```typescript
+// Props
+interface PageContainerProps {
+  children: ReactNode;
+  size?: 'sm' | 'md' | 'lg' | 'xl'; // default: 'lg'
+}
+// Size Map: sm=800, md=1000, lg=1200, xl=1400
+```
+
+##### PageHeader
+Page-Titel mit optionaler Action.
+```typescript
+interface PageHeaderProps {
+  title: string;
+  description?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  actionIcon?: ReactNode;
+}
+```
+
+##### DataTable
+Feature-reiche Datentabelle mit Toolbar, Rows und Pagination.
+```typescript
+// DataTable Props
+interface DataTableProps {
+  items: DataTableItem[];
+  isLoading?: boolean;
+  error?: string | null;
+  showType?: boolean;        // Type-Spalte anzeigen
+  showTags?: boolean;        // Tags-Spalte anzeigen  
+  showStatus?: boolean;      // Status-Switch anzeigen
+  searchPlaceholder?: string;
+  emptyMessage?: string;
+  onOpen: (id: string) => void;
+  onShare?: (id: string) => void;
+  onDuplicate?: (id: string) => void;
+  onDelete: (id: string) => void;
+  renderIcon?: () => ReactNode;
+}
+
+// DataTableItem Interface
+interface DataTableItem {
+  id: string;
+  name: string;
+  description?: string;
+  type?: string;
+  tags?: string[];
+  isActive?: boolean;
+}
+
+// Sub-Components
+- DataTableToolbar: Search, Sort, Filter (Tags, Status)
+- DataTableRow: Icon, Name+Description, Type, Tags (max 3), Status, Actions-Menu
+- DataTablePagination: Items per page (25/50/100), Page navigation
+```
+
+##### ConfirmDeleteDialog
+Bestätigungs-Dialog für DELETE-Operationen.
+```typescript
+interface ConfirmDeleteDialogProps {
+  opened: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title?: string;           // default: 'Löschen bestätigen'
+  itemName?: string;        // Name des zu löschenden Elements
+  itemType?: string;        // default: 'Element'
+  isLoading?: boolean;
+}
+```
+
+##### Verwendungsbeispiel (Entity Page Pattern)
+```typescript
+import { PageContainer, PageHeader, DataTable, ConfirmDeleteDialog } from '../../components/common';
+
+export const MyEntityPage: FC = () => {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string; name: string }>({ 
+    open: false, id: '', name: '' 
+  });
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [items, setItems] = useState<DataTableItem[]>([]);
+
+  const handleDeleteClick = (id: string) => {
+    const item = items.find(i => i.id === id);
+    setDeleteDialog({ open: true, id, name: item?.name || '' });
+  };
+
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
+    try {
+      await apiClient.deleteEntity(selectedTenant.id, deleteDialog.id);
+      setDeleteDialog({ open: false, id: '', name: '' });
+      fetchEntities();
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <MainLayout>
+      <PageContainer>
+        <PageHeader
+          title="My Entities"
+          description="Description text"
+          actionLabel="Create Entity"
+          onAction={() => setIsCreateDialogOpen(true)}
+        />
+        <DataTable
+          items={items}
+          isLoading={isLoading}
+          error={error}
+          onOpen={handleOpen}
+          onDelete={handleDeleteClick}
+          renderIcon={() => <IconMyEntity size={20} />}
+        />
+      </PageContainer>
+
+      <CreateEntityDialog opened={isCreateDialogOpen} onClose={() => setIsCreateDialogOpen(false)} />
+      
+      <ConfirmDeleteDialog
+        opened={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, id: '', name: '' })}
+        onConfirm={handleDeleteConfirm}
+        itemName={deleteDialog.name}
+        itemType="Entity"
+        isLoading={isDeleting}
+      />
+    </MainLayout>
+  );
+};
+```
 
 ### Layout Components
 - **Header**: App-Header mit Navigation

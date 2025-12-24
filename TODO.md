@@ -100,6 +100,7 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
             - created
             - Sort by Name A-Z
             - Sort by Name Z-A
+
         - FilterIcon DropDown
             - Tags
                 - multi tag filter select
@@ -118,6 +119,8 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
         - last created
         - Sort by Name A-Z
         - Sort by Name Z-A
+    - pagination ordentlich implementieren
+        - es soll ein struktur zurückgegeben werden mit total_count=100; count=25; value=[...]
 - im FE implementieren
     - tags
     - default status: disabled ()
