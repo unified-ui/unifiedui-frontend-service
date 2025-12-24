@@ -2,9 +2,10 @@ import type { FC } from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Group, TextInput, Indicator, ActionIcon, Avatar, Text, useMantineColorScheme, Stack, Paper, Button, Divider, Select, UnstyledButton } from '@mantine/core';
-import { IconSearch, IconBell, IconSparkles, IconSun, IconMoon, IconLogout, IconExternalLink } from '@tabler/icons-react';
+import { IconSearch, IconBell, IconSparkles, IconSun, IconMoon, IconLogout, IconExternalLink, IconPlus } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
 import { useIdentity } from '../../../contexts';
+import { CreateTenantDialog } from '../../dialogs';
 import classes from './Header.module.css';
 
 export const Header: FC = () => {
@@ -14,6 +15,7 @@ export const Header: FC = () => {
   const { user, tenants, selectedTenant, selectTenant } = useIdentity();
   const isDark = colorScheme === 'dark';
   const [userDropdownOpened, setUserDropdownOpened] = useState(false);
+  const [isTenantDialogOpen, setIsTenantDialogOpen] = useState(false);
   const userAccountRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -146,6 +148,16 @@ export const Header: FC = () => {
                   </Stack>
                 )}
 
+                <Button
+                  leftSection={<IconPlus size={14} />}
+                  variant="subtle"
+                  size="xs"
+                  fullWidth
+                  onClick={() => setIsTenantDialogOpen(true)}
+                >
+                  Add Tenant
+                </Button>
+
                 <Divider />
 
                 {/* Management Links */}
@@ -187,6 +199,12 @@ export const Header: FC = () => {
           )}
         </div>
       </Group>
+
+      {/* Create Tenant Dialog */}
+      <CreateTenantDialog
+        opened={isTenantDialogOpen}
+        onClose={() => setIsTenantDialogOpen(false)}
+      />
     </header>
   );
 };
