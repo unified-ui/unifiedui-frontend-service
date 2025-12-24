@@ -121,6 +121,19 @@
   border-left-color: var(--color-primary-400);
 }
 
+.itemContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-primary);
+}
+
 .itemName {
   color: var(--text-primary);
   flex: 1;

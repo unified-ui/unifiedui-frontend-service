@@ -178,18 +178,21 @@ export const Sidebar: FC = () => {
           id: app.id,
           name: app.name,
           link: entityConfigs.applications.getLink(app.id),
+          icon: <IconRobot size={16} />,
         }));
       case 'autonomous-agents':
         return autonomousAgents.map(agent => ({
           id: agent.id,
           name: agent.name,
           link: entityConfigs['autonomous-agents'].getLink(agent.id),
+          icon: <IconBrain size={16} />,
         }));
       case 'credentials':
         return credentials.map(cred => ({
           id: cred.id,
           name: cred.name,
           link: entityConfigs.credentials.getLink(cred.id),
+          icon: <IconKey size={16} />,
         }));
       case 'development':
         return []; // Empty list for development

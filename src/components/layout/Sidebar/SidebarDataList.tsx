@@ -27,6 +27,7 @@ export interface DataListItem {
   id: string;
   name: string;
   link: string;
+  icon?: React.ReactNode;
 }
 
 export interface SidebarDataListProps {
@@ -242,9 +243,14 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
                   className={classes.listItem}
                   onClick={() => handleItemClick(item)}
                 >
-                  <Text size="sm" truncate className={classes.itemName}>
-                    {item.name}
-                  </Text>
+                  <Group gap="sm" wrap="nowrap" className={classes.itemContent}>
+                    {item.icon && (
+                      <span className={classes.itemIcon}>{item.icon}</span>
+                    )}
+                    <Text size="sm" truncate className={classes.itemName}>
+                      {item.name}
+                    </Text>
+                  </Group>
                 </Box>
               ))}
               {hasMore && (
