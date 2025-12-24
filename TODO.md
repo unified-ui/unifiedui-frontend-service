@@ -19,11 +19,48 @@
     - selected tenant objekt muss auch überall verfügbar sein
 ## TODOs
 
+---
+Entwerfe eine Component in layout/sidebar.
+Nenne dieses Component SidebarDataList.
+
+Konzept:
+Wenn der Benutzer über "Applications", "Autonomous Agents", "Developmen(hier erstmal nur leere liste anzeigen, da es im be noch keine endpoints gibt)" oder "Credentials" hovert, soll dieses Component angezegt werden. Es soll direkt neben der Sidebar (selbe höhe und direkt rechts daneben) angezeigt werden.
+Dieses Comonent soll die props "Header titel", "Header icon", "DataList -> interface: "liste aus obejket, die jeweils einen name und einen link haben" und OnAdd haben.
+
+Vorbild: PowerBI Workspaces Liste, wenn man auf Workspaces in der Sidebar klickt (nur bei uns soll beim hovern aufgehen)
+
+Component:
+- Soll ein Header haben. In dem Header ist links das Icon und daneben der Namen (groß und dick); Außerdem soll ganz rechts auf der Titelhöhe noch ein "nach rechts expand/nach links verkleiner" Icon sein, welches das Component verbreitert und dann noch ein X zum schließen
+- darunter soll die SearchBar sein. Diese filtert innerhalb der compoent einfach die liste und sucht die einträge
+- ganz unten soll ein "Hinzufügen Button" sein
+- Beim Hinzufügen Button soll dann ein Dialog aufgehen, um ein Item hinzuzufügen (jeweils Autonomous Agent, Application, Credentials)
+- header und buttom sollen fixed sein und nur die liste skrollbar
+- header und button sollen jeweils mit divider von liste getrennt sein
+- das component soll einen leichten shadow haben, der das component nach leicht oben nach oben hervorhebt
+- wenn liste leer ist, zeige dies entsprechend mit einem text (und icon?) an
+- mach das component schick
+
+Impementiere logik:
+- wenn der benutzer über diese items hovert, soll das component mit den entsprechenden daten zu der Entität angezeigt werden
+- wenn der benutzer über dem component ist, soll das component weiterhin angezeigt werden
+wenn der benutzer auf das X Klickt, soll das component geschlossen werden
+- wenn der benutzer nicht mehr über dem item in der sidebar gehovert ist oder auch nicht mehr über dem component hovert, soll dieses automatisch geschlossen werden
+- wenn der Benutzer auf das Item in der Sidebar klickt, soll das component auch geschlossen werden
+- wenn der Benutzer auf der Seite der Entität ist (also zB in der Sidebar auf Applications geklickt hat), soll beim hovern über applications die component NICHT angezeigt werden, da der benutzer sich ja bereits auf der seite befindet. 
+- es soll nur einmal gerendert werden. sprcih, wenn der benutzer über applications hovert und dann über credentials hovert, soll nicht irgendwie versehndelich das component doppelt gerendert werden, sondern "umgeschaltet" auf die neue entity
+- bitte fetche die entitäten immer mit dem parameter "top=999" (es sollen immer alle aus der DB geladen werden, damit man lokal filtern kann. im BE ist ein cache hinterlegt)
+- im ersten schritt implementiere noch nicht den hinzufügen dialog. das machen wir anschließend. erstmal nur das anzeigen der component, das automatische schließen, das fetchen der daten aus dem backend mit dem api client und das lokale filtern und natürlich das design
+- auch wenn du die gesamte liste hast, rendere erstmal nicht ALLE einträge sondern führe quasi lokal eine scroll-pagination auf der in-memory liste durch
+- info: das component soll natürlich rechts neben der sidebar und "über" dem maincontent zusehen sein und nichts verschieben
+
+Ziel ist es, bei diesen Entitäten es zu ermöglichen, dem benutzer ohne die seite zu wechseln, eine liste bekommt und schnell wechseln, aber auch nicht wechseln kann
+---
+
 - SideBar Hover
     - wenn man mehr als 0,3s über einem Item mit List hovert, soll neben sidebar ein fester wie bei PowerBI Workspace aufgehen mit Search und Liste, sodass man super schnell, ohne wechseln der seite, seine App, Agent, Credential oder sonst was auswählen kann
     - das als component implementieren, in welche man liste mitgibt und OnSearch action und OnSelect action...
     - BE: wenn Search filter -> search nicht cachen! das wäre zu viel! Also wenn Search Query param gegeben ist, soll nicht gecacht werden
-    - bei applications, credentials, autonom agents, development gehen wir davon aus, dass es keine mehrere tausend einträge sind, daher: EINMAL mit top 999 fetchen; dann im Frontend filtern!
+    - bei applications, credentials, autonom agents, development gehen wir davon aus,  dass es keine mehrere tausend einträge sind, daher: EINMAL mit top 999 fetchen; dann im Frontend filtern!
     - Component:
         - Header titel + icon
         - SearchBar
@@ -31,6 +68,10 @@
         - Create Button
             - Create Dialog
                 - inkl. IAM
+
+- tenant hinzufügen
+    - im user dropdwon> tenant dropdown
+
 - CredentialsPage designen
 - ApplicationsPage designen
     - applications fetchen und anzeigen

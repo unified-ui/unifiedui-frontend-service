@@ -262,17 +262,17 @@ export class UnifiedUIAPIClient {
 
   // ========== Applications ==========
 
-  async listApplications(params?: PaginationParams & { name?: string }): Promise<ApplicationResponse[]> {
+  async listApplications(tenantId: string, params?: PaginationParams & { name?: string }): Promise<ApplicationResponse[]> {
     const queryString = params ? this.buildQueryString(params) : '';
-    return this.request<ApplicationResponse[]>(`/api/v1/applications${queryString}`);
+    return this.request<ApplicationResponse[]>(`/api/v1/tenants/${tenantId}/applications${queryString}`);
   }
 
-  async getApplication(applicationId: string): Promise<ApplicationResponse> {
-    return this.request<ApplicationResponse>(`/api/v1/applications/${applicationId}`);
+  async getApplication(tenantId: string, applicationId: string): Promise<ApplicationResponse> {
+    return this.request<ApplicationResponse>(`/api/v1/tenants/${tenantId}/applications/${applicationId}`);
   }
 
-  async createApplication(data: CreateApplicationRequest): Promise<ApplicationResponse> {
-    const response = await this.request<ApplicationResponse>('/api/v1/applications', {
+  async createApplication(tenantId: string, data: CreateApplicationRequest): Promise<ApplicationResponse> {
+    const response = await this.request<ApplicationResponse>(`/api/v1/tenants/${tenantId}/applications`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -284,8 +284,8 @@ export class UnifiedUIAPIClient {
     return response;
   }
 
-  async updateApplication(applicationId: string, data: UpdateApplicationRequest): Promise<ApplicationResponse> {
-    const response = await this.request<ApplicationResponse>(`/api/v1/applications/${applicationId}`, {
+  async updateApplication(tenantId: string, applicationId: string, data: UpdateApplicationRequest): Promise<ApplicationResponse> {
+    const response = await this.request<ApplicationResponse>(`/api/v1/tenants/${tenantId}/applications/${applicationId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
@@ -297,8 +297,8 @@ export class UnifiedUIAPIClient {
     return response;
   }
 
-  async deleteApplication(applicationId: string): Promise<void> {
-    await this.request<void>(`/api/v1/applications/${applicationId}`, {
+  async deleteApplication(tenantId: string, applicationId: string): Promise<void> {
+    await this.request<void>(`/api/v1/tenants/${tenantId}/applications/${applicationId}`, {
       method: 'DELETE',
     });
     
@@ -307,16 +307,16 @@ export class UnifiedUIAPIClient {
     }
   }
 
-  async getApplicationPrincipals(applicationId: string): Promise<ApplicationPrincipalsResponse> {
-    return this.request<ApplicationPrincipalsResponse>(`/api/v1/applications/${applicationId}/principals`);
+  async getApplicationPrincipals(tenantId: string, applicationId: string): Promise<ApplicationPrincipalsResponse> {
+    return this.request<ApplicationPrincipalsResponse>(`/api/v1/tenants/${tenantId}/applications/${applicationId}/principals`);
   }
 
-  async getApplicationPrincipalById(applicationId: string, principalId: string): Promise<PrincipalPermissionsResponse> {
-    return this.request<PrincipalPermissionsResponse>(`/api/v1/applications/${applicationId}/principals/${principalId}`);
+  async getApplicationPrincipalById(tenantId: string, applicationId: string, principalId: string): Promise<PrincipalPermissionsResponse> {
+    return this.request<PrincipalPermissionsResponse>(`/api/v1/tenants/${tenantId}/applications/${applicationId}/principals/${principalId}`);
   }
 
-  async setApplicationPermission(applicationId: string, data: SetApplicationPermissionRequest): Promise<PrincipalPermissionsResponse> {
-    const response = await this.request<PrincipalPermissionsResponse>(`/api/v1/applications/${applicationId}/principals`, {
+  async setApplicationPermission(tenantId: string, applicationId: string, data: SetApplicationPermissionRequest): Promise<PrincipalPermissionsResponse> {
+    const response = await this.request<PrincipalPermissionsResponse>(`/api/v1/tenants/${tenantId}/applications/${applicationId}/principals`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -328,8 +328,8 @@ export class UnifiedUIAPIClient {
     return response;
   }
 
-  async deleteApplicationPermission(applicationId: string, principalId: string, principalType: string): Promise<void> {
-    await this.request<void>(`/api/v1/applications/${applicationId}/principals/${principalId}?principal_type=${principalType}`, {
+  async deleteApplicationPermission(tenantId: string, applicationId: string, principalId: string, principalType: string): Promise<void> {
+    await this.request<void>(`/api/v1/tenants/${tenantId}/applications/${applicationId}/principals/${principalId}?principal_type=${principalType}`, {
       method: 'DELETE',
     });
     
@@ -340,17 +340,17 @@ export class UnifiedUIAPIClient {
 
   // ========== Autonomous Agents ==========
 
-  async listAutonomousAgents(params?: PaginationParams & { name?: string }): Promise<AutonomousAgentResponse[]> {
+  async listAutonomousAgents(tenantId: string, params?: PaginationParams & { name?: string }): Promise<AutonomousAgentResponse[]> {
     const queryString = params ? this.buildQueryString(params) : '';
-    return this.request<AutonomousAgentResponse[]>(`/api/v1/autonomous-agents${queryString}`);
+    return this.request<AutonomousAgentResponse[]>(`/api/v1/tenants/${tenantId}/autonomous-agents${queryString}`);
   }
 
-  async getAutonomousAgent(agentId: string): Promise<AutonomousAgentResponse> {
-    return this.request<AutonomousAgentResponse>(`/api/v1/autonomous-agents/${agentId}`);
+  async getAutonomousAgent(tenantId: string, agentId: string): Promise<AutonomousAgentResponse> {
+    return this.request<AutonomousAgentResponse>(`/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}`);
   }
 
-  async createAutonomousAgent(data: CreateAutonomousAgentRequest): Promise<AutonomousAgentResponse> {
-    const response = await this.request<AutonomousAgentResponse>('/api/v1/autonomous-agents', {
+  async createAutonomousAgent(tenantId: string, data: CreateAutonomousAgentRequest): Promise<AutonomousAgentResponse> {
+    const response = await this.request<AutonomousAgentResponse>(`/api/v1/tenants/${tenantId}/autonomous-agents`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -362,8 +362,8 @@ export class UnifiedUIAPIClient {
     return response;
   }
 
-  async updateAutonomousAgent(agentId: string, data: UpdateAutonomousAgentRequest): Promise<AutonomousAgentResponse> {
-    const response = await this.request<AutonomousAgentResponse>(`/api/v1/autonomous-agents/${agentId}`, {
+  async updateAutonomousAgent(tenantId: string, agentId: string, data: UpdateAutonomousAgentRequest): Promise<AutonomousAgentResponse> {
+    const response = await this.request<AutonomousAgentResponse>(`/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
@@ -375,8 +375,8 @@ export class UnifiedUIAPIClient {
     return response;
   }
 
-  async deleteAutonomousAgent(agentId: string): Promise<void> {
-    await this.request<void>(`/api/v1/autonomous-agents/${agentId}`, {
+  async deleteAutonomousAgent(tenantId: string, agentId: string): Promise<void> {
+    await this.request<void>(`/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}`, {
       method: 'DELETE',
     });
     
@@ -385,16 +385,16 @@ export class UnifiedUIAPIClient {
     }
   }
 
-  async getAutonomousAgentPrincipals(agentId: string): Promise<AutonomousAgentPrincipalsResponse> {
-    return this.request<AutonomousAgentPrincipalsResponse>(`/api/v1/autonomous-agents/${agentId}/principals`);
+  async getAutonomousAgentPrincipals(tenantId: string, agentId: string): Promise<AutonomousAgentPrincipalsResponse> {
+    return this.request<AutonomousAgentPrincipalsResponse>(`/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}/principals`);
   }
 
-  async getAutonomousAgentPrincipalById(agentId: string, principalId: string): Promise<PrincipalPermissionsResponse> {
-    return this.request<PrincipalPermissionsResponse>(`/api/v1/autonomous-agents/${agentId}/principals/${principalId}`);
+  async getAutonomousAgentPrincipalById(tenantId: string, agentId: string, principalId: string): Promise<PrincipalPermissionsResponse> {
+    return this.request<PrincipalPermissionsResponse>(`/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}/principals/${principalId}`);
   }
 
-  async setAutonomousAgentPermission(agentId: string, data: SetAutonomousAgentPermissionRequest): Promise<PrincipalPermissionsResponse> {
-    const response = await this.request<PrincipalPermissionsResponse>(`/api/v1/autonomous-agents/${agentId}/principals`, {
+  async setAutonomousAgentPermission(tenantId: string, agentId: string, data: SetAutonomousAgentPermissionRequest): Promise<PrincipalPermissionsResponse> {
+    const response = await this.request<PrincipalPermissionsResponse>(`/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}/principals`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -406,8 +406,8 @@ export class UnifiedUIAPIClient {
     return response;
   }
 
-  async deleteAutonomousAgentPermission(agentId: string, principalId: string, principalType: string): Promise<void> {
-    await this.request<void>(`/api/v1/autonomous-agents/${agentId}/principals/${principalId}?principal_type=${principalType}`, {
+  async deleteAutonomousAgentPermission(tenantId: string, agentId: string, principalId: string, principalType: string): Promise<void> {
+    await this.request<void>(`/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}/principals/${principalId}?principal_type=${principalType}`, {
       method: 'DELETE',
     });
     
@@ -418,17 +418,17 @@ export class UnifiedUIAPIClient {
 
   // ========== Conversations ==========
 
-  async listConversations(params?: PaginationParams & { name?: string }): Promise<ConversationResponse[]> {
+  async listConversations(tenantId: string, params?: PaginationParams & { name?: string }): Promise<ConversationResponse[]> {
     const queryString = params ? this.buildQueryString(params) : '';
-    return this.request<ConversationResponse[]>(`/api/v1/conversations${queryString}`);
+    return this.request<ConversationResponse[]>(`/api/v1/tenants/${tenantId}/conversations${queryString}`);
   }
 
-  async getConversation(conversationId: string): Promise<ConversationResponse> {
-    return this.request<ConversationResponse>(`/api/v1/conversations/${conversationId}`);
+  async getConversation(tenantId: string, conversationId: string): Promise<ConversationResponse> {
+    return this.request<ConversationResponse>(`/api/v1/tenants/${tenantId}/conversations/${conversationId}`);
   }
 
-  async createConversation(data: CreateConversationRequest): Promise<ConversationResponse> {
-    const response = await this.request<ConversationResponse>('/api/v1/conversations', {
+  async createConversation(tenantId: string, data: CreateConversationRequest): Promise<ConversationResponse> {
+    const response = await this.request<ConversationResponse>(`/api/v1/tenants/${tenantId}/conversations`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -440,8 +440,8 @@ export class UnifiedUIAPIClient {
     return response;
   }
 
-  async updateConversation(conversationId: string, data: UpdateConversationRequest): Promise<ConversationResponse> {
-    const response = await this.request<ConversationResponse>(`/api/v1/conversations/${conversationId}`, {
+  async updateConversation(tenantId: string, conversationId: string, data: UpdateConversationRequest): Promise<ConversationResponse> {
+    const response = await this.request<ConversationResponse>(`/api/v1/tenants/${tenantId}/conversations/${conversationId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
@@ -453,8 +453,8 @@ export class UnifiedUIAPIClient {
     return response;
   }
 
-  async deleteConversation(conversationId: string): Promise<void> {
-    await this.request<void>(`/api/v1/conversations/${conversationId}`, {
+  async deleteConversation(tenantId: string, conversationId: string): Promise<void> {
+    await this.request<void>(`/api/v1/tenants/${tenantId}/conversations/${conversationId}`, {
       method: 'DELETE',
     });
     
@@ -463,16 +463,16 @@ export class UnifiedUIAPIClient {
     }
   }
 
-  async getConversationPrincipals(conversationId: string): Promise<ConversationPrincipalsResponse> {
-    return this.request<ConversationPrincipalsResponse>(`/api/v1/conversations/${conversationId}/principals`);
+  async getConversationPrincipals(tenantId: string, conversationId: string): Promise<ConversationPrincipalsResponse> {
+    return this.request<ConversationPrincipalsResponse>(`/api/v1/tenants/${tenantId}/conversations/${conversationId}/principals`);
   }
 
-  async getConversationPrincipalById(conversationId: string, principalId: string): Promise<PrincipalPermissionsResponse> {
-    return this.request<PrincipalPermissionsResponse>(`/api/v1/conversations/${conversationId}/principals/${principalId}`);
+  async getConversationPrincipalById(tenantId: string, conversationId: string, principalId: string): Promise<PrincipalPermissionsResponse> {
+    return this.request<PrincipalPermissionsResponse>(`/api/v1/tenants/${tenantId}/conversations/${conversationId}/principals/${principalId}`);
   }
 
-  async setConversationPermission(conversationId: string, data: SetConversationPermissionRequest): Promise<PrincipalPermissionsResponse> {
-    const response = await this.request<PrincipalPermissionsResponse>(`/api/v1/conversations/${conversationId}/principals`, {
+  async setConversationPermission(tenantId: string, conversationId: string, data: SetConversationPermissionRequest): Promise<PrincipalPermissionsResponse> {
+    const response = await this.request<PrincipalPermissionsResponse>(`/api/v1/tenants/${tenantId}/conversations/${conversationId}/principals`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -484,8 +484,8 @@ export class UnifiedUIAPIClient {
     return response;
   }
 
-  async deleteConversationPermission(conversationId: string, principalId: string, principalType: string): Promise<void> {
-    await this.request<void>(`/api/v1/conversations/${conversationId}/principals/${principalId}?principal_type=${principalType}`, {
+  async deleteConversationPermission(tenantId: string, conversationId: string, principalId: string, principalType: string): Promise<void> {
+    await this.request<void>(`/api/v1/tenants/${tenantId}/conversations/${conversationId}/principals/${principalId}?principal_type=${principalType}`, {
       method: 'DELETE',
     });
     
@@ -496,17 +496,17 @@ export class UnifiedUIAPIClient {
 
   // ========== Credentials ==========
 
-  async listCredentials(params?: PaginationParams & { name?: string }): Promise<CredentialResponse[]> {
+  async listCredentials(tenantId: string, params?: PaginationParams & { name?: string }): Promise<CredentialResponse[]> {
     const queryString = params ? this.buildQueryString(params) : '';
-    return this.request<CredentialResponse[]>(`/api/v1/credentials${queryString}`);
+    return this.request<CredentialResponse[]>(`/api/v1/tenants/${tenantId}/credentials${queryString}`);
   }
 
-  async getCredential(credentialId: string): Promise<CredentialResponse> {
-    return this.request<CredentialResponse>(`/api/v1/credentials/${credentialId}`);
+  async getCredential(tenantId: string, credentialId: string): Promise<CredentialResponse> {
+    return this.request<CredentialResponse>(`/api/v1/tenants/${tenantId}/credentials/${credentialId}`);
   }
 
-  async createCredential(data: CreateCredentialRequest): Promise<CredentialResponse> {
-    const response = await this.request<CredentialResponse>('/api/v1/credentials', {
+  async createCredential(tenantId: string, data: CreateCredentialRequest): Promise<CredentialResponse> {
+    const response = await this.request<CredentialResponse>(`/api/v1/tenants/${tenantId}/credentials`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -518,8 +518,8 @@ export class UnifiedUIAPIClient {
     return response;
   }
 
-  async updateCredential(credentialId: string, data: UpdateCredentialRequest): Promise<CredentialResponse> {
-    const response = await this.request<CredentialResponse>(`/api/v1/credentials/${credentialId}`, {
+  async updateCredential(tenantId: string, credentialId: string, data: UpdateCredentialRequest): Promise<CredentialResponse> {
+    const response = await this.request<CredentialResponse>(`/api/v1/tenants/${tenantId}/credentials/${credentialId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
@@ -531,8 +531,8 @@ export class UnifiedUIAPIClient {
     return response;
   }
 
-  async deleteCredential(credentialId: string): Promise<void> {
-    await this.request<void>(`/api/v1/credentials/${credentialId}`, {
+  async deleteCredential(tenantId: string, credentialId: string): Promise<void> {
+    await this.request<void>(`/api/v1/tenants/${tenantId}/credentials/${credentialId}`, {
       method: 'DELETE',
     });
     
@@ -541,16 +541,16 @@ export class UnifiedUIAPIClient {
     }
   }
 
-  async getCredentialPrincipals(credentialId: string): Promise<CredentialPrincipalsResponse> {
-    return this.request<CredentialPrincipalsResponse>(`/api/v1/credentials/${credentialId}/principals`);
+  async getCredentialPrincipals(tenantId: string, credentialId: string): Promise<CredentialPrincipalsResponse> {
+    return this.request<CredentialPrincipalsResponse>(`/api/v1/tenants/${tenantId}/credentials/${credentialId}/principals`);
   }
 
-  async getCredentialPrincipalById(credentialId: string, principalId: string): Promise<PrincipalPermissionsResponse> {
-    return this.request<PrincipalPermissionsResponse>(`/api/v1/credentials/${credentialId}/principals/${principalId}`);
+  async getCredentialPrincipalById(tenantId: string, credentialId: string, principalId: string): Promise<PrincipalPermissionsResponse> {
+    return this.request<PrincipalPermissionsResponse>(`/api/v1/tenants/${tenantId}/credentials/${credentialId}/principals/${principalId}`);
   }
 
-  async setCredentialPermission(credentialId: string, data: SetCredentialPermissionRequest): Promise<PrincipalPermissionsResponse> {
-    const response = await this.request<PrincipalPermissionsResponse>(`/api/v1/credentials/${credentialId}/principals`, {
+  async setCredentialPermission(tenantId: string, credentialId: string, data: SetCredentialPermissionRequest): Promise<PrincipalPermissionsResponse> {
+    const response = await this.request<PrincipalPermissionsResponse>(`/api/v1/tenants/${tenantId}/credentials/${credentialId}/principals`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -562,8 +562,8 @@ export class UnifiedUIAPIClient {
     return response;
   }
 
-  async deleteCredentialPermission(credentialId: string, principalId: string, principalType: string): Promise<void> {
-    await this.request<void>(`/api/v1/credentials/${credentialId}/principals/${principalId}?principal_type=${principalType}`, {
+  async deleteCredentialPermission(tenantId: string, credentialId: string, principalId: string, principalType: string): Promise<void> {
+    await this.request<void>(`/api/v1/tenants/${tenantId}/credentials/${credentialId}/principals/${principalId}?principal_type=${principalType}`, {
       method: 'DELETE',
     });
     
@@ -574,17 +574,17 @@ export class UnifiedUIAPIClient {
 
   // ========== Custom Groups ==========
 
-  async listCustomGroups(params?: PaginationParams & { name?: string }): Promise<CustomGroupResponse[]> {
+  async listCustomGroups(tenantId: string, params?: PaginationParams & { name?: string }): Promise<CustomGroupResponse[]> {
     const queryString = params ? this.buildQueryString(params) : '';
-    return this.request<CustomGroupResponse[]>(`/api/v1/custom-groups${queryString}`);
+    return this.request<CustomGroupResponse[]>(`/api/v1/tenants/${tenantId}/custom-groups${queryString}`);
   }
 
-  async getCustomGroup(groupId: string): Promise<CustomGroupResponse> {
-    return this.request<CustomGroupResponse>(`/api/v1/custom-groups/${groupId}`);
+  async getCustomGroup(tenantId: string, groupId: string): Promise<CustomGroupResponse> {
+    return this.request<CustomGroupResponse>(`/api/v1/tenants/${tenantId}/custom-groups/${groupId}`);
   }
 
-  async createCustomGroup(data: CreateCustomGroupRequest): Promise<CustomGroupResponse> {
-    const response = await this.request<CustomGroupResponse>('/api/v1/custom-groups', {
+  async createCustomGroup(tenantId: string, data: CreateCustomGroupRequest): Promise<CustomGroupResponse> {
+    const response = await this.request<CustomGroupResponse>(`/api/v1/tenants/${tenantId}/custom-groups`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -596,8 +596,8 @@ export class UnifiedUIAPIClient {
     return response;
   }
 
-  async updateCustomGroup(groupId: string, data: UpdateCustomGroupRequest): Promise<CustomGroupResponse> {
-    const response = await this.request<CustomGroupResponse>(`/api/v1/custom-groups/${groupId}`, {
+  async updateCustomGroup(tenantId: string, groupId: string, data: UpdateCustomGroupRequest): Promise<CustomGroupResponse> {
+    const response = await this.request<CustomGroupResponse>(`/api/v1/tenants/${tenantId}/custom-groups/${groupId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
@@ -609,8 +609,8 @@ export class UnifiedUIAPIClient {
     return response;
   }
 
-  async deleteCustomGroup(groupId: string): Promise<void> {
-    await this.request<void>(`/api/v1/custom-groups/${groupId}`, {
+  async deleteCustomGroup(tenantId: string, groupId: string): Promise<void> {
+    await this.request<void>(`/api/v1/tenants/${tenantId}/custom-groups/${groupId}`, {
       method: 'DELETE',
     });
     
@@ -619,16 +619,16 @@ export class UnifiedUIAPIClient {
     }
   }
 
-  async getCustomGroupPrincipals(groupId: string): Promise<CustomGroupPrincipalsResponse> {
-    return this.request<CustomGroupPrincipalsResponse>(`/api/v1/custom-groups/${groupId}/principals`);
+  async getCustomGroupPrincipals(tenantId: string, groupId: string): Promise<CustomGroupPrincipalsResponse> {
+    return this.request<CustomGroupPrincipalsResponse>(`/api/v1/tenants/${tenantId}/custom-groups/${groupId}/principals`);
   }
 
-  async getCustomGroupPrincipalById(groupId: string, principalId: string): Promise<PrincipalPermissionsResponse> {
-    return this.request<PrincipalPermissionsResponse>(`/api/v1/custom-groups/${groupId}/principals/${principalId}`);
+  async getCustomGroupPrincipalById(tenantId: string, groupId: string, principalId: string): Promise<PrincipalPermissionsResponse> {
+    return this.request<PrincipalPermissionsResponse>(`/api/v1/tenants/${tenantId}/custom-groups/${groupId}/principals/${principalId}`);
   }
 
-  async setCustomGroupPrincipal(groupId: string, data: SetPrincipalRoleRequest): Promise<PrincipalPermissionsResponse> {
-    const response = await this.request<PrincipalPermissionsResponse>(`/api/v1/custom-groups/${groupId}/principals`, {
+  async setCustomGroupPrincipal(tenantId: string, groupId: string, data: SetPrincipalRoleRequest): Promise<PrincipalPermissionsResponse> {
+    const response = await this.request<PrincipalPermissionsResponse>(`/api/v1/tenants/${tenantId}/custom-groups/${groupId}/principals`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -640,8 +640,8 @@ export class UnifiedUIAPIClient {
     return response;
   }
 
-  async deleteCustomGroupPrincipal(groupId: string, data: DeletePrincipalRoleRequest): Promise<void> {
-    await this.request<void>(`/api/v1/custom-groups/${groupId}/principals`, {
+  async deleteCustomGroupPrincipal(tenantId: string, groupId: string, data: DeletePrincipalRoleRequest): Promise<void> {
+    await this.request<void>(`/api/v1/tenants/${tenantId}/custom-groups/${groupId}/principals`, {
       method: 'DELETE',
       body: JSON.stringify(data),
     });
