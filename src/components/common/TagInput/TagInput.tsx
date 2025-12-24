@@ -48,10 +48,18 @@ export const TagInput: FC<TagInputProps> = ({
     }
   }, [showDropdown, inputValue]);
 
-  // Search for tags when debounced input changes
+  // Use ref to track current tags value without triggering effect
+  const valueRef = useRef(value);
+  valueRef.current = value;
+
+  // Track if input is focused
+  const isFocusedRef = useRef(false);
+
+  // Search for tags when debounced input changes AND input is focused
   useEffect(() => {
     const searchTags = async () => {
-      if (!debouncedInput.trim() || !apiClient || !selectedTenant) {
+      // Only search when input is focused and has content
+      if (!isFocusedRef.current || !debouncedInput.trim() || !apiClient || !selectedTenant) {
         setSuggestions([]);
         return;
       }
@@ -63,7 +71,7 @@ export const TagInput: FC<TagInputProps> = ({
           .map(tag => tag.name)
           .filter(name => 
             name.toLowerCase().includes(debouncedInput.toLowerCase()) &&
-            !value.includes(name)
+            !valueRef.current.includes(name)
           );
         setSuggestions(filteredTags);
         setShowDropdown(filteredTags.length > 0);
@@ -77,7 +85,7 @@ export const TagInput: FC<TagInputProps> = ({
     };
 
     searchTags();
-  }, [debouncedInput, apiClient, selectedTenant, value]);
+  }, [debouncedInput, apiClient, selectedTenant]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -192,7 +200,15 @@ export const TagInput: FC<TagInputProps> = ({
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            onFocus={() => inputValue.trim() && suggestions.length > 0 && setShowDropdown(true)}
+            onFocus={() => {
+              isFocusedRef.current = true;
+              if (inputValue.trim() && suggestions.length > 0) {
+                setShowDropdown(true);
+              }
+            }}
+            onBlur={() => {
+              isFocusedRef.current = false;
+            }}
             placeholder={value.length === 0 ? placeholder : ''}
             disabled={disabled || (maxTags !== undefined && value.length >= maxTags)}
             className={classes.input}

@@ -104,8 +104,6 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
             - Tags
                 - multi tag filter select
             - status
-## TODOs
-
 - Backend:
     - development_platforms als Entity und Routes hinzufügen
         - name, description, type (Freitext, optional), iframe_url
@@ -128,20 +126,33 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
         - last created
         - Sort by Name A-Z
         - Sort by Name Z-A
-
 - tags
     - hier neues Tag-Component
 - Create-Dialoge updaten
-
-- Paginierung raus und dafür Doom-Scroll bis liste leer ist
-- default status: disabled ()
 - Standard Pages implementieren
     - ApplicationsPage
     - CredentialsPage designen
-- ApplicationsPage designen
-    - applications fetchen und anzeigen
-        - mit search, pagination, create
-    - ApplicationsDetailPage
+
+## TODOs
+
+- Development-Platform
+    - Dialog erstellen
+    - Page erstellen
+
+- Paginierung raus und dafür Doom-Scroll bis liste leer ist
+- Search implementieren (soll wirklich gegen API search gehen)
+- Sort by implementieren (default -> last updated)
+- Filter implementieren (by tags and status)
+- Table mit nötigen Daten ausstatten
+    - is_active switch
+    - tags
+    - hover -> Hand
+    - beim skrollen -> oben sieht man die liste...
+- UserDropdown > Tenants nach A-Z sortieren
+- sidebarDataList
+    - die list-resultate sollen global verfügbar bleiben
+    - wenn einmal gefetcht, nicht nochmal fetchen (erst nach Create)
+    - aber ein Refresh-Button rechts neben Search
 - SettingsPage
     - tenant settings
         - name -> rename
@@ -150,6 +161,10 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
     - Custom Groups
     - Billing & Licence
     - => über **TabNavigation** oder SideBar?
+- ApplicationsPage designen
+    - ApplicationsDetailPage
+        - IAM
+        - UPDATE
 
 - Backend:
     - für die Principals soll noch jeweils der Name gefetcht werden!
