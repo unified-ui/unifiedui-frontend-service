@@ -18,15 +18,24 @@
   align-items: flex-start;
   min-height: 36px;
   padding: var(--spacing-xs) var(--spacing-sm);
-  background-color: var(--bg-paper);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
+  background-color: var(--color-gray-0);
+  border: 1px solid #ced4da;
+  border-radius: var(--radius-md);
   cursor: text;
   transition: border-color 0.15s ease;
 }
 
+[data-mantine-color-scheme="dark"] .container {
+  background-color: #2d2d2d;
+  border-color: #424242;
+}
+
 .container:hover:not(.containerDisabled) {
-  border-color: var(--color-gray-400);
+  border-color: #adb5bd;
+}
+
+[data-mantine-color-scheme="dark"] .container:hover:not(.containerDisabled) {
+  border-color: #555;
 }
 
 .container:focus-within:not(.containerDisabled) {
@@ -46,6 +55,10 @@
   background-color: var(--color-gray-100);
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+[data-mantine-color-scheme="dark"] .containerDisabled {
+  background-color: var(--color-gray-900);
 }
 
 .tagsWrapper {
@@ -120,21 +133,26 @@
 }
 
 .dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  margin-top: 4px;
-  z-index: var(--z-dropdown);
+  position: fixed;
+  z-index: calc(var(--z-modal) + 10);
   background-color: var(--bg-paper);
   border-radius: var(--radius-sm);
   overflow: hidden;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: var(--spacing-xs);
 }
 
 .suggestion {
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: 4px var(--spacing-sm);
   cursor: pointer;
   transition: background-color 0.1s ease;
+  border-radius: var(--radius-sm);
+  margin-bottom: 2px;
+}
+
+.suggestion:last-child {
+  margin-bottom: 0;
 }
 
 .suggestion:hover,

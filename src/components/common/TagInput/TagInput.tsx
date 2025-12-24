@@ -1,5 +1,5 @@
 import { type FC, useState, useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
-import { Box, Text, CloseButton, Loader, Paper, ScrollArea } from '@mantine/core';
+import { Box, Text, CloseButton, Loader, Paper, Portal } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import { useIdentity } from '../../../contexts';
 import classes from './TagInput.module.css';
@@ -32,8 +32,21 @@ export const TagInput: FC<TagInputProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Update dropdown position when showing
+  useEffect(() => {
+    if (showDropdown && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  }, [showDropdown, inputValue]);
 
   // Search for tags when debounced input changes
   useEffect(() => {
@@ -192,33 +205,32 @@ export const TagInput: FC<TagInputProps> = ({
       </Box>
 
       {showDropdown && suggestions.length > 0 && (
-        <Paper className={classes.dropdown} shadow="md" withBorder>
-          <ScrollArea.Autosize mah={200}>
+        <Portal>
+          <Paper 
+            className={classes.dropdown} 
+            shadow="md" 
+            withBorder
+            style={{
+              top: dropdownPosition.top,
+              left: dropdownPosition.left,
+              width: dropdownPosition.width,
+            }}
+          >
             {suggestions.map((suggestion, index) => (
               <Box
                 key={suggestion}
                 className={`${classes.suggestion} ${index === highlightedIndex ? classes.suggestionHighlighted : ''}`}
-                onClick={() => handleSuggestionClick(suggestion)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleSuggestionClick(suggestion);
+                }}
                 onMouseEnter={() => setHighlightedIndex(index)}
               >
                 <Text size="sm">{suggestion}</Text>
               </Box>
             ))}
-          </ScrollArea.Autosize>
-        </Paper>
-      )}
-
-      {inputValue.trim() && !suggestions.includes(inputValue.trim()) && showDropdown && (
-        <Paper className={classes.dropdown} shadow="md" withBorder>
-          <Box
-            className={`${classes.suggestion} ${classes.createNew}`}
-            onClick={() => addTag(inputValue)}
-          >
-            <Text size="sm">
-              Neuen Tag erstellen: <strong>"{inputValue.trim()}"</strong>
-            </Text>
-          </Box>
-        </Paper>
+          </Paper>
+        </Portal>
       )}
 
       {error && (
