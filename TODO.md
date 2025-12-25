@@ -139,6 +139,7 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
     - aber ein Refresh-Button rechts neben Search
 
 - Divider zwischen credential und chat-widgets/dev-platform
+
 ## TODOs
 
 - Development-Platform
@@ -163,6 +164,7 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
 
 - Backend:
     - für die Principals soll noch jeweils der Name gefetcht werden!
+    - Backend eindockern und lokal ins docker compose übernehmen und über docker compose starten (inkl. restart!)
 
 - SettingsPage
     - tenant settings

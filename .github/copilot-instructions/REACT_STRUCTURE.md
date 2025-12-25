@@ -16,6 +16,10 @@ Diese Datei definiert die Projektstruktur für ein mittelgroßes bis großes Rea
 src/
 ├── main.tsx                    # Entry Point
 ├── App.tsx                     # Main App Component mit Router
+├── App.css                     # App-spezifische Styles
+├── index.css                   # Globale CSS Imports
+├── authConfig.ts               # MSAL Konfiguration (Root-Level)
+│
 ├── routes/                     # Route Definitionen
 │   ├── index.tsx              # Route Configuration
 │   └── ProtectedRoute.tsx     # Auth-Protected Routes
@@ -23,43 +27,44 @@ src/
 ├── pages/                      # Page Components
 │   ├── LoginPage/
 │   │   ├── LoginPage.tsx
-│   │   └── LoginPage.module.css
+│   │   ├── LoginPage.module.css
+│   │   └── index.ts
 │   ├── DashboardPage/
 │   │   ├── DashboardPage.tsx
-│   │   └── DashboardPage.module.css
-│   ├── CredentialsPage/
-│   │   ├── CredentialsPage.tsx
-│   │   ├── CredentialsList.tsx
-│   │   ├── CredentialsDetails.tsx
-│   │   ├── CredentialsForm.tsx
-│   │   └── CredentialsPage.module.css
-│   ├── TenantSettingsPage/
-│   │   ├── TenantSettingsPage.tsx
-│   │   ├── IAMSettings.tsx
-│   │   └── TenantSettingsPage.module.css
+│   │   ├── DashboardPage.module.css
+│   │   └── index.ts
 │   ├── ApplicationsPage/
 │   │   ├── ApplicationsPage.tsx
-│   │   ├── ApplicationsList.tsx
-│   │   ├── ApplicationDetails.tsx
-│   │   ├── ApplicationForm.tsx
-│   │   └── ApplicationsPage.module.css
-│   ├── ConversationsPage/
-│   │   ├── ConversationsPage.tsx
-│   │   ├── ConversationsList.tsx
-│   │   ├── ConversationDetails.tsx
-│   │   ├── MessagesList.tsx
-│   │   └── ConversationsPage.module.css
+│   │   ├── ApplicationsPage.module.css
+│   │   └── index.ts
 │   ├── AutonomousAgentsPage/
 │   │   ├── AutonomousAgentsPage.tsx
-│   │   ├── AgentsList.tsx
-│   │   ├── AgentDetails.tsx
-│   │   ├── TracingHistory.tsx
-│   │   └── AutonomousAgentsPage.module.css
+│   │   ├── AutonomousAgentsPage.module.css
+│   │   └── index.ts
+│   ├── ConversationsPage/
+│   │   ├── ConversationsPage.tsx
+│   │   ├── ConversationsPage.module.css
+│   │   └── index.ts
+│   ├── CredentialsPage/
+│   │   ├── CredentialsPage.tsx
+│   │   ├── CredentialsPage.module.css
+│   │   └── index.ts
+│   ├── TenantSettingsPage/
+│   │   ├── TenantSettingsPage.tsx
+│   │   ├── TenantSettingsPage.module.css
+│   │   └── index.ts
+│   ├── DevelopmentPage/
+│   │   ├── DevelopmentPage.tsx
+│   │   ├── DevelopmentPage.module.css
+│   │   └── index.ts
 │   ├── WidgetDesignerPage/
 │   │   ├── WidgetDesignerPage.tsx
-│   │   └── WidgetDesignerPage.module.css
+│   │   ├── WidgetDesignerPage.module.css
+│   │   └── index.ts
 │   └── NotFoundPage/
-│       └── NotFoundPage.tsx
+│       ├── NotFoundPage.tsx
+│       ├── NotFoundPage.module.css
+│       └── index.ts
 │
 ├── components/                 # Reusable Components
 │   ├── common/                # Generic Components (basierend auf Mantine)
@@ -84,31 +89,10 @@ src/
 │   │   │   ├── ConfirmDeleteDialog.tsx
 │   │   │   ├── ConfirmDeleteDialog.module.css
 │   │   │   └── index.ts
-│   │   ├── Button/
-│   │   │   ├── Button.tsx
-│   │   │   └── Button.module.css
-│   │   ├── Toast/
-│   │   │   ├── Toast.tsx
-│   │   │   ├── ToastTypes.ts  # DELETE, SUCCESS, WARNING, INFO
-│   │   │   └── Toast.module.css
-│   │   ├── Dropdown/
-│   │   │   ├── Dropdown.tsx   # Searchable Dropdown
-│   │   │   └── Dropdown.module.css
-│   │   ├── Checkbox/
-│   │   │   ├── Checkbox.tsx
-│   │   │   └── Checkbox.module.css
-│   │   ├── ToggleButton/
-│   │   │   ├── ToggleButton.tsx
-│   │   │   └── ToggleButton.module.css
-│   │   ├── TextBox/
-│   │   │   ├── TextBox.tsx
-│   │   │   └── TextBox.module.css
-│   │   ├── Card/
-│   │   │   ├── Card.tsx
-│   │   │   └── Card.module.css
-│   │   ├── Overlay/
-│   │   │   ├── Overlay.tsx    # Für Access-Dialoge
-│   │   │   └── Overlay.module.css
+│   │   ├── TagInput/          # Tag input with autocomplete
+│   │   │   ├── TagInput.tsx
+│   │   │   ├── TagInput.module.css
+│   │   │   └── index.ts
 │   │   └── index.ts           # Barrel exports
 │   ├── dialogs/               # Modal Dialogs für CRUD-Operationen
 │   │   ├── index.ts           # Exports
@@ -116,56 +100,35 @@ src/
 │   │   ├── CreateAutonomousAgentDialog.tsx
 │   │   ├── CreateCredentialDialog.tsx
 │   │   └── CreateTenantDialog.tsx
-│   ├── layout/                # Layout Components
-│   │   ├── Header/
-│   │   │   ├── Header.tsx
-│   │   │   └── Header.module.css
-│   │   ├── Sidebar/
-│   │   │   ├── Sidebar.tsx           # Navigation + DataList Integration
-│   │   │   ├── Sidebar.module.css
-│   │   │   ├── SidebarDataList.tsx   # PowerBI-like Entity-Liste
-│   │   │   └── SidebarDataList.module.css
-│   │   └── MainLayout/
-│   │       ├── MainLayout.tsx
-│   │       └── MainLayout.module.css
-│   └── features/              # Feature-specific Components
-│       ├── Conversations/
-│       │   ├── ConversationsList.tsx
-│       │   ├── ConversationMessages.tsx
-│       │   └── ConversationAccess.tsx
-│       ├── Credentials/
-│       │   ├── CredentialTestConnection.tsx
-│       │   └── CredentialAccessOverlay.tsx
-│       ├── Applications/
-│       │   ├── ApplicationAccessOverlay.tsx
-│       │   └── ApplicationCredentialsForm.tsx
-│       └── Dashboard/
-│           ├── RecentConversations.tsx
-│           ├── RecentApplications.tsx
-│           ├── RecentAgents.tsx
-│           └── Favorites.tsx
+│   └── layout/                # Layout Components
+│       ├── Header/
+│       │   ├── Header.tsx
+│       │   ├── Header.module.css
+│       │   └── index.ts
+│       ├── Sidebar/
+│       │   ├── Sidebar.tsx           # Navigation + DataList Integration
+│       │   ├── Sidebar.module.css
+│       │   ├── SidebarDataList.tsx   # PowerBI-like Entity-Liste
+│       │   ├── SidebarDataList.module.css
+│       │   └── index.ts
+│       └── MainLayout/
+│           ├── MainLayout.tsx
+│           ├── MainLayout.module.css
+│           └── index.ts
 │
 ├── theme/                      # Zentrale Theme-Verwaltung
 │   ├── index.ts               # Theme Export
 │   ├── mantineTheme.ts        # Mantine Theme Configuration
 │   ├── colors.ts              # Color Definitions (alle Themes)
-│   ├── spacing.ts             # Spacing System
-│   ├── typography.ts          # Typography Settings
-│   └── radius.ts              # Border Radius Definitions
+│   └── spacing.ts             # Spacing System
 │
 ├── styles/                     # Globale Styles
-│   ├── global.css             # Global CSS
 │   └── variables.css          # CSS Custom Properties
 │
 ├── auth/                       # Authentication
 │   ├── authConfig.ts          # MSAL Configuration
 │   ├── AuthProvider.tsx       # Auth Context Provider
-│   └── useAuth.ts             # Auth Hook
-│
-├── hooks/                      # Custom Hooks
-│   ├── useTheme.ts            # Theme Hook (Light/Dark + Color Themes)
-│   ├── useApi.ts              # API Hook
-│   └── useLocalStorage.ts     # Local Storage Hook
+│   └── index.ts               # Exports
 │
 ├── api/                        # API Client & Types
 │   ├── types.ts               # TypeScript Types für alle API Endpoints
@@ -175,17 +138,16 @@ src/
 │
 ├── contexts/                   # React Contexts
 │   ├── IdentityContext.tsx    # Global Identity State (User, Tenants)
+│   ├── SidebarDataContext.tsx # Global Sidebar Data Cache
 │   └── index.ts               # Context Exports
 │
-├── utils/                      # Utility Functions
-│   ├── constants.ts           # App Constants
-│   ├── helpers.ts             # Helper Functions
-│   └── validators.ts          # Validation Functions
-│
 └── assets/                     # Static Assets
-    ├── images/
-    ├── icons/
-   Pages-Übersicht
+    └── (images, icons, etc.)
+```
+
+---
+
+## Pages-Übersicht
 
 ### LoginPage
 - MSAL Authentication Integration
@@ -197,53 +159,56 @@ src/
 - **Meine letzten Autonomen Agents**: Liste der kürzlich genutzten Agents
 - **Meine Favoriten**: Favorisierte Applications und Auto-Agents
 
-### CredentialsPage
-- **Liste**: Übersicht aller Credentials
-- **Details**: Detailansicht mit Access-Overlay
-- **Form**: Formular zum Erstellen/Bearbeiten
-- **Test-Connection**: Funktion zum Testen der Verbindung
-
-### TenantSettingsPage
-- **IAM Settings**:
-  - Tenant Access Management
-  - Custom Groups Verwaltung
-
 ### ApplicationsPage
-- **Liste**: Übersicht aller Applications
-- **Details**: Detailansicht mit:
-  - Access-Overlay
-  - Liste der Conversations
-    - Conversation Details mit Messages
-    - Access-Verwaltung
+- **Liste**: Übersicht aller Applications mit DataTable
+- **Details**: Detailansicht mit Access-Overlay
 - **Form**: Application erstellen/bearbeiten
-- **Credentials direkt anlegbar** (mit default Namen)
+- **Integration**: Nutzt useSidebarData() für Cache-Refresh nach Create/Delete
+
+### AutonomousAgentsPage
+- **Liste**: Übersicht aller autonomen Agents mit DataTable
+- **Details**: Detailansicht eines Agents
+- **Tracing History**: Liste aller Traces mit Details
+- **Integration**: Nutzt useSidebarData() für Cache-Refresh nach Create/Delete
 
 ### ConversationsPage
 - **Als eigenständige Page**: Alle Conversations anzeigen
 - **Als Component**: Wiederverwendbar unter ApplicationsPage
 - Details mit Messages und Access-Verwaltung
 
-### AutonomousAgentsPage
-- **Liste**: Übersicht aller autonomen Agents
-- **Details**: Detailansicht eines Agents
-- **Tracing History**:
-  - Liste aller Traces
-  - Details einzelner Traces
+### CredentialsPage
+- **Liste**: Übersicht aller Credentials mit DataTable
+- **Details**: Detailansicht mit Access-Overlay
+- **Form**: Formular zum Erstellen/Bearbeiten
+- **Test-Connection**: Funktion zum Testen der Verbindung
+- **Integration**: Nutzt useSidebarData() für Cache-Refresh nach Create/Delete
+
+### TenantSettingsPage
+- **IAM Settings**:
+  - Tenant Access Management
+  - Custom Groups Verwaltung
+
+### DevelopmentPage
+- **Placeholder**: Development-bezogene Features und Tools
 
 ### WidgetDesignerPage
 - **Placeholder**: Konzept folgt später
 
+### NotFoundPage
+- 404 Error Page für unbekannte Routes
+
+---
+
 ## Standard Components (Mantine-basiert)
 
 ### Common Components
-- **Button**: Verschiedene Varianten (Primary, Secondary, Danger, etc.)
-- **Toast**: Notification-System
-  - Types: `DELETE`, `SUCCESS`, `WARNING`, `INFO`, `ERROR`
-- **Dropdown**: Searchable Dropdown-Menü
-- **Checkbox**: Standard-Checkboxen
-- **ToggleButton**: Toggle/Switch Components
-- **TextBox**: Input-Felder verschiedener Typen
-- **Overlay**: Modal/Dialog für Access-Management
+Die Anwendung nutzt **Mantine Components** als Basis. Eigene Common Components sind in `src/components/common/`:
+
+- **PageContainer**: Responsive Container mit max-width
+- **PageHeader**: Page-Titel mit optionaler Action
+- **DataTable**: Feature-reiche Datentabelle
+- **ConfirmDeleteDialog**: Bestätigungs-Dialog für DELETE-Operationen
+- **TagInput**: Tag-Input mit Autocomplete und Debouncing
 
 #### Page Building Blocks (`src/components/common/`)
 
@@ -320,6 +285,28 @@ interface ConfirmDeleteDialogProps {
   itemType?: string;        // default: 'Element'
   isLoading?: boolean;
 }
+```
+
+##### TagInput
+Tag-Input-Feld mit Autocomplete und Debouncing.
+```typescript
+interface TagInputProps {
+  value: string[];           // Aktuell ausgewählte Tags
+  onChange: (tags: string[]) => void;
+  placeholder?: string;      // default: 'Tag hinzufügen...'
+  label?: string;            // Optional: Label über dem Input
+  maxTags?: number;          // Maximale Anzahl Tags
+  allowNew?: boolean;        // default: true - Neue Tags erlauben
+  suggestions?: string[];    // Verfügbare Tag-Vorschläge
+  disabled?: boolean;
+}
+
+// Features:
+// - Autocomplete mit Dropdown-Vorschlägen
+// - Debounced Suche (300ms)
+// - Neue Tags per Enter oder Auswahl erstellen
+// - Tags per Klick oder Backspace entfernen
+// - Keyboard-Navigation in Vorschlägen
 ```
 
 ##### Verwendungsbeispiel (Entity Page Pattern)
@@ -668,7 +655,9 @@ Korrekte Reihenfolge in `main.tsx`:
   <MsalProvider instance={msalInstance}>
     <AuthProvider>              {/* MSAL Auth Wrapper */}
       <IdentityProvider>        {/* Verwendet useAuth() */}
-        <App />
+        <SidebarDataProvider>   {/* Globaler Sidebar Data Cache */}
+          <App />
+        </SidebarDataProvider>
       </IdentityProvider>
     </AuthProvider>
   </MsalProvider>
@@ -706,6 +695,78 @@ const users = await apiClient?.getUsers();
 - **API Client verwenden**: Nutze `useIdentity()` Hook für API-Zugriff
 - **Toast-System nutzen**: Automatische Benachrichtigungen via API Client
 - **Tenant-Context nutzen**: Greife auf `selectedTenant` zu, nicht auf lokalen State
+- **Sidebar-Cache nutzen**: Nutze `useSidebarData()` für Entity-Listen in der Sidebar
+- **Cache-Refresh nach CRUD**: Rufe `refreshApplications()`, `refreshAutonomousAgents()`, `refreshCredentials()` nach Create/Delete-Operationen auf
+
+---
+
+## SidebarDataContext (`src/contexts/SidebarDataContext.tsx`)
+
+Globaler Cache für Sidebar-Entity-Daten (Applications, AutonomousAgents, Credentials).
+
+### Features
+
+✅ **Einmaliges Laden** - Daten werden nur einmal geladen, dann gecacht
+✅ **Separate Refresh-Funktion** - `refresh*()` sendet `X-Use-Cache: false` Header
+✅ **Loading-States** - Separate isLoading und isRefreshing States
+✅ **Tenant-Aware** - Cache wird bei Tenant-Wechsel automatisch geleert
+✅ **Error-Handling** - Error-State pro Entity-Typ
+
+### Verwendung
+
+```typescript
+import { useSidebarData } from '../contexts';
+
+const MyComponent = () => {
+  const {
+    // Applications
+    applications,              // DataListItem[]
+    applicationsLoading,       // boolean
+    applicationsRefreshing,    // boolean
+    applicationsError,         // string | null
+    fetchApplications,         // () => Promise<void> - verwendet Cache
+    refreshApplications,       // () => Promise<void> - X-Use-Cache: false
+    
+    // Autonomous Agents
+    autonomousAgents,
+    autonomousAgentsLoading,
+    autonomousAgentsRefreshing,
+    autonomousAgentsError,
+    fetchAutonomousAgents,
+    refreshAutonomousAgents,
+    
+    // Credentials
+    credentials,
+    credentialsLoading,
+    credentialsRefreshing,
+    credentialsError,
+    fetchCredentials,
+    refreshCredentials,
+    
+    // Utility
+    clearCache,                // () => void - Leert alle Caches
+  } = useSidebarData();
+  
+  // Nach Create/Delete aufrufen
+  const handleCreate = async (data: CreateApplicationRequest) => {
+    await apiClient?.createApplication(selectedTenant.id, data);
+    await refreshApplications();  // Cache aktualisieren
+  };
+};
+```
+
+### Verwendung in Entity-Pages
+
+```typescript
+// In ApplicationsPage.tsx
+const { refreshApplications } = useSidebarData();
+
+const handleDeleteConfirm = async () => {
+  await apiClient?.deleteApplication(selectedTenant.id, id);
+  await refreshApplications();  // Sidebar-Cache aktualisieren
+  fetchEntities();              // Page-Daten neu laden
+};
+```
 
 ---
 
@@ -721,6 +782,7 @@ Die `SidebarDataList` ist eine PowerBI-inspirierte Komponente, die beim Hover ü
 - **Loading-Delay**: Loading-Indicator erscheint erst nach 300ms (verhindert Flackern)
 - **Expand/Collapse**: Breite wechselt zwischen 320px und 450px
 - **Entity-Icons**: Jedes Item zeigt sein Entity-Icon (Robot, Brain, Key)
+- **Refresh**: Refresh-Button neben der Suche lädt Daten mit `X-Use-Cache: false`
 
 ### Props
 ```typescript
@@ -729,9 +791,11 @@ interface SidebarDataListProps {
   icon: React.ReactNode;
   items: DataListItem[];
   isLoading?: boolean;
+  isRefreshing?: boolean;    // Refresh-Spinner Status
   error?: string | null;
   onAdd?: () => void;
   onClose: () => void;
+  onRefresh?: () => void;    // Refresh Handler
   isExpanded?: boolean;
   onToggleExpand?: () => void;
   onMouseEnter?: () => void;
@@ -847,6 +911,11 @@ apiClient.createApplication(tenantId, { name, description })
 apiClient.getApplication(tenantId, applicationId)
 apiClient.updateApplication(tenantId, applicationId, data)
 apiClient.deleteApplication(tenantId, applicationId)
+
+// Mit noCache Option (sendet X-Use-Cache: false Header)
+apiClient.listApplications(tenantId, { limit: 999 }, { noCache: true })
+apiClient.listAutonomousAgents(tenantId, { limit: 999 }, { noCache: true })
+apiClient.listCredentials(tenantId, { limit: 999 }, { noCache: true })
 
 // Gleiche Struktur für:
 // - Autonomous Agents
