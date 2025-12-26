@@ -55,6 +55,9 @@ export const TagInput: FC<TagInputProps> = ({
   // Track if input is focused
   const isFocusedRef = useRef(false);
 
+  // Cache last search to optimize API calls
+  const lastSearchRef = useRef<{ query: string; hadResults: boolean } | null>(null);
+
   // Search for tags when debounced input changes AND input is focused
   useEffect(() => {
     const searchTags = async () => {
@@ -64,15 +67,37 @@ export const TagInput: FC<TagInputProps> = ({
         return;
       }
 
+      // Optimization: Skip fetch if last search was empty and current input is longer
+      if (lastSearchRef.current) {
+        const { query: lastQuery, hadResults: lastHadResults } = lastSearchRef.current;
+        const isLonger = debouncedInput.length > lastQuery.length;
+        const startsWithLast = debouncedInput.toLowerCase().startsWith(lastQuery.toLowerCase());
+        
+        if (!lastHadResults && isLonger && startsWithLast) {
+          // User added characters to a query that had no results
+          // No need to fetch again, will still be empty
+          setSuggestions([]);
+          setShowDropdown(false);
+          return;
+        }
+      }
+
       setIsLoading(true);
       try {
-        const response = await apiClient.listTags(selectedTenant.id, { limit: 20 });
+        const response = await apiClient.listTags(selectedTenant.id, { limit: 10 });
         const filteredTags = response.tags
           .map(tag => tag.name)
           .filter(name => 
             name.toLowerCase().includes(debouncedInput.toLowerCase()) &&
             !valueRef.current.includes(name)
           );
+        
+        // Cache this search result
+        lastSearchRef.current = {
+          query: debouncedInput,
+          hadResults: filteredTags.length > 0,
+        };
+        
         setSuggestions(filteredTags);
         setShowDropdown(filteredTags.length > 0);
         setHighlightedIndex(-1);
@@ -109,6 +134,7 @@ export const TagInput: FC<TagInputProps> = ({
     setInputValue('');
     setSuggestions([]);
     setShowDropdown(false);
+    lastSearchRef.current = null; // Reset cache when tag is added
     inputRef.current?.focus();
   }, [value, onChange, maxTags]);
 
