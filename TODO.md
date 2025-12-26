@@ -156,28 +156,32 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
                 - jetzt kommen in den benutzer nur noch die identity groups, die auch in der App genutzt werden! (aus principals)
         - überall, wo principal_id oder user_id ist
             - soll gecheckt werden -> existiert principal? wenn nein -> hinzufügen
-
-    
         - dann müssen permission check angepasst werden
             - können nun viel effizienter gefetcht werden
     - bei den /principals routes
         - sollen principals immer rangejoint werden
-
-    - refactoring:
-        - zentrale helper functions für:
-            - principals hinzufügen (nicht tenants)
-            - tags hinzufügen
-            - user favorites
     - tests etc refactoren
-    - app zum laufen bringen
+    - bei LIST -> ohne metadaten und nur wichtige Daten ausgeben
+        - ggf ?view=quick-list -> dann nur id+name
+    - aktuell ist bei order_by und is_active -> kein cache
+        - aber order by + order direction und is_active sollen auch gecacht werden!
+    - tests refactoren:
+        - ich habe felder hinzugefügt. die CREATE, PUT/PATCH logik muss in handlern implementiert sein und in den tests getestet sein -> prüfen!
+    - Backend eindockern und lokal ins docker compose übernehmen und über docker compose starten (inkl. restart!)
 
+    - custom groups
+        - created by und updated by ist null
+        - TODO: review der tests MIT created_by und updated_by -> current user id
+        - dann alle die fehlschlagen -> handler fixen!
+    - FE: login/token page -> um token zu sehen
+    - app zum laufen bringen
     - get_me() testen
         - bekomme ich tenants + rollen im tenant?
 
-    - bei LIST -> ohne metadaten und nur wichtige Daten ausgeben
-        - ggf ?view=quick-list -> dann nur id+name
-    - Backend eindockern und lokal ins docker compose übernehmen und über docker compose starten (inkl. restart!)
-
+- client.ts und responses etc anpassen und erweitern
+    - view=quick-list -> für die sidebardatalist
+    - PUT identity/principals/{id}/refresh
+    - ...
 
 - Development-Platform
     - Dialog erstellen
@@ -313,4 +317,8 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
 **Zukunft**
 - im userdropdown > Refresh my Credentials -> cache leeren für user
 - gesamtes Backend refactoren
+    - zentrale helper functions für:
+        - principals hinzufügen (nicht tenants)
+        - tags hinzufügen
+        - user favorites
 - gesamtes Frontend refactoren

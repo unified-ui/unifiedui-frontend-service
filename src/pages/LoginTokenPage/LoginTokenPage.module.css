@@ -1,0 +1,180 @@
+/* Page Wrapper with Animated Background */
+.pageWrapper {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, 
+    var(--color-primary-900) 0%, 
+    var(--color-secondary-900) 50%, 
+    var(--color-primary-900) 100%);
+}
+
+[data-mantine-color-scheme='dark'] .pageWrapper {
+  background: linear-gradient(135deg, 
+    #0a0a0a 0%, 
+    #1a1a2e 50%, 
+    #0a0a0a 100%);
+}
+
+/* Animated Gradient Orbs */
+.animatedBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.gradientOrb1,
+.gradientOrb2,
+.gradientOrb3 {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  animation: float 20s ease-in-out infinite;
+}
+
+.gradientOrb1 {
+  width: 500px;
+  height: 500px;
+  background: var(--color-primary-500);
+  top: -10%;
+  left: -10%;
+  animation-delay: 0s;
+}
+
+.gradientOrb2 {
+  width: 400px;
+  height: 400px;
+  background: var(--color-secondary-500);
+  bottom: -10%;
+  right: -10%;
+  animation-delay: 5s;
+}
+
+.gradientOrb3 {
+  width: 350px;
+  height: 350px;
+  background: var(--color-info-500);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 10s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -30px) scale(1.1);
+  }
+  66% {
+    transform: translate(-30px, 30px) scale(0.9);
+  }
+}
+
+/* Container */
+.container {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+}
+
+/* Back Button */
+.backButton {
+  align-self: flex-start;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-mantine-color-scheme='light'] .backButton {
+  color: var(--color-gray-700);
+}
+
+.backButton:hover {
+  color: var(--color-primary-300);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-mantine-color-scheme='light'] .backButton:hover {
+  color: var(--color-primary-600);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Info Card */
+.infoCard {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: fadeInUp 0.6s ease-out;
+}
+
+[data-mantine-color-scheme='light'] .infoCard {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.infoCard * {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+[data-mantine-color-scheme='light'] .infoCard * {
+  color: var(--color-gray-900);
+}
+
+/* Token Card */
+.tokenCard {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: fadeInUp 0.8s ease-out;
+}
+
+[data-mantine-color-scheme='light'] .tokenCard {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.tokenCard * {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+[data-mantine-color-scheme='light'] .tokenCard * {
+  color: var(--color-gray-900);
+}
+
+.tokenDisplay {
+  background: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 0.875rem;
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+[data-mantine-color-scheme='light'] .tokenDisplay {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-gray-900);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

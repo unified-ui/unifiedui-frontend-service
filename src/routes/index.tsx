@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 import { LoginPage } from '../pages/LoginPage';
+import { LoginTokenPage } from '../pages/LoginTokenPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { CredentialsPage } from '../pages/CredentialsPage';
 import { TenantSettingsPage } from '../pages/TenantSettingsPage';
@@ -17,6 +18,7 @@ export const AppRoutes = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/login/token" element={<LoginTokenPage />} />
         
         {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />

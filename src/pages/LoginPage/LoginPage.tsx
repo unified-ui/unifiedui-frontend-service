@@ -1,44 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Container, Title, Text, Button, Paper, Stack, CopyButton, ActionIcon, Tooltip, Group, Code, Grid, Loader } from '@mantine/core';
-import { IconCopy, IconCheck, IconLogin, IconLogout, IconRobot, IconBrain, IconNetwork, IconShield, IconUsers, IconSparkles } from '@tabler/icons-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Container, Title, Text, Button, Paper, Stack, Group, Grid, Loader } from '@mantine/core';
+import { IconLogin, IconLogout, IconRobot, IconBrain, IconNetwork, IconShield, IconUsers, IconSparkles } from '@tabler/icons-react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../../auth';
 import { useIdentity } from '../../contexts';
 import classes from './LoginPage.module.css';
 
 export const LoginPage = () => {
-  const { isAuthenticated, login, logout, getAccessToken, account } = useAuth();
+  const { isAuthenticated, login, logout, account } = useAuth();
   const { user, tenants, selectedTenant, isLoading: identityLoading } = useIdentity();
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
 
   // Redirect to original URL or dashboard if already authenticated AND identity is loaded
+  // But DON'T redirect if user is on /login/token page
   useEffect(() => {
-    if (isAuthenticated && !identityLoading && user) {
+    if (isAuthenticated && !identityLoading && user && location.pathname === '/login') {
       const redirectUrl = searchParams.get('redirect') || '/dashboard';
       navigate(redirectUrl, { replace: true });
     }
-  }, [isAuthenticated, identityLoading, user, navigate, searchParams]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchToken();
-    }
-  }, [isAuthenticated]);
-
-  const fetchToken = async () => {
-    setIsLoading(true);
-    try {
-      const accessToken = await getAccessToken();
-      setToken(accessToken);
-    } catch (error) {
-      console.error('Failed to fetch token:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [isAuthenticated, identityLoading, user, navigate, searchParams, location.pathname]);
 
   const handleLogin = async () => {
     setIsLoading(true);
@@ -54,17 +37,10 @@ export const LoginPage = () => {
     setIsLoading(true);
     try {
       await logout();
-      setToken(null);
     } catch (error) {
       console.error('Logout failed:', error);
       setIsLoading(false);
     }
-  };
-
-  const getTokenPreview = (token: string) => {
-    const start = token.slice(0, 40);
-    const end = token.slice(-40);
-    return `${start}...${end}`;
   };
 
   // Features für die Landing-Section
@@ -179,91 +155,52 @@ export const LoginPage = () => {
                 </Stack>
               </Paper>
             ) : (
-              <>
-                <Paper shadow="md" radius="md" p="xl" className={classes.successCard}>
-                  <Stack gap="md">
-                    <Group justify="space-between" align="center">
-                      <div>
-                        <Text size="lg" fw={500} c="green">
-                          ✓ Erfolgreich angemeldet
-                        </Text>
-                        <Text size="sm" c="dimmed">
-                          Angemeldet als: {user?.mail || user?.display_name || account?.username || 'Unbekannt'}
-                        </Text>
-                        {selectedTenant && (
-                          <Text size="sm" c="dimmed">
-                            Aktueller Tenant: {selectedTenant.name}
-                          </Text>
-                        )}
-                      </div>
-                      <Button
-                        leftSection={<IconLogout size={18} />}
-                        color="red"
-                        variant="light"
-                        onClick={handleLogout}
-                        loading={isLoading}
-                      >
-                        Abmelden
-                      </Button>
-                    </Group>
+              <Paper shadow="md" radius="md" p="xl" className={classes.successCard}>
+                <Stack gap="md">
+                  <div>
+                    <Text size="lg" fw={500} c="green">
+                      ✓ Erfolgreich angemeldet
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      Angemeldet als: {user?.mail || user?.display_name || account?.username || 'Unbekannt'}
+                    </Text>
+                    {selectedTenant && (
+                      <Text size="sm" c="dimmed">
+                        Aktueller Tenant: {selectedTenant.name}
+                      </Text>
+                    )}
+                  </div>
+                  <Button
+                    leftSection={<IconLogout size={18} />}
+                    color="red"
+                    variant="light"
+                    onClick={handleLogout}
+                    loading={isLoading}
+                  >
+                    Abmelden
+                  </Button>
 
-                    {tenants.length > 0 && (
-                      <Stack gap="xs">
-                        <Text size="sm" fw={500}>
-                          Verfügbare Tenants ({tenants.length}):
-                        </Text>
-                        <Group gap="xs">
-                          {tenants.map((tenant) => (
-                            <Paper key={tenant.id} p="xs" withBorder>
+                  {tenants.length > 0 && (
+                    <Stack gap="xs">
+                      <Text size="sm" fw={500}>
+                        Verfügbare Tenants ({tenants.length}):
+                      </Text>
+                      <Grid gutter="xs">
+                        {tenants.map((tenant) => (
+                          <Grid.Col span={{ base: 12, sm: 6 }} key={tenant.id}>
+                            <Paper p="xs" withBorder>
                               <Text size="xs" fw={500}>{tenant.name}</Text>
                               <Text size="xs" c="dimmed">
                                 {tenant.id ? `${tenant.id.substring(0, 8)}...` : 'Keine ID'}
                               </Text>
                             </Paper>
-                          ))}
-                        </Group>
-                      </Stack>
-                    )}
-                  </Stack>
-                </Paper>
-              </>
-            )}
-
-            {token && (
-              <Paper shadow="md" radius="md" p="xl" className={classes.tokenCard}>
-                <Stack gap="md">
-                  <Group justify="space-between">
-                    <Text size="md" fw={500}>
-                      Access Token
-                    </Text>
-                    <CopyButton value={token} timeout={2000}>
-                      {({ copied, copy }) => (
-                        <Tooltip label={copied ? 'Kopiert!' : 'Token kopieren'} position="left">
-                          <ActionIcon
-                            color={copied ? 'teal' : 'gray'}
-                            variant="subtle"
-                            onClick={copy}
-                          >
-                            {copied ? <IconCheck size={18} /> : <IconCopy size={18} />}
-                          </ActionIcon>
-                        </Tooltip>
-                      )}
-                    </CopyButton>
-                  </Group>
-                  <Code block className={classes.tokenDisplay}>
-                    {getTokenPreview(token)}
-                  </Code>
-                  <Text size="xs" c="dimmed" ta="center">
-                    Klicke auf das Kopier-Symbol, um den vollständigen Token zu kopieren
-                  </Text>
+                          </Grid.Col>
+                        ))}
+                      </Grid>
+                    </Stack>
+                  )}
                 </Stack>
               </Paper>
-            )}
-
-            {!token && (
-              <Button onClick={fetchToken} loading={isLoading}>
-                Token neu laden
-              </Button>
             )}
           </Stack>
         )}
