@@ -5,8 +5,10 @@ import { IconSparkles } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { PageContainer, PageHeader, DataTable, ConfirmDeleteDialog } from '../../components/common';
 import type { DataTableItem } from '../../components/common';
+import type { SortOption } from '../../components/common/DataTable/DataTableToolbar';
 import { CreateApplicationDialog } from '../../components/dialogs';
 import { useIdentity, useSidebarData } from '../../contexts';
+import type { ApplicationResponse } from '../../api/types';
 
 export const ApplicationsPage: FC = () => {
   const navigate = useNavigate();
@@ -18,6 +20,22 @@ export const ApplicationsPage: FC = () => {
   const [items, setItems] = useState<DataTableItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>('updated');
+
+  // Map SortOption to Backend parameters
+  const getSortParams = (sort: SortOption): { order_by: string; order_direction: 'asc' | 'desc' } => {
+    switch (sort) {
+      case 'name-asc':
+        return { order_by: 'name', order_direction: 'asc' };
+      case 'name-desc':
+        return { order_by: 'name', order_direction: 'desc' };
+      case 'created':
+        return { order_by: 'created_at', order_direction: 'desc' };
+      case 'updated':
+      default:
+        return { order_by: 'updated_at', order_direction: 'desc' };
+    }
+  };
 
   const fetchApplications = useCallback(async () => {
     if (!apiClient || !selectedTenant) return;
@@ -26,7 +44,11 @@ export const ApplicationsPage: FC = () => {
     setError(null);
 
     try {
-      const data = await apiClient.listApplications(selectedTenant.id, { limit: 999 });
+      const sortParams = getSortParams(sortBy);
+      const data = await apiClient.listApplications(selectedTenant.id, { 
+        limit: 999, 
+        ...sortParams
+      }) as ApplicationResponse[];
       const tableItems: DataTableItem[] = data.map((app) => ({
         id: app.id,
         name: app.name,
@@ -42,11 +64,16 @@ export const ApplicationsPage: FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [apiClient, selectedTenant]);
+  }, [apiClient, selectedTenant, sortBy]);
 
   useEffect(() => {
     fetchApplications();
   }, [fetchApplications]);
+
+  const handleSortChange = useCallback((newSort: SortOption) => {
+    setSortBy(newSort);
+    // fetchApplications wird automatisch durch useEffect aufgerufen
+  }, []);
 
   const handleOpen = useCallback((id: string) => {
     navigate(`/applications/${id}`);
@@ -114,6 +141,8 @@ export const ApplicationsPage: FC = () => {
           onDuplicate={handleDuplicate}
           onDelete={handleDeleteClick}
           renderIcon={renderIcon}
+          sortBy={sortBy}
+          onSortChange={handleSortChange}
         />
       </PageContainer>
 

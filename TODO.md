@@ -35,6 +35,7 @@
     - app zum laufen bringen
     - get_me() testen
         - bekomme ich tenants + rollen im tenant?
+
 ## TODOs
 
 
@@ -174,6 +175,7 @@
             - hier nur Placeholder
 
 **Zukunft**
+- ttl im Backend bei den resourcen optimieren!
 - im userdropdown > Refresh my Credentials -> cache leeren für user
 - gesamtes Backend refactoren
     - zentrale helper functions für:

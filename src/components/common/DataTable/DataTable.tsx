@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from 'react';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Stack, Text, Center, Loader } from '@mantine/core';
 import { IconInbox } from '@tabler/icons-react';
 import { DataTableToolbar, type SortOption, type FilterState } from './DataTableToolbar';
@@ -34,6 +34,10 @@ interface DataTableProps {
   onDelete?: (id: string) => void;
   /** Custom row icon renderer */
   renderIcon?: (item: DataTableItem) => ReactNode;
+  /** Controlled sort value (for backend sorting) */
+  sortBy?: SortOption;
+  /** Sort change handler (for backend sorting) */
+  onSortChange?: (sort: SortOption) => void;
 }
 
 export const DataTable: FC<DataTableProps> = ({
@@ -50,17 +54,38 @@ export const DataTable: FC<DataTableProps> = ({
   onDuplicate,
   onDelete,
   renderIcon,
+  sortBy: externalSortBy,
+  onSortChange: externalOnSortChange,
 }) => {
   // Toolbar state
   const [searchValue, setSearchValue] = useState('');
-  const [sortBy, setSortBy] = useState<SortOption>('updated');
+  const [internalSortBy, setInternalSortBy] = useState<SortOption>('updated');
   const [filters, setFilters] = useState<FilterState>({ tags: [], status: 'all' });
+
+  // Delayed loading indicator (only show after 1s)
+  const [showLoader, setShowLoader] = useState(false);
+
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        setShowLoader(true);
+      }, 1000); // 1 second delay
+
+      return () => clearTimeout(timer);
+    } else {
+      setShowLoader(false);
+    }
+  }, [isLoading]);
+
+  // Use external sortBy if provided, otherwise use internal state
+  const sortBy = externalSortBy ?? internalSortBy;
+  const handleSortChange = externalOnSortChange ?? setInternalSortBy;
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
-  // Filter and sort items
+  // Filter and sort items (only if not using external sorting)
   const processedItems = useMemo(() => {
     let result = [...items];
 
@@ -88,23 +113,26 @@ export const DataTable: FC<DataTableProps> = ({
       result = result.filter((item) => item.isActive === isActive);
     }
 
-    // Apply sorting
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case 'name-asc':
-          return a.name.localeCompare(b.name);
-        case 'name-desc':
-          return b.name.localeCompare(a.name);
-        case 'created':
-        case 'updated':
-        default:
-          // For now, keep original order (would need timestamps for proper sorting)
-          return 0;
-      }
-    });
+    // Apply sorting ONLY if using internal (client-side) sorting
+    // When external sorting is used, backend handles sorting
+    if (!externalSortBy) {
+      result.sort((a, b) => {
+        switch (sortBy) {
+          case 'name-asc':
+            return a.name.localeCompare(b.name);
+          case 'name-desc':
+            return b.name.localeCompare(a.name);
+          case 'created':
+          case 'updated':
+          default:
+            // For now, keep original order (would need timestamps for proper sorting)
+            return 0;
+        }
+      });
+    }
 
     return result;
-  }, [items, searchValue, sortBy, filters]);
+  }, [items, searchValue, sortBy, filters, externalSortBy]);
 
   // Paginated items
   const paginatedItems = useMemo(() => {
@@ -139,25 +167,6 @@ export const DataTable: FC<DataTableProps> = ({
 
   const tagsForFilter = availableTags.length > 0 ? availableTags : allTags;
 
-  if (isLoading) {
-    return (
-      <Center py="xl">
-        <Stack align="center" gap="sm">
-          <Loader size="lg" />
-          <Text c="dimmed">Loading...</Text>
-        </Stack>
-      </Center>
-    );
-  }
-
-  if (error) {
-    return (
-      <Center py="xl">
-        <Text c="red">{error}</Text>
-      </Center>
-    );
-  }
-
   return (
     <div className={classes.wrapper}>
       <DataTableToolbar
@@ -165,48 +174,65 @@ export const DataTable: FC<DataTableProps> = ({
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         sortBy={sortBy}
-        onSortChange={setSortBy}
+        onSortChange={handleSortChange}
         availableTags={tagsForFilter}
         filters={filters}
         onFilterChange={handleFilterChange}
         showFilter={true}
       />
 
-      <div className={classes.scrollArea}>
-        <Stack gap="xs" className={classes.tableBody}>
-          {paginatedItems.length === 0 ? (
-            <Center py="xl">
-              <Stack align="center" gap="sm">
-                <IconInbox size={48} stroke={1} className={classes.emptyIcon} />
-                <Text c="dimmed">{emptyMessage}</Text>
-              </Stack>
-            </Center>
-          ) : (
-            paginatedItems.map((item) => (
-              <DataTableRow
-                key={item.id}
-                item={item}
-                showStatus={showStatus}
-                onStatusChange={onStatusChange}
-                onOpen={onOpen}
-                onShare={onShare}
-                onDuplicate={onDuplicate}
-                onDelete={onDelete}
-                icon={renderIcon?.(item)}
-              />
-            ))
-          )}
-        </Stack>
-      </div>
+      {isLoading ? (
+        showLoader ? (
+          <Center py="xl">
+            <Stack align="center" gap="sm">
+              <Loader size="lg" />
+              <Text c="dimmed">Loading...</Text>
+            </Stack>
+          </Center>
+        ) : null
+      ) : error ? (
+        <Center py="xl">
+          <Text c="red">{error}</Text>
+        </Center>
+      ) : (
+        <>
+          <div className={classes.scrollArea}>
+            <Stack gap="xs" className={classes.tableBody}>
+              {paginatedItems.length === 0 ? (
+                <Center py="xl">
+                  <Stack align="center" gap="sm">
+                    <IconInbox size={48} stroke={1} className={classes.emptyIcon} />
+                    <Text c="dimmed">{emptyMessage}</Text>
+                  </Stack>
+                </Center>
+              ) : (
+                paginatedItems.map((item) => (
+                  <DataTableRow
+                    key={item.id}
+                    item={item}
+                    showStatus={showStatus}
+                    onStatusChange={onStatusChange}
+                    onOpen={onOpen}
+                    onShare={onShare}
+                    onDuplicate={onDuplicate}
+                    onDelete={onDelete}
+                    icon={renderIcon?.(item)}
+                  />
+                ))
+              )}
+            </Stack>
+          </div>
 
-      {processedItems.length > 0 && (
-        <DataTablePagination
-          totalItems={processedItems.length}
-          currentPage={currentPage}
-          pageSize={pageSize}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={handlePageSizeChange}
-        />
+          {processedItems.length > 0 && (
+            <DataTablePagination
+              totalItems={processedItems.length}
+              currentPage={currentPage}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          )}
+        </>
       )}
     </div>
   );

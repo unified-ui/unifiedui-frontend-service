@@ -2,6 +2,7 @@ import type {
   // Common Types
   PaginationParams,
   SearchParams,
+  OrderParams,
   QuickListItemResponse,
   // Principal Types
   PrincipalResponse,
@@ -235,7 +236,7 @@ export class UnifiedUIAPIClient {
 
   async listApplications(
     tenantId: string, 
-    params?: PaginationParams & { view?: 'quick-list' }, 
+    params?: PaginationParams & OrderParams & { view?: 'quick-list' }, 
     options?: { noCache?: boolean }
   ): Promise<ApplicationResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
@@ -287,7 +288,7 @@ export class UnifiedUIAPIClient {
 
   async listAutonomousAgents(
     tenantId: string, 
-    params?: PaginationParams & { view?: 'quick-list' }, 
+    params?: PaginationParams & OrderParams & { view?: 'quick-list' }, 
     options?: { noCache?: boolean }
   ): Promise<AutonomousAgentResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
@@ -387,7 +388,7 @@ export class UnifiedUIAPIClient {
 
   async listCredentials(
     tenantId: string, 
-    params?: PaginationParams & { view?: 'quick-list' }, 
+    params?: PaginationParams & OrderParams & { view?: 'quick-list' }, 
     options?: { noCache?: boolean }
   ): Promise<CredentialResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
@@ -439,7 +440,7 @@ export class UnifiedUIAPIClient {
 
   async listDevelopmentPlatforms(
     tenantId: string, 
-    params?: PaginationParams & { view?: 'quick-list' }
+    params?: PaginationParams & OrderParams & { view?: 'quick-list' }
   ): Promise<DevelopmentPlatformResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<DevelopmentPlatformResponse[] | QuickListItemResponse[]>('GET', `/api/v1/tenants/${tenantId}/development-platforms${query}`);
@@ -490,7 +491,7 @@ export class UnifiedUIAPIClient {
 
   async listChatWidgets(
     tenantId: string, 
-    params?: PaginationParams & { view?: 'quick-list' }
+    params?: PaginationParams & OrderParams & { view?: 'quick-list' }
   ): Promise<ChatWidgetResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<ChatWidgetResponse[] | QuickListItemResponse[]>('GET', `/api/v1/tenants/${tenantId}/chat-widgets${query}`);

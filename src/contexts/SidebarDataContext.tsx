@@ -122,7 +122,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     try {
       const result = await apiClient.listApplications(
         selectedTenant.id, 
-        { limit: 999, view: 'quick-list' },
+        { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' },
         noCache ? { noCache: true } : undefined
       );
       // Type guard: Ensure result is QuickListItemResponse[]
@@ -152,7 +152,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     try {
       const result = await apiClient.listAutonomousAgents(
         selectedTenant.id, 
-        { limit: 999, view: 'quick-list' },
+        { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' },
         noCache ? { noCache: true } : undefined
       );
       // Type guard: Ensure result is QuickListItemResponse[]
@@ -182,7 +182,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     try {
       const result = await apiClient.listCredentials(
         selectedTenant.id, 
-        { limit: 999, view: 'quick-list' },
+        { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' },
         noCache ? { noCache: true } : undefined
       );
       // Type guard: Ensure result is QuickListItemResponse[]
