@@ -53,8 +53,8 @@ export const AutonomousAgentsPage: FC = () => {
         name: agent.name,
         description: agent.description,
         type: 'Autonomous',
-        tags: [], // TODO: Add tags when available from API
-        isActive: true, // TODO: Add status when available from API
+        tags: agent.tags?.map(tag => tag.name) || [],
+        isActive: agent.is_active,
       }));
       setItems(tableItems);
     } catch (err) {

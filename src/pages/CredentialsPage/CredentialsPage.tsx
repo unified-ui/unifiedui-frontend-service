@@ -53,8 +53,8 @@ export const CredentialsPage: FC = () => {
         name: cred.name,
         description: cred.description,
         type: cred.type,
-        tags: [], // TODO: Add tags when available from API
-        isActive: true, // TODO: Add status when available from API
+        tags: cred.tags?.map(tag => tag.name) || [],
+        isActive: cred.is_active,
       }));
       setItems(tableItems);
     } catch (err) {

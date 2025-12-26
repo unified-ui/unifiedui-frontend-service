@@ -54,8 +54,8 @@ export const ApplicationsPage: FC = () => {
         name: app.name,
         description: app.description,
         type: 'Chat Agent',
-        tags: [], // TODO: Add tags when available from API
-        isActive: true, // TODO: Add status when available from API
+        tags: app.tags?.map(tag => tag.name) || [],
+        isActive: app.is_active,
       }));
       setItems(tableItems);
     } catch (err) {
