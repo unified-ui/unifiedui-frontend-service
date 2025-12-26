@@ -147,24 +147,37 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
         - tenant_id, principal_id, mail, display_name, principal_id
             - tenant_id + principal_id als PK
             - mail leer bei gruppen; 
-        - überall, wo principal_id oder user_id ist
-            - soll fk
-            - soll gecheckt werden -> existiert principal? wenn nein -> hinzufügen
         - eine route: PUT identity/principals/{id}/refresh {type: IDENTITY_USER|IDETNTITY_GROUP}
             - soll identity hinzufügen bzw neu getchen und updaten
         - custom_groups soll in dieselbe Tabelle geschrieben werden
-            - dann müssen permission check angepasst werden
-                - können nun viel effizienter gefetcht werden
             - im IdentityUser wird nicht mehr unter custom groups und identity groups unterschieden
                 - sondern über type bekommt man den korrekten type!
                 - jetzt kann man die rolle des prinicpals (gruppe und custom gruppe) driket mit fetchen und kann tenant roles besser auslesen
                 - jetzt kommen in den benutzer nur noch die identity groups, die auch in der App genutzt werden! (aus principals)
+        - überall, wo principal_id oder user_id ist
+            - soll gecheckt werden -> existiert principal? wenn nein -> hinzufügen
+
+    
+        - dann müssen permission check angepasst werden
+            - können nun viel effizienter gefetcht werden
     - bei den /principals routes
         - sollen principals immer rangejoint werden
+
+    - refactoring:
+        - zentrale helper functions für:
+            - principals hinzufügen (nicht tenants)
+            - tags hinzufügen
+            - user favorites
+    - tests etc refactoren
+    - app zum laufen bringen
+
+    - get_me() testen
+        - bekomme ich tenants + rollen im tenant?
 
     - bei LIST -> ohne metadaten und nur wichtige Daten ausgeben
         - ggf ?view=quick-list -> dann nur id+name
     - Backend eindockern und lokal ins docker compose übernehmen und über docker compose starten (inkl. restart!)
+
 
 - Development-Platform
     - Dialog erstellen
@@ -296,3 +309,8 @@ so. baue nun diese komponenten und richte sie auf den Seiten:
                 - Details
         - Widget Designer
             - hier nur Placeholder
+
+**Zukunft**
+- im userdropdown > Refresh my Credentials -> cache leeren für user
+- gesamtes Backend refactoren
+- gesamtes Frontend refactoren

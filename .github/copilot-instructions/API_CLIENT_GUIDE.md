@@ -316,13 +316,13 @@ src/pages/DashboardPage/DashboardPage.tsx  # Beispiel-Usage
 
 ### 1. Backend starten
 ```bash
-cd /path/to/aihub-backend
-python -m uvicorn aihub.app:app --reload
+cd /path/to/unifiedui-backend
+python -m uvicorn unifiedui.app:app --reload
 ```
 
 ### 2. Frontend starten
 ```bash
-cd /path/to/aihub-frontend
+cd /path/to/unifiedui-frontend
 npm run dev
 ```
 
