@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, type FC, type ReactNode } from 'react';
-import type { ApplicationResponse, AutonomousAgentResponse, CredentialResponse } from '../api/types';
+import type { QuickListItemResponse } from '../api/types';
 import { useIdentity } from './IdentityContext';
 
 // ========== Types ==========
@@ -7,9 +7,9 @@ import { useIdentity } from './IdentityContext';
 export type EntityType = 'applications' | 'autonomous-agents' | 'credentials' | 'development';
 
 interface SidebarDataState {
-  applications: ApplicationResponse[];
-  autonomousAgents: AutonomousAgentResponse[];
-  credentials: CredentialResponse[];
+  applications: QuickListItemResponse[];
+  autonomousAgents: QuickListItemResponse[];
+  credentials: QuickListItemResponse[];
 }
 
 interface LoadingState {
@@ -35,9 +35,9 @@ interface FetchedState {
 
 interface SidebarDataContextType {
   // Data
-  applications: ApplicationResponse[];
-  autonomousAgents: AutonomousAgentResponse[];
-  credentials: CredentialResponse[];
+  applications: QuickListItemResponse[];
+  autonomousAgents: QuickListItemResponse[];
+  credentials: QuickListItemResponse[];
   
   // Loading & Error states
   loadingStates: LoadingState;
@@ -122,11 +122,14 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     try {
       const result = await apiClient.listApplications(
         selectedTenant.id, 
-        { limit: 999 },
+        { limit: 999, view: 'quick-list' },
         noCache ? { noCache: true } : undefined
       );
-      setData(prev => ({ ...prev, applications: result }));
-      setFetchedStates(prev => ({ ...prev, applications: true }));
+      // Type guard: Ensure result is QuickListItemResponse[]
+      if (Array.isArray(result)) {
+        setData(prev => ({ ...prev, applications: result as QuickListItemResponse[] }));
+        setFetchedStates(prev => ({ ...prev, applications: true }));
+      }
     } catch (error) {
       setErrorStates(prev => ({ ...prev, applications: 'Fehler beim Laden der Chat Agents' }));
       console.error('Error fetching applications:', error);
@@ -149,11 +152,14 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     try {
       const result = await apiClient.listAutonomousAgents(
         selectedTenant.id, 
-        { limit: 999 },
+        { limit: 999, view: 'quick-list' },
         noCache ? { noCache: true } : undefined
       );
-      setData(prev => ({ ...prev, autonomousAgents: result }));
-      setFetchedStates(prev => ({ ...prev, 'autonomous-agents': true }));
+      // Type guard: Ensure result is QuickListItemResponse[]
+      if (Array.isArray(result)) {
+        setData(prev => ({ ...prev, autonomousAgents: result as QuickListItemResponse[] }));
+        setFetchedStates(prev => ({ ...prev, 'autonomous-agents': true }));
+      }
     } catch (error) {
       setErrorStates(prev => ({ ...prev, 'autonomous-agents': 'Fehler beim Laden der Autonomous Agents' }));
       console.error('Error fetching autonomous agents:', error);
@@ -176,11 +182,14 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     try {
       const result = await apiClient.listCredentials(
         selectedTenant.id, 
-        { limit: 999 },
+        { limit: 999, view: 'quick-list' },
         noCache ? { noCache: true } : undefined
       );
-      setData(prev => ({ ...prev, credentials: result }));
-      setFetchedStates(prev => ({ ...prev, credentials: true }));
+      // Type guard: Ensure result is QuickListItemResponse[]
+      if (Array.isArray(result)) {
+        setData(prev => ({ ...prev, credentials: result as QuickListItemResponse[] }));
+        setFetchedStates(prev => ({ ...prev, credentials: true }));
+      }
     } catch (error) {
       setErrorStates(prev => ({ ...prev, credentials: 'Fehler beim Laden der Credentials' }));
       console.error('Error fetching credentials:', error);

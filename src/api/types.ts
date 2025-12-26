@@ -96,6 +96,32 @@ export interface SetResourceTagsRequest {
   tags: string[];
 }
 
+// ========== Common Response Types ==========
+
+export interface QuickListItemResponse {
+  id: string;
+  name: string;
+}
+
+// ========== Principal Types ==========
+
+export interface PrincipalResponse {
+  tenant_id: string;
+  principal_id: string;
+  principal_type: string; // 'IDENTITY_USER' | 'IDENTITY_GROUP' | 'CUSTOM_GROUP'
+  mail?: string;
+  display_name: string;
+  principal_name: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RefreshPrincipalRequest {
+  tenant_id: string;
+  type: 'IDENTITY_USER' | 'IDENTITY_GROUP';
+}
+
 // ========== Identity Types ==========
 
 export interface IdentityUser {
