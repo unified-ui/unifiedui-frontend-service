@@ -17,6 +17,7 @@
     - Hover:Hand-Cursor
     - kontext-menü (drei punkte)
         - Edit hinzufügen
+        - Pin item / Unpin item
     - beim skrollen -> oben sieht man die liste...
 
 - aktuelle pages aktualisieren (wenn nötig)
@@ -25,6 +26,13 @@
     - Tab-Bar:
         - Details
         - IAM
+
+- favorieten-feature implementieren
+    - FE: favorieten einmal fetchen beim öffnen und dann global im state speichern
+    - sidebardatalist -> hier ein Pin-Symbol hinzufügen und lokal ordnen
+    - in liste -> auch Pin-Symbol hinzufügen
+    - lokal immer die pins oben zeigen -> dann die fetch results entsprechend filtern (am besten in einer zentralen component)
+    - beim sortieren -> Pins lokal sortieren nach logik!
 
 - Development-Platform (route in `development-platforms` umbenennen)
     - Page erstellen
