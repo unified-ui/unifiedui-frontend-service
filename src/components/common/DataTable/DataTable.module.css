@@ -80,6 +80,10 @@
   color: var(--color-gray-600);
 }
 
+.sentinel {
+  min-height: 1px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 992px) {
   .typeColumn {

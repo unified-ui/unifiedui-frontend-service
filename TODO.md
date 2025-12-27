@@ -81,7 +81,7 @@
 - im userdropdown > Refresh my Credentials -> cache leeren für user
 - gesamtes Backend refactoren
     - zentrale helper functions für:
-        - principals hinzufügen (nicht tenants)
+        - principals (permissions) hinzufügen (nicht tenants)
         - tags hinzufügen
         - user favorites
 - gesamtes Frontend refactoren

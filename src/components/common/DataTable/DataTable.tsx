@@ -1,17 +1,20 @@
 import type { FC, ReactNode } from 'react';
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Stack, Text, Center, Loader } from '@mantine/core';
 import { IconInbox } from '@tabler/icons-react';
 import { DataTableToolbar, type SortOption, type FilterState } from './DataTableToolbar';
 import { DataTableRow, type DataTableItem } from './DataTableRow';
-import { DataTablePagination } from './DataTablePagination';
 import classes from './DataTable.module.css';
 
 interface DataTableProps {
   /** Table items */
   items: DataTableItem[];
-  /** Loading state */
+  /** Loading state (initial load) */
   isLoading?: boolean;
+  /** Loading more items (infinite scroll) */
+  isLoadingMore?: boolean;
+  /** Whether there are more items to load */
+  hasMore?: boolean;
   /** Error message */
   error?: string | null;
   /** Show status toggle column */
@@ -38,11 +41,15 @@ interface DataTableProps {
   sortBy?: SortOption;
   /** Sort change handler (for backend sorting) */
   onSortChange?: (sort: SortOption) => void;
+  /** Load more items handler (for infinite scroll) */
+  onLoadMore?: () => void;
 }
 
 export const DataTable: FC<DataTableProps> = ({
   items,
   isLoading = false,
+  isLoadingMore = false,
+  hasMore = false,
   error = null,
   showStatus = false,
   availableTags = [],
@@ -56,6 +63,7 @@ export const DataTable: FC<DataTableProps> = ({
   renderIcon,
   sortBy: externalSortBy,
   onSortChange: externalOnSortChange,
+  onLoadMore,
 }) => {
   // Toolbar state
   const [searchValue, setSearchValue] = useState('');
@@ -80,10 +88,6 @@ export const DataTable: FC<DataTableProps> = ({
   // Use external sortBy if provided, otherwise use internal state
   const sortBy = externalSortBy ?? internalSortBy;
   const handleSortChange = externalOnSortChange ?? setInternalSortBy;
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
 
   // Filter and sort items (only if not using external sorting)
   const processedItems = useMemo(() => {
@@ -134,26 +138,50 @@ export const DataTable: FC<DataTableProps> = ({
     return result;
   }, [items, searchValue, sortBy, filters, externalSortBy]);
 
-  // Paginated items
-  const paginatedItems = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return processedItems.slice(start, start + pageSize);
-  }, [processedItems, currentPage, pageSize]);
+  // Infinite scroll: observe the sentinel element
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  // Reset page when filters change
+  useEffect(() => {
+    if (!onLoadMore || !hasMore || isLoadingMore || isLoading) return;
+
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting && hasMore && !isLoadingMore) {
+          onLoadMore();
+        }
+      },
+      {
+        root: scrollAreaRef.current,
+        rootMargin: '100px',
+        threshold: 0,
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [onLoadMore, hasMore, isLoadingMore, isLoading]);
+
+  // Reset scroll position when search/filters change
   const handleSearchChange = useCallback((value: string) => {
     setSearchValue(value);
-    setCurrentPage(1);
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = 0;
+    }
   }, []);
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);
-    setCurrentPage(1);
-  }, []);
-
-  const handlePageSizeChange = useCallback((size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = 0;
+    }
   }, []);
 
   // Collect all unique tags from items
@@ -195,18 +223,18 @@ export const DataTable: FC<DataTableProps> = ({
           <Text c="red">{error}</Text>
         </Center>
       ) : (
-        <>
-          <div className={classes.scrollArea}>
-            <Stack gap="xs" className={classes.tableBody}>
-              {paginatedItems.length === 0 ? (
-                <Center py="xl">
-                  <Stack align="center" gap="sm">
-                    <IconInbox size={48} stroke={1} className={classes.emptyIcon} />
-                    <Text c="dimmed">{emptyMessage}</Text>
-                  </Stack>
-                </Center>
-              ) : (
-                paginatedItems.map((item) => (
+        <div ref={scrollAreaRef} className={classes.scrollArea}>
+          <Stack gap="xs" className={classes.tableBody}>
+            {processedItems.length === 0 ? (
+              <Center py="xl">
+                <Stack align="center" gap="sm">
+                  <IconInbox size={48} stroke={1} className={classes.emptyIcon} />
+                  <Text c="dimmed">{emptyMessage}</Text>
+                </Stack>
+              </Center>
+            ) : (
+              <>
+                {processedItems.map((item) => (
                   <DataTableRow
                     key={item.id}
                     item={item}
@@ -218,21 +246,22 @@ export const DataTable: FC<DataTableProps> = ({
                     onDelete={onDelete}
                     icon={renderIcon?.(item)}
                   />
-                ))
-              )}
-            </Stack>
-          </div>
-
-          {processedItems.length > 0 && (
-            <DataTablePagination
-              totalItems={processedItems.length}
-              currentPage={currentPage}
-              pageSize={pageSize}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={handlePageSizeChange}
-            />
-          )}
-        </>
+                ))}
+                
+                {/* Sentinel element for infinite scroll */}
+                {hasMore && (
+                  <div ref={sentinelRef} className={classes.sentinel}>
+                    {isLoadingMore && (
+                      <Center py="md">
+                        <Loader size="sm" />
+                      </Center>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </Stack>
+        </div>
       )}
     </div>
   );
