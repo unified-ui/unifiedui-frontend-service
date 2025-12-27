@@ -34,6 +34,8 @@ export const ApplicationsPage: FC = () => {
   
   // Track current offset for pagination
   const offsetRef = useRef(0);
+  // Ref to prevent race conditions in fetch
+  const isLoadingRef = useRef(false);
 
   // Map SortOption to Backend parameters
   const getSortParams = (sort: SortOption): { order_by: string; order_direction: 'asc' | 'desc' } => {
@@ -53,6 +55,11 @@ export const ApplicationsPage: FC = () => {
   const fetchApplications = useCallback(async (reset = true, searchFilter?: string) => {
     if (!apiClient || !selectedTenant) return;
 
+    // Prevent duplicate fetches while loading (use ref for immediate check)
+    if (!reset && isLoadingRef.current) return;
+
+    isLoadingRef.current = true;
+
     if (reset) {
       setIsLoading(true);
       setItems([]);
@@ -63,11 +70,14 @@ export const ApplicationsPage: FC = () => {
     }
     setError(null);
 
+    // Capture offset before fetch
+    const currentOffset = offsetRef.current;
+
     try {
       const sortParams = getSortParams(sortBy);
       const data = await apiClient.listApplications(selectedTenant.id, { 
         limit: PAGE_SIZE,
-        skip: offsetRef.current,
+        skip: currentOffset,
         name_filter: searchFilter || undefined,
         ...sortParams
       }) as ApplicationResponse[];
@@ -83,22 +93,27 @@ export const ApplicationsPage: FC = () => {
 
       if (reset) {
         setItems(tableItems);
+        // Set offset to number of items received
+        offsetRef.current = data.length;
       } else {
         setItems(prev => [...prev, ...tableItems]);
+        // Increment offset by actual number of items received
+        offsetRef.current = currentOffset + data.length;
       }
 
       // If we received fewer items than requested, there are no more
       if (data.length < PAGE_SIZE) {
         setHasMore(false);
-      } else {
-        offsetRef.current += data.length;
       }
     } catch (err) {
+      // Reset offset on error to allow retry
+      offsetRef.current = currentOffset;
       setError('Failed to load applications');
       console.error('Error loading applications:', err);
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
+      isLoadingRef.current = false;
     }
   }, [apiClient, selectedTenant, sortBy]);
 
