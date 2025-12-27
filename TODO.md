@@ -2,17 +2,6 @@
 
 ## TODOs
 
-- Standard List Page designen
-    - is active switch anzeigen
-    - type anzeigen -> aktuell zB Chat Agent -> n8n oder MSF Foundry oder ... halt type
-    - tags ansicht
-        - mehr Tags anzeigen; besser anzeigen
-        - tool-tip viel schöner (mit container; wrapped etc)
-        - tag hinzufügen button anzeigen -> mit dialog?
-    - Hover:Hand-Cursor
-    - kontext-menü (drei punkte)
-        - Edit hinzufügen
-        - Pin item / Unpin item
 
 - aktuelle pages aktualisieren (wenn nötig)
 
@@ -77,6 +66,10 @@
 - caching strategie optimieren
     - ttl im Backend bei den resourcen optimieren! (länger oder kürzer)
     - ...
+- user favorites implementieren
+    - anpinnen
+    - favorieten lokal speichern und beim öffnen sync
+        - favs immer oben anzeigen
 - im userdropdown > Refresh my Credentials -> cache leeren für user
 - gesamtes Backend refactoren
     - zentrale helper functions für:

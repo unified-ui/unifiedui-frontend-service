@@ -15,8 +15,11 @@ import {
 import {
   IconDots,
   IconExternalLink,
+  IconEdit,
   IconShare,
   IconCopy,
+  IconPin,
+  IconPinned,
   IconTrash,
 } from '@tabler/icons-react';
 import classes from './DataTable.module.css';
@@ -28,6 +31,7 @@ export interface DataTableItem {
   type?: string;
   tags?: string[];
   isActive?: boolean;
+  isPinned?: boolean;
 }
 
 interface DataTableRowProps {
@@ -38,10 +42,14 @@ interface DataTableRowProps {
   onStatusChange?: (id: string, isActive: boolean) => void;
   /** Open item handler */
   onOpen?: (id: string) => void;
+  /** Edit item handler */
+  onEdit?: (id: string) => void;
   /** Share item handler */
   onShare?: (id: string) => void;
   /** Duplicate item handler */
   onDuplicate?: (id: string) => void;
+  /** Pin/Unpin item handler */
+  onPin?: (id: string, isPinned: boolean) => void;
   /** Delete item handler */
   onDelete?: (id: string) => void;
   /** Custom row icon */
@@ -55,8 +63,10 @@ export const DataTableRow: FC<DataTableRowProps> = ({
   showStatus = false,
   onStatusChange,
   onOpen,
+  onEdit,
   onShare,
   onDuplicate,
+  onPin,
   onDelete,
   icon,
 }) => {
@@ -159,6 +169,12 @@ export const DataTableRow: FC<DataTableRowProps> = ({
               Open
             </Menu.Item>
             <Menu.Item
+              leftSection={<IconEdit size={14} />}
+              onClick={() => onEdit?.(item.id)}
+            >
+              Edit
+            </Menu.Item>
+            <Menu.Item
               leftSection={<IconShare size={14} />}
               onClick={() => onShare?.(item.id)}
             >
@@ -169,6 +185,13 @@ export const DataTableRow: FC<DataTableRowProps> = ({
               onClick={() => onDuplicate?.(item.id)}
             >
               Duplicate
+            </Menu.Item>
+            <Menu.Divider />
+            <Menu.Item
+              leftSection={item.isPinned ? <IconPinned size={14} /> : <IconPin size={14} />}
+              onClick={() => onPin?.(item.id, !item.isPinned)}
+            >
+              {item.isPinned ? 'Unpin' : 'Pin'}
             </Menu.Item>
             <Menu.Divider />
             <Menu.Item

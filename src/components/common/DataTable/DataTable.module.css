@@ -21,6 +21,7 @@
 .row {
   background: var(--bg-paper);
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
 }
 
 .row:hover {
