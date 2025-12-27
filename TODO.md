@@ -8,6 +8,7 @@
     - filter by
         - tags
         - is active all, active, inactive
+    - BE: tag ids auch in cache mit rein
     - is active switch anzeigen
     - type anzeigen -> aktuell zB Chat Agent -> n8n oder MSF Foundry oder ... halt type
     - tags ansicht
@@ -21,6 +22,9 @@
     - beim skrollen -> oben sieht man die liste...
 
 - aktuelle pages aktualisieren (wenn nötig)
+
+- Backend:
+    - Tags endpoint, um alle Tags abzufragen, die es auf einer Resource gibt
 
 - Standard Detail-Page + Edit designen
     - Tab-Bar:

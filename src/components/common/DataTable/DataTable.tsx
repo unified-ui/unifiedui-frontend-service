@@ -47,6 +47,12 @@ interface DataTableProps {
   searchValue?: string;
   /** Search change handler (for backend filtering) */
   onSearchChange?: (value: string) => void;
+  /** Controlled filter state (for backend filtering) */
+  filters?: FilterState;
+  /** Filter change handler (for backend filtering) */
+  onFilterChange?: (filters: FilterState) => void;
+  /** Tag search handler (for backend tag loading) */
+  onTagSearch?: (search: string) => void;
 }
 
 export const DataTable: FC<DataTableProps> = ({
@@ -70,11 +76,18 @@ export const DataTable: FC<DataTableProps> = ({
   onLoadMore,
   searchValue: externalSearchValue,
   onSearchChange: externalOnSearchChange,
+  filters: externalFilters,
+  onFilterChange: externalOnFilterChange,
+  onTagSearch,
 }) => {
   // Toolbar state
   const [internalSearchValue, setInternalSearchValue] = useState('');
   const [internalSortBy, setInternalSortBy] = useState<SortOption>('updated');
-  const [filters, setFilters] = useState<FilterState>({ tags: [], status: 'all' });
+  const [internalFilters, setInternalFilters] = useState<FilterState>({ tags: [], status: 'all' });
+
+  // Use external filters if provided, otherwise use internal state
+  const filters = externalFilters ?? internalFilters;
+  const isExternalFilters = externalOnFilterChange !== undefined;
 
   // Delayed loading indicator (only show after 1s)
   const [showLoader, setShowLoader] = useState(false);
@@ -115,15 +128,17 @@ export const DataTable: FC<DataTableProps> = ({
       );
     }
 
-    // Apply tag filter
-    if (filters.tags.length > 0) {
+    // Apply tag filter ONLY if using internal (client-side) filtering
+    // When external filters are used, backend handles filtering
+    if (filters.tags.length > 0 && !isExternalFilters) {
       result = result.filter((item) =>
         filters.tags.some((tag) => item.tags?.includes(tag))
       );
     }
 
-    // Apply status filter
-    if (filters.status !== 'all') {
+    // Apply status filter ONLY if using internal (client-side) filtering
+    // When external filters are used, backend handles filtering
+    if (filters.status !== 'all' && !isExternalFilters) {
       const isActive = filters.status === 'active';
       result = result.filter((item) => item.isActive === isActive);
     }
@@ -147,7 +162,7 @@ export const DataTable: FC<DataTableProps> = ({
     }
 
     return result;
-  }, [items, searchValue, sortBy, filters, externalSortBy, isExternalSearch]);
+  }, [items, searchValue, sortBy, filters, externalSortBy, isExternalSearch, isExternalFilters]);
 
   // Infinite scroll: observe the sentinel element
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -194,11 +209,16 @@ export const DataTable: FC<DataTableProps> = ({
   }, [externalOnSearchChange]);
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
-    setFilters(newFilters);
+    // Use external handler if provided, otherwise use internal state
+    if (externalOnFilterChange) {
+      externalOnFilterChange(newFilters);
+    } else {
+      setInternalFilters(newFilters);
+    }
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = 0;
     }
-  }, []);
+  }, [externalOnFilterChange]);
 
   // Collect all unique tags from items
   const allTags = useMemo(() => {
@@ -222,6 +242,7 @@ export const DataTable: FC<DataTableProps> = ({
         availableTags={tagsForFilter}
         filters={filters}
         onFilterChange={handleFilterChange}
+        onTagSearch={onTagSearch}
         showFilter={true}
       />
 

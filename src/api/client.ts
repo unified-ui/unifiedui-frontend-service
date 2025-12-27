@@ -578,7 +578,7 @@ export class UnifiedUIAPIClient {
 
   // ========== Tag Endpoints ==========
 
-  async listTags(tenantId: string, params?: PaginationParams): Promise<TagListResponse> {
+  async listTags(tenantId: string, params?: PaginationParams & { name?: string }): Promise<TagListResponse> {
     const query = this.buildQueryString(params || {});
     return this.request<TagListResponse>('GET', `/api/v1/tenants/${tenantId}/tags${query}`);
   }

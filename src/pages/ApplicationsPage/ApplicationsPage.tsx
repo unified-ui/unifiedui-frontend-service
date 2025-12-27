@@ -6,13 +6,15 @@ import { IconSparkles } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { PageContainer, PageHeader, DataTable, ConfirmDeleteDialog } from '../../components/common';
 import type { DataTableItem } from '../../components/common';
-import type { SortOption } from '../../components/common/DataTable/DataTableToolbar';
+import type { SortOption, FilterState } from '../../components/common/DataTable/DataTableToolbar';
 import { CreateApplicationDialog } from '../../components/dialogs';
 import { useIdentity, useSidebarData } from '../../contexts';
 import type { ApplicationResponse } from '../../api/types';
 
 const PAGE_SIZE = 25;
+const TAG_PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 300;
+const FILTER_DEBOUNCE_MS = 300;
 
 export const ApplicationsPage: FC = () => {
   const navigate = useNavigate();
@@ -28,14 +30,58 @@ export const ApplicationsPage: FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('updated');
   
+  // Filter state with debouncing
+  const [filters, setFilters] = useState<FilterState>({ tags: [], status: 'all' });
+  const [debouncedFilters] = useDebouncedValue(filters, FILTER_DEBOUNCE_MS);
+  
   // Search state with debouncing
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearch] = useDebouncedValue(searchValue, SEARCH_DEBOUNCE_MS);
+  
+  // Tag search state with debouncing
+  const [tagSearchValue, setTagSearchValue] = useState('');
+  const [debouncedTagSearch] = useDebouncedValue(tagSearchValue, SEARCH_DEBOUNCE_MS);
   
   // Track current offset for pagination
   const offsetRef = useRef(0);
   // Ref to prevent race conditions in fetch
   const isLoadingRef = useRef(false);
+  // Ref for tag mapping to avoid dependency issues
+  const tagMapRef = useRef<Map<string, number>>(new Map());
+  
+  // Tags state
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+
+  // Fetch tags from API with optional name filter
+  const fetchTags = useCallback(async (nameFilter?: string) => {
+    if (!apiClient || !selectedTenant) return;
+    
+    try {
+      const response = await apiClient.listTags(selectedTenant.id, {
+        limit: TAG_PAGE_SIZE,
+        name: nameFilter || undefined,
+      });
+      
+      // Update tagMapRef and availableTags
+      response.tags.forEach(tag => {
+        tagMapRef.current.set(tag.name, tag.id);
+      });
+      
+      setAvailableTags(response.tags.map(tag => tag.name));
+    } catch (err) {
+      console.error('Error loading tags:', err);
+    }
+  }, [apiClient, selectedTenant]);
+
+  // Load tags on mount
+  useEffect(() => {
+    fetchTags();
+  }, [fetchTags]);
+
+  // Reload tags when tag search changes
+  useEffect(() => {
+    fetchTags(debouncedTagSearch || undefined);
+  }, [debouncedTagSearch, fetchTags]);
 
   // Map SortOption to Backend parameters
   const getSortParams = (sort: SortOption): { order_by: string; order_direction: 'asc' | 'desc' } => {
@@ -52,7 +98,11 @@ export const ApplicationsPage: FC = () => {
     }
   };
 
-  const fetchApplications = useCallback(async (reset = true, searchFilter?: string) => {
+  const fetchApplications = useCallback(async (
+    reset = true, 
+    searchFilter?: string,
+    currentFilters?: FilterState
+  ) => {
     if (!apiClient || !selectedTenant) return;
 
     // Prevent duplicate fetches while loading (use ref for immediate check)
@@ -75,10 +125,32 @@ export const ApplicationsPage: FC = () => {
 
     try {
       const sortParams = getSortParams(sortBy);
+      
+      // Convert filter status to API format (0, 1, or undefined)
+      let isActiveParam: number | undefined;
+      if (currentFilters?.status === 'active') {
+        isActiveParam = 1;
+      } else if (currentFilters?.status === 'inactive') {
+        isActiveParam = 0;
+      }
+      
+      // Convert tag names to comma-separated tag IDs
+      let tagsParam: string | undefined;
+      if (currentFilters?.tags && currentFilters.tags.length > 0) {
+        const tagIds = currentFilters.tags
+          .map(tagName => tagMapRef.current.get(tagName))
+          .filter((id): id is number => id !== undefined);
+        if (tagIds.length > 0) {
+          tagsParam = tagIds.join(',');
+        }
+      }
+      
       const data = await apiClient.listApplications(selectedTenant.id, { 
         limit: PAGE_SIZE,
         skip: currentOffset,
         name_filter: searchFilter || undefined,
+        is_active: isActiveParam,
+        tags: tagsParam,
         ...sortParams
       }) as ApplicationResponse[];
       
@@ -117,24 +189,33 @@ export const ApplicationsPage: FC = () => {
     }
   }, [apiClient, selectedTenant, sortBy]);
 
-  // Fetch when sort or debounced search changes
+  // Fetch when sort, debounced search, or debounced filters change
   useEffect(() => {
-    fetchApplications(true, debouncedSearch);
-  }, [fetchApplications, debouncedSearch]);
+    fetchApplications(true, debouncedSearch, debouncedFilters);
+  }, [fetchApplications, debouncedSearch, debouncedFilters]);
 
   const handleLoadMore = useCallback(() => {
     if (!isLoadingMore && hasMore) {
-      fetchApplications(false, debouncedSearch);
+      fetchApplications(false, debouncedSearch, debouncedFilters);
     }
-  }, [fetchApplications, isLoadingMore, hasMore, debouncedSearch]);
+  }, [fetchApplications, isLoadingMore, hasMore, debouncedSearch, debouncedFilters]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchValue(value);
   }, []);
 
+  const handleTagSearch = useCallback((value: string) => {
+    setTagSearchValue(value);
+  }, []);
+
   const handleSortChange = useCallback((newSort: SortOption) => {
     setSortBy(newSort);
     // fetchApplications wird automatisch durch useEffect aufgerufen
+  }, []);
+
+  const handleFilterChange = useCallback((newFilters: FilterState) => {
+    setFilters(newFilters);
+    // fetchApplications wird automatisch durch useEffect aufgerufen (debouncedFilters)
   }, []);
 
   const handleOpen = useCallback((id: string) => {
@@ -163,19 +244,19 @@ export const ApplicationsPage: FC = () => {
     try {
       await apiClient.deleteApplication(selectedTenant.id, deleteDialog.id);
       setDeleteDialog({ open: false, id: '', name: '' });
-      fetchApplications(true, debouncedSearch); // Reset and refetch with current search
+      fetchApplications(true, debouncedSearch, debouncedFilters); // Reset and refetch with current search and filters
       refreshApplications(); // Update sidebar cache
     } catch (err) {
       console.error('Error deleting application:', err);
     } finally {
       setIsDeleting(false);
     }
-  }, [apiClient, selectedTenant, deleteDialog.id, fetchApplications, refreshApplications, debouncedSearch]);
+  }, [apiClient, selectedTenant, deleteDialog.id, fetchApplications, refreshApplications, debouncedSearch, debouncedFilters]);
 
   const handleCreateSuccess = useCallback(() => {
-    fetchApplications(true, debouncedSearch); // Reset and refetch with current search
+    fetchApplications(true, debouncedSearch, debouncedFilters); // Reset and refetch with current search and filters
     refreshApplications(); // Update sidebar cache
-  }, [fetchApplications, refreshApplications, debouncedSearch]);
+  }, [fetchApplications, refreshApplications, debouncedSearch, debouncedFilters]);
 
   const renderIcon = useCallback(() => (
     <IconSparkles size={20} />
@@ -202,6 +283,10 @@ export const ApplicationsPage: FC = () => {
           emptyMessage="No chat agents found. Create your first one!"
           searchValue={searchValue}
           onSearchChange={handleSearchChange}
+          availableTags={availableTags}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onTagSearch={handleTagSearch}
           onOpen={handleOpen}
           onShare={handleShare}
           onDuplicate={handleDuplicate}

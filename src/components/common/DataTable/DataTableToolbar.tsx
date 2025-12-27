@@ -43,6 +43,8 @@ interface DataTableToolbarProps {
   filters?: FilterState;
   /** Filter change handler */
   onFilterChange?: (filters: FilterState) => void;
+  /** Tag search handler for server-side tag filtering */
+  onTagSearch?: (search: string) => void;
   /** Whether to show the filter button */
   showFilter?: boolean;
   /** Whether to show the sort dropdown */
@@ -71,6 +73,7 @@ export const DataTableToolbar: FC<DataTableToolbarProps> = ({
   availableTags = [],
   filters = { tags: [], status: 'all' },
   onFilterChange,
+  onTagSearch,
   showFilter = true,
   showSort = true,
 }) => {
@@ -165,6 +168,7 @@ export const DataTableToolbar: FC<DataTableToolbarProps> = ({
                     onChange={(tags) =>
                       setLocalFilters((prev) => ({ ...prev, tags }))
                     }
+                    onSearchChange={onTagSearch}
                     placeholder="Select tags"
                     searchable
                     clearable
