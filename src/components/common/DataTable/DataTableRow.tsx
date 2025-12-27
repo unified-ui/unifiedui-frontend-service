@@ -110,8 +110,9 @@ export const DataTableRow: FC<DataTableRowProps> = ({
                 <div
                   onMouseEnter={() => setPopoverOpened(true)}
                   onMouseLeave={() => setPopoverOpened(false)}
+                  style={{ display: 'inline-block', lineHeight: 1 }}
                 >
-                  <Badge size="sm" variant="outline" radius="sm" style={{ cursor: 'pointer' }}>
+                  <Badge size="sm" variant="outline" radius="sm" style={{ cursor: 'pointer', display: 'inline-flex' }}>
                     +{hiddenTags.length}
                   </Badge>
                 </div>
