@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   Group,
   TextInput,
@@ -79,6 +79,32 @@ export const DataTableToolbar: FC<DataTableToolbarProps> = ({
 }) => {
   const [filterOpened, setFilterOpened] = useState(false);
   const [localFilters, setLocalFilters] = useState<FilterState>(filters);
+  const filterButtonRef = useRef<HTMLDivElement>(null);
+
+  // Close filter popover when clicking outside (but not on portal elements like dropdowns)
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      // Check if click is outside filterButtonRef
+      if (filterButtonRef.current && !filterButtonRef.current.contains(target)) {
+        // Check if click is on a Mantine portal element (dropdown, select options, etc.)
+        const isPortalElement = (target as Element).closest?.('[data-portal]');
+        
+        if (!isPortalElement) {
+          setFilterOpened(false);
+        }
+      }
+    };
+
+    if (filterOpened) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [filterOpened]);
 
   const activeFilterCount = 
     (filters.tags.length > 0 ? 1 : 0) + 
@@ -126,35 +152,37 @@ export const DataTableToolbar: FC<DataTableToolbarProps> = ({
         )}
 
         {showFilter && (
-          <Popover
-            opened={filterOpened}
-            onChange={setFilterOpened}
-            position="bottom-end"
-            shadow="md"
-            width={300}
-          >
-            <Popover.Target>
-              <ActionIcon
-                variant="default"
-                size="lg"
-                w={42}
-                onClick={() => setFilterOpened((o) => !o)}
-                pos="relative"
-              >
-                <IconFilter size={18} />
-                {activeFilterCount > 0 && (
-                  <Badge 
-                    size="xs" 
-                    circle 
-                    pos="absolute" 
-                    top={-4} 
-                    right={-4}
-                  >
-                    {activeFilterCount}
-                  </Badge>
-                )}
-              </ActionIcon>
-            </Popover.Target>
+          <div ref={filterButtonRef}>
+            <Popover
+              opened={filterOpened}
+              onChange={setFilterOpened}
+              position="bottom-end"
+              shadow="md"
+              width={300}
+              closeOnClickOutside={false}
+            >
+              <Popover.Target>
+                <ActionIcon
+                  variant="default"
+                  size="lg"
+                  w={42}
+                  onClick={() => setFilterOpened((o) => !o)}
+                  pos="relative"
+                >
+                  <IconFilter size={18} />
+                  {activeFilterCount > 0 && (
+                    <Badge 
+                      size="xs" 
+                      circle 
+                      pos="absolute" 
+                      top={-4} 
+                      right={-4}
+                    >
+                      {activeFilterCount}
+                    </Badge>
+                  )}
+                </ActionIcon>
+              </Popover.Target>
 
             <Popover.Dropdown py="md">
               <Stack gap="md">
@@ -206,6 +234,7 @@ export const DataTableToolbar: FC<DataTableToolbarProps> = ({
               </Stack>
             </Popover.Dropdown>
           </Popover>
+          </div>
         )}
       </Group>
     </div>
