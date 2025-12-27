@@ -1,4 +1,5 @@
 import type { FC, ReactNode } from 'react';
+import { useState } from 'react';
 import {
   Group,
   Text,
@@ -6,7 +7,7 @@ import {
   Switch,
   Menu,
   ActionIcon,
-  Tooltip,
+  Popover,
   Stack,
   Paper,
   Box,
@@ -62,6 +63,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
   const visibleTags = item.tags?.slice(0, MAX_VISIBLE_TAGS) || [];
   const hiddenTags = item.tags?.slice(MAX_VISIBLE_TAGS) || [];
   const hasHiddenTags = hiddenTags.length > 0;
+  const [popoverOpened, setPopoverOpened] = useState(false);
 
   return (
     <Paper className={classes.row} p="md" withBorder>
@@ -89,23 +91,44 @@ export const DataTableRow: FC<DataTableRowProps> = ({
         )}
 
         {/* Tags Column */}
-        <Group gap={4} wrap="nowrap" className={classes.tagsColumn}>
+        <Group gap={4} wrap="wrap" className={classes.tagsColumn}>
           {visibleTags.map((tag) => (
             <Badge key={tag} size="sm" variant="light" radius="sm">
               {tag}
             </Badge>
           ))}
           {hasHiddenTags && (
-            <Tooltip
-              label={hiddenTags.join(', ')}
-              position="top"
-              multiline
-              w={200}
+            <Popover 
+              position="top" 
+              withArrow 
+              shadow="md" 
+              withinPortal
+              opened={popoverOpened}
+              onChange={setPopoverOpened}
             >
-              <Badge size="sm" variant="outline" radius="sm" style={{ cursor: 'pointer' }}>
-                +{hiddenTags.length}
-              </Badge>
-            </Tooltip>
+              <Popover.Target>
+                <div
+                  onMouseEnter={() => setPopoverOpened(true)}
+                  onMouseLeave={() => setPopoverOpened(false)}
+                >
+                  <Badge size="sm" variant="outline" radius="sm" style={{ cursor: 'pointer' }}>
+                    +{hiddenTags.length}
+                  </Badge>
+                </div>
+              </Popover.Target>
+              <Popover.Dropdown
+                onMouseEnter={() => setPopoverOpened(true)}
+                onMouseLeave={() => setPopoverOpened(false)}
+              >
+                <Group gap={4} wrap="wrap" maw={300}>
+                  {hiddenTags.map((tag) => (
+                    <Badge key={tag} size="sm" variant="light" radius="sm">
+                      {tag}
+                    </Badge>
+                  ))}
+                </Group>
+              </Popover.Dropdown>
+            </Popover>
           )}
         </Group>
 

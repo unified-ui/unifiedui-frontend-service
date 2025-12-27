@@ -158,7 +158,7 @@ export const ApplicationsPage: FC = () => {
         id: app.id,
         name: app.name,
         description: app.description,
-        type: 'Chat Agent',
+        type: app.type.replace(/_/g, ' '),
         tags: app.tags?.map(tag => tag.name) || [],
         isActive: app.is_active,
       }));
