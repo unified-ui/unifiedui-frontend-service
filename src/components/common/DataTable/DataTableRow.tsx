@@ -16,7 +16,7 @@ import {
   IconDots,
   IconExternalLink,
   IconEdit,
-  IconShare,
+  IconUserCog,
   IconCopy,
   IconPin,
   IconPinned,
@@ -175,10 +175,10 @@ export const DataTableRow: FC<DataTableRowProps> = ({
               Edit
             </Menu.Item>
             <Menu.Item
-              leftSection={<IconShare size={14} />}
+              leftSection={<IconUserCog size={14} />}
               onClick={() => onShare?.(item.id)}
             >
-              Share
+              Manage access
             </Menu.Item>
             <Menu.Item
               leftSection={<IconCopy size={14} />}
