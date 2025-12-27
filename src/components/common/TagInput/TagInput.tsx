@@ -171,7 +171,7 @@ export const TagInput: FC<TagInputProps> = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
+    setInputValue(e.target.value.toLocaleUpperCase());
     if (e.target.value.trim()) {
       setShowDropdown(true);
     }
