@@ -43,6 +43,10 @@ interface DataTableProps {
   onSortChange?: (sort: SortOption) => void;
   /** Load more items handler (for infinite scroll) */
   onLoadMore?: () => void;
+  /** Controlled search value (for backend filtering) */
+  searchValue?: string;
+  /** Search change handler (for backend filtering) */
+  onSearchChange?: (value: string) => void;
 }
 
 export const DataTable: FC<DataTableProps> = ({
@@ -64,9 +68,11 @@ export const DataTable: FC<DataTableProps> = ({
   sortBy: externalSortBy,
   onSortChange: externalOnSortChange,
   onLoadMore,
+  searchValue: externalSearchValue,
+  onSearchChange: externalOnSearchChange,
 }) => {
   // Toolbar state
-  const [searchValue, setSearchValue] = useState('');
+  const [internalSearchValue, setInternalSearchValue] = useState('');
   const [internalSortBy, setInternalSortBy] = useState<SortOption>('updated');
   const [filters, setFilters] = useState<FilterState>({ tags: [], status: 'all' });
 
@@ -89,12 +95,17 @@ export const DataTable: FC<DataTableProps> = ({
   const sortBy = externalSortBy ?? internalSortBy;
   const handleSortChange = externalOnSortChange ?? setInternalSortBy;
 
-  // Filter and sort items (only if not using external sorting)
+  // Use external searchValue if provided, otherwise use internal state
+  const searchValue = externalSearchValue ?? internalSearchValue;
+  const isExternalSearch = externalOnSearchChange !== undefined;
+
+  // Filter and sort items (only if not using external sorting/filtering)
   const processedItems = useMemo(() => {
     let result = [...items];
 
-    // Apply search filter
-    if (searchValue) {
+    // Apply search filter ONLY if using internal (client-side) search
+    // When external search is used, backend handles filtering
+    if (searchValue && !isExternalSearch) {
       const query = searchValue.toLowerCase();
       result = result.filter(
         (item) =>
@@ -136,7 +147,7 @@ export const DataTable: FC<DataTableProps> = ({
     }
 
     return result;
-  }, [items, searchValue, sortBy, filters, externalSortBy]);
+  }, [items, searchValue, sortBy, filters, externalSortBy, isExternalSearch]);
 
   // Infinite scroll: observe the sentinel element
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -171,11 +182,16 @@ export const DataTable: FC<DataTableProps> = ({
 
   // Reset scroll position when search/filters change
   const handleSearchChange = useCallback((value: string) => {
-    setSearchValue(value);
+    // Use external handler if provided, otherwise use internal state
+    if (externalOnSearchChange) {
+      externalOnSearchChange(value);
+    } else {
+      setInternalSearchValue(value);
+    }
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = 0;
     }
-  }, []);
+  }, [externalOnSearchChange]);
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);

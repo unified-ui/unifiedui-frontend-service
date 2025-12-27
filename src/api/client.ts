@@ -1,6 +1,7 @@
 import type {
   // Common Types
   PaginationParams,
+  FilterParams,
   SearchParams,
   OrderParams,
   QuickListItemResponse,
@@ -236,7 +237,7 @@ export class UnifiedUIAPIClient {
 
   async listApplications(
     tenantId: string, 
-    params?: PaginationParams & OrderParams & { view?: 'quick-list' }, 
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' }, 
     options?: { noCache?: boolean }
   ): Promise<ApplicationResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});

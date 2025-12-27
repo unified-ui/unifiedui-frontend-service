@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useDebouncedValue } from '@mantine/hooks';
 import { useNavigate } from 'react-router-dom';
 import { IconSparkles } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
@@ -11,6 +12,7 @@ import { useIdentity, useSidebarData } from '../../contexts';
 import type { ApplicationResponse } from '../../api/types';
 
 const PAGE_SIZE = 25;
+const SEARCH_DEBOUNCE_MS = 300;
 
 export const ApplicationsPage: FC = () => {
   const navigate = useNavigate();
@@ -25,6 +27,10 @@ export const ApplicationsPage: FC = () => {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('updated');
+  
+  // Search state with debouncing
+  const [searchValue, setSearchValue] = useState('');
+  const [debouncedSearch] = useDebouncedValue(searchValue, SEARCH_DEBOUNCE_MS);
   
   // Track current offset for pagination
   const offsetRef = useRef(0);
@@ -44,7 +50,7 @@ export const ApplicationsPage: FC = () => {
     }
   };
 
-  const fetchApplications = useCallback(async (reset = true) => {
+  const fetchApplications = useCallback(async (reset = true, searchFilter?: string) => {
     if (!apiClient || !selectedTenant) return;
 
     if (reset) {
@@ -62,6 +68,7 @@ export const ApplicationsPage: FC = () => {
       const data = await apiClient.listApplications(selectedTenant.id, { 
         limit: PAGE_SIZE,
         skip: offsetRef.current,
+        name_filter: searchFilter || undefined,
         ...sortParams
       }) as ApplicationResponse[];
       
@@ -95,15 +102,20 @@ export const ApplicationsPage: FC = () => {
     }
   }, [apiClient, selectedTenant, sortBy]);
 
+  // Fetch when sort or debounced search changes
   useEffect(() => {
-    fetchApplications(true);
-  }, [fetchApplications]);
+    fetchApplications(true, debouncedSearch);
+  }, [fetchApplications, debouncedSearch]);
 
   const handleLoadMore = useCallback(() => {
     if (!isLoadingMore && hasMore) {
-      fetchApplications(false);
+      fetchApplications(false, debouncedSearch);
     }
-  }, [fetchApplications, isLoadingMore, hasMore]);
+  }, [fetchApplications, isLoadingMore, hasMore, debouncedSearch]);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchValue(value);
+  }, []);
 
   const handleSortChange = useCallback((newSort: SortOption) => {
     setSortBy(newSort);
@@ -136,19 +148,19 @@ export const ApplicationsPage: FC = () => {
     try {
       await apiClient.deleteApplication(selectedTenant.id, deleteDialog.id);
       setDeleteDialog({ open: false, id: '', name: '' });
-      fetchApplications(true); // Reset and refetch
+      fetchApplications(true, debouncedSearch); // Reset and refetch with current search
       refreshApplications(); // Update sidebar cache
     } catch (err) {
       console.error('Error deleting application:', err);
     } finally {
       setIsDeleting(false);
     }
-  }, [apiClient, selectedTenant, deleteDialog.id, fetchApplications, refreshApplications]);
+  }, [apiClient, selectedTenant, deleteDialog.id, fetchApplications, refreshApplications, debouncedSearch]);
 
   const handleCreateSuccess = useCallback(() => {
-    fetchApplications(true); // Reset and refetch
+    fetchApplications(true, debouncedSearch); // Reset and refetch with current search
     refreshApplications(); // Update sidebar cache
-  }, [fetchApplications, refreshApplications]);
+  }, [fetchApplications, refreshApplications, debouncedSearch]);
 
   const renderIcon = useCallback(() => (
     <IconSparkles size={20} />
@@ -173,6 +185,8 @@ export const ApplicationsPage: FC = () => {
           showStatus={false}
           searchPlaceholder="Search chat agents..."
           emptyMessage="No chat agents found. Create your first one!"
+          searchValue={searchValue}
+          onSearchChange={handleSearchChange}
           onOpen={handleOpen}
           onShare={handleShare}
           onDuplicate={handleDuplicate}

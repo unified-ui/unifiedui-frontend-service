@@ -635,6 +635,12 @@ export interface PaginationParams {
   limit?: number;
 }
 
+export interface FilterParams {
+  name_filter?: string;
+  is_active?: number;
+  tags?: string;
+}
+
 export interface SearchParams {
   search?: string;
   top?: number;
