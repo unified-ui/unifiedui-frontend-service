@@ -162,14 +162,15 @@ export const DataTableToolbar: FC<DataTableToolbarProps> = ({
               closeOnClickOutside={false}
             >
               <Popover.Target>
-                <ActionIcon
-                  variant="default"
-                  size="lg"
-                  w={42}
-                  onClick={() => setFilterOpened((o) => !o)}
-                  pos="relative"
-                >
-                  <IconFilter size={18} />
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <ActionIcon
+                    variant="default"
+                    size="lg"
+                    w={42}
+                    onClick={() => setFilterOpened((o) => !o)}
+                  >
+                    <IconFilter size={18} />
+                  </ActionIcon>
                   {activeFilterCount > 0 && (
                     <Badge 
                       size="xs" 
@@ -177,11 +178,12 @@ export const DataTableToolbar: FC<DataTableToolbarProps> = ({
                       pos="absolute" 
                       top={-4} 
                       right={-4}
+                      style={{ pointerEvents: 'none', zIndex: 1 }}
                     >
                       {activeFilterCount}
                     </Badge>
                   )}
-                </ActionIcon>
+                </div>
               </Popover.Target>
 
             <Popover.Dropdown py="md">

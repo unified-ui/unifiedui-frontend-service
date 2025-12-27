@@ -3,12 +3,6 @@
 ## TODOs
 
 - Standard List Page designen
-    - Paginierung raus und dafür Doom-Scroll bis liste leer ist
-    - search by name (ohne cache)
-    - filter by
-        - tags
-        - is active all, active, inactive
-    - BE: tag ids auch in cache mit rein
     - is active switch anzeigen
     - type anzeigen -> aktuell zB Chat Agent -> n8n oder MSF Foundry oder ... halt type
     - tags ansicht
