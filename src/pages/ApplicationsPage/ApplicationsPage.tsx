@@ -232,6 +232,23 @@ export const ApplicationsPage: FC = () => {
     console.log('Duplicate:', id);
   }, []);
 
+  const handleStatusChange = useCallback(async (id: string, isActive: boolean) => {
+    if (!apiClient || !selectedTenant) return;
+    
+    try {
+      await apiClient.updateApplication(selectedTenant.id, id, { is_active: isActive });
+      
+      // Update local state immediately for better UX
+      setItems(prev => prev.map(item => 
+        item.id === id ? { ...item, isActive } : item
+      ));
+    } catch (err) {
+      console.error('Error updating application status:', err);
+      // Revert on error
+      fetchApplications(true, debouncedSearch, debouncedFilters);
+    }
+  }, [apiClient, selectedTenant, fetchApplications, debouncedSearch, debouncedFilters]);
+
   const handleDeleteClick = useCallback((id: string) => {
     const item = items.find(i => i.id === id);
     setDeleteDialog({ open: true, id, name: item?.name || '' });
@@ -278,7 +295,7 @@ export const ApplicationsPage: FC = () => {
           isLoadingMore={isLoadingMore}
           hasMore={hasMore}
           error={error}
-          showStatus={false}
+          showStatus={true}
           searchPlaceholder="Search chat agents..."
           emptyMessage="No chat agents found. Create your first one!"
           searchValue={searchValue}
@@ -287,6 +304,7 @@ export const ApplicationsPage: FC = () => {
           filters={filters}
           onFilterChange={handleFilterChange}
           onTagSearch={handleTagSearch}
+          onStatusChange={handleStatusChange}
           onOpen={handleOpen}
           onShare={handleShare}
           onDuplicate={handleDuplicate}

@@ -13,12 +13,13 @@
     - kontext-menü (drei punkte)
         - Edit hinzufügen
         - Pin item / Unpin item
-    - beim skrollen -> oben sieht man die liste...
 
 - aktuelle pages aktualisieren (wenn nötig)
 
 - Backend:
-    - Tags endpoint, um alle Tags abzufragen, die es auf einer Resource gibt
+    - Tags endpoint hinzufügen, um alle Tags abzufragen, die es auf einer Resource gibt
+- Frontend:
+    - Tags-Filter im FE auf neuen endpoint ändern
 
 - Standard Detail-Page + Edit designen
     - Tab-Bar:

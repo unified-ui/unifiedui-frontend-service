@@ -212,7 +212,7 @@ export class UnifiedUIAPIClient {
   }
 
   async updateTenant(tenantId: string, data: UpdateTenantRequest): Promise<TenantResponse> {
-    return this.request<TenantResponse>('PUT', `/api/v1/tenants/${tenantId}`, data, 'Tenant updated successfully');
+    return this.request<TenantResponse>('PATCH', `/api/v1/tenants/${tenantId}`, data, 'Tenant updated successfully');
   }
 
   async deleteTenant(tenantId: string): Promise<void> {
@@ -253,7 +253,7 @@ export class UnifiedUIAPIClient {
   }
 
   async updateApplication(tenantId: string, applicationId: string, data: UpdateApplicationRequest): Promise<ApplicationResponse> {
-    return this.request<ApplicationResponse>('PUT', `/api/v1/tenants/${tenantId}/applications/${applicationId}`, data, 'Application updated successfully');
+    return this.request<ApplicationResponse>('PATCH', `/api/v1/tenants/${tenantId}/applications/${applicationId}`, data, 'Application updated successfully');
   }
 
   async deleteApplication(tenantId: string, applicationId: string): Promise<void> {
@@ -305,7 +305,7 @@ export class UnifiedUIAPIClient {
   }
 
   async updateAutonomousAgent(tenantId: string, agentId: string, data: UpdateAutonomousAgentRequest): Promise<AutonomousAgentResponse> {
-    return this.request<AutonomousAgentResponse>('PUT', `/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}`, data, 'Autonomous agent updated successfully');
+    return this.request<AutonomousAgentResponse>('PATCH', `/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}`, data, 'Autonomous agent updated successfully');
   }
 
   async deleteAutonomousAgent(tenantId: string, agentId: string): Promise<void> {
@@ -353,7 +353,7 @@ export class UnifiedUIAPIClient {
   }
 
   async updateConversation(tenantId: string, conversationId: string, data: UpdateConversationRequest): Promise<ConversationResponse> {
-    return this.request<ConversationResponse>('PUT', `/api/v1/tenants/${tenantId}/conversations/${conversationId}`, data, 'Conversation updated successfully');
+    return this.request<ConversationResponse>('PATCH', `/api/v1/tenants/${tenantId}/conversations/${conversationId}`, data, 'Conversation updated successfully');
   }
 
   async deleteConversation(tenantId: string, conversationId: string): Promise<void> {
@@ -405,7 +405,7 @@ export class UnifiedUIAPIClient {
   }
 
   async updateCredential(tenantId: string, credentialId: string, data: UpdateCredentialRequest): Promise<CredentialResponse> {
-    return this.request<CredentialResponse>('PUT', `/api/v1/tenants/${tenantId}/credentials/${credentialId}`, data, 'Credential updated successfully');
+    return this.request<CredentialResponse>('PATCH', `/api/v1/tenants/${tenantId}/credentials/${credentialId}`, data, 'Credential updated successfully');
   }
 
   async deleteCredential(tenantId: string, credentialId: string): Promise<void> {
@@ -456,7 +456,7 @@ export class UnifiedUIAPIClient {
   }
 
   async updateDevelopmentPlatform(tenantId: string, platformId: string, data: UpdateDevelopmentPlatformRequest): Promise<DevelopmentPlatformResponse> {
-    return this.request<DevelopmentPlatformResponse>('PUT', `/api/v1/tenants/${tenantId}/development-platforms/${platformId}`, data, 'Development platform updated successfully');
+    return this.request<DevelopmentPlatformResponse>('PATCH', `/api/v1/tenants/${tenantId}/development-platforms/${platformId}`, data, 'Development platform updated successfully');
   }
 
   async deleteDevelopmentPlatform(tenantId: string, platformId: string): Promise<void> {
@@ -507,7 +507,7 @@ export class UnifiedUIAPIClient {
   }
 
   async updateChatWidget(tenantId: string, widgetId: string, data: UpdateChatWidgetRequest): Promise<ChatWidgetResponse> {
-    return this.request<ChatWidgetResponse>('PUT', `/api/v1/tenants/${tenantId}/chat-widgets/${widgetId}`, data, 'Chat widget updated successfully');
+    return this.request<ChatWidgetResponse>('PATCH', `/api/v1/tenants/${tenantId}/chat-widgets/${widgetId}`, data, 'Chat widget updated successfully');
   }
 
   async deleteChatWidget(tenantId: string, widgetId: string): Promise<void> {
@@ -555,7 +555,7 @@ export class UnifiedUIAPIClient {
   }
 
   async updateCustomGroup(tenantId: string, groupId: string, data: UpdateCustomGroupRequest): Promise<CustomGroupResponse> {
-    return this.request<CustomGroupResponse>('PUT', `/api/v1/tenants/${tenantId}/custom-groups/${groupId}`, data, 'Custom group updated successfully');
+    return this.request<CustomGroupResponse>('PATCH', `/api/v1/tenants/${tenantId}/custom-groups/${groupId}`, data, 'Custom group updated successfully');
   }
 
   async deleteCustomGroup(tenantId: string, groupId: string): Promise<void> {
