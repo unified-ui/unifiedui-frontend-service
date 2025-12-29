@@ -65,6 +65,29 @@
         - history_messages_count -> 15 default
         - foreign_conversation_id
         - ...
+- man kann nur die LETZTE Nachricht bearbeiten
+- traces
+    - message traces werden werden IMMER über den Consumer ingestet! also bei message invokation -> am ende ein event senden
+    - traces eimal nach unserem Schema einblenden über Popup; mit tabbar auch per iframe den foreign trace einblenen
+        - foreign trace:
+            - n8n -> Workflow
+- types beim streamen weitergeben (zB AgentMessage, AskQuestion Action, ...)
+- Widgets:
+    - iFrame Widget
+        - Externe Seite / Formular in Canvas embedden
+        - über query Params config mitgeben
+        - callback url für annahme von Daten
+        - iframe.contentWindow.postMessage -> übergabe des user-tokens
+            - ref: [Link to ref](https://chatgpt.com/c/6951ae1e-c968-8332-a774-b46a8d08235c)
+            - oder -> useMsal
+    - fertige Widgets
+        - Ja / Nein
+        - Multi-Select Options
+        - Single-Select Options
+    - Widgets designen
+        - einfaches Formular mit jeglichen Datentypen configurieren
+    - LLM soll nur ausgeben: $%_WIDGET:ID=id-of-widget:WIDGET_%$
+    
 
 ```json
 /*
@@ -91,6 +114,8 @@ können wir hier einfach den header zurückgeben (und aggessiv cachen!).
 - caching strategie optimieren
     - ttl im Backend bei den resourcen optimieren! (länger oder kürzer)
     - ...
+- Consumer Ingestion Service
+    - core code und auch als Azure Serverless Function bereitstellen
 - favorieten-feature implementieren
     - FE: favorieten einmal fetchen beim öffnen und dann global im state speichern
     - sidebardatalist -> hier ein Pin-Symbol hinzufügen und lokal ordnen
@@ -104,3 +129,8 @@ können wir hier einfach den header zurückgeben (und aggessiv cachen!).
         - tags hinzufügen
         - user favorites
 - gesamtes Frontend refactoren
+- multi-azure/google-tenant
+    - in principals tabelle noch identity_provider (EXTRA_ID, GCP, AWS etc) aufnehmen
+    - mit der vollen email, soll man auch azure-user aus anderen tenants berechtigen können
+    - auch google accounts etc einladen können
+- private azure deployment

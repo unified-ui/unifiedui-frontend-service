@@ -82,10 +82,20 @@ export interface TagListResponse {
   total: number;
 }
 
+/** Response type for resource-specific tag endpoints (e.g., /applications/tags) */
+export type ResourceTypeTagsResponse = TagSummary[];
+
 export interface ResourceTagsResponse {
   resource_id: string;
   resource_type: string;
   tags: TagSummary[];
+}
+
+/** Parameters for resource-specific tag list endpoints */
+export interface ResourceTagListParams {
+  name?: string;
+  skip?: number;
+  limit?: number;
 }
 
 export interface CreateTagRequest {

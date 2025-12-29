@@ -52,22 +52,22 @@ export const ApplicationsPage: FC = () => {
   // Tags state
   const [availableTags, setAvailableTags] = useState<string[]>([]);
 
-  // Fetch tags from API with optional name filter
+  // Fetch tags from API with optional name filter (only tags used by applications)
   const fetchTags = useCallback(async (nameFilter?: string) => {
     if (!apiClient || !selectedTenant) return;
     
     try {
-      const response = await apiClient.listTags(selectedTenant.id, {
+      const tags = await apiClient.listApplicationTypeTags(selectedTenant.id, {
         limit: TAG_PAGE_SIZE,
         name: nameFilter || undefined,
       });
       
       // Update tagMapRef and availableTags
-      response.tags.forEach(tag => {
+      tags.forEach(tag => {
         tagMapRef.current.set(tag.name, tag.id);
       });
       
-      setAvailableTags(response.tags.map(tag => tag.name));
+      setAvailableTags(tags.map(tag => tag.name));
     } catch (err) {
       console.error('Error loading tags:', err);
     }

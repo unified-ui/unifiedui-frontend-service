@@ -66,6 +66,8 @@ import type {
   TagResponse,
   TagListResponse,
   ResourceTagsResponse,
+  ResourceTypeTagsResponse,
+  ResourceTagListParams,
   CreateTagRequest,
   SetResourceTagsRequest,
   // User Favorites Types
@@ -389,7 +391,7 @@ export class UnifiedUIAPIClient {
 
   async listCredentials(
     tenantId: string, 
-    params?: PaginationParams & OrderParams & { view?: 'quick-list' }, 
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' }, 
     options?: { noCache?: boolean }
   ): Promise<CredentialResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
@@ -593,6 +595,37 @@ export class UnifiedUIAPIClient {
 
   async deleteTag(tenantId: string, tagId: number): Promise<void> {
     return this.request<void>('DELETE', `/api/v1/tenants/${tenantId}/tags/${tagId}`, undefined, 'Tag deleted successfully');
+  }
+
+  // ========== Resource Type Tags (for filter dropdowns) ==========
+
+  /**
+   * List tags that are applied to resources of a specific type.
+   * Use these endpoints for filter dropdowns to show only relevant tags.
+   */
+  async listResourceTypeTags(tenantId: string, resourceType: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
+    const query = this.buildQueryString(params || {});
+    return this.request<ResourceTypeTagsResponse>('GET', `/api/v1/tenants/${tenantId}/${resourceType}/tags${query}`);
+  }
+
+  async listApplicationTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
+    return this.listResourceTypeTags(tenantId, 'applications', params);
+  }
+
+  async listAutonomousAgentTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
+    return this.listResourceTypeTags(tenantId, 'autonomous-agents', params);
+  }
+
+  async listCredentialTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
+    return this.listResourceTypeTags(tenantId, 'credentials', params);
+  }
+
+  async listChatWidgetTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
+    return this.listResourceTypeTags(tenantId, 'chat-widgets', params);
+  }
+
+  async listDevelopmentPlatformTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
+    return this.listResourceTypeTags(tenantId, 'development-platforms', params);
   }
 
   // ========== Resource Tags ==========

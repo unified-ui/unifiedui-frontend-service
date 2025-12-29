@@ -52,22 +52,22 @@ export const CredentialsPage: FC = () => {
   // Tags state
   const [availableTags, setAvailableTags] = useState<string[]>([]);
 
-  // Fetch tags from API with optional name filter
+  // Fetch tags from API with optional name filter (only tags used by credentials)
   const fetchTags = useCallback(async (nameFilter?: string) => {
     if (!apiClient || !selectedTenant) return;
     
     try {
-      const response = await apiClient.listTags(selectedTenant.id, {
+      const tags = await apiClient.listCredentialTypeTags(selectedTenant.id, {
         limit: TAG_PAGE_SIZE,
         name: nameFilter || undefined,
       });
       
       // Update tagMapRef and availableTags
-      response.tags.forEach(tag => {
+      tags.forEach(tag => {
         tagMapRef.current.set(tag.name, tag.id);
       });
       
-      setAvailableTags(response.tags.map(tag => tag.name));
+      setAvailableTags(tags.map(tag => tag.name));
     } catch (err) {
       console.error('Error loading tags:', err);
     }
@@ -218,11 +218,6 @@ export const CredentialsPage: FC = () => {
     navigate(`/credentials/${id}`);
   }, [navigate]);
 
-  const handleEdit = useCallback((id: string) => {
-    // TODO: Implement edit functionality
-    console.log('Edit:', id);
-  }, []);
-
   const handleShare = useCallback((id: string) => {
     // TODO: Implement share functionality
     console.log('Share:', id);
@@ -231,11 +226,6 @@ export const CredentialsPage: FC = () => {
   const handleDuplicate = useCallback((id: string) => {
     // TODO: Implement duplicate functionality
     console.log('Duplicate:', id);
-  }, []);
-
-  const handlePin = useCallback((id: string, isPinned: boolean) => {
-    // TODO: Implement pin functionality
-    console.log('Pin:', id, isPinned);
   }, []);
 
   const handleStatusChange = useCallback(async (id: string, isActive: boolean) => {
@@ -312,10 +302,8 @@ export const CredentialsPage: FC = () => {
           onTagSearch={handleTagSearch}
           onStatusChange={handleStatusChange}
           onOpen={handleOpen}
-          onEdit={handleEdit}
           onShare={handleShare}
           onDuplicate={handleDuplicate}
-          onPin={handlePin}
           onDelete={handleDeleteClick}
           renderIcon={renderIcon}
           sortBy={sortBy}
