@@ -80,6 +80,7 @@ export const DataTableToolbar: FC<DataTableToolbarProps> = ({
   const [filterOpened, setFilterOpened] = useState(false);
   const [localFilters, setLocalFilters] = useState<FilterState>(filters);
   const filterButtonRef = useRef<HTMLDivElement>(null);
+  const tagSelectRef = useRef<HTMLInputElement>(null);
 
   // Close filter popover when clicking outside (but not on portal elements like dropdowns)
   useEffect(() => {
@@ -193,11 +194,14 @@ export const DataTableToolbar: FC<DataTableToolbarProps> = ({
                     Tags
                   </Text>
                   <MultiSelect
+                    ref={tagSelectRef}
                     data={availableTags}
                     value={localFilters.tags}
-                    onChange={(tags) =>
-                      setLocalFilters((prev) => ({ ...prev, tags }))
-                    }
+                    onChange={(tags) => {
+                      setLocalFilters((prev) => ({ ...prev, tags }));
+                      // Close dropdown after selection by blurring the input
+                      tagSelectRef.current?.blur();
+                    }}
                     onSearchChange={onTagSearch}
                     placeholder="Select tags"
                     searchable
