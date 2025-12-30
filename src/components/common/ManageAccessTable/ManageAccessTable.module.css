@@ -21,8 +21,10 @@
   min-width: 700px;
 }
 
+
 .table thead tr th {
   border-bottom: 1px solid var(--border-default);
+  text-align: center;
 }
 
 .roleHeader {

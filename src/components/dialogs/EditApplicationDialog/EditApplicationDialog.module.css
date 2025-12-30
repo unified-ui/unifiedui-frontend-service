@@ -32,19 +32,23 @@
 }
 
 .segmentedControl {
-  background-color: var(--color-gray-100);
+  background-color: var(--color-gray-200);
   border-radius: var(--radius-md);
   padding: var(--spacing-xs);
 }
 
 [data-mantine-color-scheme='dark'] .segmentedControl {
-  background-color: var(--color-gray-700);
+  background-color: var(--bg-app);
 }
 
 .segmentedControl :global(.mantine-SegmentedControl-indicator) {
   background-color: var(--bg-paper);
   box-shadow: var(--shadow-sm);
   border-radius: var(--radius-sm);
+}
+
+[data-mantine-color-scheme='dark'] .segmentedControl :global(.mantine-SegmentedControl-indicator) {
+  background-color: #292929;
 }
 
 .segmentedControl :global(.mantine-SegmentedControl-label) {
