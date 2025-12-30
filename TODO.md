@@ -22,7 +22,11 @@ bugs:
             - Hinzufügen -> Dialog; multiple inputs wie bei tags
             - Entfernen (bei drei punkten)
 
-- Quick-IAM beim Manage Access aus dropdown
+- Backend:
+    - Name der Gruppe / Users mit in Response -> bereits in permssions.py drin?
+    - im FE entsprechend in IAM anpassen
+
+- Edit-Logik auf alle seiten ausweiten
 
 - Development-Platform (route in `development-platforms` umbenennen)
     - Page erstellen
@@ -46,9 +50,6 @@ bugs:
     - IAM
     - Custom Groups
     - Billing & Licence
-
-- CredentialsPage deisgnen
-- ApplicationsPage designen
 
 ---
 
