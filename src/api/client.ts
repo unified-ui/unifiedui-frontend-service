@@ -543,7 +543,7 @@ export class UnifiedUIAPIClient {
 
   // ========== Custom Group Endpoints ==========
 
-  async listCustomGroups(tenantId: string, params?: PaginationParams): Promise<CustomGroupResponse[]> {
+  async listCustomGroups(tenantId: string, params?: PaginationParams & { name?: string }): Promise<CustomGroupResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<CustomGroupResponse[]>('GET', `/api/v1/tenants/${tenantId}/custom-groups${query}`);
   }

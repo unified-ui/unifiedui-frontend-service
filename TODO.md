@@ -2,11 +2,6 @@
 
 ## TODOs
 
-- Backend:
-    - (`DONE ✅`) Tags endpoint hinzufügen, um alle Tags abzufragen, die es auf einer Resource gibt
-- Frontend:
-    - Tags-Filter im FE auf neuen endpoint ändern
-
 - Standard Detail-Page + Edit designen
     - Tab-Bar:
         - Details
@@ -17,6 +12,8 @@
             - CheckBoxen in Tabelle -> READ, WRITE, ADMIN mit Beschreibung beim hovern
             - Hinzufügen -> Dialog; multiple inputs wie bei tags
             - Entfernen (bei drei punkten)
+
+- Quick-IAM beim Manage Access aus dropdown
 
 - Development-Platform (route in `development-platforms` umbenennen)
     - Page erstellen
@@ -134,3 +131,6 @@ können wir hier einfach den header zurückgeben (und aggessiv cachen!).
     - mit der vollen email, soll man auch azure-user aus anderen tenants berechtigen können
     - auch google accounts etc einladen können
 - private azure deployment
+- Env-Deployment mit anpassung der variablen
+    - von zB N8N oder Foundry
+        - N8N -> download json -> map variables -> upload json

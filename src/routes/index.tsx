@@ -6,6 +6,7 @@ import { DashboardPage } from '../pages/DashboardPage';
 import { CredentialsPage } from '../pages/CredentialsPage';
 import { TenantSettingsPage } from '../pages/TenantSettingsPage';
 import { ApplicationsPage } from '../pages/ApplicationsPage';
+import { ApplicationDetailPage } from '../pages/ApplicationsPage/ApplicationDetailPage';
 import { ConversationsPage } from '../pages/ConversationsPage';
 import { AutonomousAgentsPage } from '../pages/AutonomousAgentsPage';
 import { WidgetDesignerPage } from '../pages/WidgetDesignerPage';
@@ -25,6 +26,7 @@ export const AppRoutes = () => {
         <Route path="/credentials" element={<ProtectedRoute><CredentialsPage /></ProtectedRoute>} />
         <Route path="/tenant-settings" element={<ProtectedRoute><TenantSettingsPage /></ProtectedRoute>} />
         <Route path="/applications" element={<ProtectedRoute><ApplicationsPage /></ProtectedRoute>} />
+        <Route path="/applications/:id/details" element={<ProtectedRoute><ApplicationDetailPage /></ProtectedRoute>} />
         <Route path="/conversations" element={<ProtectedRoute><ConversationsPage /></ProtectedRoute>} />
         <Route path="/autonomous-agents" element={<ProtectedRoute><AutonomousAgentsPage /></ProtectedRoute>} />
         <Route path="/widget-designer" element={<ProtectedRoute><WidgetDesignerPage /></ProtectedRoute>} />
