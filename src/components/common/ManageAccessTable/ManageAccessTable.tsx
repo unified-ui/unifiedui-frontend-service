@@ -58,9 +58,9 @@ const ROLE_OPTIONS = [
 
 const getPrincipalIcon = (type: PrincipalTypeEnum) => {
   switch (type) {
-    case 'USER':
+    case 'IDENTITY_USER':
       return <IconUser size={16} />;
-    case 'GROUP':
+    case 'IDENTITY_GROUP':
       return <IconUsers size={16} />;
     case 'CUSTOM_GROUP':
       return <IconUsersGroup size={16} />;
@@ -71,9 +71,9 @@ const getPrincipalIcon = (type: PrincipalTypeEnum) => {
 
 const getPrincipalTypeLabel = (type: PrincipalTypeEnum) => {
   switch (type) {
-    case 'USER':
+    case 'IDENTITY_USER':
       return 'User';
-    case 'GROUP':
+    case 'IDENTITY_GROUP':
       return 'Identity Group';
     case 'CUSTOM_GROUP':
       return 'Custom Group';

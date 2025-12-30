@@ -29,8 +29,8 @@ export const PermissionActionEnum = {
 export type PermissionActionEnum = typeof PermissionActionEnum[keyof typeof PermissionActionEnum];
 
 export const PrincipalTypeEnum = {
-  USER: 'USER',
-  GROUP: 'GROUP',
+  IDENTITY_USER: 'IDENTITY_USER',
+  IDENTITY_GROUP: 'IDENTITY_GROUP',
   CUSTOM_GROUP: 'CUSTOM_GROUP',
 } as const;
 
@@ -290,13 +290,16 @@ export interface ApplicationPermissionResponse {
 }
 
 export interface PrincipalPermissionsResponse {
+  application_id?: string;
+  tenant_id?: string;
   principal_id: string;
   principal_type: PrincipalTypeEnum;
-  permissions: ApplicationPermissionResponse[];
+  roles: PermissionActionEnum[];
 }
 
 export interface ApplicationPrincipalsResponse {
   application_id: string;
+  tenant_id?: string;
   principals: PrincipalPermissionsResponse[];
 }
 

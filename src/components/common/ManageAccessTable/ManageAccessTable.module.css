@@ -32,12 +32,18 @@
 }
 
 .roleHeader {
-  width: 150px;
+  width: 80px;
   text-align: center;
 }
 
 .roleCell {
   text-align: center;
+}
+
+.roleCell > div,
+.roleCell > label {
+  display: flex;
+  justify-content: center;
 }
 
 .actionHeader {

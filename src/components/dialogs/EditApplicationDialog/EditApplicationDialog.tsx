@@ -160,14 +160,14 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       const response = await apiClient.getApplicationPrincipals(selectedTenant.id, applicationId);
 
       // Transform response to PrincipalPermission format
-      // Response structure: { application_id, principals: [{ principal_id, principal_type, permissions: [{ role }] }] }
+      // Response structure: { application_id, principals: [{ principal_id, principal_type, roles: ['READ', 'WRITE', ...] }] }
       const transformedPrincipals: PrincipalPermission[] = (response.principals || []).map(
         (p: PrincipalPermissionsResponse) => ({
           id: p.principal_id,
           principalId: p.principal_id,
           principalType: p.principal_type,
           displayName: p.principal_id, // TODO: Fetch display names
-          roles: (p.permissions || []).map((perm) => perm.role),
+          roles: p.roles || [],
         })
       );
 

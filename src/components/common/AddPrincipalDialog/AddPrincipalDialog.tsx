@@ -21,6 +21,7 @@ import {
   IconUser,
   IconUsers,
   IconUsersGroup,
+  IconShieldLock,
 } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import type {
@@ -104,14 +105,14 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
       id: u.id,
       displayName: u.display_name,
       email: u.mail,
-      type: 'USER' as PrincipalTypeEnum,
+      type: 'IDENTITY_USER' as PrincipalTypeEnum,
       section: 'users',
     })),
     ...groups.map((g) => ({
       id: g.id,
       displayName: g.display_name,
       email: undefined,
-      type: 'GROUP' as PrincipalTypeEnum,
+      type: 'IDENTITY_GROUP' as PrincipalTypeEnum,
       section: 'groups',
     })),
     ...customGroups.map((cg) => ({
@@ -245,9 +246,9 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
   // Get icon for principal type
   const getPrincipalIcon = (type: PrincipalTypeEnum) => {
     switch (type) {
-      case 'USER':
+      case 'IDENTITY_USER':
         return <IconUser size={16} />;
-      case 'GROUP':
+      case 'IDENTITY_GROUP':
         return <IconUsers size={16} />;
       case 'CUSTOM_GROUP':
         return <IconUsersGroup size={16} />;
@@ -266,7 +267,12 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={`Add access to ${entityName}`}
+      title={
+        <Group gap="sm">
+          <IconShieldLock size={20} />
+          <span>Add access to {entityName}</span>
+        </Group>
+      }
       size="lg"
       centered
     >
@@ -281,6 +287,7 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
             className={classes.inputContainer}
             onClick={() => inputRef.current?.focus()}
           >
+            <IconSearch size={16} className={classes.searchIconFixed} />
             <Box className={classes.selectedWrapper}>
               {selectedPrincipals.map((principal) => (
                 <Box key={principal.id} className={classes.selectedTag}>
@@ -300,7 +307,6 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
               ))}
 
               <Box className={classes.inputWrapper}>
-                <IconSearch size={16} className={classes.searchIcon} />
                 <input
                   ref={inputRef}
                   type="text"
@@ -342,7 +348,7 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
                     {/* Identity Users Section */}
                     {users.length > 0 && (
                       <>
-                        <Text size="xs" fw={600} c="dimmed" px="sm" py="xs" className={classes.sectionHeader}>
+                        <Text px="sm" py="xs" className={classes.sectionHeader}>
                           Identity Users
                         </Text>
                         {users
@@ -366,7 +372,7 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
                                     id: user.id,
                                     displayName: user.display_name,
                                     email: user.mail,
-                                    type: 'USER',
+                                    type: 'IDENTITY_USER',
                                   });
                                 }}
                                 onMouseEnter={() => setHighlightedIndex(idx)}
@@ -394,7 +400,7 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
                     {groups.length > 0 && (
                       <>
                         {users.length > 0 && <Divider my="xs" />}
-                        <Text size="xs" fw={600} c="dimmed" px="sm" py="xs" className={classes.sectionHeader}>
+                        <Text px="sm" py="xs" className={classes.sectionHeader}>
                           Identity Groups
                         </Text>
                         {groups
@@ -417,7 +423,7 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
                                   addPrincipal({
                                     id: group.id,
                                     displayName: group.display_name,
-                                    type: 'GROUP',
+                                    type: 'IDENTITY_GROUP',
                                   });
                                 }}
                                 onMouseEnter={() => setHighlightedIndex(idx)}
@@ -438,7 +444,7 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
                     {customGroups.length > 0 && (
                       <>
                         {(users.length > 0 || groups.length > 0) && <Divider my="xs" />}
-                        <Text size="xs" fw={600} c="dimmed" px="sm" py="xs" className={classes.sectionHeader}>
+                        <Text px="sm" py="xs" className={classes.sectionHeader}>
                           Custom Groups
                         </Text>
                         {customGroups
@@ -502,21 +508,26 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
           >
             <Stack gap="sm">
               {(['READ', 'WRITE', 'ADMIN'] as PermissionActionEnum[]).map((role) => (
-                <Radio
+                <Box
                   key={role}
-                  value={role}
-                  label={
-                    <Box>
-                      <Text size="sm" fw={500}>
-                        {role.charAt(0) + role.slice(1).toLowerCase()}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {ROLE_DESCRIPTIONS[role]}
-                      </Text>
-                    </Box>
-                  }
-                  className={classes.radioOption}
-                />
+                  className={`${classes.radioOption} ${selectedRole === role ? classes.radioOptionSelected : ''}`}
+                  onClick={() => setSelectedRole(role)}
+                >
+                  <Radio
+                    value={role}
+                    label={
+                      <Box>
+                        <Text size="sm" fw={500}>
+                          {role.charAt(0) + role.slice(1).toLowerCase()}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {ROLE_DESCRIPTIONS[role]}
+                        </Text>
+                      </Box>
+                    }
+                    styles={{ radio: { cursor: 'pointer' }, label: { cursor: 'pointer' } }}
+                  />
+                </Box>
               ))}
             </Stack>
           </Radio.Group>
