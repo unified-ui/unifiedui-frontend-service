@@ -107,7 +107,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
     principalId: string;
     principalType: PrincipalTypeEnum;
     displayName: string;
-  }>({ open: false, principalId: '', principalType: 'USER', displayName: '' });
+  }>({ open: false, principalId: '', principalType: 'IDENTITY_USER', displayName: '' });
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Filter principals based on search and role filter
@@ -147,11 +147,10 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
   // Handle delete confirm
   const handleDeleteConfirm = useCallback(async () => {
     if (!onDeletePrincipal) return;
-    
     setIsDeleting(true);
     try {
       await onDeletePrincipal(deleteDialog.principalId, deleteDialog.principalType, deleteDialog.displayName);
-      setDeleteDialog({ open: false, principalId: '', principalType: 'USER', displayName: '' });
+      setDeleteDialog({ open: false, principalId: '', principalType: 'IDENTITY_USER', displayName: '' });
     } finally {
       setIsDeleting(false);
     }
@@ -160,9 +159,24 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
   // Handle role checkbox change
   const handleRoleToggle = useCallback(
     async (principal: PrincipalPermission, role: PermissionActionEnum, enabled: boolean) => {
+      // If removing READ and it's the only role, show delete dialog instead of direct removal
+      if (
+        !enabled &&
+        role === 'READ' &&
+        principal.roles.length === 1 &&
+        principal.roles[0] === 'READ' &&
+        onDeletePrincipal
+      ) {
+        setDeleteDialog({
+          open: true,
+          principalId: principal.principalId,
+          principalType: principal.principalType,
+          displayName: principal.displayName,
+        });
+        return;
+      }
       const key = `${principal.principalId}-${role}`;
       setLoadingRoles((prev) => new Set(prev).add(key));
-
       try {
         await onRoleChange(principal.principalId, principal.principalType, role, enabled);
       } finally {
@@ -173,7 +187,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
         });
       }
     },
-    [onRoleChange]
+    [onRoleChange, onDeletePrincipal]
   );
 
   // Check if a specific role checkbox is loading
@@ -330,7 +344,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
       {/* Delete Confirmation Dialog */}
       <ConfirmDeleteDialog
         opened={deleteDialog.open}
-        onClose={() => setDeleteDialog({ open: false, principalId: '', principalType: 'USER', displayName: '' })}
+        onClose={() => setDeleteDialog({ open: false, principalId: '', principalType: 'IDENTITY_USER', displayName: '' })}
         onConfirm={handleDeleteConfirm}
         title="Remove Access"
         itemName={deleteDialog.displayName}
