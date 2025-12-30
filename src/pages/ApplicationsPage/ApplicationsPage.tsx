@@ -1,13 +1,13 @@
 import type { FC } from 'react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { IconSparkles } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { PageContainer, PageHeader, DataTable, ConfirmDeleteDialog } from '../../components/common';
 import type { DataTableItem } from '../../components/common';
 import type { SortOption, FilterState } from '../../components/common/DataTable/DataTableToolbar';
-import { CreateApplicationDialog } from '../../components/dialogs';
+import { CreateApplicationDialog, EditApplicationDialog, type EditDialogTab } from '../../components/dialogs';
 import { useIdentity, useSidebarData } from '../../contexts';
 import type { ApplicationResponse } from '../../api/types';
 
@@ -18,6 +18,7 @@ const FILTER_DEBOUNCE_MS = 300;
 
 export const ApplicationsPage: FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { apiClient, selectedTenant } = useIdentity();
   const { refreshApplications } = useSidebarData();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -29,6 +30,10 @@ export const ApplicationsPage: FC = () => {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('updated');
+  
+  // Edit dialog state from URL params
+  const editItemId = searchParams.get('editItemId');
+  const editTab = (searchParams.get('tab') as EditDialogTab) || 'details';
   
   // Filter state with debouncing
   const [filters, setFilters] = useState<FilterState>({ tags: [], status: 'all' });
@@ -222,10 +227,33 @@ export const ApplicationsPage: FC = () => {
     navigate(`/applications/${id}`);
   }, [navigate]);
 
+  // Open edit dialog with details tab
+  const handleEdit = useCallback((id: string) => {
+    setSearchParams({ editItemId: id, tab: 'details' });
+  }, [setSearchParams]);
+
+  // Open edit dialog with manage access tab
   const handleShare = useCallback((id: string) => {
-    // TODO: Implement share functionality
-    console.log('Share:', id);
-  }, []);
+    setSearchParams({ editItemId: id, tab: 'iam' });
+  }, [setSearchParams]);
+
+  // Close edit dialog and clear URL params
+  const handleEditClose = useCallback(() => {
+    setSearchParams({});
+  }, [setSearchParams]);
+
+  // Handle tab change in edit dialog
+  const handleEditTabChange = useCallback((tab: EditDialogTab) => {
+    if (editItemId) {
+      setSearchParams({ editItemId, tab });
+    }
+  }, [editItemId, setSearchParams]);
+
+  // Handle successful edit
+  const handleEditSuccess = useCallback(() => {
+    fetchApplications(true, debouncedSearch, debouncedFilters);
+    refreshApplications();
+  }, [fetchApplications, debouncedSearch, debouncedFilters, refreshApplications]);
 
   const handleDuplicate = useCallback((id: string) => {
     // TODO: Implement duplicate functionality
@@ -306,6 +334,7 @@ export const ApplicationsPage: FC = () => {
           onTagSearch={handleTagSearch}
           onStatusChange={handleStatusChange}
           onOpen={handleOpen}
+          onEdit={handleEdit}
           onShare={handleShare}
           onDuplicate={handleDuplicate}
           onDelete={handleDeleteClick}
@@ -320,6 +349,15 @@ export const ApplicationsPage: FC = () => {
         opened={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onSuccess={handleCreateSuccess}
+      />
+
+      <EditApplicationDialog
+        opened={!!editItemId}
+        onClose={handleEditClose}
+        applicationId={editItemId}
+        initialTab={editTab}
+        onTabChange={handleEditTabChange}
+        onSuccess={handleEditSuccess}
       />
 
       <ConfirmDeleteDialog

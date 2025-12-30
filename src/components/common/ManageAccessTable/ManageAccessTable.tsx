@@ -14,10 +14,13 @@ import {
   Stack,
   Center,
   ScrollArea,
+  Tooltip,
+  ActionIcon,
 } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
-import { IconSearch, IconPlus, IconUser, IconUsers, IconUsersGroup } from '@tabler/icons-react';
+import { IconSearch, IconPlus, IconUser, IconUsers, IconUsersGroup, IconTrash } from '@tabler/icons-react';
 import type { PermissionActionEnum, PrincipalTypeEnum } from '../../../api/types';
+import { ConfirmDeleteDialog } from '../ConfirmDeleteDialog';
 import classes from './ManageAccessTable.module.css';
 
 // Types
@@ -39,6 +42,8 @@ interface ManageAccessTableProps {
   error?: string | null;
   /** Handler when a role is toggled */
   onRoleChange: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum, enabled: boolean) => Promise<void>;
+  /** Handler to delete a principal's access */
+  onDeletePrincipal?: (principalId: string, principalType: PrincipalTypeEnum, displayName: string) => Promise<void>;
   /** Handler to open add principal dialog */
   onAddPrincipal: () => void;
   /** Entity name for labels (e.g., "application", "credential") */
@@ -82,6 +87,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
   isLoading = false,
   error = null,
   onRoleChange,
+  onDeletePrincipal,
   onAddPrincipal,
   entityName = 'resource',
 }) => {
@@ -94,6 +100,15 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
   
   // Loading states for individual role changes
   const [loadingRoles, setLoadingRoles] = useState<Set<string>>(new Set());
+  
+  // Delete confirmation dialog state
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    principalId: string;
+    principalType: PrincipalTypeEnum;
+    displayName: string;
+  }>({ open: false, principalId: '', principalType: 'USER', displayName: '' });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Filter principals based on search and role filter
   const filteredPrincipals = useMemo(() => {
@@ -118,6 +133,29 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
 
     return result;
   }, [principals, debouncedSearch, roleFilter]);
+
+  // Handle delete click - open confirmation dialog
+  const handleDeleteClick = useCallback((principal: PrincipalPermission) => {
+    setDeleteDialog({
+      open: true,
+      principalId: principal.principalId,
+      principalType: principal.principalType,
+      displayName: principal.displayName,
+    });
+  }, []);
+
+  // Handle delete confirm
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!onDeletePrincipal) return;
+    
+    setIsDeleting(true);
+    try {
+      await onDeletePrincipal(deleteDialog.principalId, deleteDialog.principalType, deleteDialog.displayName);
+      setDeleteDialog({ open: false, principalId: '', principalType: 'USER', displayName: '' });
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [onDeletePrincipal, deleteDialog]);
 
   // Handle role checkbox change
   const handleRoleToggle = useCallback(
@@ -196,29 +234,29 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
               <Table.Th>Name</Table.Th>
               <Table.Th>Type</Table.Th>
               <Table.Th className={classes.roleHeader}>
-                <Group gap="xs">
-                  <Text size="sm">Read</Text>
-                  <Text size="xs" c="dimmed">(View {entityName})</Text>
-                </Group>
+                <Tooltip label={`Can view this ${entityName} and its data`} withArrow>
+                  <Text size="sm" style={{ cursor: 'help' }}>Read</Text>
+                </Tooltip>
               </Table.Th>
               <Table.Th className={classes.roleHeader}>
-                <Group gap="xs">
-                  <Text size="sm">Write</Text>
-                  <Text size="xs" c="dimmed">(Edit {entityName})</Text>
-                </Group>
+                <Tooltip label={`Can edit this ${entityName}`} withArrow>
+                  <Text size="sm" style={{ cursor: 'help' }}>Write</Text>
+                </Tooltip>
               </Table.Th>
               <Table.Th className={classes.roleHeader}>
-                <Group gap="xs">
-                  <Text size="sm">Admin</Text>
-                  <Text size="xs" c="dimmed">(Manage access)</Text>
-                </Group>
+                <Tooltip label="Full control including manage access" withArrow>
+                  <Text size="sm" style={{ cursor: 'help' }}>Admin</Text>
+                </Tooltip>
               </Table.Th>
+              {onDeletePrincipal && (
+                <Table.Th className={classes.actionHeader}></Table.Th>
+              )}
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {filteredPrincipals.length === 0 ? (
               <Table.Tr>
-                <Table.Td colSpan={5}>
+                <Table.Td colSpan={onDeletePrincipal ? 6 : 5}>
                   <Center py="lg">
                     <Text c="dimmed">
                       {principals.length === 0
@@ -268,12 +306,37 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
                       )}
                     </Table.Td>
                   ))}
+                  {onDeletePrincipal && (
+                    <Table.Td className={classes.actionCell}>
+                      <Tooltip label="Remove access" withArrow>
+                        <ActionIcon
+                          variant="subtle"
+                          color="red"
+                          onClick={() => handleDeleteClick(principal)}
+                          aria-label={`Remove access for ${principal.displayName}`}
+                        >
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Table.Td>
+                  )}
                 </Table.Tr>
               ))
             )}
           </Table.Tbody>
         </Table>
       </ScrollArea>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDeleteDialog
+        opened={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, principalId: '', principalType: 'USER', displayName: '' })}
+        onConfirm={handleDeleteConfirm}
+        title="Remove Access"
+        itemName={deleteDialog.displayName}
+        itemType="access"
+        isLoading={isDeleting}
+      />
     </Stack>
   );
 };

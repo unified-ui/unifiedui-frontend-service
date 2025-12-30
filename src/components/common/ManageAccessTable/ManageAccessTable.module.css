@@ -15,6 +15,7 @@
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   background-color: var(--bg-paper);
+  padding: var(--spacing-md);
 }
 
 .table {
@@ -36,6 +37,14 @@
 }
 
 .roleCell {
+  text-align: center;
+}
+
+.actionHeader {
+  width: 60px;
+}
+
+.actionCell {
   text-align: center;
 }
 

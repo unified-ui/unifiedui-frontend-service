@@ -2,6 +2,15 @@
 
 ## TODOs
 
+bugs:
+- add access dialog
+    - kein icon! -> manage access icon hinzufügen im titel links
+    - beim inputfeld -> search icon bleibt nicht links wenn man item (principal) hinzufügt
+    - bei den checkboxen -> nur links beim text auswählbar, nicht auf gesamten container der checkbox
+    - labels im dropdow (Identity Users, Identity Groups Custom Groups):
+        - dick + größer
+        - keine hintergrundfarbe
+
 - Standard Detail-Page + Edit designen
     - Tab-Bar:
         - Details

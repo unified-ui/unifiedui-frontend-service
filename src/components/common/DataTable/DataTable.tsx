@@ -29,6 +29,8 @@ interface DataTableProps {
   onStatusChange?: (id: string, isActive: boolean) => void;
   /** Open item handler */
   onOpen?: (id: string) => void;
+  /** Edit item handler */
+  onEdit?: (id: string) => void;
   /** Share item handler */
   onShare?: (id: string) => void;
   /** Duplicate item handler */
@@ -67,6 +69,7 @@ export const DataTable: FC<DataTableProps> = ({
   searchPlaceholder = 'Search...',
   onStatusChange,
   onOpen,
+  onEdit,
   onShare,
   onDuplicate,
   onDelete,
@@ -278,6 +281,7 @@ export const DataTable: FC<DataTableProps> = ({
                     showStatus={showStatus}
                     onStatusChange={onStatusChange}
                     onOpen={onOpen}
+                    onEdit={onEdit}
                     onShare={onShare}
                     onDuplicate={onDuplicate}
                     onDelete={onDelete}

@@ -85,7 +85,8 @@ export const TagInput: FC<TagInputProps> = ({
       setIsLoading(true);
       try {
         const response = await apiClient.listTags(selectedTenant.id, { limit: 10 });
-        const filteredTags = response.tags
+        const tags = response?.tags || [];
+        const filteredTags = tags
           .map(tag => tag.name)
           .filter(name => 
             name.toLowerCase().includes(debouncedInput.toLowerCase()) &&

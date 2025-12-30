@@ -269,7 +269,7 @@ export class UnifiedUIAPIClient {
   }
 
   async setApplicationPermission(tenantId: string, applicationId: string, data: SetApplicationPermissionRequest): Promise<void> {
-    return this.request<void>('POST', `/api/v1/tenants/${tenantId}/applications/${applicationId}/principals`, data, 'Permission added successfully');
+    return this.request<void>('PUT', `/api/v1/tenants/${tenantId}/applications/${applicationId}/principals`, data, 'Permission updated successfully');
   }
 
   async deleteApplicationPermission(
