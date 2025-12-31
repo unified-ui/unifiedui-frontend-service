@@ -3,13 +3,10 @@
 ## TODOs
 
 bugs:
-- add access dialog
-    - kein icon! -> manage access icon hinzufügen im titel links
-    - beim inputfeld -> search icon bleibt nicht links wenn man item (principal) hinzufügt
-    - bei den checkboxen -> nur links beim text auswählbar, nicht auf gesamten container der checkbox
-    - labels im dropdow (Identity Users, Identity Groups Custom Groups):
-        - dick + größer
-        - keine hintergrundfarbe
+- wenn man im IAM input einen principal auswählt -> liste nicht mehr sichtbar
+    - fix: input deselektieren. beim neu selektieren -> wird wieder angezeigt
+- wenn man IAM checkbox drückt -> flash es auf -> soll nur easy geupdated werden!
+- IAM Table: Read, Write, Admin Spaltenheader zentriert, andere linksbündig
 
 - Standard Detail-Page + Edit designen
     - Tab-Bar:
@@ -21,6 +18,10 @@ bugs:
             - CheckBoxen in Tabelle -> READ, WRITE, ADMIN mit Beschreibung beim hovern
             - Hinzufügen -> Dialog; multiple inputs wie bei tags
             - Entfernen (bei drei punkten)
+
+- die Sortier-order soll lokal gespeichert werden und immer angewand werden, wie lokal gespeichert (default -> last updated)
+
+---
 
 - Backend:
     - Name der Gruppe / Users mit in Response -> bereits in permssions.py drin?
@@ -58,6 +59,7 @@ bugs:
     - hier direkt in einen Chat rein
         - oben im Chat -> Applications DropDown
 
+
 **Chat Service**
 
 - GOLang Chat Service
@@ -72,6 +74,15 @@ bugs:
         - history_messages_count -> 15 default
         - foreign_conversation_id
         - ...
+
+- wenn RUN durch (ob fail oder nicht), wird tracing service aufgerufen -> 202 ACCEPTED
+
+- N8N Integration
+    - config:
+        - use unified-ui chat history (Togglebutton) + HistoryChatMessages (15; aber in invoke; damit konfigurierbar!)
+        - 
+
+*Additional:*
 - man kann nur die LETZTE Nachricht bearbeiten
 - traces
     - message traces werden werden IMMER über den Consumer ingestet! also bei message invokation -> am ende ein event senden
@@ -110,6 +121,74 @@ können wir hier einfach den header zurückgeben (und aggessiv cachen!).
 ```
 
 - Widget Registry
+
+**Tracing-API-Service**
+
+Simpler, aber performanter Service für die validierung der Anfrage und das erstellen von events bzw. bei custom traces -> direkt in docdatabase schreiben und dem zurückgeben der traces
+
+- POST /api/v1/tenants/{id}/conversations/{id}/messages/{id}/traces
+    ```json
+    {
+        "reference_id"?: "{id-of-tracing-store}",
+        "data"?: {...}
+    }
+    ```
+    - (type bekommt man über application)
+    - entweder reference_id oder data
+        - reference_id -> wenn event 
+            - 202 ACCEPED + {"status_url": "/api/v1/tenants/{id}/conversations/{id}/messages/{id}/traces" -> status steht im Objekt}
+            - objekt wird in docdatabase erstellt
+                - _id, reference_id, type und config wird an event gegeben (keine sensitiven Daten!)
+        - data -> wenn man die daten direkt speichern möchte
+            - data-schema wird direkt validiert
+            - und direkt gespeichert
+    
+- GET /api/v1/tenants/{id}/conversations/{id}/messages/{id}/traces
+    - tracing daten UND Job-Status
+    ```json
+    {
+        "id": "{uuid}",
+        "reference_id": "{reference-id-with-index}",
+        "entity_type": "{entity-type-with-index-for-optimized-search-with-reference-id}",
+        "job": {
+            "type": "DIRECT|EVENT",
+            "status": "PENDING|IN_PROCESS|SUCCESS|FAILED",
+            "message": "",
+            "error": "NULL|Message",
+            "createdAt": "{TIMESTAMP}",
+            "finishedAt": "{TIMESTAMP}",
+            "request": {
+                "data": {},
+                "reference_id": ""
+            },
+            "event": {
+                "autonomous_agent_id": "{id}",
+                "application_id": "{id}",
+                "conversation_id": "{id}",
+                "credential_id": "{id}",
+                "type": "N8N|MICROSOFT_FOUNDRY|..."
+            }
+        },
+        "tracing": {...}
+    }
+    ```
+
+- GO Service
+- connection zu docdatabase
+- REST API zum ingestion der traces
+    - Aufgabe:
+        - übernimmt die validierung der Anfrage
+        - gibt 202 ACCEPED + status url (traces/{trace_id}/status) zurück (oder 400er oder 500er zurück)
+            - event geschrieben wird gefeuert
+    - N8N Traces anbinden -> /executions
+    - Foundry Traces anbinden -> Foundry SDK
+    - Custom Traces anbinden -> hier vorgegebenes Format -> kann direkt gespeichert werden
+        - 201er oder 400er oder 500er
+- Auch Cache! lange TTL für traces, da diese sich nie verändern
+
+**Tracing-Ingestion-Service**
+
+...
 
 **Design**
 - Wenn man in Application reingeht -> direkt chat öffnen
