@@ -244,7 +244,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
       </Group>
 
       {/* Table */}
-      <ScrollArea className={classes.tableContainer}>
+      <ScrollArea h={350} className={classes.tableContainer}>
         <Table highlightOnHover className={classes.table}>
           <Table.Thead>
             <Table.Tr>
