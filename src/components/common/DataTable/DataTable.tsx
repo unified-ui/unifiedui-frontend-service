@@ -41,6 +41,8 @@ interface DataTableProps {
   onPin?: (id: string, isPinned: boolean) => void;
   /** Delete item handler */
   onDelete?: (id: string) => void;
+  /** Row click handler (clicking the row itself, not menu items) */
+  onRowClick?: (id: string) => void;
   /** Custom row icon renderer */
   renderIcon?: (item: DataTableItem) => ReactNode;
   /** Controlled sort value (for backend sorting) */
@@ -79,6 +81,7 @@ export const DataTable: FC<DataTableProps> = ({
   onDuplicate,
   onPin,
   onDelete,
+  onRowClick,
   renderIcon,
   sortBy: externalSortBy,
   onSortChange: externalOnSortChange,
@@ -293,6 +296,7 @@ export const DataTable: FC<DataTableProps> = ({
                     onDuplicate={onDuplicate}
                     onPin={onPin}
                     onDelete={onDelete}
+                    onRowClick={onRowClick}
                     icon={renderIcon?.(item)}
                   />
                 ))}

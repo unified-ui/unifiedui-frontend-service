@@ -238,10 +238,18 @@ export const DevelopmentPlatformsPage: FC = () => {
     setFilters(newFilters);
   }, []);
 
-  const handleOpen = useCallback((id: string) => {
+  const handleRowClick = useCallback((id: string) => {
     // Navigate to the details page with iframe
     navigate(`/development-platforms/${id}`);
   }, [navigate]);
+
+  const handleOpen = useCallback((id: string) => {
+    // Open the external URL in a new tab
+    const platform = rawDataRef.current.get(id);
+    if (platform?.iframe_url) {
+      window.open(platform.iframe_url, '_blank');
+    }
+  }, []);
 
   // Edit dialog handlers
   const handleEdit = useCallback((id: string) => {
@@ -353,6 +361,7 @@ export const DevelopmentPlatformsPage: FC = () => {
           onFilterChange={handleFilterChange}
           onTagSearch={handleTagSearch}
           onStatusChange={handleStatusChange}
+          onRowClick={handleRowClick}
           onOpen={handleOpen}
           onEdit={handleEdit}
           onShare={handleShare}

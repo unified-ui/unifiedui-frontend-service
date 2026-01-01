@@ -54,6 +54,8 @@ interface DataTableRowProps {
   onPin?: (id: string, isPinned: boolean) => void;
   /** Delete item handler */
   onDelete?: (id: string) => void;
+  /** Row click handler (clicking the row itself) */
+  onRowClick?: (id: string) => void;
   /** Custom row icon */
   icon?: ReactNode;
 }
@@ -71,6 +73,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
   onDuplicate,
   onPin,
   onDelete,
+  onRowClick,
   icon,
 }) => {
   const visibleTags = item.tags?.slice(0, MAX_VISIBLE_TAGS) || [];
@@ -79,7 +82,13 @@ export const DataTableRow: FC<DataTableRowProps> = ({
   const [popoverOpened, setPopoverOpened] = useState(false);
 
   return (
-    <Paper className={classes.row} p="md" withBorder>
+    <Paper 
+      className={`${classes.row} ${onRowClick ? classes.clickable : ''}`} 
+      p="md" 
+      withBorder
+      onClick={() => onRowClick?.(item.id)}
+      style={onRowClick ? { cursor: 'pointer' } : undefined}
+    >
       <Group justify="space-between" wrap="nowrap" gap="lg">
         {/* Left: Name & Description */}
         <Group gap="md" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
@@ -151,6 +160,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
           <Switch
             checked={item.isActive}
             onChange={(e) => onStatusChange?.(item.id, e.currentTarget.checked)}
+            onClick={(e) => e.stopPropagation()}
             size="sm"
             className={classes.statusSwitch}
           />
@@ -159,7 +169,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
         {/* Actions Menu */}
         <Menu shadow="md" position="bottom-end" withinPortal>
           <Menu.Target>
-            <ActionIcon variant="subtle" color="gray">
+            <ActionIcon variant="subtle" color="gray" onClick={(e) => e.stopPropagation()}>
               <IconDots size={18} />
             </ActionIcon>
           </Menu.Target>
