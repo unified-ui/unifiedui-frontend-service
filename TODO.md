@@ -21,8 +21,6 @@
     - Name der Gruppe / Users mit in Response -> bereits in permssions.py drin?
     - im FE entsprechend in IAM anpassen
 
-- /refresh von identity implementieren
-    - FE button in IAM table
 
 - Edit-Logik auf alle seiten ausweiten
 
@@ -35,6 +33,9 @@
 - Chat-Widgets
     - Page hinzufügen (comming soon)
     - SidebarItem hinzufügen
+
+- /refresh von identity implementieren
+    - FE button in IAM table
 
 - SettingsPage
     - **TabNavigation**

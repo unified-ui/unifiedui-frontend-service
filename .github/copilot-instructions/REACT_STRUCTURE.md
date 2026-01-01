@@ -53,9 +53,17 @@ src/
 │   │   ├── TenantSettingsPage.tsx
 │   │   ├── TenantSettingsPage.module.css
 │   │   └── index.ts
-│   ├── DevelopmentPage/
-│   │   ├── DevelopmentPage.tsx
-│   │   ├── DevelopmentPage.module.css
+│   ├── ChatWidgetsPage/
+│   │   ├── ChatWidgetsPage.tsx
+│   │   ├── ChatWidgetsPage.module.css
+│   │   └── index.ts
+│   ├── DevelopmentPlatformsPage/
+│   │   ├── DevelopmentPlatformsPage.tsx
+│   │   ├── DevelopmentPlatformsPage.module.css
+│   │   └── index.ts
+│   ├── DevelopmentPlatformDetailsPage/
+│   │   ├── DevelopmentPlatformDetailsPage.tsx
+│   │   ├── DevelopmentPlatformDetailsPage.module.css
 │   │   └── index.ts
 │   ├── WidgetDesignerPage/
 │   │   ├── WidgetDesignerPage.tsx
@@ -99,7 +107,10 @@ src/
 │   │   ├── CreateApplicationDialog.tsx
 │   │   ├── CreateAutonomousAgentDialog.tsx
 │   │   ├── CreateCredentialDialog.tsx
-│   │   └── CreateTenantDialog.tsx
+│   │   ├── CreateChatWidgetDialog.tsx
+│   │   ├── CreateDevelopmentPlatformDialog.tsx
+│   │   ├── CreateTenantDialog.tsx
+│   │   └── Edit*Dialog/       # Edit-Dialoge pro Entity-Typ
 │   └── layout/                # Layout Components
 │       ├── Header/
 │       │   ├── Header.tsx
@@ -188,8 +199,24 @@ src/
   - Tenant Access Management
   - Custom Groups Verwaltung
 
-### DevelopmentPage
-- **Placeholder**: Development-bezogene Features und Tools
+### ChatWidgetsPage
+- **Liste**: Übersicht aller Chat Widgets mit DataTable
+- **Details**: Detailansicht mit Access-Overlay
+- **Form**: Chat Widget erstellen/bearbeiten
+- **Widget Types**: `IFRAME` oder `FORM`
+- **Integration**: Nutzt useSidebarData() für Cache-Refresh nach Create/Delete
+
+### DevelopmentPlatformsPage
+- **Liste**: Übersicht aller Development Platforms mit DataTable
+- **Row-Click**: Navigiert zu DevelopmentPlatformDetailsPage
+- **Open-Action**: Öffnet `iframe_url` in neuem Tab
+- **Integration**: Nutzt useSidebarData() für Cache-Refresh nach Create/Delete
+
+### DevelopmentPlatformDetailsPage
+- **Iframe-Anzeige**: Zeigt `iframe_url` in Vollbild-Iframe
+- **Route**: `/development-platforms/:id`
+- **Loading/Error States**: Skeleton während Laden, Error-Alert bei Fehlern
+- **Sidebar-Integration**: SidebarDataList zeigt beim Hover für schnellen Wechsel
 
 ### WidgetDesignerPage
 - **Placeholder**: Konzept folgt später
@@ -250,12 +277,18 @@ interface DataTableProps {
   showStatus?: boolean;      // Status-Switch anzeigen
   searchPlaceholder?: string;
   emptyMessage?: string;
-  onOpen: (id: string) => void;
+  onOpen: (id: string) => void;      // Dropdown-Menu "Open" Action
+  onRowClick?: (id: string) => void; // Click auf Row selbst (Navigation)
   onShare?: (id: string) => void;
   onDuplicate?: (id: string) => void;
   onDelete: (id: string) => void;
   renderIcon?: () => ReactNode;
 }
+
+// WICHTIG: onRowClick vs onOpen
+// - onRowClick: Wird bei Klick auf die Row aufgerufen (z.B. Navigation zu Details)
+// - onOpen: Wird bei Klick auf "Öffnen" im Dropdown-Menu aufgerufen (z.B. externe URL)
+// DataTableRow verwendet stopPropagation auf Switch und Menu ActionIcon
 
 // DataTableItem Interface
 interface DataTableItem {
@@ -702,7 +735,12 @@ const users = await apiClient?.getUsers();
 
 ## SidebarDataContext (`src/contexts/SidebarDataContext.tsx`)
 
-Globaler Cache für Sidebar-Entity-Daten (Applications, AutonomousAgents, Credentials).
+Globaler Cache für Sidebar-Entity-Daten (5 Entity-Typen).
+
+### Unterstützte Entity-Typen
+```typescript
+type EntityType = 'applications' | 'autonomous-agents' | 'credentials' | 'chat-widgets' | 'development-platforms';
+```
 
 ### Features
 
@@ -742,6 +780,22 @@ const MyComponent = () => {
     credentialsError,
     fetchCredentials,
     refreshCredentials,
+    
+    // Chat Widgets
+    chatWidgets,
+    chatWidgetsLoading,
+    chatWidgetsRefreshing,
+    chatWidgetsError,
+    fetchChatWidgets,
+    refreshChatWidgets,
+    
+    // Development Platforms
+    developmentPlatforms,
+    developmentPlatformsLoading,
+    developmentPlatformsRefreshing,
+    developmentPlatformsError,
+    fetchDevelopmentPlatforms,
+    refreshDevelopmentPlatforms,
     
     // Utility
     clearCache,                // () => void - Leert alle Caches
@@ -817,6 +871,43 @@ Die Sidebar integriert SidebarDataList mit folgender Logik:
 - Hover verlassen → 300ms Timeout → Panel schließen
 - Klick auf Item → Navigation + Panel schließen
 - Add-Button → Öffnet entsprechenden Create-Dialog
+
+### isOnEntityListPage Logic
+```typescript
+// Sidebar zeigt DataList NUR wenn User NICHT auf der Entity-Listen-Page ist
+// ABER: Auf Detail-Pages (z.B. /development-platforms/{id}) wird DataList angezeigt
+const isOnEntityListPage = (entityType: EntityType): boolean => {
+  const entityPaths: Record<EntityType, string> = {
+    'applications': '/applications',
+    'autonomous-agents': '/autonomous-agents',
+    'credentials': '/credentials',
+    'chat-widgets': '/chat-widgets',
+    'development-platforms': '/development-platforms',
+  };
+  // Exact match! startsWith würde auch Detail-Pages matchen
+  return location.pathname === entityPaths[entityType];
+};
+```
+
+### entityConfigs Pattern
+```typescript
+// Zentrale Konfiguration für alle Entity-Typen in Sidebar
+const entityConfigs: Record<EntityType, EntityConfig> = {
+  'applications': {
+    title: 'Applications',
+    icon: <IconRobot size={20} />,
+    items: applications,
+    isLoading: applicationsLoading,
+    isRefreshing: applicationsRefreshing,
+    error: applicationsError,
+    fetch: fetchApplications,
+    refresh: refreshApplications,
+    setCreateDialogOpen: setCreateApplicationDialogOpen,
+    addButtonLabel: 'Neue Application',
+  },
+  // ... weitere Entity-Typen
+};
+```
 
 ---
 

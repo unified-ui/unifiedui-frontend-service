@@ -21,6 +21,8 @@
 - Conversations (CRUD + Permissions)
 - Credentials (CRUD + Permissions)
 - Custom Groups (CRUD + Permissions)
+- **Chat Widgets** (CRUD + Permissions)
+- **Development Platforms** (CRUD + Permissions)
 
 ### 2. ✅ TypeScript-Typen
 
@@ -164,6 +166,8 @@ const MyComponent = () => {
 /api/v1/tenants/{tenantId}/credentials
 /api/v1/tenants/{tenantId}/conversations
 /api/v1/tenants/{tenantId}/custom-groups
+/api/v1/tenants/{tenantId}/chat-widgets
+/api/v1/tenants/{tenantId}/development-platforms
 ```
 
 ### API-Client Methoden (tenantId erforderlich)
@@ -197,6 +201,22 @@ apiClient.getConversation(tenantId, conversationId)
 // Custom Groups
 apiClient.listCustomGroups(tenantId, { limit: 999 })
 apiClient.createCustomGroup(tenantId, data)
+
+// Chat Widgets
+apiClient.listChatWidgets(tenantId, { limit: 999 })
+apiClient.listChatWidgets(tenantId, { limit: 999 }, { noCache: true })  // Mit noCache
+apiClient.createChatWidget(tenantId, { name, description, widget_type })  // widget_type: 'IFRAME' | 'FORM'
+apiClient.getChatWidget(tenantId, chatWidgetId)
+apiClient.updateChatWidget(tenantId, chatWidgetId, data)
+apiClient.deleteChatWidget(tenantId, chatWidgetId)
+
+// Development Platforms
+apiClient.listDevelopmentPlatforms(tenantId, { limit: 999 })
+apiClient.listDevelopmentPlatforms(tenantId, { limit: 999 }, { noCache: true })  // Mit noCache
+apiClient.createDevelopmentPlatform(tenantId, { name, description, iframe_url })
+apiClient.getDevelopmentPlatform(tenantId, developmentPlatformId)
+apiClient.updateDevelopmentPlatform(tenantId, developmentPlatformId, data)
+apiClient.deleteDevelopmentPlatform(tenantId, developmentPlatformId)
 ```
 
 ## Automatische Features

@@ -623,6 +623,96 @@ const rows = items.map((item) => (
 return <Table>{rows}</Table>;
 ```
 
+### DataTable Row Click vs Menu Action Pattern
+```typescript
+// Pattern: Unterschiedliches Verhalten für Row-Click und Menu-Actions
+
+// In Page Component:
+const handleRowClick = (id: string) => {
+  // Navigation zu Detail-Page
+  navigate(`/development-platforms/${id}`);
+};
+
+const handleOpen = (id: string) => {
+  // Externe URL öffnen (z.B. iframe_url)
+  const platform = items.find(p => p.id === id);
+  if (platform?.iframe_url) {
+    window.open(platform.iframe_url, '_blank');
+  }
+};
+
+<DataTable
+  items={items}
+  onRowClick={handleRowClick}  // Klick auf Row → Navigation
+  onOpen={handleOpen}          // Menu "Öffnen" → externe URL
+  onDelete={handleDelete}
+/>
+```
+
+### stopPropagation Pattern für nested Interactive Elements
+```typescript
+// In DataTableRow.tsx:
+// Wenn Row klickbar ist, müssen nested Elements (Switch, Menu) stopPropagation verwenden
+
+<Paper 
+  onClick={() => onRowClick?.(item.id)}
+  style={{ cursor: onRowClick ? 'pointer' : 'default' }}
+>
+  {/* Switch verhindert Row-Click */}
+  <Switch
+    checked={item.isActive}
+    onClick={(e) => e.stopPropagation()}  // Wichtig!
+    onChange={() => onStatusChange?.(item.id)}
+  />
+  
+  {/* Menu ActionIcon verhindert Row-Click */}
+  <ActionIcon onClick={(e) => e.stopPropagation()}>  // Wichtig!
+    <IconDots />
+  </ActionIcon>
+</Paper>
+```
+
+### Iframe Detail Page Pattern
+```typescript
+// Pattern für Pages die externe URLs in Iframe anzeigen
+// Beispiel: DevelopmentPlatformDetailsPage
+
+export const DevelopmentPlatformDetailsPage: FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const { apiClient, selectedTenant } = useIdentity();
+  const [platform, setPlatform] = useState<DevelopmentPlatformResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPlatform = async () => {
+      if (!apiClient || !selectedTenant || !id) return;
+      try {
+        const data = await apiClient.getDevelopmentPlatform(selectedTenant.id, id);
+        setPlatform(data);
+      } catch {
+        setError('Platform konnte nicht geladen werden');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPlatform();
+  }, [apiClient, selectedTenant, id]);
+
+  if (loading) return <Skeleton height="100%" />;
+  if (error) return <Alert color="red">{error}</Alert>;
+  if (!platform?.iframe_url) return <Alert>Keine iframe_url vorhanden</Alert>;
+
+  return (
+    <iframe
+      src={platform.iframe_url}
+      style={{ width: '100%', height: '100%', border: 'none' }}
+      title={platform.name}
+    />
+  );
+};
+```
+
 ---
 
 ## Environment Variables
@@ -670,10 +760,26 @@ This is a **modern React application** for an **unified-ui multi-tenant platform
 6. ✅ **Write type-safe code** with explicit TypeScript types
 7. ✅ **Create reusable components** following the project structure
 8. ✅ **Test thoroughly** with proper error handling
+9. ✅ **Use SidebarDataContext** for sidebar entity lists (5 types: applications, autonomous-agents, credentials, chat-widgets, development-platforms)
+10. ✅ **Use stopPropagation** when nested interactive elements are inside clickable containers
+
+### Entity Types Overview
+The application supports **5 main entity types** with consistent CRUD patterns:
+- **Applications** - AI agent applications
+- **Autonomous Agents** - Self-running AI agents
+- **Credentials** - Secure credentials storage (types: API_KEY, PASSWORD, TOKEN, SECRET, CONNECTION_STRING, CERTIFICATE, OTHER)
+- **Chat Widgets** - Embeddable chat interfaces (types: IFRAME, FORM)
+- **Development Platforms** - External development tools (with iframe_url for embedding)
+
+### Key Patterns to Follow
+- **DataTable**: Use `onRowClick` for navigation, `onOpen` for external URLs
+- **SidebarDataList**: Shows on hover, except when on exact list page path
+- **Edit Dialogs**: Fetch entity data fresh, don't rely on URL-based state alone
+- **Iframe Pages**: Use for displaying external URLs within the app
 
 **Before generating code, always reference**:
 - [REACT_STRUCTURE.md](./REACT_STRUCTURE.md) for project organization
 - [DESIGN_THEMES.md](./DESIGN_THEMES.md) for design tokens
-- [PAGES.md](./PAGES.md) for page specifications
+- [API_CLIENT_GUIDE.md](./API_CLIENT_GUIDE.md) for API integration
 
 Happy coding! 🚀
