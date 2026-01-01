@@ -20,6 +20,7 @@ import {
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconSearch, IconPlus, IconUser, IconUsers, IconUsersGroup, IconTrash } from '@tabler/icons-react';
 import type { PermissionActionEnum, PrincipalTypeEnum } from '../../../api/types';
+import { useIdentity } from '../../../contexts';
 import { ConfirmDeleteDialog } from '../ConfirmDeleteDialog';
 import classes from './ManageAccessTable.module.css';
 
@@ -96,6 +97,9 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
   onAddPrincipal,
   entityName = 'resource',
 }) => {
+  // Get current user to prevent self-modification
+  const { user: currentUser } = useIdentity();
+
   // Search state
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearch] = useDebouncedValue(searchValue, 300);
@@ -305,6 +309,9 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
                 // Fallback: if no display name, show principalId
                 const primaryText = principal.displayName || principal.principalId;
                 
+                // Check if this is the current logged-in user (prevent self-modification)
+                const isCurrentUser = currentUser?.id === principal.principalId;
+                
                 return (
                 <Table.Tr key={principal.id}>
                   <Table.Td>
@@ -315,6 +322,11 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
                       <Box className={hasDisplayName && hasSecondary ? classes.principalNameContainer : classes.principalNameContainerCentered}>
                         <Text size="sm" fw={500}>
                           {primaryText}
+                          {isCurrentUser && (
+                            <Text component="span" size="xs" c="dimmed" ml={4}>
+                              (You)
+                            </Text>
+                          )}
                         </Text>
                         {hasDisplayName && hasSecondary && (
                           <Text size="xs" c="dimmed">
@@ -334,23 +346,42 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
                       {isRoleLoading(principal.principalId, role) ? (
                         <Loader size="xs" />
                       ) : (
-                        <Checkbox
-                          checked={principal.roles.includes(role)}
-                          onChange={(e) =>
-                            handleRoleToggle(principal, role, e.target.checked)
-                          }
-                          aria-label={`${role} permission for ${primaryText}`}
-                        />
+                        <Tooltip
+                          label="You cannot modify your own permissions"
+                          disabled={!isCurrentUser}
+                          withArrow
+                        >
+                          <Box>
+                            <Checkbox
+                              checked={principal.roles.includes(role)}
+                              onChange={(e) => {
+                                if (!isCurrentUser) {
+                                  handleRoleToggle(principal, role, e.target.checked);
+                                }
+                              }}
+                              disabled={isCurrentUser}
+                              aria-label={`${role} permission for ${primaryText}`}
+                            />
+                          </Box>
+                        </Tooltip>
                       )}
                     </Table.Td>
                   ))}
                   {onDeletePrincipal && (
                     <Table.Td className={classes.actionCell}>
-                      <Tooltip label="Remove access" withArrow>
+                      <Tooltip
+                        label={isCurrentUser ? "You cannot remove your own access" : "Remove access"}
+                        withArrow
+                      >
                         <ActionIcon
                           variant="subtle"
                           color="red"
-                          onClick={() => handleDeleteClick(principal)}
+                          onClick={() => {
+                            if (!isCurrentUser) {
+                              handleDeleteClick(principal);
+                            }
+                          }}
+                          disabled={isCurrentUser}
                           aria-label={`Remove access for ${primaryText}`}
                         >
                           <IconTrash size={16} />
