@@ -180,8 +180,8 @@ export const Sidebar: FC = () => {
     }
   }, [activeEntity, applications, autonomousAgents, credentials, chatWidgets, developmentPlatforms, entityConfigs]);
 
-  // Check if user is on the entity's page
-  const isOnEntityPage = useCallback((entityType: EntityType) => {
+  // Check if user is on the entity's list page (not detail page)
+  const isOnEntityListPage = useCallback((entityType: EntityType) => {
     const entityPaths: Record<EntityType, string> = {
       applications: '/applications',
       'autonomous-agents': '/autonomous-agents',
@@ -189,13 +189,14 @@ export const Sidebar: FC = () => {
       'chat-widgets': '/chat-widgets',
       'development-platforms': '/development-platforms',
     };
-    return location.pathname.startsWith(entityPaths[entityType]);
+    // Only return true if exactly on the list page, not on detail pages like /development-platforms/{id}
+    return location.pathname === entityPaths[entityType];
   }, [location.pathname]);
 
   // Handle nav item hover enter
   const handleNavItemHoverEnter = useCallback((item: NavItem) => {
     if (!item.hasDataList || !item.entityType) return;
-    if (isOnEntityPage(item.entityType)) return; // Don't show if already on page
+    if (isOnEntityListPage(item.entityType)) return; // Don't show if already on list page
     
     // Clear any pending close timeout
     if (closeTimeoutRef.current) {
@@ -220,7 +221,7 @@ export const Sidebar: FC = () => {
         config.fetchData();
       }
     }, 150);
-  }, [entityConfigs, isOnEntityPage]);
+  }, [entityConfigs, isOnEntityListPage]);
 
   // Handle nav item hover leave
   const handleNavItemHoverLeave = useCallback(() => {
