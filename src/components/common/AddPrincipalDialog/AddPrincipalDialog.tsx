@@ -193,7 +193,8 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
     setSearchValue('');
     setShowDropdown(false);
     setHighlightedIndex(-1);
-    inputRef.current?.focus();
+    // Blur input so user needs to click again to select more
+    inputRef.current?.blur();
   }, [selectedPrincipals]);
 
   // Remove principal from selection

@@ -2,12 +2,6 @@
 
 ## TODOs
 
-bugs:
-- wenn man im IAM input einen principal auswählt -> liste nicht mehr sichtbar
-    - fix: input deselektieren. beim neu selektieren -> wird wieder angezeigt
-- wenn man IAM checkbox drückt -> flash es auf -> soll nur easy geupdated werden!
-- IAM Table: Read, Write, Admin Spaltenheader zentriert, andere linksbündig
-
 - Standard Detail-Page + Edit designen
     - Tab-Bar:
         - Details

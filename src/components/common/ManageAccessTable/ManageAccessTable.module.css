@@ -28,7 +28,7 @@
   text-align: left;
 }
 
-.roleHeader {
+.table thead tr th.roleHeader {
   width: 80px;
   text-align: center;
 }

@@ -149,11 +149,13 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiClient, selectedTenant, applicationId]);
 
-  // Fetch principals
-  const fetchPrincipals = useCallback(async () => {
+  // Fetch principals (showLoading=false for background refresh to prevent flash)
+  const fetchPrincipals = useCallback(async (showLoading = true) => {
     if (!apiClient || !selectedTenant || !applicationId) return;
 
-    setIsPrincipalsLoading(true);
+    if (showLoading) {
+      setIsPrincipalsLoading(true);
+    }
     setPrincipalsError(null);
 
     try {
@@ -234,26 +236,32 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
     async (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum, enabled: boolean) => {
       if (!apiClient || !selectedTenant || !applicationId) return;
 
-      if (enabled) {
-        // Add permission
-        await apiClient.setApplicationPermission(selectedTenant.id, applicationId, {
-          principal_id: principalId,
-          principal_type: principalType,
-          role,
-        });
-      } else {
-        // Remove permission
-        await apiClient.deleteApplicationPermission(
-          selectedTenant.id,
-          applicationId,
-          principalId,
-          principalType,
-          role
-        );
-      }
+      try {
+        if (enabled) {
+          // Add permission
+          await apiClient.setApplicationPermission(selectedTenant.id, applicationId, {
+            principal_id: principalId,
+            principal_type: principalType,
+            role,
+          });
+        } else {
+          // Remove permission
+          await apiClient.deleteApplicationPermission(
+            selectedTenant.id,
+            applicationId,
+            principalId,
+            principalType,
+            role
+          );
+        }
 
-      // Refresh principals list
-      await fetchPrincipals();
+        // Refresh principals list without showing loading state (prevents flash)
+        await fetchPrincipals(false);
+      } catch (error) {
+        console.error('Failed to update permission:', error);
+        // Refresh to get correct state from server
+        await fetchPrincipals(false);
+      }
     },
     [apiClient, selectedTenant, applicationId, fetchPrincipals]
   );
@@ -272,8 +280,8 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
         });
       }
 
-      // Refresh principals list
-      await fetchPrincipals();
+      // Refresh principals list without showing loading state
+      await fetchPrincipals(false);
     },
     [apiClient, selectedTenant, applicationId, fetchPrincipals]
   );
@@ -297,8 +305,8 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
         }
       }
 
-      // Refresh principals list
-      await fetchPrincipals();
+      // Refresh principals list without showing loading state
+      await fetchPrincipals(false);
     },
     [apiClient, selectedTenant, applicationId, principals, fetchPrincipals]
   );
