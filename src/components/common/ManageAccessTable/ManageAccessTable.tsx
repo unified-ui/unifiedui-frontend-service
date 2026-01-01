@@ -163,12 +163,11 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
   // Handle role checkbox change
   const handleRoleToggle = useCallback(
     async (principal: PrincipalPermission, role: PermissionActionEnum, enabled: boolean) => {
-      // If removing READ and it's the only role, show delete dialog instead of direct removal
+      // If removing the last remaining role, show delete dialog instead of direct removal
       if (
         !enabled &&
-        role === 'READ' &&
         principal.roles.length === 1 &&
-        principal.roles[0] === 'READ' &&
+        principal.roles[0] === role &&
         onDeletePrincipal
       ) {
         setDeleteDialog({
