@@ -1,0 +1,8 @@
+.modal {
+  /* Ensure modal content has proper height */
+}
+
+/* Ensure consistent spacing */
+.modal :global(.mantine-Modal-body) {
+  padding-bottom: var(--spacing-md);
+}

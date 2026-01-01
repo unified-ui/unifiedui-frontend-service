@@ -1,6 +1,7 @@
 // ========== Common Types ==========
 
 export const TenantPermissionEnum = {
+  READER: 'READER',
   GLOBAL_ADMIN: 'GLOBAL_ADMIN',
   APPLICATIONS_ADMIN: 'APPLICATIONS_ADMIN',
   APPLICATIONS_CREATOR: 'APPLICATIONS_CREATOR',

@@ -8,6 +8,8 @@ export { DetailPageTabs } from './DetailPageTabs';
 export type { DetailTab } from './DetailPageTabs';
 export { ManageAccessTable } from './ManageAccessTable';
 export type { PrincipalPermission } from './ManageAccessTable';
+export { ManageTenantAccessTable, TENANT_ROLE_OPTIONS } from './ManageTenantAccessTable';
+export type { TenantPrincipalPermission } from './ManageTenantAccessTable';
 export { AddPrincipalDialog } from './AddPrincipalDialog';
 export type { SelectedPrincipal } from './AddPrincipalDialog';
 export { EntityDetailsForm } from './EntityDetailsForm';

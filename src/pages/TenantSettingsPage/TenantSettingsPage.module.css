@@ -2,3 +2,11 @@
   padding: var(--spacing-xl);
   min-height: 100vh;
 }
+
+.dangerZone {
+  border-color: var(--color-error-300);
+}
+
+[data-mantine-color-scheme='dark'] .dangerZone {
+  border-color: var(--color-error-700);
+}

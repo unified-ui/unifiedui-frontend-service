@@ -2,53 +2,24 @@
 
 ## TODOs
 
-- Standard Detail-Page + Edit designen
-    - Tab-Bar:
-        - Details
-            - Edit Button oben -> dann wird form freigegeben
-            - wenn man auf "Edit" drück, wird direkt edit freigegeben (über queryparam: view=display|edit (None = display))
-        - IAM
-            - Liste (an IDENTITY_USER/GROUP kann man "Refresh Entity" icon sehen und drücken)
-            - CheckBoxen in Tabelle -> READ, WRITE, ADMIN mit Beschreibung beim hovern
-            - Hinzufügen -> Dialog; multiple inputs wie bei tags
-            - Entfernen (bei drei punkten)
 
-- die Sortier-order soll lokal gespeichert werden und immer angewand werden, wie lokal gespeichert (default -> last updated)
+- SettingsPage
+    - tab-bar schöner -> mehr padding
+    - teant settings
+        - Delete Tenant -> 2x Confirm, bevor man killt
+    - Manage Access
+        - umbenennen in Manage Access
+        - Add Principal
+            - Dialog ist nett;
+            - wir müssen aber checkbox items mitgeben können
+            - permissions liste sollte skrollbar sien
+            - permissions mit search suchbar
+            - fix des create; method not allowd aktuell
+            - principal input -> liste wird nicht sauber geskrollt
 
----
-
-- Backend:
-    - Name der Gruppe / Users mit in Response -> bereits in permssions.py drin?
-    - im FE entsprechend in IAM anpassen
-
-
-- Edit-Logik auf alle seiten ausweiten
-
-- Development-Platform (route in `development-platforms` umbenennen)
-    - Page erstellen
-    - Dialog erstellen
-    - n8n hinzufügen
-    - Dev-Page anzeigen /development-platforms/{id}
-
-- Chat-Widgets
-    - Page hinzufügen (comming soon)
-    - SidebarItem hinzufügen
 
 - /refresh von identity implementieren
     - FE button in IAM table
-
-- SettingsPage
-    - **TabNavigation**
-        - Tenant Settings
-        - IAM
-        - Custom Groups
-        - Billing & Licence
-    - tenant settings
-        - name -> rename
-        - Delete Tenant
-    - IAM
-    - Custom Groups
-    - Billing & Licence
 
 ---
 
