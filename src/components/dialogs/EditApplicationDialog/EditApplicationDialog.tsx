@@ -352,7 +352,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
             </Box>
             <Stack gap={2}>
               <Text fw={600} size="lg">
-                {application?.name || 'Edit Chat Agent'}
+                {application?.name}
               </Text>
               {application && (
                 <Group gap="xs">

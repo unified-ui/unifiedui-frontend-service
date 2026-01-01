@@ -138,6 +138,13 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
       );
     }
 
+    // Sort by displayName ASC (nulls/empty at the end)
+    result.sort((a, b) => {
+      const nameA = (a.displayName || a.principalId).toLowerCase();
+      const nameB = (b.displayName || b.principalId).toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+
     return result;
   }, [principals, debouncedSearch, roleFilter]);
 
