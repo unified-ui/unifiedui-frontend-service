@@ -29,10 +29,8 @@ interface FormValues {
 }
 
 const CHAT_WIDGET_TYPES = [
-  { value: 'CHAT', label: 'Chat' },
-  { value: 'EMBEDDED', label: 'Embedded' },
-  { value: 'POPUP', label: 'Popup' },
-  { value: 'FLOATING', label: 'Floating' },
+  { value: 'IFRAME', label: 'IFrame' },
+  { value: 'FORM', label: 'Form' },
 ];
 
 export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
@@ -47,7 +45,7 @@ export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
     initialValues: {
       name: '',
       description: '',
-      type: 'CHAT',
+      type: 'IFRAME',
       tags: [],
     },
     validate: {

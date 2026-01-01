@@ -438,10 +438,11 @@ export class UnifiedUIAPIClient {
 
   async listDevelopmentPlatforms(
     tenantId: string, 
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' }
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
+    options?: { noCache?: boolean }
   ): Promise<DevelopmentPlatformResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
-    return this.request<DevelopmentPlatformResponse[] | QuickListItemResponse[]>('GET', `/api/v1/tenants/${tenantId}/development-platforms${query}`);
+    return this.request<DevelopmentPlatformResponse[] | QuickListItemResponse[]>('GET', `/api/v1/tenants/${tenantId}/development-platforms${query}`, undefined, undefined, options);
   }
 
   async getDevelopmentPlatform(tenantId: string, platformId: string): Promise<DevelopmentPlatformResponse> {
@@ -489,10 +490,11 @@ export class UnifiedUIAPIClient {
 
   async listChatWidgets(
     tenantId: string, 
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' }
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
+    options?: { noCache?: boolean }
   ): Promise<ChatWidgetResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
-    return this.request<ChatWidgetResponse[] | QuickListItemResponse[]>('GET', `/api/v1/tenants/${tenantId}/chat-widgets${query}`);
+    return this.request<ChatWidgetResponse[] | QuickListItemResponse[]>('GET', `/api/v1/tenants/${tenantId}/chat-widgets${query}`, undefined, undefined, options);
   }
 
   async getChatWidget(tenantId: string, widgetId: string): Promise<ChatWidgetResponse> {

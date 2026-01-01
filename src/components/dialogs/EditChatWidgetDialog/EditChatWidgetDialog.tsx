@@ -37,10 +37,8 @@ interface FormValues {
 }
 
 const CHAT_WIDGET_TYPES = [
-  { value: 'CHAT', label: 'Chat' },
-  { value: 'EMBEDDED', label: 'Embedded' },
-  { value: 'POPUP', label: 'Popup' },
-  { value: 'FLOATING', label: 'Floating' },
+  { value: 'IFRAME', label: 'IFrame' },
+  { value: 'FORM', label: 'Form' },
 ];
 
 export interface EditChatWidgetDialogProps {

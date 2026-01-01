@@ -17,6 +17,8 @@ import {
   CreateApplicationDialog,
   CreateAutonomousAgentDialog,
   CreateCredentialDialog,
+  CreateChatWidgetDialog,
+  CreateDevelopmentPlatformDialog,
 } from '../../dialogs';
 import classes from './Sidebar.module.css';
 
@@ -26,7 +28,7 @@ interface NavItem {
   label: string;
   path: string;
   hasDataList?: boolean;
-  entityType?: 'applications' | 'autonomous-agents' | 'credentials';
+  entityType?: EntityType;
 }
 
 const mainNavItemsTop: NavItem[] = [
@@ -38,8 +40,8 @@ const mainNavItemsTop: NavItem[] = [
 ];
 
 const mainNavItemsBottom: NavItem[] = [
-  { icon: IconBrandWechat, label: 'Chat\nWidgets', path: '/chat-widgets' },
-  { icon: IconCode, label: 'Development\nPlatforms', path: '/development-platforms' },
+  { icon: IconBrandWechat, label: 'Chat\nWidgets', path: '/chat-widgets', hasDataList: true, entityType: 'chat-widgets' },
+  { icon: IconCode, label: 'Development\nPlatforms', path: '/development-platforms', hasDataList: true, entityType: 'development-platforms' },
 ];
 
 const bottomNavItems: NavItem[] = [
@@ -63,6 +65,8 @@ export const Sidebar: FC = () => {
     applications,
     autonomousAgents,
     credentials,
+    chatWidgets,
+    developmentPlatforms,
     loadingStates,
     errorStates,
     fetchEntityData,
@@ -70,6 +74,8 @@ export const Sidebar: FC = () => {
     refreshApplications,
     refreshAutonomousAgents,
     refreshCredentials,
+    refreshChatWidgets,
+    refreshDevelopmentPlatforms,
   } = useSidebarData();
   
   // State for data list panel
@@ -87,6 +93,8 @@ export const Sidebar: FC = () => {
   const [isApplicationDialogOpen, setIsApplicationDialogOpen] = useState(false);
   const [isAutonomousAgentDialogOpen, setIsAutonomousAgentDialogOpen] = useState(false);
   const [isCredentialDialogOpen, setIsCredentialDialogOpen] = useState(false);
+  const [isChatWidgetDialogOpen, setIsChatWidgetDialogOpen] = useState(false);
+  const [isDevelopmentPlatformDialogOpen, setIsDevelopmentPlatformDialogOpen] = useState(false);
 
   // Entity configurations
   const entityConfigs: Record<EntityType, EntityConfig> = useMemo(() => ({
@@ -110,6 +118,20 @@ export const Sidebar: FC = () => {
       addButtonLabel: 'Add Credential',
       fetchData: () => fetchEntityData('credentials'),
       getLink: (id) => `/credentials/${id}`,
+    },
+    'chat-widgets': {
+      title: 'Chat Widgets',
+      icon: <IconBrandWechat size={24} />,
+      addButtonLabel: 'Add Chat Widget',
+      fetchData: () => fetchEntityData('chat-widgets'),
+      getLink: (id) => `/chat-widgets/${id}`,
+    },
+    'development-platforms': {
+      title: 'Development Platforms',
+      icon: <IconCode size={24} />,
+      addButtonLabel: 'Add Development Platform',
+      fetchData: () => fetchEntityData('development-platforms'),
+      getLink: (id) => `/development-platforms/${id}`,
     },
   }), [fetchEntityData]);
 
@@ -139,10 +161,24 @@ export const Sidebar: FC = () => {
           link: entityConfigs.credentials.getLink(cred.id),
           icon: <IconKey size={16} />,
         }));
+      case 'chat-widgets':
+        return chatWidgets.map(widget => ({
+          id: widget.id,
+          name: widget.name,
+          link: entityConfigs['chat-widgets'].getLink(widget.id),
+          icon: <IconBrandWechat size={16} />,
+        }));
+      case 'development-platforms':
+        return developmentPlatforms.map(platform => ({
+          id: platform.id,
+          name: platform.name,
+          link: entityConfigs['development-platforms'].getLink(platform.id),
+          icon: <IconCode size={16} />,
+        }));
       default:
         return [];
     }
-  }, [activeEntity, applications, autonomousAgents, credentials, entityConfigs]);
+  }, [activeEntity, applications, autonomousAgents, credentials, chatWidgets, developmentPlatforms, entityConfigs]);
 
   // Check if user is on the entity's page
   const isOnEntityPage = useCallback((entityType: EntityType) => {
@@ -150,6 +186,8 @@ export const Sidebar: FC = () => {
       applications: '/applications',
       'autonomous-agents': '/autonomous-agents',
       credentials: '/credentials',
+      'chat-widgets': '/chat-widgets',
+      'development-platforms': '/development-platforms',
     };
     return location.pathname.startsWith(entityPaths[entityType]);
   }, [location.pathname]);
@@ -250,6 +288,12 @@ export const Sidebar: FC = () => {
       case 'credentials':
         setIsCredentialDialogOpen(true);
         break;
+      case 'chat-widgets':
+        setIsChatWidgetDialogOpen(true);
+        break;
+      case 'development-platforms':
+        setIsDevelopmentPlatformDialogOpen(true);
+        break;
     }
   }, [activeEntity]);
 
@@ -265,6 +309,14 @@ export const Sidebar: FC = () => {
   const handleCredentialCreated = useCallback(() => {
     refreshCredentials();
   }, [refreshCredentials]);
+
+  const handleChatWidgetCreated = useCallback(() => {
+    refreshChatWidgets();
+  }, [refreshChatWidgets]);
+
+  const handleDevelopmentPlatformCreated = useCallback(() => {
+    refreshDevelopmentPlatforms();
+  }, [refreshDevelopmentPlatforms]);
 
   // Handle refresh button click (bypasses cache)
   const handleRefresh = useCallback(async () => {
@@ -370,6 +422,16 @@ export const Sidebar: FC = () => {
         opened={isCredentialDialogOpen}
         onClose={() => setIsCredentialDialogOpen(false)}
         onSuccess={handleCredentialCreated}
+      />
+      <CreateChatWidgetDialog
+        opened={isChatWidgetDialogOpen}
+        onClose={() => setIsChatWidgetDialogOpen(false)}
+        onSuccess={handleChatWidgetCreated}
+      />
+      <CreateDevelopmentPlatformDialog
+        opened={isDevelopmentPlatformDialogOpen}
+        onClose={() => setIsDevelopmentPlatformDialogOpen(false)}
+        onSuccess={handleDevelopmentPlatformCreated}
       />
     </>
   );
