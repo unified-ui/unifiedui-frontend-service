@@ -8,8 +8,9 @@ import { TenantSettingsPage } from '../pages/TenantSettingsPage';
 import { ApplicationsPage } from '../pages/ApplicationsPage';
 import { ConversationsPage } from '../pages/ConversationsPage';
 import { AutonomousAgentsPage } from '../pages/AutonomousAgentsPage';
+import { ChatWidgetsPage } from '../pages/ChatWidgetsPage';
 import { WidgetDesignerPage } from '../pages/WidgetDesignerPage';
-import { DevelopmentPage } from '../pages/DevelopmentPage';
+import { DevelopmentPlatformsPage } from '../pages/DevelopmentPlatformsPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 
 export const AppRoutes = () => {
@@ -27,8 +28,9 @@ export const AppRoutes = () => {
         <Route path="/applications" element={<ProtectedRoute><ApplicationsPage /></ProtectedRoute>} />
         <Route path="/conversations" element={<ProtectedRoute><ConversationsPage /></ProtectedRoute>} />
         <Route path="/autonomous-agents" element={<ProtectedRoute><AutonomousAgentsPage /></ProtectedRoute>} />
+        <Route path="/chat-widgets" element={<ProtectedRoute><ChatWidgetsPage /></ProtectedRoute>} />
         <Route path="/widget-designer" element={<ProtectedRoute><WidgetDesignerPage /></ProtectedRoute>} />
-        <Route path="/development" element={<ProtectedRoute><DevelopmentPage /></ProtectedRoute>} />
+        <Route path="/development-platforms" element={<ProtectedRoute><DevelopmentPlatformsPage /></ProtectedRoute>} />
         
         {/* Redirects */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

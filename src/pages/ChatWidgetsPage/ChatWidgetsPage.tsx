@@ -2,21 +2,21 @@ import type { FC } from 'react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { IconKey } from '@tabler/icons-react';
+import { IconBrandWechat } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { PageContainer, PageHeader, DataTable, ConfirmDeleteDialog } from '../../components/common';
 import type { DataTableItem } from '../../components/common';
 import type { SortOption, FilterState } from '../../components/common/DataTable/DataTableToolbar';
-import { CreateCredentialDialog, EditCredentialDialog } from '../../components/dialogs';
+import { CreateChatWidgetDialog, EditChatWidgetDialog } from '../../components/dialogs';
 import type { EditDialogTab } from '../../components/dialogs';
-import { useIdentity, useSidebarData } from '../../contexts';
-import type { CredentialResponse } from '../../api/types';
+import { useIdentity } from '../../contexts';
+import type { ChatWidgetResponse } from '../../api/types';
 
 const PAGE_SIZE = 25;
 const TAG_PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 300;
 const FILTER_DEBOUNCE_MS = 300;
-const SORT_STORAGE_KEY = 'unified-ui:sort:credentials';
+const SORT_STORAGE_KEY = 'unified-ui:sort:chat-widgets';
 
 const getStoredSort = (): SortOption => {
   const stored = localStorage.getItem(SORT_STORAGE_KEY);
@@ -26,11 +26,17 @@ const getStoredSort = (): SortOption => {
   return 'updated';
 };
 
-export const CredentialsPage: FC = () => {
+const CHAT_WIDGET_TYPE_LABELS: Record<string, string> = {
+  'CHAT': 'Chat',
+  'EMBEDDED': 'Embedded',
+  'POPUP': 'Popup',
+  'FLOATING': 'Floating',
+};
+
+export const ChatWidgetsPage: FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { apiClient, selectedTenant } = useIdentity();
-  const { refreshCredentials } = useSidebarData();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
   const [isDeleting, setIsDeleting] = useState(false);
@@ -64,17 +70,17 @@ export const CredentialsPage: FC = () => {
   // Ref for tag mapping to avoid dependency issues
   const tagMapRef = useRef<Map<string, number>>(new Map());
   // Ref to store raw data for passing to edit dialog
-  const rawDataRef = useRef<Map<string, CredentialResponse>>(new Map());
+  const rawDataRef = useRef<Map<string, ChatWidgetResponse>>(new Map());
   
   // Tags state
   const [availableTags, setAvailableTags] = useState<string[]>([]);
 
-  // Fetch tags from API with optional name filter (only tags used by credentials)
+  // Fetch tags from API with optional name filter (only tags used by chat widgets)
   const fetchTags = useCallback(async (nameFilter?: string) => {
     if (!apiClient || !selectedTenant) return;
     
     try {
-      const tags = await apiClient.listCredentialTypeTags(selectedTenant.id, {
+      const tags = await apiClient.listChatWidgetTypeTags(selectedTenant.id, {
         limit: TAG_PAGE_SIZE,
         name: nameFilter || undefined,
       });
@@ -115,7 +121,7 @@ export const CredentialsPage: FC = () => {
     }
   };
 
-  const fetchCredentials = useCallback(async (
+  const fetchChatWidgets = useCallback(async (
     reset = true, 
     searchFilter?: string,
     currentFilters?: FilterState
@@ -162,30 +168,30 @@ export const CredentialsPage: FC = () => {
         }
       }
       
-      const data = await apiClient.listCredentials(selectedTenant.id, { 
+      const data = await apiClient.listChatWidgets(selectedTenant.id, { 
         limit: PAGE_SIZE,
         skip: currentOffset,
         name_filter: searchFilter || undefined,
         is_active: isActiveParam,
         tags: tagsParam,
         ...sortParams
-      }) as CredentialResponse[];
+      }) as ChatWidgetResponse[];
       
       // Store raw data for edit dialog
       if (reset) {
         rawDataRef.current.clear();
       }
-      data.forEach((cred) => {
-        rawDataRef.current.set(cred.id, cred);
+      data.forEach((widget) => {
+        rawDataRef.current.set(widget.id, widget);
       });
       
-      const tableItems: DataTableItem[] = data.map((cred) => ({
-        id: cred.id,
-        name: cred.name,
-        description: cred.description,
-        type: cred.type.replace(/_/g, ' '),
-        tags: cred.tags?.map(tag => tag.name) || [],
-        isActive: cred.is_active,
+      const tableItems: DataTableItem[] = data.map((widget) => ({
+        id: widget.id,
+        name: widget.name,
+        description: widget.description,
+        type: CHAT_WIDGET_TYPE_LABELS[widget.type || ''] || widget.type || 'Chat',
+        tags: widget.tags?.map(tag => tag.name) || [],
+        isActive: widget.is_active,
       }));
 
       if (reset) {
@@ -203,8 +209,8 @@ export const CredentialsPage: FC = () => {
     } catch (err) {
       // Reset offset on error to allow retry
       offsetRef.current = currentOffset;
-      setError('Failed to load credentials');
-      console.error('Error loading credentials:', err);
+      setError('Failed to load chat widgets');
+      console.error('Error loading chat widgets:', err);
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
@@ -214,14 +220,14 @@ export const CredentialsPage: FC = () => {
 
   // Fetch when sort, debounced search, or debounced filters change
   useEffect(() => {
-    fetchCredentials(true, debouncedSearch, debouncedFilters);
-  }, [fetchCredentials, debouncedSearch, debouncedFilters]);
+    fetchChatWidgets(true, debouncedSearch, debouncedFilters);
+  }, [fetchChatWidgets, debouncedSearch, debouncedFilters]);
 
   const handleLoadMore = useCallback(() => {
     if (!isLoadingMore && hasMore) {
-      fetchCredentials(false, debouncedSearch, debouncedFilters);
+      fetchChatWidgets(false, debouncedSearch, debouncedFilters);
     }
-  }, [fetchCredentials, isLoadingMore, hasMore, debouncedSearch, debouncedFilters]);
+  }, [fetchChatWidgets, isLoadingMore, hasMore, debouncedSearch, debouncedFilters]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchValue(value);
@@ -241,7 +247,7 @@ export const CredentialsPage: FC = () => {
   }, []);
 
   const handleOpen = useCallback((id: string) => {
-    navigate(`/credentials/${id}`);
+    navigate(`/chat-widgets/${id}`);
   }, [navigate]);
 
   // Edit dialog handlers
@@ -264,9 +270,8 @@ export const CredentialsPage: FC = () => {
   }, [editItemId, setSearchParams]);
 
   const handleEditSuccess = useCallback(() => {
-    fetchCredentials(true, debouncedSearch, debouncedFilters);
-    refreshCredentials();
-  }, [fetchCredentials, debouncedSearch, debouncedFilters, refreshCredentials]);
+    fetchChatWidgets(true, debouncedSearch, debouncedFilters);
+  }, [fetchChatWidgets, debouncedSearch, debouncedFilters]);
 
   const handleShare = useCallback((id: string) => {
     // TODO: Implement share functionality
@@ -282,18 +287,18 @@ export const CredentialsPage: FC = () => {
     if (!apiClient || !selectedTenant) return;
     
     try {
-      await apiClient.updateCredential(selectedTenant.id, id, { is_active: isActive });
+      await apiClient.updateChatWidget(selectedTenant.id, id, { is_active: isActive });
       
       // Update local state immediately for better UX
       setItems(prev => prev.map(item => 
         item.id === id ? { ...item, isActive } : item
       ));
     } catch (err) {
-      console.error('Error updating credential status:', err);
+      console.error('Error updating chat widget status:', err);
       // Revert on error
-      fetchCredentials(true, debouncedSearch, debouncedFilters);
+      fetchChatWidgets(true, debouncedSearch, debouncedFilters);
     }
-  }, [apiClient, selectedTenant, fetchCredentials, debouncedSearch, debouncedFilters]);
+  }, [apiClient, selectedTenant, fetchChatWidgets, debouncedSearch, debouncedFilters]);
 
   const handleDeleteClick = useCallback((id: string) => {
     const item = items.find(i => i.id === id);
@@ -305,33 +310,31 @@ export const CredentialsPage: FC = () => {
     
     setIsDeleting(true);
     try {
-      await apiClient.deleteCredential(selectedTenant.id, deleteDialog.id);
+      await apiClient.deleteChatWidget(selectedTenant.id, deleteDialog.id);
       setDeleteDialog({ open: false, id: '', name: '' });
-      fetchCredentials(true, debouncedSearch, debouncedFilters);
-      refreshCredentials(); // Update sidebar cache
+      fetchChatWidgets(true, debouncedSearch, debouncedFilters);
     } catch (err) {
-      console.error('Error deleting credential:', err);
+      console.error('Error deleting chat widget:', err);
     } finally {
       setIsDeleting(false);
     }
-  }, [apiClient, selectedTenant, deleteDialog.id, fetchCredentials, refreshCredentials, debouncedSearch, debouncedFilters]);
+  }, [apiClient, selectedTenant, deleteDialog.id, fetchChatWidgets, debouncedSearch, debouncedFilters]);
 
   const handleCreateSuccess = useCallback(() => {
-    fetchCredentials(true, debouncedSearch, debouncedFilters);
-    refreshCredentials(); // Update sidebar cache
-  }, [fetchCredentials, refreshCredentials, debouncedSearch, debouncedFilters]);
+    fetchChatWidgets(true, debouncedSearch, debouncedFilters);
+  }, [fetchChatWidgets, debouncedSearch, debouncedFilters]);
 
   const renderIcon = useCallback(() => (
-    <IconKey size={20} />
+    <IconBrandWechat size={20} />
   ), []);
 
   return (
     <MainLayout>
       <PageContainer>
         <PageHeader
-          title="Credentials"
-          description="Securely manage API keys, tokens, and other credentials used by your agents and applications."
-          actionLabel="Create Credential"
+          title="Chat Widgets"
+          description="Manage your chat widgets. Create embeddable chat interfaces for your applications."
+          actionLabel="Create Chat Widget"
           onAction={() => setIsCreateDialogOpen(true)}
         />
 
@@ -342,8 +345,8 @@ export const CredentialsPage: FC = () => {
           hasMore={hasMore}
           error={error}
           showStatus={true}
-          searchPlaceholder="Search credentials..."
-          emptyMessage="No credentials found. Create your first one!"
+          searchPlaceholder="Search chat widgets..."
+          emptyMessage="No chat widgets found. Create your first one!"
           searchValue={searchValue}
           onSearchChange={handleSearchChange}
           availableTags={availableTags}
@@ -364,15 +367,15 @@ export const CredentialsPage: FC = () => {
         />
       </PageContainer>
 
-      <CreateCredentialDialog
+      <CreateChatWidgetDialog
         opened={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onSuccess={handleCreateSuccess}
       />
 
-      <EditCredentialDialog
+      <EditChatWidgetDialog
         opened={!!editItemId}
-        credentialId={editItemId}
+        chatWidgetId={editItemId}
         initialData={editItemId ? rawDataRef.current.get(editItemId) || null : null}
         activeTab={editTab}
         onClose={handleEditDialogClose}
@@ -385,7 +388,7 @@ export const CredentialsPage: FC = () => {
         onClose={() => setDeleteDialog({ open: false, id: '', name: '' })}
         onConfirm={handleDeleteConfirm}
         itemName={deleteDialog.name}
-        itemType="Credential"
+        itemType="Chat Widget"
         isLoading={isDeleting}
       />
     </MainLayout>

@@ -7,7 +7,8 @@ import {
   IconSparkles,
   IconKey, IconKeyFilled,
   IconCode,
-  IconSettings, IconSettingsFilled 
+  IconSettings, IconSettingsFilled,
+  IconBrandWechat
 } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSidebarData, type EntityType } from '../../../contexts';
@@ -25,7 +26,7 @@ interface NavItem {
   label: string;
   path: string;
   hasDataList?: boolean;
-  entityType?: 'applications' | 'autonomous-agents' | 'credentials' | 'development';
+  entityType?: 'applications' | 'autonomous-agents' | 'credentials';
 }
 
 const mainNavItemsTop: NavItem[] = [
@@ -37,7 +38,8 @@ const mainNavItemsTop: NavItem[] = [
 ];
 
 const mainNavItemsBottom: NavItem[] = [
-  { icon: IconCode, label: 'Development', path: '/development', hasDataList: true, entityType: 'development' },
+  { icon: IconBrandWechat, label: 'Chat\nWidgets', path: '/chat-widgets' },
+  { icon: IconCode, label: 'Development\nPlatforms', path: '/development-platforms' },
 ];
 
 const bottomNavItems: NavItem[] = [
@@ -109,13 +111,6 @@ export const Sidebar: FC = () => {
       fetchData: () => fetchEntityData('credentials'),
       getLink: (id) => `/credentials/${id}`,
     },
-    development: {
-      title: 'Development',
-      icon: <IconCode size={24} />,
-      addButtonLabel: 'Add Platform',
-      fetchData: async () => {}, // No data to fetch
-      getLink: () => '/development',
-    },
   }), [fetchEntityData]);
 
   // Get data items for active entity
@@ -144,8 +139,6 @@ export const Sidebar: FC = () => {
           link: entityConfigs.credentials.getLink(cred.id),
           icon: <IconKey size={16} />,
         }));
-      case 'development':
-        return []; // Empty list for development
       default:
         return [];
     }
@@ -157,7 +150,6 @@ export const Sidebar: FC = () => {
       applications: '/applications',
       'autonomous-agents': '/autonomous-agents',
       credentials: '/credentials',
-      development: '/development',
     };
     return location.pathname.startsWith(entityPaths[entityType]);
   }, [location.pathname]);
@@ -186,7 +178,7 @@ export const Sidebar: FC = () => {
       
       // Fetch data if needed
       const config = entityConfigs[item.entityType!];
-      if (config && item.entityType !== 'development') {
+      if (config) {
         config.fetchData();
       }
     }, 150);
@@ -258,9 +250,6 @@ export const Sidebar: FC = () => {
       case 'credentials':
         setIsCredentialDialogOpen(true);
         break;
-      case 'development':
-        // No dialog for development yet
-        break;
     }
   }, [activeEntity]);
 
@@ -279,7 +268,7 @@ export const Sidebar: FC = () => {
 
   // Handle refresh button click (bypasses cache)
   const handleRefresh = useCallback(async () => {
-    if (!activeEntity || activeEntity === 'development') return;
+    if (!activeEntity) return;
     
     setIsRefreshing(true);
     try {
@@ -332,9 +321,6 @@ export const Sidebar: FC = () => {
   // Get active entity config
   const activeConfig = activeEntity ? entityConfigs[activeEntity] : null;
 
-  // Check if add button should be enabled for current entity
-  const isAddEnabled = activeEntity !== 'development';
-
   return (
     <>
       <aside className={classes.sidebar}>
@@ -363,8 +349,8 @@ export const Sidebar: FC = () => {
           onMouseEnter={handleDataListHoverEnter}
           onMouseLeave={handleDataListHoverLeave}
           addButtonLabel={activeConfig.addButtonLabel}
-          onAdd={isAddEnabled ? handleAddClick : undefined}
-          onRefresh={activeEntity !== 'development' ? handleRefresh : undefined}
+          onAdd={handleAddClick}
+          onRefresh={handleRefresh}
           isRefreshing={isRefreshing}
         />
       )}

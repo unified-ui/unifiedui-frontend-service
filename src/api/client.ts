@@ -438,7 +438,7 @@ export class UnifiedUIAPIClient {
 
   async listDevelopmentPlatforms(
     tenantId: string, 
-    params?: PaginationParams & OrderParams & { view?: 'quick-list' }
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' }
   ): Promise<DevelopmentPlatformResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<DevelopmentPlatformResponse[] | QuickListItemResponse[]>('GET', `/api/v1/tenants/${tenantId}/development-platforms${query}`);
@@ -489,7 +489,7 @@ export class UnifiedUIAPIClient {
 
   async listChatWidgets(
     tenantId: string, 
-    params?: PaginationParams & OrderParams & { view?: 'quick-list' }
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' }
   ): Promise<ChatWidgetResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<ChatWidgetResponse[] | QuickListItemResponse[]>('GET', `/api/v1/tenants/${tenantId}/chat-widgets${query}`);

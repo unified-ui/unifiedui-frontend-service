@@ -4,7 +4,7 @@ import { useIdentity } from './IdentityContext';
 
 // ========== Types ==========
 
-export type EntityType = 'applications' | 'autonomous-agents' | 'credentials' | 'development';
+export type EntityType = 'applications' | 'autonomous-agents' | 'credentials';
 
 interface SidebarDataState {
   applications: QuickListItemResponse[];
@@ -16,21 +16,18 @@ interface LoadingState {
   applications: boolean;
   'autonomous-agents': boolean;
   credentials: boolean;
-  development: boolean;
 }
 
 interface ErrorState {
   applications: string | null;
   'autonomous-agents': string | null;
   credentials: string | null;
-  development: string | null;
 }
 
 interface FetchedState {
   applications: boolean;
   'autonomous-agents': boolean;
   credentials: boolean;
-  development: boolean;
 }
 
 interface SidebarDataContextType {
@@ -87,7 +84,6 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     applications: false,
     'autonomous-agents': false,
     credentials: false,
-    development: false,
   });
   
   // Error states
@@ -95,7 +91,6 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     applications: null,
     'autonomous-agents': null,
     credentials: null,
-    development: null,
   });
   
   // Track if data has been fetched (to avoid refetching on every hover)
@@ -103,7 +98,6 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     applications: false,
     'autonomous-agents': false,
     credentials: false,
-    development: false,
   });
 
   // ========== Fetch Functions (with cache) ==========
@@ -210,9 +204,6 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
       case 'credentials':
         await fetchCredentials(false);
         break;
-      case 'development':
-        // No data to fetch for development
-        break;
     }
   }, [fetchApplications, fetchAutonomousAgents, fetchCredentials]);
 
@@ -242,9 +233,6 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
       case 'credentials':
         await refreshCredentials();
         break;
-      case 'development':
-        // No data to refresh for development
-        break;
     }
   }, [refreshApplications, refreshAutonomousAgents, refreshCredentials]);
 
@@ -264,13 +252,11 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
       applications: false,
       'autonomous-agents': false,
       credentials: false,
-      development: false,
     });
     setErrorStates({
       applications: null,
       'autonomous-agents': null,
       credentials: null,
-      development: null,
     });
   }, []);
 

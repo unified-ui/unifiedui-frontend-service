@@ -33,6 +33,8 @@ interface DataTableProps {
   onEdit?: (id: string) => void;
   /** Share item handler */
   onShare?: (id: string) => void;
+  /** Manage access/IAM handler */
+  onManageAccess?: (id: string) => void;
   /** Duplicate item handler */
   onDuplicate?: (id: string) => void;
   /** Pin item handler */
@@ -73,6 +75,7 @@ export const DataTable: FC<DataTableProps> = ({
   onOpen,
   onEdit,
   onShare,
+  onManageAccess,
   onDuplicate,
   onPin,
   onDelete,
@@ -286,6 +289,7 @@ export const DataTable: FC<DataTableProps> = ({
                     onOpen={onOpen}
                     onEdit={onEdit}
                     onShare={onShare}
+                    onManageAccess={onManageAccess}
                     onDuplicate={onDuplicate}
                     onPin={onPin}
                     onDelete={onDelete}

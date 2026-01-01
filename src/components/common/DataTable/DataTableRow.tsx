@@ -46,6 +46,8 @@ interface DataTableRowProps {
   onEdit?: (id: string) => void;
   /** Share item handler */
   onShare?: (id: string) => void;
+  /** Manage access/IAM handler */
+  onManageAccess?: (id: string) => void;
   /** Duplicate item handler */
   onDuplicate?: (id: string) => void;
   /** Pin/Unpin item handler */
@@ -64,7 +66,8 @@ export const DataTableRow: FC<DataTableRowProps> = ({
   onStatusChange,
   onOpen,
   onEdit,
-  onShare,
+  onShare: _onShare,
+  onManageAccess,
   onDuplicate,
   onPin,
   onDelete,
@@ -176,7 +179,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
             </Menu.Item>
             <Menu.Item
               leftSection={<IconUserCog size={14} />}
-              onClick={() => onShare?.(item.id)}
+              onClick={() => onManageAccess?.(item.id)}
             >
               Manage access
             </Menu.Item>

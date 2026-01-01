@@ -1,13 +1,14 @@
 import type { FC } from 'react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { IconRobot } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { PageContainer, PageHeader, DataTable, ConfirmDeleteDialog } from '../../components/common';
 import type { DataTableItem } from '../../components/common';
 import type { SortOption, FilterState } from '../../components/common/DataTable/DataTableToolbar';
-import { CreateAutonomousAgentDialog } from '../../components/dialogs';
+import { CreateAutonomousAgentDialog, EditAutonomousAgentDialog } from '../../components/dialogs';
+import type { EditDialogTab } from '../../components/dialogs';
 import { useIdentity, useSidebarData } from '../../contexts';
 import type { AutonomousAgentResponse } from '../../api/types';
 
@@ -27,6 +28,7 @@ const getStoredSort = (): SortOption => {
 
 export const AutonomousAgentsPage: FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { apiClient, selectedTenant } = useIdentity();
   const { refreshAutonomousAgents } = useSidebarData();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -38,6 +40,10 @@ export const AutonomousAgentsPage: FC = () => {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>(getStoredSort);
+  
+  // Edit dialog state from URL
+  const editItemId = searchParams.get('editItemId');
+  const editTab = (searchParams.get('tab') as EditDialogTab) || 'details';
   
   // Filter state with debouncing
   const [filters, setFilters] = useState<FilterState>({ tags: [], status: 'all' });
@@ -57,6 +63,8 @@ export const AutonomousAgentsPage: FC = () => {
   const isLoadingRef = useRef(false);
   // Ref for tag mapping to avoid dependency issues
   const tagMapRef = useRef<Map<string, number>>(new Map());
+  // Ref to store raw data for passing to edit dialog
+  const rawDataRef = useRef<Map<string, AutonomousAgentResponse>>(new Map());
   
   // Tags state
   const [availableTags, setAvailableTags] = useState<string[]>([]);
@@ -163,6 +171,14 @@ export const AutonomousAgentsPage: FC = () => {
         ...sortParams
       }) as AutonomousAgentResponse[];
       
+      // Store raw data for edit dialog
+      if (reset) {
+        rawDataRef.current.clear();
+      }
+      data.forEach((agent) => {
+        rawDataRef.current.set(agent.id, agent);
+      });
+      
       const tableItems: DataTableItem[] = data.map((agent) => ({
         id: agent.id,
         name: agent.name,
@@ -228,10 +244,29 @@ export const AutonomousAgentsPage: FC = () => {
     navigate(`/autonomous-agents/${id}`);
   }, [navigate]);
 
+  // Edit dialog handlers
   const handleEdit = useCallback((id: string) => {
-    // TODO: Implement edit functionality
-    console.log('Edit:', id);
-  }, []);
+    setSearchParams({ editItemId: id, tab: 'details' });
+  }, [setSearchParams]);
+
+  const handleManageAccess = useCallback((id: string) => {
+    setSearchParams({ editItemId: id, tab: 'iam' });
+  }, [setSearchParams]);
+
+  const handleEditDialogClose = useCallback(() => {
+    setSearchParams({});
+  }, [setSearchParams]);
+
+  const handleEditDialogTabChange = useCallback((tab: EditDialogTab) => {
+    if (editItemId) {
+      setSearchParams({ editItemId, tab });
+    }
+  }, [editItemId, setSearchParams]);
+
+  const handleEditSuccess = useCallback(() => {
+    fetchAutonomousAgents(true, debouncedSearch, debouncedFilters);
+    refreshAutonomousAgents();
+  }, [fetchAutonomousAgents, debouncedSearch, debouncedFilters, refreshAutonomousAgents]);
 
   const handleShare = useCallback((id: string) => {
     // TODO: Implement share functionality
@@ -324,6 +359,7 @@ export const AutonomousAgentsPage: FC = () => {
           onOpen={handleOpen}
           onEdit={handleEdit}
           onShare={handleShare}
+          onManageAccess={handleManageAccess}
           onDuplicate={handleDuplicate}
           onPin={handlePin}
           onDelete={handleDeleteClick}
@@ -338,6 +374,16 @@ export const AutonomousAgentsPage: FC = () => {
         opened={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onSuccess={handleCreateSuccess}
+      />
+
+      <EditAutonomousAgentDialog
+        opened={!!editItemId}
+        autonomousAgentId={editItemId}
+        initialData={editItemId ? rawDataRef.current.get(editItemId) || null : null}
+        activeTab={editTab}
+        onClose={handleEditDialogClose}
+        onSuccess={handleEditSuccess}
+        onTabChange={handleEditDialogTabChange}
       />
 
       <ConfirmDeleteDialog
