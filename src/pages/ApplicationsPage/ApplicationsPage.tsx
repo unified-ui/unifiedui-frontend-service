@@ -62,6 +62,8 @@ export const ApplicationsPage: FC = () => {
   const isLoadingRef = useRef(false);
   // Ref for tag mapping to avoid dependency issues
   const tagMapRef = useRef<Map<string, number>>(new Map());
+  // Ref to store raw application data for edit dialog
+  const rawDataRef = useRef<Map<string, ApplicationResponse>>(new Map());
   
   // Tags state
   const [availableTags, setAvailableTags] = useState<string[]>([]);
@@ -176,6 +178,14 @@ export const ApplicationsPage: FC = () => {
         tags: app.tags?.map(tag => tag.name) || [],
         isActive: app.is_active,
       }));
+
+      // Store raw data for edit dialog
+      if (reset) {
+        rawDataRef.current.clear();
+      }
+      data.forEach((app) => {
+        rawDataRef.current.set(app.id, app);
+      });
 
       if (reset) {
         setItems(tableItems);
@@ -364,6 +374,7 @@ export const ApplicationsPage: FC = () => {
         opened={!!editItemId}
         onClose={handleEditClose}
         applicationId={editItemId}
+        initialData={editItemId ? rawDataRef.current.get(editItemId) : undefined}
         initialTab={editTab}
         onTabChange={handleEditTabChange}
         onSuccess={handleEditSuccess}

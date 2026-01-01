@@ -52,6 +52,7 @@ export const ApplicationDetailPage: FC = () => {
   // Principals data
   const [principals, setPrincipals] = useState<PrincipalPermission[]>([]);
   const [isPrincipalsLoading, setIsPrincipalsLoading] = useState(false);
+  const [hasPrincipalsFetched, setHasPrincipalsFetched] = useState(false);
   const [principalsError, setPrincipalsError] = useState<string | null>(null);
 
   // Dialog state
@@ -103,6 +104,7 @@ export const ApplicationDetailPage: FC = () => {
       setPrincipalsError('Failed to load access permissions');
     } finally {
       setIsPrincipalsLoading(false);
+      setHasPrincipalsFetched(true);
     }
   }, [apiClient, selectedTenant, id]);
 
@@ -373,6 +375,7 @@ export const ApplicationDetailPage: FC = () => {
                 <ManageAccessTable
                   principals={principals}
                   isLoading={isPrincipalsLoading}
+                  hasFetched={hasPrincipalsFetched}
                   error={principalsError}
                   onRoleChange={handleRoleChange}
                   onAddPrincipal={() => setIsAddDialogOpen(true)}

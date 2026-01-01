@@ -40,6 +40,8 @@ interface ManageAccessTableProps {
   principals: PrincipalPermission[];
   /** Loading state */
   isLoading?: boolean;
+  /** Indicates if initial data fetch is complete. When false, empty state message is hidden. */
+  hasFetched?: boolean;
   /** Error message */
   error?: string | null;
   /** Handler when a role is toggled */
@@ -87,6 +89,7 @@ const getPrincipalTypeLabel = (type: PrincipalTypeEnum) => {
 export const ManageAccessTable: FC<ManageAccessTableProps> = ({
   principals,
   isLoading = false,
+  hasFetched = true,
   error = null,
   onRoleChange,
   onDeletePrincipal,
@@ -272,17 +275,19 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
           </Table.Thead>
           <Table.Tbody>
             {filteredPrincipals.length === 0 ? (
-              <Table.Tr>
-                <Table.Td colSpan={onDeletePrincipal ? 6 : 5}>
-                  <Center py="lg">
-                    <Text c="dimmed">
-                      {principals.length === 0
-                        ? 'No principals have access to this resource.'
-                        : 'No principals match your search criteria.'}
-                    </Text>
-                  </Center>
-                </Table.Td>
-              </Table.Tr>
+              hasFetched && (
+                <Table.Tr>
+                  <Table.Td colSpan={onDeletePrincipal ? 6 : 5}>
+                    <Center py="lg">
+                      <Text c="dimmed">
+                        {principals.length === 0
+                          ? 'No principals have access to this resource.'
+                          : 'No principals match your search criteria.'}
+                      </Text>
+                    </Center>
+                  </Table.Td>
+                </Table.Tr>
+              )
             ) : (
               filteredPrincipals.map((principal) => {
                 // Determine what to show: display_name on top, mail or principalName below

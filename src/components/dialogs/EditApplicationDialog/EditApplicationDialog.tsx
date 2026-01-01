@@ -49,6 +49,8 @@ interface EditApplicationDialogProps {
   opened: boolean;
   onClose: () => void;
   applicationId: string | null;
+  /** Pre-loaded application data from context (avoids re-fetch if provided) */
+  initialData?: ApplicationResponse | null;
   initialTab?: EditDialogTab;
   onTabChange?: (tab: EditDialogTab) => void;
   onSuccess?: () => void;
@@ -66,6 +68,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
   opened,
   onClose,
   applicationId,
+  initialData = null,
   initialTab = 'details',
   onTabChange,
   onSuccess,
@@ -80,6 +83,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
   // Principals state
   const [principals, setPrincipals] = useState<PrincipalPermission[]>([]);
   const [isPrincipalsLoading, setIsPrincipalsLoading] = useState(false);
+  const [hasPrincipalsFetched, setHasPrincipalsFetched] = useState(false);
   const [principalsError, setPrincipalsError] = useState<string | null>(null);
   const [isAddPrincipalOpen, setIsAddPrincipalOpen] = useState(false);
 
@@ -121,7 +125,20 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
     setActiveTab(initialTab);
   }, [initialTab]);
 
-  // Fetch application data
+  // Initialize from initialData when provided
+  const initializeFromData = useCallback((data: ApplicationResponse) => {
+    setApplication(data);
+    form.setValues({
+      name: data.name,
+      type: data.type,
+      description: data.description || '',
+      tags: data.tags?.map((t) => t.name) || [],
+      is_active: data.is_active,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fetch application data (only if no initialData provided)
   const fetchApplication = useCallback(async () => {
     if (!apiClient || !selectedTenant || !applicationId) return;
 
@@ -130,24 +147,14 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
 
     try {
       const data = await apiClient.getApplication(selectedTenant.id, applicationId);
-      setApplication(data);
-      
-      // Update form with fetched data
-      form.setValues({
-        name: data.name,
-        type: data.type,
-        description: data.description || '',
-        tags: data.tags?.map((t) => t.name) || [],
-        is_active: data.is_active,
-      });
+      initializeFromData(data);
     } catch (err) {
       console.error('Failed to fetch application:', err);
       setError('Failed to load application data');
     } finally {
       setIsLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiClient, selectedTenant, applicationId]);
+  }, [apiClient, selectedTenant, applicationId, initializeFromData]);
 
   // Fetch principals (showLoading=false for background refresh to prevent flash)
   const fetchPrincipals = useCallback(async (showLoading = true) => {
@@ -182,16 +189,26 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       setPrincipalsError('Failed to load access permissions');
     } finally {
       setIsPrincipalsLoading(false);
+      setHasPrincipalsFetched(true);
     }
   }, [apiClient, selectedTenant, applicationId]);
 
   // Load data when dialog opens or applicationId changes
   useEffect(() => {
     if (opened && applicationId) {
-      fetchApplication();
+      // If initialData is provided, use it; otherwise fetch
+      if (initialData) {
+        initializeFromData(initialData);
+      } else {
+        fetchApplication();
+      }
+      // Always fetch principals (they're not in the list data)
       fetchPrincipals();
+    } else if (!opened) {
+      // Reset hasPrincipalsFetched when dialog closes
+      setHasPrincipalsFetched(false);
     }
-  }, [opened, applicationId, fetchApplication, fetchPrincipals]);
+  }, [opened, applicationId, initialData, initializeFromData, fetchApplication, fetchPrincipals]);
 
   // Handle tab change
   const handleTabChange = (value: string) => {
@@ -468,6 +485,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
             <ManageAccessTable
               principals={principals}
               isLoading={isPrincipalsLoading}
+              hasFetched={hasPrincipalsFetched}
               error={principalsError}
               onRoleChange={handleRoleChange}
               onDeletePrincipal={handleDeletePrincipal}
