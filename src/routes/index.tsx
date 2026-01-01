@@ -11,6 +11,7 @@ import { AutonomousAgentsPage } from '../pages/AutonomousAgentsPage';
 import { ChatWidgetsPage } from '../pages/ChatWidgetsPage';
 import { WidgetDesignerPage } from '../pages/WidgetDesignerPage';
 import { DevelopmentPlatformsPage } from '../pages/DevelopmentPlatformsPage';
+import { DevelopmentPlatformDetailsPage } from '../pages/DevelopmentPlatformDetailsPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 
 export const AppRoutes = () => {
@@ -31,6 +32,7 @@ export const AppRoutes = () => {
         <Route path="/chat-widgets" element={<ProtectedRoute><ChatWidgetsPage /></ProtectedRoute>} />
         <Route path="/widget-designer" element={<ProtectedRoute><WidgetDesignerPage /></ProtectedRoute>} />
         <Route path="/development-platforms" element={<ProtectedRoute><DevelopmentPlatformsPage /></ProtectedRoute>} />
+        <Route path="/development-platforms/:id" element={<ProtectedRoute><DevelopmentPlatformDetailsPage /></ProtectedRoute>} />
         
         {/* Redirects */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

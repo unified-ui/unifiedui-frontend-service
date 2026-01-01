@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { IconCode } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { PageContainer, PageHeader, DataTable, ConfirmDeleteDialog } from '../../components/common';
@@ -28,6 +28,7 @@ const getStoredSort = (): SortOption => {
 
 export const DevelopmentPlatformsPage: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
@@ -238,15 +239,9 @@ export const DevelopmentPlatformsPage: FC = () => {
   }, []);
 
   const handleOpen = useCallback((id: string) => {
-    // Open the platform in a new window/tab with its iframe_url
-    const platform = rawDataRef.current.get(id);
-    if (platform?.iframe_url) {
-      window.open(platform.iframe_url, '_blank');
-    } else {
-      // Fallback to edit dialog
-      setSearchParams({ editItemId: id, tab: 'details' });
-    }
-  }, [setSearchParams]);
+    // Navigate to the details page with iframe
+    navigate(`/development-platforms/${id}`);
+  }, [navigate]);
 
   // Edit dialog handlers
   const handleEdit = useCallback((id: string) => {
