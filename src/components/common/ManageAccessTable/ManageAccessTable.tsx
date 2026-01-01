@@ -245,7 +245,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
 
       {/* Table */}
       <ScrollArea h={350} className={classes.tableContainer}>
-        <Table highlightOnHover className={classes.table}>
+        <Table highlightOnHover stickyHeader className={classes.table}>
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Name</Table.Th>
