@@ -30,7 +30,7 @@ import {
   type ApplicationResponse,
   type PrincipalTypeEnum,
   type PermissionActionEnum,
-  type PrincipalPermissionsResponse,
+  type PrincipalWithRolesResponse,
 } from '../../../api/types';
 import { TagInput, ManageAccessTable, AddPrincipalDialog } from '../../common';
 import type { PrincipalPermission } from '../../common/ManageAccessTable/ManageAccessTable';
@@ -162,13 +162,16 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       const response = await apiClient.getApplicationPrincipals(selectedTenant.id, applicationId);
 
       // Transform response to PrincipalPermission format
-      // Response structure: { application_id, principals: [{ principal_id, principal_type, roles: ['READ', 'WRITE', ...] }] }
+      // Response structure: { resource_id, resource_type, tenant_id, principals: [{ principal_id, principal_type, roles, mail, display_name, principal_name, description }] }
       const transformedPrincipals: PrincipalPermission[] = (response.principals || []).map(
-        (p: PrincipalPermissionsResponse) => ({
+        (p: PrincipalWithRolesResponse) => ({
           id: p.principal_id,
           principalId: p.principal_id,
           principalType: p.principal_type,
-          displayName: p.principal_id, // TODO: Fetch display names
+          displayName: p.display_name,
+          mail: p.mail,
+          principalName: p.principal_name,
+          description: p.description,
           roles: p.roles || [],
         })
       );

@@ -90,8 +90,11 @@ export const ApplicationDetailPage: FC = () => {
         id: p.principal_id,
         principalId: p.principal_id,
         principalType: p.principal_type,
-        displayName: p.principal_id, // TODO: Fetch display names
-        roles: p.permissions.map((perm) => perm.role),
+        displayName: p.display_name,
+        mail: p.mail,
+        principalName: p.principal_name,
+        description: p.description,
+        roles: p.roles,
       }));
 
       setPrincipals(transformedPrincipals);

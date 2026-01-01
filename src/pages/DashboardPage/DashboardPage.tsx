@@ -35,7 +35,7 @@ export const DashboardPage: FC = () => {
                   <Text fw={500}>Benutzer</Text>
                 </Group>
                 <Text size="xl" fw={700}>{user?.display_name}</Text>
-                <Text size="xs" c="dimmed">{user?.email}</Text>
+                <Text size="xs" c="dimmed">{user?.mail}</Text>
               </Stack>
             </Paper>
           </Grid.Col>

@@ -35,6 +35,8 @@ interface DataTableProps {
   onShare?: (id: string) => void;
   /** Duplicate item handler */
   onDuplicate?: (id: string) => void;
+  /** Pin item handler */
+  onPin?: (id: string, isPinned: boolean) => void;
   /** Delete item handler */
   onDelete?: (id: string) => void;
   /** Custom row icon renderer */
@@ -72,6 +74,7 @@ export const DataTable: FC<DataTableProps> = ({
   onEdit,
   onShare,
   onDuplicate,
+  onPin,
   onDelete,
   renderIcon,
   sortBy: externalSortBy,
@@ -284,6 +287,7 @@ export const DataTable: FC<DataTableProps> = ({
                     onEdit={onEdit}
                     onShare={onShare}
                     onDuplicate={onDuplicate}
+                    onPin={onPin}
                     onDelete={onDelete}
                     icon={renderIcon?.(item)}
                   />

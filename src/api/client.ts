@@ -8,6 +8,8 @@ import type {
   // Principal Types
   PrincipalResponse,
   RefreshPrincipalRequest,
+  PrincipalWithRolesResponse,
+  ResourcePrincipalsResponse,
   // Identity Types
   MeResponse,
   IdentityUsersResponse,
@@ -23,43 +25,36 @@ import type {
   ApplicationResponse,
   CreateApplicationRequest,
   UpdateApplicationRequest,
-  ApplicationPrincipalsResponse,
   SetApplicationPermissionRequest,
   // Autonomous Agent Types
   AutonomousAgentResponse,
   CreateAutonomousAgentRequest,
   UpdateAutonomousAgentRequest,
-  AutonomousAgentPrincipalsResponse,
   SetAutonomousAgentPermissionRequest,
   // Conversation Types
   ConversationResponse,
   CreateConversationRequest,
   UpdateConversationRequest,
-  ConversationPrincipalsResponse,
   SetConversationPermissionRequest,
   // Credential Types
   CredentialResponse,
   CreateCredentialRequest,
   UpdateCredentialRequest,
-  CredentialPrincipalsResponse,
   SetCredentialPermissionRequest,
   // Development Platform Types
   DevelopmentPlatformResponse,
   CreateDevelopmentPlatformRequest,
   UpdateDevelopmentPlatformRequest,
-  DevelopmentPlatformPrincipalsResponse,
   SetDevelopmentPlatformPermissionRequest,
   // Chat Widget Types
   ChatWidgetResponse,
   CreateChatWidgetRequest,
   UpdateChatWidgetRequest,
-  ChatWidgetPrincipalsResponse,
   SetChatWidgetPermissionRequest,
   // Custom Group Types
   CustomGroupResponse,
   CreateCustomGroupRequest,
   UpdateCustomGroupRequest,
-  CustomGroupPrincipalsResponse,
   SetPrincipalRoleRequest,
   DeletePrincipalRoleRequest,
   // Tag Types
@@ -264,12 +259,12 @@ export class UnifiedUIAPIClient {
 
   // ========== Application Permissions ==========
 
-  async getApplicationPrincipals(tenantId: string, applicationId: string): Promise<ApplicationPrincipalsResponse> {
-    return this.request<ApplicationPrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/applications/${applicationId}/principals`);
+  async getApplicationPrincipals(tenantId: string, applicationId: string): Promise<ResourcePrincipalsResponse> {
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/applications/${applicationId}/principals`);
   }
 
-  async setApplicationPermission(tenantId: string, applicationId: string, data: SetApplicationPermissionRequest): Promise<void> {
-    return this.request<void>('PUT', `/api/v1/tenants/${tenantId}/applications/${applicationId}/principals`, data, 'Permission updated successfully');
+  async setApplicationPermission(tenantId: string, applicationId: string, data: SetApplicationPermissionRequest): Promise<PrincipalWithRolesResponse> {
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/tenants/${tenantId}/applications/${applicationId}/principals`, data, 'Permission updated successfully');
   }
 
   async deleteApplicationPermission(
@@ -291,7 +286,7 @@ export class UnifiedUIAPIClient {
 
   async listAutonomousAgents(
     tenantId: string, 
-    params?: PaginationParams & OrderParams & { view?: 'quick-list' }, 
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' }, 
     options?: { noCache?: boolean }
   ): Promise<AutonomousAgentResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
@@ -316,12 +311,12 @@ export class UnifiedUIAPIClient {
 
   // ========== Autonomous Agent Permissions ==========
 
-  async getAutonomousAgentPrincipals(tenantId: string, agentId: string): Promise<AutonomousAgentPrincipalsResponse> {
-    return this.request<AutonomousAgentPrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}/principals`);
+  async getAutonomousAgentPrincipals(tenantId: string, agentId: string): Promise<ResourcePrincipalsResponse> {
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}/principals`);
   }
 
-  async setAutonomousAgentPermission(tenantId: string, agentId: string, data: SetAutonomousAgentPermissionRequest): Promise<void> {
-    return this.request<void>('POST', `/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}/principals`, data, 'Permission added successfully');
+  async setAutonomousAgentPermission(tenantId: string, agentId: string, data: SetAutonomousAgentPermissionRequest): Promise<PrincipalWithRolesResponse> {
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}/principals`, data, 'Permission added successfully');
   }
 
   async deleteAutonomousAgentPermission(
@@ -364,12 +359,12 @@ export class UnifiedUIAPIClient {
 
   // ========== Conversation Permissions ==========
 
-  async getConversationPrincipals(tenantId: string, conversationId: string): Promise<ConversationPrincipalsResponse> {
-    return this.request<ConversationPrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/conversations/${conversationId}/principals`);
+  async getConversationPrincipals(tenantId: string, conversationId: string): Promise<ResourcePrincipalsResponse> {
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/conversations/${conversationId}/principals`);
   }
 
-  async setConversationPermission(tenantId: string, conversationId: string, data: SetConversationPermissionRequest): Promise<void> {
-    return this.request<void>('POST', `/api/v1/tenants/${tenantId}/conversations/${conversationId}/principals`, data, 'Permission added successfully');
+  async setConversationPermission(tenantId: string, conversationId: string, data: SetConversationPermissionRequest): Promise<PrincipalWithRolesResponse> {
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/tenants/${tenantId}/conversations/${conversationId}/principals`, data, 'Permission added successfully');
   }
 
   async deleteConversationPermission(
@@ -416,12 +411,12 @@ export class UnifiedUIAPIClient {
 
   // ========== Credential Permissions ==========
 
-  async getCredentialPrincipals(tenantId: string, credentialId: string): Promise<CredentialPrincipalsResponse> {
-    return this.request<CredentialPrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/credentials/${credentialId}/principals`);
+  async getCredentialPrincipals(tenantId: string, credentialId: string): Promise<ResourcePrincipalsResponse> {
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/credentials/${credentialId}/principals`);
   }
 
-  async setCredentialPermission(tenantId: string, credentialId: string, data: SetCredentialPermissionRequest): Promise<void> {
-    return this.request<void>('POST', `/api/v1/tenants/${tenantId}/credentials/${credentialId}/principals`, data, 'Permission added successfully');
+  async setCredentialPermission(tenantId: string, credentialId: string, data: SetCredentialPermissionRequest): Promise<PrincipalWithRolesResponse> {
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/tenants/${tenantId}/credentials/${credentialId}/principals`, data, 'Permission added successfully');
   }
 
   async deleteCredentialPermission(
@@ -467,12 +462,12 @@ export class UnifiedUIAPIClient {
 
   // ========== Development Platform Permissions ==========
 
-  async getDevelopmentPlatformPrincipals(tenantId: string, platformId: string): Promise<DevelopmentPlatformPrincipalsResponse> {
-    return this.request<DevelopmentPlatformPrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/development-platforms/${platformId}/principals`);
+  async getDevelopmentPlatformPrincipals(tenantId: string, platformId: string): Promise<ResourcePrincipalsResponse> {
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/development-platforms/${platformId}/principals`);
   }
 
-  async setDevelopmentPlatformPermission(tenantId: string, platformId: string, data: SetDevelopmentPlatformPermissionRequest): Promise<void> {
-    return this.request<void>('POST', `/api/v1/tenants/${tenantId}/development-platforms/${platformId}/principals`, data, 'Permission added successfully');
+  async setDevelopmentPlatformPermission(tenantId: string, platformId: string, data: SetDevelopmentPlatformPermissionRequest): Promise<PrincipalWithRolesResponse> {
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/tenants/${tenantId}/development-platforms/${platformId}/principals`, data, 'Permission added successfully');
   }
 
   async deleteDevelopmentPlatformPermission(
@@ -518,12 +513,12 @@ export class UnifiedUIAPIClient {
 
   // ========== Chat Widget Permissions ==========
 
-  async getChatWidgetPrincipals(tenantId: string, widgetId: string): Promise<ChatWidgetPrincipalsResponse> {
-    return this.request<ChatWidgetPrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/chat-widgets/${widgetId}/principals`);
+  async getChatWidgetPrincipals(tenantId: string, widgetId: string): Promise<ResourcePrincipalsResponse> {
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/chat-widgets/${widgetId}/principals`);
   }
 
-  async setChatWidgetPermission(tenantId: string, widgetId: string, data: SetChatWidgetPermissionRequest): Promise<void> {
-    return this.request<void>('POST', `/api/v1/tenants/${tenantId}/chat-widgets/${widgetId}/principals`, data, 'Permission added successfully');
+  async setChatWidgetPermission(tenantId: string, widgetId: string, data: SetChatWidgetPermissionRequest): Promise<PrincipalWithRolesResponse> {
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/tenants/${tenantId}/chat-widgets/${widgetId}/principals`, data, 'Permission added successfully');
   }
 
   async deleteChatWidgetPermission(
@@ -566,16 +561,16 @@ export class UnifiedUIAPIClient {
 
   // ========== Custom Group Principals ==========
 
-  async getCustomGroupPrincipals(tenantId: string, groupId: string): Promise<CustomGroupPrincipalsResponse> {
-    return this.request<CustomGroupPrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/custom-groups/${groupId}/principals`);
+  async getCustomGroupPrincipals(tenantId: string, groupId: string): Promise<ResourcePrincipalsResponse> {
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/custom-groups/${groupId}/principals`);
   }
 
-  async setCustomGroupPrincipal(tenantId: string, groupId: string, data: SetPrincipalRoleRequest): Promise<void> {
-    return this.request<void>('POST', `/api/v1/tenants/${tenantId}/custom-groups/${groupId}/principals`, data, 'Principal added successfully');
+  async setCustomGroupPrincipal(tenantId: string, groupId: string, data: SetPrincipalRoleRequest): Promise<PrincipalWithRolesResponse> {
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/tenants/${tenantId}/custom-groups/${groupId}/principals`, data, 'Principal added successfully');
   }
 
-  async deleteCustomGroupPrincipal(tenantId: string, groupId: string, data: DeletePrincipalRoleRequest): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/tenants/${tenantId}/custom-groups/${groupId}/principals`, data, 'Principal removed successfully');
+  async deleteCustomGroupPrincipal(tenantId: string, groupId: string, data: DeletePrincipalRoleRequest): Promise<PrincipalWithRolesResponse> {
+    return this.request<PrincipalWithRolesResponse>('DELETE', `/api/v1/tenants/${tenantId}/custom-groups/${groupId}/principals`, data, 'Principal removed successfully');
   }
 
   // ========== Tag Endpoints ==========

@@ -28,8 +28,10 @@ export interface PrincipalPermission {
   id: string;
   principalId: string;
   principalType: PrincipalTypeEnum;
-  displayName: string;
-  email?: string;
+  displayName?: string | null;
+  mail?: string | null;
+  principalName?: string | null;
+  description?: string | null;
   roles: PermissionActionEnum[];
 }
 
@@ -43,7 +45,7 @@ interface ManageAccessTableProps {
   /** Handler when a role is toggled */
   onRoleChange: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum, enabled: boolean) => Promise<void>;
   /** Handler to delete a principal's access */
-  onDeletePrincipal?: (principalId: string, principalType: PrincipalTypeEnum, displayName: string) => Promise<void>;
+  onDeletePrincipal?: (principalId: string, principalType: PrincipalTypeEnum, displayName?: string | null) => Promise<void>;
   /** Handler to open add principal dialog */
   onAddPrincipal: () => void;
   /** Entity name for labels (e.g., "application", "credential") */
@@ -106,7 +108,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
     open: boolean;
     principalId: string;
     principalType: PrincipalTypeEnum;
-    displayName: string;
+    displayName: string | null | undefined;
   }>({ open: false, principalId: '', principalType: 'IDENTITY_USER', displayName: '' });
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -119,8 +121,10 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
       const query = debouncedSearch.toLowerCase();
       result = result.filter(
         (p) =>
-          p.displayName.toLowerCase().includes(query) ||
-          p.email?.toLowerCase().includes(query)
+          p.displayName?.toLowerCase().includes(query) ||
+          p.mail?.toLowerCase().includes(query) ||
+          p.principalName?.toLowerCase().includes(query) ||
+          p.principalId.toLowerCase().includes(query)
       );
     }
 
@@ -281,20 +285,29 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
                 </Table.Td>
               </Table.Tr>
             ) : (
-              filteredPrincipals.map((principal) => (
+              filteredPrincipals.map((principal) => {
+                // Determine what to show: display_name on top, mail or principalName below
+                const hasDisplayName = !!principal.displayName;
+                const secondaryText = principal.mail || principal.principalName || null;
+                const hasSecondary = !!secondaryText;
+                
+                // Fallback: if no display name, show principalId
+                const primaryText = principal.displayName || principal.principalId;
+                
+                return (
                 <Table.Tr key={principal.id}>
                   <Table.Td>
                     <Group gap="sm" wrap="nowrap">
                       <Box className={classes.principalIcon}>
                         {getPrincipalIcon(principal.principalType)}
                       </Box>
-                      <Box>
+                      <Box className={hasDisplayName && hasSecondary ? classes.principalNameContainer : classes.principalNameContainerCentered}>
                         <Text size="sm" fw={500}>
-                          {principal.displayName}
+                          {primaryText}
                         </Text>
-                        {principal.email && (
+                        {hasDisplayName && hasSecondary && (
                           <Text size="xs" c="dimmed">
-                            {principal.email}
+                            {secondaryText}
                           </Text>
                         )}
                       </Box>
@@ -315,7 +328,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
                           onChange={(e) =>
                             handleRoleToggle(principal, role, e.target.checked)
                           }
-                          aria-label={`${role} permission for ${principal.displayName}`}
+                          aria-label={`${role} permission for ${primaryText}`}
                         />
                       )}
                     </Table.Td>
@@ -327,7 +340,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
                           variant="subtle"
                           color="red"
                           onClick={() => handleDeleteClick(principal)}
-                          aria-label={`Remove access for ${principal.displayName}`}
+                          aria-label={`Remove access for ${primaryText}`}
                         >
                           <IconTrash size={16} />
                         </ActionIcon>
@@ -335,7 +348,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
                     </Table.Td>
                   )}
                 </Table.Tr>
-              ))
+              )})
             )}
           </Table.Tbody>
         </Table>
@@ -347,7 +360,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
         onClose={() => setDeleteDialog({ open: false, principalId: '', principalType: 'IDENTITY_USER', displayName: '' })}
         onConfirm={handleDeleteConfirm}
         title="Remove Access"
-        itemName={deleteDialog.displayName}
+        itemName={deleteDialog.displayName ?? undefined}
         itemType="access"
         isLoading={isDeleting}
       />

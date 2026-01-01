@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Container, Title, Text, Button, Paper, Stack, CopyButton, ActionIcon, Tooltip, Group, Code, Loader } from '@mantine/core';
+import { Container, Text, Button, Paper, Stack, CopyButton, ActionIcon, Tooltip, Group, Code, Loader } from '@mantine/core';
 import { IconCopy, IconCheck, IconArrowLeft, IconKey } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth';

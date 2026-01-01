@@ -278,30 +278,42 @@ export interface SetApplicationPermissionRequest {
   role: PermissionActionEnum;
 }
 
-export interface ApplicationPermissionResponse {
-  id: string;
-  application_id: string;
-  tenant_id: string;
-  principal_id: string;
-  principal_type: PrincipalTypeEnum;
-  role: PermissionActionEnum;
-  created_at: string;
-  updated_at: string;
-}
+// ========== Unified Principal Response Types ==========
 
-export interface PrincipalPermissionsResponse {
-  application_id?: string;
-  tenant_id?: string;
+/**
+ * Unified response for a principal with their roles on a resource.
+ * Used by all resource types (application, autonomous_agent, chat_widget, 
+ * conversation, credential, development_platform, custom_group).
+ */
+export interface PrincipalWithRolesResponse {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
   roles: PermissionActionEnum[];
+  mail?: string | null;
+  display_name?: string | null;
+  principal_name?: string | null;
+  description?: string | null;
 }
 
-export interface ApplicationPrincipalsResponse {
-  application_id: string;
-  tenant_id?: string;
-  principals: PrincipalPermissionsResponse[];
+/**
+ * Unified response for listing all principals with their roles on a resource.
+ * Used by all resource types.
+ */
+export interface ResourcePrincipalsResponse {
+  resource_id: string;
+  resource_type: string;
+  tenant_id: string;
+  principals: PrincipalWithRolesResponse[];
 }
+
+// Legacy type aliases for backward compatibility
+export type ApplicationPrincipalsResponse = ResourcePrincipalsResponse;
+export type AutonomousAgentPrincipalsResponse = ResourcePrincipalsResponse;
+export type ChatWidgetPrincipalsResponse = ResourcePrincipalsResponse;
+export type ConversationPrincipalsResponse = ResourcePrincipalsResponse;
+export type CredentialPrincipalsResponse = ResourcePrincipalsResponse;
+export type DevelopmentPlatformPrincipalsResponse = ResourcePrincipalsResponse;
+export type CustomGroupPrincipalsResponse = ResourcePrincipalsResponse;
 
 // ========== Autonomous Agent Types ==========
 
@@ -339,22 +351,6 @@ export interface SetAutonomousAgentPermissionRequest {
   role: PermissionActionEnum;
 }
 
-export interface AutonomousAgentPermissionResponse {
-  id: string;
-  autonomous_agent_id: string;
-  tenant_id: string;
-  principal_id: string;
-  principal_type: PrincipalTypeEnum;
-  role: PermissionActionEnum;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface AutonomousAgentPrincipalsResponse {
-  autonomous_agent_id: string;
-  principals: PrincipalPermissionsResponse[];
-}
-
 // ========== Conversation Types ==========
 
 export interface ConversationResponse {
@@ -385,22 +381,6 @@ export interface SetConversationPermissionRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
   role: PermissionActionEnum;
-}
-
-export interface ConversationPermissionResponse {
-  id: string;
-  conversation_id: string;
-  tenant_id: string;
-  principal_id: string;
-  principal_type: PrincipalTypeEnum;
-  role: PermissionActionEnum;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ConversationPrincipalsResponse {
-  conversation_id: string;
-  principals: PrincipalPermissionsResponse[];
 }
 
 // ========== Credential Types ==========
@@ -446,22 +426,6 @@ export interface SetCredentialPermissionRequest {
   role: PermissionActionEnum;
 }
 
-export interface CredentialPermissionResponse {
-  id: string;
-  credential_id: string;
-  tenant_id: string;
-  principal_id: string;
-  principal_type: PrincipalTypeEnum;
-  role: PermissionActionEnum;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CredentialPrincipalsResponse {
-  credential_id: string;
-  principals: PrincipalPermissionsResponse[];
-}
-
 // ========== Development Platform Types ==========
 
 export interface DevelopmentPlatformResponse {
@@ -504,22 +468,6 @@ export interface SetDevelopmentPlatformPermissionRequest {
   role: PermissionActionEnum;
 }
 
-export interface DevelopmentPlatformPermissionResponse {
-  id: string;
-  development_platform_id: string;
-  tenant_id: string;
-  principal_id: string;
-  principal_type: PrincipalTypeEnum;
-  role: PermissionActionEnum;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface DevelopmentPlatformPrincipalsResponse {
-  development_platform_id: string;
-  principals: PrincipalPermissionsResponse[];
-}
-
 // ========== Chat Widget Types ==========
 
 export interface ChatWidgetResponse {
@@ -559,22 +507,6 @@ export interface SetChatWidgetPermissionRequest {
   role: PermissionActionEnum;
 }
 
-export interface ChatWidgetPermissionResponse {
-  id: string;
-  chat_widget_id: string;
-  tenant_id: string;
-  principal_id: string;
-  principal_type: PrincipalTypeEnum;
-  role: PermissionActionEnum;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ChatWidgetPrincipalsResponse {
-  chat_widget_id: string;
-  principals: PrincipalPermissionsResponse[];
-}
-
 // ========== Custom Group Types ==========
 
 export interface CustomGroupResponse {
@@ -601,18 +533,13 @@ export interface UpdateCustomGroupRequest {
 export interface SetPrincipalRoleRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
-  permission: PermissionActionEnum;
+  role: PermissionActionEnum;
 }
 
 export interface DeletePrincipalRoleRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
-  permission: PermissionActionEnum;
-}
-
-export interface CustomGroupPrincipalsResponse {
-  custom_group_id: string;
-  principals: PrincipalPermissionsResponse[];
+  role: PermissionActionEnum;
 }
 
 // ========== User Favorites Types ==========

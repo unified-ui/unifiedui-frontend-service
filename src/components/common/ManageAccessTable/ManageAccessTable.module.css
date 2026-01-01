@@ -65,3 +65,15 @@
 [data-mantine-color-scheme='dark'] .principalIcon {
   background-color: var(--color-gray-700);
 }
+
+.principalNameContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.principalNameContainerCentered {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
