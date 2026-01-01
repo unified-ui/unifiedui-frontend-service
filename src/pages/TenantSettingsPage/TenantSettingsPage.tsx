@@ -333,7 +333,7 @@ export const TenantSettingsPage: FC = () => {
                 Tenant Settings
               </Tabs.Tab>
               <Tabs.Tab value="access" leftSection={<IconUsers size={16} />}>
-                Access Management
+                Manage Access
               </Tabs.Tab>
               <Tabs.Tab value="groups" leftSection={<IconUsersGroup size={16} />}>
                 Custom Groups

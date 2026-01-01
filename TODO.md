@@ -4,11 +4,19 @@
 
 
 - SettingsPage
-    - tab-bar schöner -> mehr padding
-    - teant settings
+    - tab-bar
+        - schöner -> mehr padding
+        - tab in url aufnehmen: ?tab=settings|iam|custom-groups|billing-and-licence
+
+    - tenant settings
         - Delete Tenant -> 2x Confirm, bevor man killt
+
     - Manage Access
-        - umbenennen in Manage Access
+        - Backend:
+            - GET /principals -> response anpassen und principals table joinen, damit man namen etc bekommt -> wie bei applications etc!
+            - principals tabelle: is_active (default: true); soll aber anpassbar sein auf false je tenant!
+            - principals -> /tenants/{id}/prinicpals/{id}/active {is_active: false|true}
+                - können nur global admins
         - Add Principal
             - Dialog ist nett;
             - wir müssen aber checkbox items mitgeben können
@@ -16,6 +24,36 @@
             - permissions mit search suchbar
             - fix des create; method not allowd aktuell
             - principal input -> liste wird nicht sauber geskrollt
+        - liste
+            - wie bei tags -> Gruppen anzeigen als badge, rest über tooltip 
+                - priviligierte rollen (global admin, admin) zuerst
+            - beim draufklicken -> manage access -> rollen zuweisen
+            - als tabelle! und type als spalte!
+            - paginierung -> infinitive scroll
+            - serverside search and pagination
+
+    - custom groups
+        - info wie bei Manage access
+        - searchbar + filter auf rolle + Create button wie bei Manage access
+        - EditDialog
+            - tabs:
+                - Manage Members
+                - Details
+                - Manage Access
+            - beim klicken auf row -> ?tab=manage-members
+        - tabelle
+            - Spalten:
+                - Name
+                - Description
+                - Icon: ...
+                    - Edit
+                    - Manage Members
+                    - Delete
+            - als tabelle
+            - schöner
+            - skrollbar
+        - paginierung -> infinity scroll
+        
 
 
 - /refresh von identity implementieren
