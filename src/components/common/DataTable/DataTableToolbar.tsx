@@ -112,7 +112,8 @@ export const DataTableToolbar: FC<DataTableToolbarProps> = ({
     (filters.status !== 'all' ? 1 : 0);
 
   const handleFilterApply = useCallback(() => {
-    onFilterChange?.(localFilters);
+    // Always create a new object reference to force React state update and refetch
+    onFilterChange?.({ ...localFilters });
     setFilterOpened(false);
   }, [localFilters, onFilterChange]);
 
