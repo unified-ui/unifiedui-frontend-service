@@ -15,6 +15,15 @@ const PAGE_SIZE = 25;
 const TAG_PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 300;
 const FILTER_DEBOUNCE_MS = 300;
+const SORT_STORAGE_KEY = 'unified-ui:sort:applications';
+
+const getStoredSort = (): SortOption => {
+  const stored = localStorage.getItem(SORT_STORAGE_KEY);
+  if (stored && ['updated', 'created', 'name-asc', 'name-desc'].includes(stored)) {
+    return stored as SortOption;
+  }
+  return 'updated';
+};
 
 export const ApplicationsPage: FC = () => {
   const navigate = useNavigate();
@@ -29,7 +38,7 @@ export const ApplicationsPage: FC = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<SortOption>('updated');
+  const [sortBy, setSortBy] = useState<SortOption>(getStoredSort);
   
   // Edit dialog state from URL params
   const editItemId = searchParams.get('editItemId');
@@ -215,7 +224,7 @@ export const ApplicationsPage: FC = () => {
 
   const handleSortChange = useCallback((newSort: SortOption) => {
     setSortBy(newSort);
-    // fetchApplications wird automatisch durch useEffect aufgerufen
+    localStorage.setItem(SORT_STORAGE_KEY, newSort);
   }, []);
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {

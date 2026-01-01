@@ -15,6 +15,15 @@ const PAGE_SIZE = 25;
 const TAG_PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 300;
 const FILTER_DEBOUNCE_MS = 300;
+const SORT_STORAGE_KEY = 'unified-ui:sort:credentials';
+
+const getStoredSort = (): SortOption => {
+  const stored = localStorage.getItem(SORT_STORAGE_KEY);
+  if (stored && ['updated', 'created', 'name-asc', 'name-desc'].includes(stored)) {
+    return stored as SortOption;
+  }
+  return 'updated';
+};
 
 export const CredentialsPage: FC = () => {
   const navigate = useNavigate();
@@ -28,7 +37,7 @@ export const CredentialsPage: FC = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<SortOption>('updated');
+  const [sortBy, setSortBy] = useState<SortOption>(getStoredSort);
   
   // Filter state with debouncing
   const [filters, setFilters] = useState<FilterState>({ tags: [], status: 'all' });
@@ -208,6 +217,7 @@ export const CredentialsPage: FC = () => {
 
   const handleSortChange = useCallback((newSort: SortOption) => {
     setSortBy(newSort);
+    localStorage.setItem(SORT_STORAGE_KEY, newSort);
   }, []);
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
