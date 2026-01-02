@@ -11,15 +11,10 @@
 - SettingsPage
 
     - Manage Access
-        - Add Principal
-            - permissions skroll -> padding left so breit wie skrollbar + breite hinzu der breite der skrollbar
         - sich selbst kann man nicht bearbeiten! > kein klick und switch button disabled
             - paginierung -> infinitive scroll
             - serverside search and pagination
             - order by + order_direction
-
-
-
 
     - custom groups
         - info wie bei Manage access

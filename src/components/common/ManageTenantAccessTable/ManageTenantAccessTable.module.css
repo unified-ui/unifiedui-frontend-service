@@ -28,3 +28,19 @@
   background-color: var(--color-gray-800);
   color: var(--color-gray-400);
 }
+
+.tableScrollArea {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.tableHeader {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--bg-paper);
+}
+
+.loadMoreTrigger {
+  min-height: 40px;
+}

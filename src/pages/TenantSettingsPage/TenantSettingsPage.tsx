@@ -103,10 +103,17 @@ export const TenantSettingsPage: FC = () => {
   // ===== Access Management State =====
   const [principals, setPrincipals] = useState<TenantPrincipalPermission[]>([]);
   const [principalsLoading, setPrincipalsLoading] = useState(false);
+  const [principalsLoadingMore, setPrincipalsLoadingMore] = useState(false);
   const [principalsError, setPrincipalsError] = useState<string | null>(null);
   const [principalsFetched, setPrincipalsFetched] = useState(false);
+  const [principalsHasMore, setPrincipalsHasMore] = useState(true);
+  const [principalsSkip, setPrincipalsSkip] = useState(0);
+  const [principalsSearch, setPrincipalsSearch] = useState('');
+  const [principalsRoleFilter, setPrincipalsRoleFilter] = useState<string[]>([]);
   const [addPrincipalDialogOpen, setAddPrincipalDialogOpen] = useState(false);
   const [editPrincipal, setEditPrincipal] = useState<TenantPrincipalPermission | null>(null);
+  
+  const PRINCIPALS_PAGE_SIZE = 50;
 
   // ===== Custom Groups State =====
   const [customGroups, setCustomGroups] = useState<CustomGroupResponse[]>([]);
@@ -134,43 +141,81 @@ export const TenantSettingsPage: FC = () => {
   }, [selectedTenant]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ===== Fetch Principals =====
-  const fetchPrincipals = useCallback(async () => {
+  const fetchPrincipals = useCallback(async (reset = false) => {
     if (!apiClient || !selectedTenant) return;
 
-    setPrincipalsLoading(true);
+    const isInitialFetch = reset || !principalsFetched;
+    if (isInitialFetch) {
+      setPrincipalsLoading(true);
+    } else {
+      setPrincipalsLoadingMore(true);
+    }
     setPrincipalsError(null);
+
+    const skip = reset ? 0 : principalsSkip;
+    
     try {
-      const response = await apiClient.getTenantPrincipals(selectedTenant.id);
+      const response = await apiClient.getTenantPrincipals(selectedTenant.id, {
+        skip,
+        limit: PRINCIPALS_PAGE_SIZE,
+        search: principalsSearch || undefined,
+        roles: principalsRoleFilter.length > 0 ? principalsRoleFilter.join(',') : undefined,
+        order_by: 'display_name',
+        order_direction: 'asc',
+      });
       
       // Transform response: use display_name, mail, principal_name from principal level
-      const principalMap = new Map<string, TenantPrincipalPermission>();
+      const newPrincipals: TenantPrincipalPermission[] = response.principals.map(principal => ({
+        id: `${principal.principal_id}-${principal.principal_type}`,
+        principalId: principal.principal_id,
+        principalType: principal.principal_type,
+        displayName: principal.display_name || null,
+        mail: principal.mail || null,
+        principalName: principal.principal_name || null,
+        description: principal.description || null,
+        isActive: principal.is_active,
+        roles: principal.roles.map(r => r.role),
+      }));
       
-      for (const principal of response.principals) {
-        const key = `${principal.principal_id}-${principal.principal_type}`;
-        
-        if (!principalMap.has(key)) {
-          principalMap.set(key, {
-            id: key,
-            principalId: principal.principal_id,
-            principalType: principal.principal_type,
-            displayName: principal.display_name || null,
-            mail: principal.mail || null,
-            principalName: principal.principal_name || null,
-            description: principal.description || null,
-            isActive: principal.is_active,
-            roles: principal.roles.map(r => r.role),
-          });
-        }
+      if (reset) {
+        setPrincipals(newPrincipals);
+        setPrincipalsSkip(PRINCIPALS_PAGE_SIZE);
+      } else {
+        setPrincipals(prev => [...prev, ...newPrincipals]);
+        setPrincipalsSkip(prev => prev + PRINCIPALS_PAGE_SIZE);
       }
       
-      setPrincipals(Array.from(principalMap.values()));
+      // Determine if there are more items to load
+      setPrincipalsHasMore(newPrincipals.length === PRINCIPALS_PAGE_SIZE);
       setPrincipalsFetched(true);
     } catch {
       setPrincipalsError('Failed to load principals');
     } finally {
       setPrincipalsLoading(false);
+      setPrincipalsLoadingMore(false);
     }
-  }, [apiClient, selectedTenant]);
+  }, [apiClient, selectedTenant, principalsFetched, principalsSkip, principalsSearch, principalsRoleFilter]);
+
+  // Handler for search changes (server-side)
+  const handlePrincipalsSearchChange = useCallback((search: string) => {
+    setPrincipalsSearch(search);
+    setPrincipalsSkip(0);
+    setPrincipalsFetched(false); // Trigger re-fetch
+  }, []);
+
+  // Handler for role filter changes (server-side)
+  const handlePrincipalsRoleFilterChange = useCallback((roles: string[]) => {
+    setPrincipalsRoleFilter(roles);
+    setPrincipalsSkip(0);
+    setPrincipalsFetched(false); // Trigger re-fetch
+  }, []);
+
+  // Handler for loading more principals (infinite scroll)
+  const handleLoadMorePrincipals = useCallback(() => {
+    if (!principalsLoadingMore && principalsHasMore) {
+      fetchPrincipals(false);
+    }
+  }, [fetchPrincipals, principalsLoadingMore, principalsHasMore]);
 
   // ===== Fetch Custom Groups =====
   const fetchCustomGroups = useCallback(async () => {
@@ -192,12 +237,19 @@ export const TenantSettingsPage: FC = () => {
   // ===== Load data based on active tab =====
   useEffect(() => {
     if (activeTab === 'iam' && !principalsFetched) {
-      fetchPrincipals();
+      fetchPrincipals(true);
     }
     if (activeTab === 'custom-groups' && !customGroupsFetched) {
       fetchCustomGroups();
     }
   }, [activeTab, principalsFetched, customGroupsFetched, fetchPrincipals, fetchCustomGroups]);
+
+  // Re-fetch principals when search or filters change
+  useEffect(() => {
+    if (activeTab === 'iam' && principalsFetched) {
+      fetchPrincipals(true);
+    }
+  }, [principalsSearch, principalsRoleFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ===== Tenant Settings Handlers =====
   const handleSaveTenant = tenantForm.onSubmit(async (values) => {
@@ -275,7 +327,8 @@ export const TenantSettingsPage: FC = () => {
         }
 
         setEditPrincipal(null);
-        await fetchPrincipals();
+        // Reset and refetch from the beginning
+        await fetchPrincipals(true);
       } catch {
         // Error handled by API client
       }
@@ -299,7 +352,8 @@ export const TenantSettingsPage: FC = () => {
             role: role,
           });
         }
-        await fetchPrincipals();
+        // Reset and refetch from the beginning
+        await fetchPrincipals(true);
       } catch {
         // Error handled by API client
       }
@@ -323,7 +377,8 @@ export const TenantSettingsPage: FC = () => {
           }
         }
         setAddPrincipalDialogOpen(false);
-        await fetchPrincipals();
+        // Reset and refetch from the beginning
+        await fetchPrincipals(true);
       } catch {
         // Error handled by API client
       }
@@ -347,7 +402,7 @@ export const TenantSettingsPage: FC = () => {
         );
       } catch {
         // Error handled by API client - revert optimistic update by refetching
-        await fetchPrincipals();
+        await fetchPrincipals(true);
       }
     },
     [apiClient, selectedTenant, fetchPrincipals]
@@ -491,12 +546,19 @@ export const TenantSettingsPage: FC = () => {
                 <ManageTenantAccessTable
                   principals={principals}
                   isLoading={principalsLoading}
+                  isLoadingMore={principalsLoadingMore}
                   hasFetched={principalsFetched}
+                  hasMore={principalsHasMore}
                   error={principalsError}
                   onManageAccess={handleManageAccess}
                   onDeletePrincipal={handleDeletePrincipal}
                   onAddPrincipal={() => setAddPrincipalDialogOpen(true)}
                   onStatusChange={handleStatusChange}
+                  onSearchChange={handlePrincipalsSearchChange}
+                  onRoleFilterChange={handlePrincipalsRoleFilterChange}
+                  onLoadMore={handleLoadMorePrincipals}
+                  searchValue={principalsSearch}
+                  roleFilterValue={principalsRoleFilter}
                 />
               </Stack>
             </Tabs.Panel>

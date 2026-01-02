@@ -612,3 +612,14 @@ export interface OrderParams {
   order_by?: string;
   order_direction?: 'asc' | 'desc';
 }
+
+/** Query parameters for tenant principals endpoint */
+export interface TenantPrincipalsQueryParams {
+  skip?: number;
+  limit?: number;
+  search?: string;
+  roles?: string; // comma-separated roles
+  is_active?: boolean;
+  order_by?: 'display_name';
+  order_direction?: 'asc' | 'desc';
+}

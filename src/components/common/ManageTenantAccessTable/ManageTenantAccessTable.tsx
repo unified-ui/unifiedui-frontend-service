@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   Box,
   TextInput,
@@ -97,8 +97,12 @@ interface ManageTenantAccessTableProps {
   principals: TenantPrincipalPermission[];
   /** Loading state */
   isLoading?: boolean;
+  /** Loading more state (for infinite scroll) */
+  isLoadingMore?: boolean;
   /** Indicates if initial data fetch is complete */
   hasFetched?: boolean;
+  /** Whether there are more items to load */
+  hasMore?: boolean;
   /** Error message */
   error?: string | null;
   /** Handler when clicking on a principal row to manage access */
@@ -109,6 +113,16 @@ interface ManageTenantAccessTableProps {
   onAddPrincipal: () => void;
   /** Handler to update principal's active status */
   onStatusChange?: (principalId: string, principalType: PrincipalTypeEnum, isActive: boolean) => Promise<void>;
+  /** Handler for search changes (server-side) */
+  onSearchChange?: (search: string) => void;
+  /** Handler for role filter changes (server-side) */
+  onRoleFilterChange?: (roles: string[]) => void;
+  /** Handler to load more items (infinite scroll) */
+  onLoadMore?: () => void;
+  /** Current search value (controlled) */
+  searchValue?: string;
+  /** Current role filter values (controlled) */
+  roleFilterValue?: string[];
 }
 
 const getPrincipalIcon = (type: PrincipalTypeEnum) => {
@@ -249,22 +263,32 @@ const RoleBadges: FC<{ roles: TenantPermissionEnum[] }> = ({ roles }) => {
 export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
   principals,
   isLoading = false,
+  isLoadingMore = false,
   hasFetched = true,
+  hasMore = false,
   error = null,
   onManageAccess,
   onDeletePrincipal,
   onAddPrincipal,
   onStatusChange,
+  onSearchChange,
+  onRoleFilterChange,
+  onLoadMore,
+  searchValue: controlledSearchValue,
+  roleFilterValue: controlledRoleFilterValue,
 }) => {
   // Get current user to prevent self-modification
   const { user: currentUser } = useIdentity();
 
-  // Search state
-  const [searchValue, setSearchValue] = useState('');
-  const [debouncedSearch] = useDebouncedValue(searchValue, 300);
+  // Search state (for internal debouncing)
+  const [internalSearchValue, setInternalSearchValue] = useState(controlledSearchValue || '');
+  const [debouncedSearch] = useDebouncedValue(internalSearchValue, 400);
   
   // Role filter state
-  const [roleFilter, setRoleFilter] = useState<string[]>([]);
+  const [internalRoleFilter, setInternalRoleFilter] = useState<string[]>(controlledRoleFilterValue || []);
+  
+  // Infinite scroll observer ref
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   
   // Delete confirmation dialog state
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -275,38 +299,50 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
   }>({ open: false, principalId: '', principalType: 'IDENTITY_USER', displayName: '' });
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Filter principals based on search and role filter
-  const filteredPrincipals = useMemo(() => {
-    let result = [...principals];
-
-    // Apply search filter
-    if (debouncedSearch) {
-      const query = debouncedSearch.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.displayName?.toLowerCase().includes(query) ||
-          p.mail?.toLowerCase().includes(query) ||
-          p.principalName?.toLowerCase().includes(query) ||
-          p.principalId.toLowerCase().includes(query)
-      );
+  // Sync internal search with controlled value
+  useEffect(() => {
+    if (controlledSearchValue !== undefined && controlledSearchValue !== internalSearchValue) {
+      setInternalSearchValue(controlledSearchValue);
     }
+  }, [controlledSearchValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Apply role filter
-    if (roleFilter.length > 0) {
-      result = result.filter((p) =>
-        roleFilter.some((role) => p.roles.includes(role as TenantPermissionEnum))
-      );
+  // Trigger server-side search when debounced value changes
+  useEffect(() => {
+    if (onSearchChange) {
+      onSearchChange(debouncedSearch);
     }
+  }, [debouncedSearch, onSearchChange]);
 
-    // Sort by displayName ASC (nulls/empty at the end)
-    result.sort((a, b) => {
-      const nameA = (a.displayName || a.principalId).toLowerCase();
-      const nameB = (b.displayName || b.principalId).toLowerCase();
-      return nameA.localeCompare(nameB);
-    });
+  // Handle search input change
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setInternalSearchValue(e.target.value);
+  }, []);
 
-    return result;
-  }, [principals, debouncedSearch, roleFilter]);
+  // Handle role filter change
+  const handleRoleFilterChange = useCallback((roles: string[]) => {
+    setInternalRoleFilter(roles);
+    if (onRoleFilterChange) {
+      onRoleFilterChange(roles);
+    }
+  }, [onRoleFilterChange]);
+
+  // Intersection observer for infinite scroll
+  useEffect(() => {
+    if (!loadMoreRef.current || !onLoadMore || !hasMore || isLoadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          onLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(loadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, onLoadMore]);
 
   // Handle delete click - open confirmation dialog
   const handleDeleteClick = useCallback((e: React.MouseEvent, principal: TenantPrincipalPermission) => {
@@ -336,7 +372,14 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
     onManageAccess(principal);
   }, [onManageAccess]);
 
-  if (isLoading) {
+  // Group role options for filter dropdown
+  const roleFilterOptions = useMemo(() => 
+    TENANT_ROLE_OPTIONS.map(r => ({ value: r.value, label: r.label })), 
+    []
+  );
+
+  // Show initial loading spinner (not for subsequent loads)
+  if (isLoading && !hasFetched) {
     return (
       <Center py="xl">
         <Loader size="lg" />
@@ -352,9 +395,6 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
     );
   }
 
-  // Group role options for filter dropdown
-  const roleFilterOptions = TENANT_ROLE_OPTIONS.map(r => ({ value: r.value, label: r.label }));
-
   return (
     <Stack gap="md" className={classes.container}>
       {/* Toolbar */}
@@ -363,15 +403,15 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
           <TextInput
             placeholder="Search by name or email..."
             leftSection={<IconSearch size={16} />}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
+            value={internalSearchValue}
+            onChange={handleSearchChange}
             className={classes.searchInput}
           />
           <MultiSelect
             placeholder="Filter by role"
             data={roleFilterOptions}
-            value={roleFilter}
-            onChange={setRoleFilter}
+            value={internalRoleFilter}
+            onChange={handleRoleFilterChange}
             clearable
             className={classes.roleFilter}
             searchable
@@ -385,10 +425,10 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
         </Button>
       </Group>
 
-      {/* Table */}
-      <ScrollArea>
+      {/* Scrollable Table Container */}
+      <ScrollArea.Autosize mah={500} className={classes.tableScrollArea}>
         <Table striped highlightOnHover>
-          <Table.Thead>
+          <Table.Thead className={classes.tableHeader}>
             <Table.Tr>
               <Table.Th style={{ width: '280px' }}>Principal</Table.Th>
               <Table.Th style={{ width: '120px' }}>Type</Table.Th>
@@ -398,13 +438,13 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {filteredPrincipals.length === 0 ? (
+            {principals.length === 0 && !isLoading ? (
               <Table.Tr>
                 <Table.Td colSpan={5}>
                   <Center py="xl">
                     <Text c="dimmed">
                       {hasFetched 
-                        ? (debouncedSearch || roleFilter.length > 0
+                        ? (internalSearchValue || internalRoleFilter.length > 0
                           ? 'No principals match your filters'
                           : 'No principals have access yet. Click "Add Principal" to get started.')
                         : ''}
@@ -413,7 +453,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
                 </Table.Td>
               </Table.Tr>
             ) : (
-              filteredPrincipals.map((principal) => {
+              principals.map((principal) => {
                 const isCurrentUser = currentUser?.id === principal.principalId;
 
                 return (
@@ -499,7 +539,18 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
             )}
           </Table.Tbody>
         </Table>
-      </ScrollArea>
+        
+        {/* Infinite scroll trigger element */}
+        {hasMore && (
+          <div ref={loadMoreRef} className={classes.loadMoreTrigger}>
+            {isLoadingMore && (
+              <Center py="sm">
+                <Loader size="sm" />
+              </Center>
+            )}
+          </div>
+        )}
+      </ScrollArea.Autosize>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDeleteDialog

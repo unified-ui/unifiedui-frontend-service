@@ -19,6 +19,7 @@ import type {
   CreateTenantRequest,
   UpdateTenantRequest,
   TenantPrincipalsResponse,
+  TenantPrincipalsQueryParams,
   SetPrincipalRequest,
   DeletePrincipalRequest,
   // Application Types
@@ -218,8 +219,9 @@ export class UnifiedUIAPIClient {
 
   // ========== Tenant Principals ==========
 
-  async getTenantPrincipals(tenantId: string): Promise<TenantPrincipalsResponse> {
-    return this.request<TenantPrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/principals`);
+  async getTenantPrincipals(tenantId: string, params?: TenantPrincipalsQueryParams): Promise<TenantPrincipalsResponse> {
+    const query = this.buildQueryString(params || {});
+    return this.request<TenantPrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/principals${query}`);
   }
 
   async setTenantPrincipal(tenantId: string, data: SetPrincipalRequest): Promise<void> {
