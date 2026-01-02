@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Stack,
   Tabs,
@@ -45,7 +46,14 @@ import type {
 } from '../../api/types';
 import classes from './TenantSettingsPage.module.css';
 
-type TabValue = 'settings' | 'access' | 'groups' | 'billing';
+type TabValue = 'settings' | 'iam' | 'custom-groups' | 'billing-and-licence';
+
+const TAB_VALUES: TabValue[] = ['settings', 'iam', 'custom-groups', 'billing-and-licence'];
+const DEFAULT_TAB: TabValue = 'settings';
+
+const isValidTab = (value: string | null): value is TabValue => {
+  return value !== null && TAB_VALUES.includes(value as TabValue);
+};
 
 interface TenantSettingsFormValues {
   name: string;
@@ -54,7 +62,20 @@ interface TenantSettingsFormValues {
 
 export const TenantSettingsPage: FC = () => {
   const { apiClient, selectedTenant, refreshIdentity } = useIdentity();
-  const [activeTab, setActiveTab] = useState<TabValue>('settings');
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Read initial tab from URL, default to 'settings'
+  const tabFromUrl = searchParams.get('tab');
+  const initialTab = isValidTab(tabFromUrl) ? tabFromUrl : DEFAULT_TAB;
+  const [activeTab, setActiveTab] = useState<TabValue>(initialTab);
+
+  // Update URL when tab changes
+  const handleTabChange = useCallback((value: string | null) => {
+    if (value && isValidTab(value)) {
+      setActiveTab(value);
+      setSearchParams({ tab: value }, { replace: true });
+    }
+  }, [setSearchParams]);
 
   // ===== Tenant Settings State =====
   const [isSavingTenant, setIsSavingTenant] = useState(false);
@@ -170,10 +191,10 @@ export const TenantSettingsPage: FC = () => {
 
   // ===== Load data based on active tab =====
   useEffect(() => {
-    if (activeTab === 'access' && !principalsFetched) {
+    if (activeTab === 'iam' && !principalsFetched) {
       fetchPrincipals();
     }
-    if (activeTab === 'groups' && !customGroupsFetched) {
+    if (activeTab === 'custom-groups' && !customGroupsFetched) {
       fetchCustomGroups();
     }
   }, [activeTab, principalsFetched, customGroupsFetched, fetchPrincipals, fetchCustomGroups]);
@@ -324,7 +345,7 @@ export const TenantSettingsPage: FC = () => {
         <Stack gap="lg">
           <Tabs
             value={activeTab}
-            onChange={(value) => setActiveTab(value as TabValue)}
+            onChange={handleTabChange}
             classNames={{
               root: classes.tabs,
               list: classes.tabsList,
@@ -336,13 +357,13 @@ export const TenantSettingsPage: FC = () => {
               <Tabs.Tab value="settings" leftSection={<IconSettings size={20} />}>
                 Tenant Settings
               </Tabs.Tab>
-              <Tabs.Tab value="access" leftSection={<IconUsers size={20} />}>
+              <Tabs.Tab value="iam" leftSection={<IconUsers size={20} />}>
                 Manage Access
               </Tabs.Tab>
-              <Tabs.Tab value="groups" leftSection={<IconUsersGroup size={20} />}>
+              <Tabs.Tab value="custom-groups" leftSection={<IconUsersGroup size={20} />}>
                 Custom Groups
               </Tabs.Tab>
-              <Tabs.Tab value="billing" leftSection={<IconCreditCard size={20} />}>
+              <Tabs.Tab value="billing-and-licence" leftSection={<IconCreditCard size={20} />}>
                 Billing & Licence
               </Tabs.Tab>
             </Tabs.List>
@@ -402,7 +423,7 @@ export const TenantSettingsPage: FC = () => {
             </Tabs.Panel>
 
             {/* Access Management Tab */}
-            <Tabs.Panel value="access">
+            <Tabs.Panel value="iam">
               <Stack gap="md">
                 <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
                   <Text size="sm">
@@ -424,7 +445,7 @@ export const TenantSettingsPage: FC = () => {
             </Tabs.Panel>
 
             {/* Custom Groups Tab */}
-            <Tabs.Panel value="groups">
+            <Tabs.Panel value="custom-groups">
               <Stack gap="md">
                 <Group justify="space-between">
                   <Text size="sm" c="dimmed">
@@ -501,7 +522,7 @@ export const TenantSettingsPage: FC = () => {
             </Tabs.Panel>
 
             {/* Billing Tab */}
-            <Tabs.Panel value="billing">
+            <Tabs.Panel value="billing-and-licence">
               <Stack gap="lg">
                 <Paper p="lg" withBorder>
                   <Stack gap="md">
