@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Stack,
@@ -21,6 +21,7 @@ import {
   ScrollArea,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useDebouncedValue } from '@mantine/hooks';
 import {
   IconSettings,
   IconUsers,
@@ -123,18 +124,25 @@ export const TenantSettingsPage: FC = () => {
   // ===== Custom Groups State =====
   const [customGroups, setCustomGroups] = useState<CustomGroupResponse[]>([]);
   const [customGroupsLoading, setCustomGroupsLoading] = useState(false);
+  const [customGroupsLoadingMore, setCustomGroupsLoadingMore] = useState(false);
   const [customGroupsError, setCustomGroupsError] = useState<string | null>(null);
   const [customGroupsFetched, setCustomGroupsFetched] = useState(false);
+  const [customGroupsHasMore, setCustomGroupsHasMore] = useState(true);
+  const [customGroupsSkip, setCustomGroupsSkip] = useState(0);
   const [createGroupDialogOpen, setCreateGroupDialogOpen] = useState(false);
   const [editGroupId, setEditGroupId] = useState<string | null>(null);
   const [editGroupInitialTab, setEditGroupInitialTab] = useState<'members' | 'details'>('details');
   const [customGroupsSearch, setCustomGroupsSearch] = useState('');
+  const [debouncedCustomGroupsSearch] = useDebouncedValue(customGroupsSearch, 400);
   const [deleteGroupDialog, setDeleteGroupDialog] = useState<{
     open: boolean;
     id: string;
     name: string;
   }>({ open: false, id: '', name: '' });
   const [isDeletingGroup, setIsDeletingGroup] = useState(false);
+  
+  const CUSTOM_GROUPS_PAGE_SIZE = 50;
+  const customGroupsLoadMoreRef = useRef<HTMLDivElement>(null);
 
   // ===== Load Tenant Details =====
   useEffect(() => {
@@ -230,21 +238,73 @@ export const TenantSettingsPage: FC = () => {
   }, [fetchPrincipals, principalsLoadingMore, principalsHasMore]);
 
   // ===== Fetch Custom Groups =====
-  const fetchCustomGroups = useCallback(async () => {
+  const fetchCustomGroups = useCallback(async (reset = false) => {
     if (!apiClient || !selectedTenant) return;
 
-    setCustomGroupsLoading(true);
+    const isInitialFetch = reset || !customGroupsFetched;
+    if (isInitialFetch) {
+      setCustomGroupsLoading(true);
+    } else {
+      setCustomGroupsLoadingMore(true);
+    }
     setCustomGroupsError(null);
+
+    const skip = reset ? 0 : customGroupsSkip;
+
     try {
-      const groups = await apiClient.listCustomGroups(selectedTenant.id, { limit: 999 });
-      setCustomGroups(groups);
+      const groups = await apiClient.listCustomGroups(selectedTenant.id, {
+        skip,
+        limit: CUSTOM_GROUPS_PAGE_SIZE,
+        name: debouncedCustomGroupsSearch || undefined,
+      });
+
+      if (reset) {
+        setCustomGroups(groups);
+        setCustomGroupsSkip(CUSTOM_GROUPS_PAGE_SIZE);
+      } else {
+        // Append new groups, avoiding duplicates
+        setCustomGroups((prev) => {
+          const existingIds = new Set(prev.map(g => g.id));
+          const uniqueNewGroups = groups.filter(g => !existingIds.has(g.id));
+          return [...prev, ...uniqueNewGroups];
+        });
+        setCustomGroupsSkip((prev) => prev + CUSTOM_GROUPS_PAGE_SIZE);
+      }
+
+      setCustomGroupsHasMore(groups.length === CUSTOM_GROUPS_PAGE_SIZE);
       setCustomGroupsFetched(true);
     } catch {
       setCustomGroupsError('Failed to load custom groups');
     } finally {
       setCustomGroupsLoading(false);
+      setCustomGroupsLoadingMore(false);
     }
-  }, [apiClient, selectedTenant]);
+  }, [apiClient, selectedTenant, customGroupsFetched, customGroupsSkip, debouncedCustomGroupsSearch]);
+
+  // Handler for loading more custom groups (infinite scroll)
+  const handleLoadMoreCustomGroups = useCallback(() => {
+    if (!customGroupsLoadingMore && customGroupsHasMore) {
+      fetchCustomGroups(false);
+    }
+  }, [fetchCustomGroups, customGroupsLoadingMore, customGroupsHasMore]);
+
+  // Intersection observer for infinite scroll (custom groups)
+  useEffect(() => {
+    if (!customGroupsLoadMoreRef.current || !handleLoadMoreCustomGroups || !customGroupsHasMore || customGroupsLoadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && customGroupsHasMore && !customGroupsLoadingMore) {
+          handleLoadMoreCustomGroups();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(customGroupsLoadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [customGroupsHasMore, customGroupsLoadingMore, handleLoadMoreCustomGroups]);
 
   // ===== Load data based on active tab =====
   useEffect(() => {
@@ -262,6 +322,13 @@ export const TenantSettingsPage: FC = () => {
       fetchPrincipals(true);
     }
   }, [principalsSearch, principalsRoleFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-fetch custom groups when search changes
+  useEffect(() => {
+    if (activeTab === 'custom-groups' && customGroupsFetched) {
+      fetchCustomGroups(true);
+    }
+  }, [debouncedCustomGroupsSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ===== Tenant Settings Handlers =====
   const handleSaveTenant = tenantForm.onSubmit(async (values) => {
@@ -446,17 +513,6 @@ export const TenantSettingsPage: FC = () => {
     setEditGroupInitialTab('details');
   };
 
-  // Filter custom groups by search
-  const filteredCustomGroups = useMemo(() => {
-    if (!customGroupsSearch.trim()) return customGroups;
-    const searchLower = customGroupsSearch.toLowerCase();
-    return customGroups.filter(
-      group =>
-        group.name.toLowerCase().includes(searchLower) ||
-        (group.description && group.description.toLowerCase().includes(searchLower))
-    );
-  }, [customGroups, customGroupsSearch]);
-
   // Get existing principal IDs for AddPrincipalDialog
   const existingPrincipalIds = useMemo(
     () => principals.map((p) => p.principalId),
@@ -624,12 +680,8 @@ export const TenantSettingsPage: FC = () => {
                 </Group>
 
                 {/* Table */}
-                <Paper radius="md" className={classes.customGroupsTableWrapper}>
-                  <ScrollArea.Autosize
-                    mah="calc(100vh - 380px)"
-                    type="auto"
-                  >
-                    <Table highlightOnHover withRowBorders={false}>
+                <ScrollArea.Autosize className={classes.customGroupsTableScrollArea}>
+                    <Table striped highlightOnHover>
                       <Table.Thead className={classes.customGroupsTableHeader}>
                         <Table.Tr>
                           <Table.Th>Name</Table.Th>
@@ -652,7 +704,7 @@ export const TenantSettingsPage: FC = () => {
                               <Alert color="red">{customGroupsError}</Alert>
                             </Table.Td>
                           </Table.Tr>
-                        ) : filteredCustomGroups.length === 0 ? (
+                        ) : customGroups.length === 0 ? (
                           <Table.Tr>
                             <Table.Td colSpan={3}>
                               <Center py="xl">
@@ -665,7 +717,7 @@ export const TenantSettingsPage: FC = () => {
                             </Table.Td>
                           </Table.Tr>
                         ) : (
-                          filteredCustomGroups.map((group) => (
+                          customGroups.map((group) => (
                             <Table.Tr
                               key={group.id}
                               className={classes.customGroupRow}
@@ -739,8 +791,18 @@ export const TenantSettingsPage: FC = () => {
                         )}
                       </Table.Tbody>
                     </Table>
-                  </ScrollArea.Autosize>
-                </Paper>
+                    
+                    {/* Infinite scroll trigger element */}
+                    {customGroupsHasMore && (
+                      <div ref={customGroupsLoadMoreRef} className={classes.loadMoreTrigger}>
+                        {customGroupsLoadingMore && (
+                          <Center py="sm">
+                            <Loader size="sm" />
+                          </Center>
+                        )}
+                      </div>
+                    )}
+                </ScrollArea.Autosize>
               </Stack>
             </Tabs.Panel>
 
@@ -831,7 +893,7 @@ export const TenantSettingsPage: FC = () => {
       <CreateCustomGroupDialog
         opened={createGroupDialogOpen}
         onClose={() => setCreateGroupDialogOpen(false)}
-        onSuccess={() => fetchCustomGroups()}
+        onSuccess={() => fetchCustomGroups(true)}
       />
 
       {/* Edit Custom Group Dialog */}

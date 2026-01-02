@@ -78,6 +78,7 @@ export const CreateCustomGroupDialog: FC<CreateCustomGroupDialogProps> = ({
             label="Name"
             placeholder="Enter group name"
             required
+            data-autofocus
             {...form.getInputProps('name')}
           />
           <Textarea

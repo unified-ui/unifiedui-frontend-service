@@ -31,14 +31,16 @@
 }
 
 /* Custom Groups Table Styles */
-.customGroupsTableWrapper {
-  overflow: hidden;
+.customGroupsTableScrollArea {
+  /* Dynamic height: fills remaining viewport space with bottom padding */
+  max-height: calc(100vh - 380px);
+  min-height: 200px;
 }
 
 .customGroupsTableHeader {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 1;
   background-color: var(--bg-app);
 }
 
@@ -61,9 +63,8 @@
 
 .customGroupRow {
   cursor: pointer;
-  transition: background-color 0.15s ease;
 }
 
-.customGroupRow:hover {
-  background-color: var(--mantine-color-default-hover);
+.loadMoreTrigger {
+  min-height: 40px;
 }
