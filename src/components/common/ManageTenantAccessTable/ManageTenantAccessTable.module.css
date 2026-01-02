@@ -30,15 +30,15 @@
 }
 
 .tableScrollArea {
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
+  /* Dynamic height: fills remaining viewport space with bottom padding */
+  max-height: calc(100vh - 380px);
+  min-height: 200px;
 }
 
 .tableHeader {
   position: sticky;
   top: 0;
   z-index: 1;
-  background-color: var(--bg-paper);
 }
 
 .loadMoreTrigger {

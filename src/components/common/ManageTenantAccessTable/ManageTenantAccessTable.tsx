@@ -426,7 +426,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
       </Group>
 
       {/* Scrollable Table Container */}
-      <ScrollArea.Autosize mah={500} className={classes.tableScrollArea}>
+      <ScrollArea.Autosize className={classes.tableScrollArea}>
         <Table striped highlightOnHover>
           <Table.Thead className={classes.tableHeader}>
             <Table.Tr>
