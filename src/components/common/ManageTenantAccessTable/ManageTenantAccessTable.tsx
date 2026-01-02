@@ -378,26 +378,16 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
     []
   );
 
-  // Show initial loading spinner (not for subsequent loads)
-  if (isLoading && !hasFetched) {
-    return (
-      <Center py="xl">
-        <Loader size="lg" />
-      </Center>
-    );
-  }
-
-  if (error) {
-    return (
-      <Center py="xl">
-        <Text c="red">{error}</Text>
-      </Center>
-    );
-  }
+  // Determine what to show in table body
+  const showInitialLoading = isLoading && !hasFetched;
+  const showFilterLoading = isLoading && hasFetched;
+  const showError = !!error;
+  const showEmpty = !isLoading && principals.length === 0;
+  const showData = !isLoading && principals.length > 0;
 
   return (
     <Stack gap="md" className={classes.container}>
-      {/* Toolbar */}
+      {/* Toolbar - always visible */}
       <Group justify="space-between" wrap="nowrap">
         <Group gap="sm" wrap="nowrap" style={{ flex: 1 }}>
           <TextInput
@@ -438,7 +428,28 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {principals.length === 0 && !isLoading ? (
+            {/* Show loading spinner (initial or filter loading) */}
+            {(showInitialLoading || showFilterLoading) && (
+              <Table.Tr>
+                <Table.Td colSpan={5}>
+                  <Center py="xl">
+                    <Loader size="md" />
+                  </Center>
+                </Table.Td>
+              </Table.Tr>
+            )}
+            {/* Show error */}
+            {showError && (
+              <Table.Tr>
+                <Table.Td colSpan={5}>
+                  <Center py="xl">
+                    <Text c="red">{error}</Text>
+                  </Center>
+                </Table.Td>
+              </Table.Tr>
+            )}
+            {/* Show empty state */}
+            {showEmpty && (
               <Table.Tr>
                 <Table.Td colSpan={5}>
                   <Center py="xl">
@@ -452,8 +463,9 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
                   </Center>
                 </Table.Td>
               </Table.Tr>
-            ) : (
-              principals.map((principal) => {
+            )}
+            {/* Show data */}
+            {showData && principals.map((principal) => {
                 const isCurrentUser = currentUser?.id === principal.principalId;
 
                 return (
@@ -535,8 +547,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
                     </Table.Td>
                   </Table.Tr>
                 );
-              })
-            )}
+              })}
           </Table.Tbody>
         </Table>
         

@@ -47,6 +47,10 @@
     - context leeren
         - zB sidebardatalist sind noch die bereits gefetcheten sachen dabei
 
+- Rollen im FE beachten
+    - CREATOR, ADMIN
+    - TENANT manages acces etc etc
+
 - language-support einbauen
     - erstmal alles in englisch
     - als zweites: über url /de-de /en-us übersetzen (default -> /en-us)
