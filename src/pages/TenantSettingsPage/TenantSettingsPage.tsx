@@ -17,6 +17,8 @@ import {
   Center,
   Table,
   ActionIcon,
+  Menu,
+  ScrollArea,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import {
@@ -27,6 +29,10 @@ import {
   IconTrash,
   IconInfoCircle,
   IconEdit,
+  IconSearch,
+  IconDots,
+  IconUserPlus,
+  IconShield,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { PageContainer, ConfirmDeleteDialog, EditRolesDialog } from '../../components/common';
@@ -122,6 +128,8 @@ export const TenantSettingsPage: FC = () => {
   const [customGroupsFetched, setCustomGroupsFetched] = useState(false);
   const [createGroupDialogOpen, setCreateGroupDialogOpen] = useState(false);
   const [editGroupId, setEditGroupId] = useState<string | null>(null);
+  const [editGroupInitialTab, setEditGroupInitialTab] = useState<'members' | 'details' | 'access'>('details');
+  const [customGroupsSearch, setCustomGroupsSearch] = useState('');
   const [deleteGroupDialog, setDeleteGroupDialog] = useState<{
     open: boolean;
     id: string;
@@ -429,6 +437,27 @@ export const TenantSettingsPage: FC = () => {
     }
   };
 
+  const handleOpenEditGroup = (groupId: string, tab: 'members' | 'details' | 'access' = 'members') => {
+    setEditGroupInitialTab(tab);
+    setEditGroupId(groupId);
+  };
+
+  const handleCloseEditGroup = () => {
+    setEditGroupId(null);
+    setEditGroupInitialTab('details');
+  };
+
+  // Filter custom groups by search
+  const filteredCustomGroups = useMemo(() => {
+    if (!customGroupsSearch.trim()) return customGroups;
+    const searchLower = customGroupsSearch.toLowerCase();
+    return customGroups.filter(
+      group =>
+        group.name.toLowerCase().includes(searchLower) ||
+        (group.description && group.description.toLowerCase().includes(searchLower))
+    );
+  }, [customGroups, customGroupsSearch]);
+
   // Get existing principal IDs for AddPrincipalDialog
   const existingPrincipalIds = useMemo(
     () => principals.map((p) => p.principalId),
@@ -571,77 +600,157 @@ export const TenantSettingsPage: FC = () => {
             {/* Custom Groups Tab */}
             <Tabs.Panel value="custom-groups">
               <Stack gap="md">
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
+                <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+                  <Text size="sm">
                     Custom groups allow you to organize users and identity groups for easier
-                    permission management across your tenant resources.
+                    permission management across your tenant resources. Click on a group to manage its members.
                   </Text>
-                  <Button onClick={() => setCreateGroupDialogOpen(true)}>
+                </Alert>
+
+                {/* Toolbar */}
+                <Group justify="space-between">
+                  <TextInput
+                    placeholder="Search groups..."
+                    leftSection={<IconSearch size={16} />}
+                    value={customGroupsSearch}
+                    onChange={(e) => setCustomGroupsSearch(e.currentTarget.value)}
+                    style={{ flex: 1, maxWidth: 350 }}
+                  />
+                  <Button
+                    leftSection={<IconUsersGroup size={16} />}
+                    onClick={() => setCreateGroupDialogOpen(true)}
+                  >
                     Create Group
                   </Button>
                 </Group>
 
-                {customGroupsLoading && !customGroupsFetched ? (
-                  <Center py="xl">
-                    <Loader size="lg" />
-                  </Center>
-                ) : customGroupsError ? (
-                  <Alert color="red">{customGroupsError}</Alert>
-                ) : customGroups.length === 0 ? (
-                  <Center py="xl">
-                    <Text c="dimmed">
-                      No custom groups yet. Create one to get started.
-                    </Text>
-                  </Center>
-                ) : (
-                  <Table striped highlightOnHover>
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th>Name</Table.Th>
-                        <Table.Th>Description</Table.Th>
-                        <Table.Th style={{ width: 100 }}>Actions</Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                      {customGroups.map((group) => (
-                        <Table.Tr key={group.id}>
-                          <Table.Td>
-                            <Text fw={500}>{group.name}</Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Text size="sm" c="dimmed" lineClamp={1}>
-                              {group.description || '-'}
-                            </Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Group gap="xs">
-                              <ActionIcon
-                                variant="subtle"
-                                color="blue"
-                                onClick={() => setEditGroupId(group.id)}
-                              >
-                                <IconEdit size={16} />
-                              </ActionIcon>
-                              <ActionIcon
-                                variant="subtle"
-                                color="red"
-                                onClick={() =>
-                                  setDeleteGroupDialog({
-                                    open: true,
-                                    id: group.id,
-                                    name: group.name,
-                                  })
-                                }
-                              >
-                                <IconTrash size={16} />
-                              </ActionIcon>
-                            </Group>
-                          </Table.Td>
+                {/* Table */}
+                <Paper radius="md" className={classes.customGroupsTableWrapper}>
+                  <ScrollArea.Autosize
+                    mah="calc(100vh - 380px)"
+                    type="auto"
+                  >
+                    <Table highlightOnHover withRowBorders={false}>
+                      <Table.Thead className={classes.customGroupsTableHeader}>
+                        <Table.Tr>
+                          <Table.Th>Name</Table.Th>
+                          <Table.Th>Description</Table.Th>
+                          <Table.Th style={{ width: 60 }}></Table.Th>
                         </Table.Tr>
-                      ))}
-                    </Table.Tbody>
-                  </Table>
-                )}
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {customGroupsLoading && !customGroupsFetched ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={3}>
+                              <Center py="xl">
+                                <Loader size="lg" />
+                              </Center>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : customGroupsError ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={3}>
+                              <Alert color="red">{customGroupsError}</Alert>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : filteredCustomGroups.length === 0 ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={3}>
+                              <Center py="xl">
+                                <Text c="dimmed">
+                                  {customGroupsSearch
+                                    ? 'No custom groups match your search.'
+                                    : 'No custom groups yet. Create one to get started.'}
+                                </Text>
+                              </Center>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : (
+                          filteredCustomGroups.map((group) => (
+                            <Table.Tr
+                              key={group.id}
+                              className={classes.customGroupRow}
+                              onClick={() => handleOpenEditGroup(group.id, 'members')}
+                            >
+                              <Table.Td>
+                                <Group gap="sm">
+                                  <div className={classes.groupIcon}>
+                                    <IconUsersGroup size={16} />
+                                  </div>
+                                  <Text fw={500}>{group.name}</Text>
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Text size="sm" c="dimmed" lineClamp={1}>
+                                  {group.description || '-'}
+                                </Text>
+                              </Table.Td>
+                              <Table.Td>
+                                <Group gap={0} justify="flex-end">
+                                  <Menu position="bottom-end" withinPortal shadow="md">
+                                    <Menu.Target>
+                                      <ActionIcon
+                                        variant="subtle"
+                                        color="gray"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <IconDots size={16} />
+                                      </ActionIcon>
+                                    </Menu.Target>
+                                    <Menu.Dropdown>
+                                      <Menu.Item
+                                        leftSection={<IconUserPlus size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenEditGroup(group.id, 'members');
+                                        }}
+                                      >
+                                        Manage Members
+                                      </Menu.Item>
+                                      <Menu.Item
+                                        leftSection={<IconEdit size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenEditGroup(group.id, 'details');
+                                        }}
+                                      >
+                                        Edit Details
+                                      </Menu.Item>
+                                      <Menu.Item
+                                        leftSection={<IconShield size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenEditGroup(group.id, 'access');
+                                        }}
+                                      >
+                                        Manage Access
+                                      </Menu.Item>
+                                      <Menu.Divider />
+                                      <Menu.Item
+                                        color="red"
+                                        leftSection={<IconTrash size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setDeleteGroupDialog({
+                                            open: true,
+                                            id: group.id,
+                                            name: group.name,
+                                          });
+                                        }}
+                                      >
+                                        Delete
+                                      </Menu.Item>
+                                    </Menu.Dropdown>
+                                  </Menu>
+                                </Group>
+                              </Table.Td>
+                            </Table.Tr>
+                          ))
+                        )}
+                      </Table.Tbody>
+                    </Table>
+                  </ScrollArea.Autosize>
+                </Paper>
               </Stack>
             </Tabs.Panel>
 
@@ -738,8 +847,9 @@ export const TenantSettingsPage: FC = () => {
       {/* Edit Custom Group Dialog */}
       <EditCustomGroupDialog
         opened={!!editGroupId}
-        onClose={() => setEditGroupId(null)}
+        onClose={handleCloseEditGroup}
         customGroupId={editGroupId}
+        initialTab={editGroupInitialTab}
         onSuccess={() => fetchCustomGroups()}
       />
 

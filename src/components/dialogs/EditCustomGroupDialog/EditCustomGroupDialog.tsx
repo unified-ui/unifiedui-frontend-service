@@ -8,13 +8,19 @@ import {
   Textarea,
   Button,
   Group,
-  Loader,
-  Center,
   Text,
   Alert,
+  Box,
+  LoadingOverlay,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconInfoCircle } from '@tabler/icons-react';
+import {
+  IconInfoCircle,
+  IconUsersGroup,
+  IconUsers,
+  IconShieldLock,
+  IconAlertCircle,
+} from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { ManageAccessTable } from '../../common/ManageAccessTable';
 import type { PrincipalPermission } from '../../common/ManageAccessTable';
@@ -31,6 +37,7 @@ interface EditCustomGroupDialogProps {
   opened: boolean;
   onClose: () => void;
   customGroupId: string | null;
+  initialTab?: 'members' | 'details' | 'access';
   onSuccess?: () => void;
 }
 
@@ -39,22 +46,23 @@ interface FormValues {
   description: string;
 }
 
-type TabValue = 'details' | 'access';
+type TabValue = 'members' | 'details' | 'access';
 
 export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
   opened,
   onClose,
   customGroupId,
+  initialTab = 'members',
   onSuccess,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
-  const [activeTab, setActiveTab] = useState<TabValue>('details');
+  const [activeTab, setActiveTab] = useState<TabValue>(initialTab);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customGroup, setCustomGroup] = useState<CustomGroupResponse | null>(null);
 
-  // Principals state
+  // Principals state (for both members and access tabs - they show the same data)
   const [principals, setPrincipals] = useState<PrincipalPermission[]>([]);
   const [principalsLoading, setPrincipalsLoading] = useState(false);
   const [principalsError, setPrincipalsError] = useState<string | null>(null);
@@ -100,7 +108,8 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [apiClient, selectedTenant, customGroupId, form]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiClient, selectedTenant, customGroupId]);
 
   // Fetch principals for the custom group
   const fetchPrincipals = useCallback(async () => {
@@ -132,16 +141,16 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
   // Load data when dialog opens
   useEffect(() => {
     if (opened && customGroupId) {
-      setActiveTab('details');
+      setActiveTab(initialTab);
       fetchCustomGroup();
       setPrincipalsFetched(false);
       setPrincipals([]);
     }
-  }, [opened, customGroupId, fetchCustomGroup]);
+  }, [opened, customGroupId, initialTab, fetchCustomGroup]);
 
-  // Fetch principals when switching to access tab
+  // Fetch principals when switching to members or access tab
   useEffect(() => {
-    if (activeTab === 'access' && !principalsFetched && customGroupId) {
+    if ((activeTab === 'members' || activeTab === 'access') && !principalsFetched && customGroupId) {
       fetchPrincipals();
     }
   }, [activeTab, principalsFetched, customGroupId, fetchPrincipals]);
@@ -209,11 +218,13 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
 
   // Handle add principals
   const handleAddPrincipals = useCallback(
-    async (selectedPrincipals: SelectedPrincipal[], role: PermissionActionEnum) => {
+    async (selectedPrincipals: SelectedPrincipal[], roles: string[]) => {
       if (!apiClient || !selectedTenant || !customGroupId) return;
 
       try {
         for (const principal of selectedPrincipals) {
+          // For custom groups, use the first role (single role per principal)
+          const role = roles[0] as PermissionActionEnum || PermissionActionEnum.READ;
           await apiClient.setCustomGroupPrincipal(selectedTenant.id, customGroupId, {
             principal_id: principal.id,
             principal_type: principal.type,
@@ -254,29 +265,112 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
       <Modal
         opened={opened}
         onClose={handleClose}
-        title={customGroup ? `Edit: ${customGroup.name}` : 'Edit Custom Group'}
-        size="xl"
-        className={classes.modal}
+        title={
+          <Group gap="sm">
+            <Box className={classes.titleIcon}>
+              <IconUsersGroup size={20} />
+            </Box>
+            <Stack gap={2}>
+              <Text fw={600} size="lg">
+                {customGroup?.name || 'Custom Group'}
+              </Text>
+              <Text size="xs" c="dimmed" lineClamp={1}>
+                {customGroup?.description || 'No description'}
+              </Text>
+            </Stack>
+          </Group>
+        }
+        size={1100}
+        centered
+        classNames={{
+          content: classes.modalContent,
+          header: classes.modalHeader,
+          body: classes.modalBody,
+        }}
       >
-        {isLoading ? (
-          <Center py="xl">
-            <Loader size="lg" />
-          </Center>
-        ) : error ? (
-          <Alert color="red" title="Error">
+        <LoadingOverlay visible={isLoading} zIndex={1000} overlayProps={{ blur: 2 }} />
+
+        {error && (
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            color="red"
+            mb="md"
+            onClose={() => setError(null)}
+            withCloseButton
+          >
             {error}
           </Alert>
-        ) : (
+        )}
+
+        {!isLoading && (
           <Stack gap="md">
             {/* Tab Navigation */}
-            <SegmentedControl
-              value={activeTab}
-              onChange={(value) => setActiveTab(value as TabValue)}
-              data={[
-                { label: 'Details', value: 'details' },
-                { label: 'Manage Access', value: 'access' },
-              ]}
-            />
+            <Box className={classes.tabContainer}>
+              <SegmentedControl
+                value={activeTab}
+                onChange={(value) => setActiveTab(value as TabValue)}
+                data={[
+                  {
+                    value: 'members',
+                    label: (
+                      <Group gap="xs" wrap="nowrap">
+                        <IconUsers size={16} />
+                        <span>Manage Members</span>
+                      </Group>
+                    ),
+                  },
+                  {
+                    value: 'details',
+                    label: (
+                      <Group gap="xs" wrap="nowrap">
+                        <IconInfoCircle size={16} />
+                        <span>Details</span>
+                      </Group>
+                    ),
+                  },
+                  {
+                    value: 'access',
+                    label: (
+                      <Group gap="xs" wrap="nowrap">
+                        <IconShieldLock size={16} />
+                        <span>Manage Access</span>
+                      </Group>
+                    ),
+                  },
+                ]}
+                fullWidth
+                className={classes.segmentedControl}
+              />
+            </Box>
+
+            {/* Manage Members Tab */}
+            {activeTab === 'members' && (
+              <Stack gap="md">
+                <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+                  <Text size="sm">
+                    Members of this group will inherit permissions when this group is added to resources.
+                    Add users or identity groups as members.
+                  </Text>
+                </Alert>
+
+                <ManageAccessTable
+                  principals={principals}
+                  isLoading={principalsLoading}
+                  hasFetched={principalsFetched}
+                  error={principalsError}
+                  onRoleChange={handleRoleChange}
+                  onDeletePrincipal={handleDeletePrincipal}
+                  onAddPrincipal={() => setAddPrincipalDialogOpen(true)}
+                  addButtonLabel="Add Member"
+                />
+
+                <Group justify="flex-end" mt="md">
+                  <Button variant="default" onClick={handleClose}>
+                    Close
+                  </Button>
+                </Group>
+              </Stack>
+            )}
 
             {/* Details Tab */}
             {activeTab === 'details' && (
@@ -315,7 +409,7 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
               <Stack gap="md">
                 <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
                   <Text size="sm">
-                    Manage who can view and modify this custom group. Principals with access can see the group and use it for permissions.
+                    Manage who can view and modify this custom group itself. Principals with access can edit the group and manage its members.
                   </Text>
                 </Alert>
 

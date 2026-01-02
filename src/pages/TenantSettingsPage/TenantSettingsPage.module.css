@@ -29,3 +29,41 @@
 [data-mantine-color-scheme='dark'] .dangerZone {
   border-color: var(--color-error-700);
 }
+
+/* Custom Groups Table Styles */
+.customGroupsTableWrapper {
+  overflow: hidden;
+}
+
+.customGroupsTableHeader {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--bg-app);
+}
+
+.groupIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-600);
+  flex-shrink: 0;
+}
+
+[data-mantine-color-scheme='dark'] .groupIcon {
+  background-color: var(--color-gray-800);
+  color: var(--color-gray-400);
+}
+
+.customGroupRow {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.customGroupRow:hover {
+  background-color: var(--mantine-color-default-hover);
+}

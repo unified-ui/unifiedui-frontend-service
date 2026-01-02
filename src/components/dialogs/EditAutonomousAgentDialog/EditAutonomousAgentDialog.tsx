@@ -21,7 +21,8 @@ import { IconAlertCircle, IconRobot, IconInfoCircle, IconShieldLock } from '@tab
 import { useIdentity } from '../../../contexts';
 import { useEntityPermissions } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
-import type { AutonomousAgentResponse, PermissionActionEnum, PrincipalTypeEnum } from '../../../api/types';
+import type { AutonomousAgentResponse, PrincipalTypeEnum } from '../../../api/types';
+import { PermissionActionEnum } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
 import classes from './EditAutonomousAgentDialog.module.css';
 
@@ -181,7 +182,8 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
 
   // Handle adding principals with callback
   const handleAddPrincipalsWithRole = useCallback(
-    async (selectedPrincipals: SelectedPrincipal[], role: PermissionActionEnum) => {
+    async (selectedPrincipals: SelectedPrincipal[], roles: string[]) => {
+      const role = roles[0] as PermissionActionEnum || PermissionActionEnum.READ;
       await handleAddPrincipals(selectedPrincipals, role);
     },
     [handleAddPrincipals]

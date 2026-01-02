@@ -22,7 +22,8 @@ import { IconAlertCircle, IconBrandWechat, IconInfoCircle, IconShieldLock } from
 import { useIdentity } from '../../../contexts';
 import { useEntityPermissions } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
-import type { ChatWidgetResponse, ChatWidgetTypeEnum, PermissionActionEnum, PrincipalTypeEnum } from '../../../api/types';
+import type { ChatWidgetResponse, ChatWidgetTypeEnum, PrincipalTypeEnum } from '../../../api/types';
+import { PermissionActionEnum } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
 import classes from './EditChatWidgetDialog.module.css';
 
@@ -191,7 +192,8 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
 
   // Handle adding principals with callback
   const handleAddPrincipalsWithRole = useCallback(
-    async (selectedPrincipals: SelectedPrincipal[], role: PermissionActionEnum) => {
+    async (selectedPrincipals: SelectedPrincipal[], roles: string[]) => {
+      const role = roles[0] as PermissionActionEnum || PermissionActionEnum.READ;
       await handleAddPrincipals(selectedPrincipals, role);
     },
     [handleAddPrincipals]

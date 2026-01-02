@@ -53,6 +53,8 @@ interface ManageAccessTableProps {
   onAddPrincipal: () => void;
   /** Entity name for labels (e.g., "application", "credential") */
   entityName?: string;
+  /** Custom label for the add button */
+  addButtonLabel?: string;
 }
 
 const ROLE_OPTIONS = [
@@ -96,6 +98,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
   onDeletePrincipal,
   onAddPrincipal,
   entityName = 'resource',
+  addButtonLabel = 'Add Access',
 }) => {
   // Get current user to prevent self-modification
   const { user: currentUser } = useIdentity();
@@ -253,7 +256,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
           leftSection={<IconPlus size={16} />}
           onClick={onAddPrincipal}
         >
-          Add Access
+          {addButtonLabel}
         </Button>
       </Group>
 

@@ -20,7 +20,8 @@ import { IconAlertCircle, IconKey, IconInfoCircle, IconShieldLock } from '@table
 import { useIdentity } from '../../../contexts';
 import { useEntityPermissions } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
-import type { CredentialResponse, PermissionActionEnum, PrincipalTypeEnum } from '../../../api/types';
+import type { CredentialResponse, PrincipalTypeEnum } from '../../../api/types';
+import { PermissionActionEnum } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
 import classes from './EditCredentialDialog.module.css';
 
@@ -180,7 +181,8 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
 
   // Handle adding principals with callback
   const handleAddPrincipalsWithRole = useCallback(
-    async (selectedPrincipals: SelectedPrincipal[], role: PermissionActionEnum) => {
+    async (selectedPrincipals: SelectedPrincipal[], roles: string[]) => {
+      const role = roles[0] as PermissionActionEnum || PermissionActionEnum.READ;
       await handleAddPrincipals(selectedPrincipals, role);
     },
     [handleAddPrincipals]

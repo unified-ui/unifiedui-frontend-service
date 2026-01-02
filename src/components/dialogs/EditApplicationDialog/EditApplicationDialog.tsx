@@ -27,9 +27,9 @@ import {
 import { useIdentity } from '../../../contexts';
 import {
   ApplicationTypeEnum,
+  PermissionActionEnum,
   type ApplicationResponse,
   type PrincipalTypeEnum,
-  type PermissionActionEnum,
   type PrincipalWithRolesResponse,
 } from '../../../api/types';
 import { TagInput, ManageAccessTable, AddPrincipalDialog } from '../../common';
@@ -288,10 +288,11 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
 
   // Handle adding a new principal
   const handleAddPrincipals = useCallback(
-    async (selectedPrincipals: SelectedPrincipal[], role: PermissionActionEnum) => {
+    async (selectedPrincipals: SelectedPrincipal[], roles: string[]) => {
       if (!apiClient || !selectedTenant || !applicationId) return;
 
-      // Add permission for each selected principal
+      // Add permission for each selected principal with the first selected role
+      const role = roles[0] as PermissionActionEnum || PermissionActionEnum.READ;
       for (const principal of selectedPrincipals) {
         await apiClient.setApplicationPermission(selectedTenant.id, applicationId, {
           principal_id: principal.id,
