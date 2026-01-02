@@ -18,14 +18,13 @@ import {
   IconInfoCircle,
   IconUsersGroup,
   IconUsers,
-  IconShieldLock,
   IconAlertCircle,
 } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { ManageAccessTable } from '../../common/ManageAccessTable';
 import type { PrincipalPermission } from '../../common/ManageAccessTable';
 import { AddPrincipalDialog } from '../../common/AddPrincipalDialog';
-import type { SelectedPrincipal } from '../../common/AddPrincipalDialog';
+import type { SelectedPrincipal, RoleOption } from '../../common/AddPrincipalDialog';
 import type {
   CustomGroupResponse,
   PrincipalTypeEnum,
@@ -37,7 +36,7 @@ interface EditCustomGroupDialogProps {
   opened: boolean;
   onClose: () => void;
   customGroupId: string | null;
-  initialTab?: 'members' | 'details' | 'access';
+  initialTab?: 'members' | 'details';
   onSuccess?: () => void;
 }
 
@@ -46,7 +45,22 @@ interface FormValues {
   description: string;
 }
 
-type TabValue = 'members' | 'details' | 'access';
+type TabValue = 'members' | 'details';
+
+// Custom role options for custom groups (Member = READ role, no WRITE)
+const CUSTOM_GROUP_ROLE_OPTIONS: RoleOption[] = [
+  { value: 'READ', label: 'Member', description: 'Is a member of this group (READ role)' },
+  { value: 'ADMIN', label: 'Admin', description: 'Can manage this group and its members' },
+];
+
+// Custom role labels for ManageAccessTable
+const CUSTOM_GROUP_ROLE_LABELS = {
+  READ: { label: 'Member', tooltip: 'Is Member (READ role)' },
+  ADMIN: { label: 'Admin', tooltip: 'Can manage this group and its members' },
+};
+
+// Only show READ and ADMIN roles (no WRITE)
+const CUSTOM_GROUP_VISIBLE_ROLES: ('READ' | 'WRITE' | 'ADMIN')[] = ['READ', 'ADMIN'];
 
 export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
   opened,
@@ -148,9 +162,9 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
     }
   }, [opened, customGroupId, initialTab, fetchCustomGroup]);
 
-  // Fetch principals when switching to members or access tab
+  // Fetch principals when switching to members tab
   useEffect(() => {
-    if ((activeTab === 'members' || activeTab === 'access') && !principalsFetched && customGroupId) {
+    if (activeTab === 'members' && !principalsFetched && customGroupId) {
       fetchPrincipals();
     }
   }, [activeTab, principalsFetched, customGroupId, fetchPrincipals]);
@@ -328,15 +342,6 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
                       </Group>
                     ),
                   },
-                  {
-                    value: 'access',
-                    label: (
-                      <Group gap="xs" wrap="nowrap">
-                        <IconShieldLock size={16} />
-                        <span>Manage Access</span>
-                      </Group>
-                    ),
-                  },
                 ]}
                 fullWidth
                 className={classes.segmentedControl}
@@ -362,6 +367,8 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
                   onDeletePrincipal={handleDeletePrincipal}
                   onAddPrincipal={() => setAddPrincipalDialogOpen(true)}
                   addButtonLabel="Add Member"
+                  roleLabels={CUSTOM_GROUP_ROLE_LABELS}
+                  visibleRoles={CUSTOM_GROUP_VISIBLE_ROLES}
                 />
 
                 <Group justify="flex-end" mt="md">
@@ -404,32 +411,6 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
               </form>
             )}
 
-            {/* Manage Access Tab */}
-            {activeTab === 'access' && (
-              <Stack gap="md">
-                <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
-                  <Text size="sm">
-                    Manage who can view and modify this custom group itself. Principals with access can edit the group and manage its members.
-                  </Text>
-                </Alert>
-
-                <ManageAccessTable
-                  principals={principals}
-                  isLoading={principalsLoading}
-                  hasFetched={principalsFetched}
-                  error={principalsError}
-                  onRoleChange={handleRoleChange}
-                  onDeletePrincipal={handleDeletePrincipal}
-                  onAddPrincipal={() => setAddPrincipalDialogOpen(true)}
-                />
-
-                <Group justify="flex-end" mt="md">
-                  <Button variant="default" onClick={handleClose}>
-                    Close
-                  </Button>
-                </Group>
-              </Stack>
-            )}
           </Stack>
         )}
       </Modal>
@@ -441,6 +422,7 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
         onSubmit={handleAddPrincipals}
         existingPrincipalIds={existingPrincipalIds}
         entityName="custom group"
+        roleOptions={CUSTOM_GROUP_ROLE_OPTIONS}
       />
     </>
   );

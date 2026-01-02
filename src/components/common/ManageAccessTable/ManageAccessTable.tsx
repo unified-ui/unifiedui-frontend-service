@@ -55,7 +55,23 @@ interface ManageAccessTableProps {
   entityName?: string;
   /** Custom label for the add button */
   addButtonLabel?: string;
+  /** Custom role column configuration - allows renaming and adding tooltips */
+  roleLabels?: {
+    READ?: { label: string; tooltip: string };
+    WRITE?: { label: string; tooltip: string };
+    ADMIN?: { label: string; tooltip: string };
+  };
+  /** Which roles to show (default: all three) */
+  visibleRoles?: PermissionActionEnum[];
 }
+
+const DEFAULT_ROLE_LABELS = {
+  READ: { label: 'Read', tooltip: 'Can view this resource and its data' },
+  WRITE: { label: 'Write', tooltip: 'Can edit this resource' },
+  ADMIN: { label: 'Admin', tooltip: 'Full control including manage access' },
+};
+
+const DEFAULT_VISIBLE_ROLES: PermissionActionEnum[] = ['READ', 'WRITE', 'ADMIN'];
 
 const ROLE_OPTIONS = [
   { value: 'READ', label: 'Read' },
@@ -97,11 +113,25 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
   onRoleChange,
   onDeletePrincipal,
   onAddPrincipal,
-  entityName = 'resource',
+  entityName: _entityName = 'resource',
   addButtonLabel = 'Add Access',
+  roleLabels = {},
+  visibleRoles = DEFAULT_VISIBLE_ROLES,
 }) => {
   // Get current user to prevent self-modification
   const { user: currentUser } = useIdentity();
+
+  // Merge custom role labels with defaults
+  const mergedRoleLabels = {
+    READ: { ...DEFAULT_ROLE_LABELS.READ, ...roleLabels.READ },
+    WRITE: { ...DEFAULT_ROLE_LABELS.WRITE, ...roleLabels.WRITE },
+    ADMIN: { ...DEFAULT_ROLE_LABELS.ADMIN, ...roleLabels.ADMIN },
+  };
+
+  // Filter ROLE_OPTIONS based on visibleRoles
+  const filteredRoleOptions = ROLE_OPTIONS.filter((opt) =>
+    visibleRoles.includes(opt.value as PermissionActionEnum)
+  );
 
   // Search state
   const [searchValue, setSearchValue] = useState('');
@@ -245,7 +275,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
           />
           <MultiSelect
             placeholder="Filter by role"
-            data={ROLE_OPTIONS}
+            data={filteredRoleOptions}
             value={roleFilter}
             onChange={setRoleFilter}
             clearable
@@ -267,21 +297,13 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
             <Table.Tr>
               <Table.Th>Name</Table.Th>
               <Table.Th>Type</Table.Th>
-              <Table.Th className={classes.roleHeader}>
-                <Tooltip label={`Can view this ${entityName} and its data`} withArrow>
-                  <Text size="sm" style={{ cursor: 'help' }}>Read</Text>
-                </Tooltip>
-              </Table.Th>
-              <Table.Th className={classes.roleHeader}>
-                <Tooltip label={`Can edit this ${entityName}`} withArrow>
-                  <Text size="sm" style={{ cursor: 'help' }}>Write</Text>
-                </Tooltip>
-              </Table.Th>
-              <Table.Th className={classes.roleHeader}>
-                <Tooltip label="Full control including manage access" withArrow>
-                  <Text size="sm" style={{ cursor: 'help' }}>Admin</Text>
-                </Tooltip>
-              </Table.Th>
+              {visibleRoles.map((role) => (
+                <Table.Th key={role} className={classes.roleHeader}>
+                  <Tooltip label={mergedRoleLabels[role].tooltip} withArrow>
+                    <Text size="sm" style={{ cursor: 'help' }}>{mergedRoleLabels[role].label}</Text>
+                  </Tooltip>
+                </Table.Th>
+              ))}
               {onDeletePrincipal && (
                 <Table.Th className={classes.actionHeader}></Table.Th>
               )}
@@ -291,7 +313,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
             {filteredPrincipals.length === 0 ? (
               hasFetched && (
                 <Table.Tr>
-                  <Table.Td colSpan={onDeletePrincipal ? 6 : 5}>
+                  <Table.Td colSpan={2 + visibleRoles.length + (onDeletePrincipal ? 1 : 0)}>
                     <Center py="lg">
                       <Text c="dimmed">
                         {principals.length === 0
@@ -344,7 +366,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
                       {getPrincipalTypeLabel(principal.principalType)}
                     </Badge>
                   </Table.Td>
-                  {(['READ', 'WRITE', 'ADMIN'] as PermissionActionEnum[]).map((role) => (
+                  {visibleRoles.map((role) => (
                     <Table.Td key={role} className={classes.roleCell}>
                       {isRoleLoading(principal.principalId, role) ? (
                         <Loader size="xs" />
@@ -363,7 +385,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
                                 }
                               }}
                               disabled={isCurrentUser}
-                              aria-label={`${role} permission for ${primaryText}`}
+                              aria-label={`${mergedRoleLabels[role].label} permission for ${primaryText}`}
                             />
                           </Box>
                         </Tooltip>

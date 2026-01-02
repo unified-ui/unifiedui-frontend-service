@@ -32,7 +32,6 @@ import {
   IconSearch,
   IconDots,
   IconUserPlus,
-  IconShield,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { PageContainer, ConfirmDeleteDialog, EditRolesDialog } from '../../components/common';
@@ -128,7 +127,7 @@ export const TenantSettingsPage: FC = () => {
   const [customGroupsFetched, setCustomGroupsFetched] = useState(false);
   const [createGroupDialogOpen, setCreateGroupDialogOpen] = useState(false);
   const [editGroupId, setEditGroupId] = useState<string | null>(null);
-  const [editGroupInitialTab, setEditGroupInitialTab] = useState<'members' | 'details' | 'access'>('details');
+  const [editGroupInitialTab, setEditGroupInitialTab] = useState<'members' | 'details'>('details');
   const [customGroupsSearch, setCustomGroupsSearch] = useState('');
   const [deleteGroupDialog, setDeleteGroupDialog] = useState<{
     open: boolean;
@@ -437,7 +436,7 @@ export const TenantSettingsPage: FC = () => {
     }
   };
 
-  const handleOpenEditGroup = (groupId: string, tab: 'members' | 'details' | 'access' = 'members') => {
+  const handleOpenEditGroup = (groupId: string, tab: 'members' | 'details' = 'members') => {
     setEditGroupInitialTab(tab);
     setEditGroupId(groupId);
   };
@@ -715,15 +714,6 @@ export const TenantSettingsPage: FC = () => {
                                         }}
                                       >
                                         Edit Details
-                                      </Menu.Item>
-                                      <Menu.Item
-                                        leftSection={<IconShield size={14} />}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleOpenEditGroup(group.id, 'access');
-                                        }}
-                                      >
-                                        Manage Access
                                       </Menu.Item>
                                       <Menu.Divider />
                                       <Menu.Item
