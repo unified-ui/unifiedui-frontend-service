@@ -1,20 +1,9 @@
 ## Done
 
-        - Backend:
-            - GET /principals -> response anpassen und principals table joinen, damit man namen etc bekommt -> wie bei applications etc!
-            - principals tabelle: is_active (default: true); soll aber anpassbar sein auf false je tenant!
-            - principals -> /tenants/{id}/prinicpals/{id}/active {is_active: false|true}
-                - können nur global admins
+
 ## TODOs
 
-
 - SettingsPage
-
-    - Manage Access
-        - sich selbst kann man nicht bearbeiten! > kein klick und switch button disabled
-            - paginierung -> infinitive scroll
-            - serverside search and pagination
-            - order by + order_direction
 
     - custom groups
         - info wie bei Manage access
@@ -38,10 +27,8 @@
             - skrollbar
         - paginierung -> infinity scroll
 
-- paginierungs bei permissions /principals
-
 - /refresh von identity implementieren
-    - FE button in IAM table
+    - FE button in IAM table -> da wo das icon ganz links ist -> beim hovern hier ein refresh icon rein!
 
 - beim wechseln des tenants
     - context leeren
