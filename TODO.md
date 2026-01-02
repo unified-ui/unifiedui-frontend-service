@@ -3,29 +3,16 @@
 
 ## TODOs
 
-- SettingsPage
+---
 
-    - custom groups
-        - info wie bei Manage access
-        - searchbar + filter auf rolle + Create button wie bei Manage access
-        - EditDialog
-            - tabs:
-                - Manage Members
-                - Details
-                - Manage Access
-            - beim klicken auf row -> ?tab=manage-members
-        - tabelle
-            - Spalten:
-                - Name
-                - Description
-                - Icon: ...
-                    - Edit
-                    - Manage Members
-                    - Delete
-            - als tabelle
-            - schöner
-            - skrollbar
-        - paginierung -> infinity scroll
+- AB HIER: CHAT UND INTEGRATION
+- ConversationsPage
+    - hier direkt in einen Chat rein
+        - oben im Chat -> Applications DropDown
+
+---
+
+- Bugs aus der Demo vom 02.01. (FE) beheben (primär refresh state nach Speicherung)
 
 - /refresh von identity implementieren
     - FE button in IAM table -> da wo das icon ganz links ist -> beim hovern hier ein refresh icon rein!
@@ -35,20 +22,12 @@
         - zB sidebardatalist sind noch die bereits gefetcheten sachen dabei
 
 - Rollen im FE beachten
-    - CREATOR, ADMIN
+    - GLOBAL_ADMIN, *CREATOR, *ADMIN
     - TENANT manages acces etc etc
 
 - language-support einbauen
     - erstmal alles in englisch
     - als zweites: über url /de-de /en-us übersetzen (default -> /en-us)
-
----
-
-- AB HIER: CHAT UND INTEGRATION
-- ConversationsPage
-    - hier direkt in einen Chat rein
-        - oben im Chat -> Applications DropDown
-
 
 **Chat Service**
 
