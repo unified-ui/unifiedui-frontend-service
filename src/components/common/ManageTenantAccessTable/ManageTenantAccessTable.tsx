@@ -5,7 +5,6 @@ import {
   TextInput,
   MultiSelect,
   Table,
-  Checkbox,
   Text,
   Group,
   Badge,
@@ -16,6 +15,7 @@ import {
   ScrollArea,
   Tooltip,
   ActionIcon,
+  Popover,
 } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconSearch, IconPlus, IconUser, IconUsers, IconUsersGroup, IconTrash } from '@tabler/icons-react';
@@ -52,6 +52,32 @@ export const TENANT_ROLE_OPTIONS: { value: TenantPermissionEnum; label: string; 
   { value: 'CHAT_WIDGETS_CREATOR', label: 'Chat Widgets Creator', description: 'Create new chat widgets', category: 'Chat Widgets' },
 ];
 
+// Role priority for sorting (higher = more privileged)
+const ROLE_PRIORITY: Record<string, number> = {
+  GLOBAL_ADMIN: 100,
+  // Admins
+  APPLICATIONS_ADMIN: 50,
+  AUTONOMOUS_AGENTS_ADMIN: 50,
+  CONVERSATIONS_ADMIN: 50,
+  CREDENTIALS_ADMIN: 50,
+  CUSTOM_GROUPS_ADMIN: 50,
+  DEVELOPMENT_PLATFORMS_ADMIN: 50,
+  CHAT_WIDGETS_ADMIN: 50,
+  // Creators
+  APPLICATIONS_CREATOR: 25,
+  AUTONOMOUS_AGENTS_CREATOR: 25,
+  CONVERSATIONS_CREATOR: 25,
+  CREDENTIALS_CREATOR: 25,
+  CUSTOM_GROUP_CREATOR: 25,
+  DEVELOPMENT_PLATFORMS_CREATOR: 25,
+  CHAT_WIDGETS_CREATOR: 25,
+  // Reader
+  READER: 10,
+};
+
+// How many roles to show before collapsing into popover
+const MAX_VISIBLE_ROLES = 3;
+
 // Types
 export interface TenantPrincipalPermission {
   id: string;
@@ -73,8 +99,8 @@ interface ManageTenantAccessTableProps {
   hasFetched?: boolean;
   /** Error message */
   error?: string | null;
-  /** Handler when a role is toggled */
-  onRoleChange: (principalId: string, principalType: PrincipalTypeEnum, role: TenantPermissionEnum, enabled: boolean) => Promise<void>;
+  /** Handler when clicking on a principal row to manage access */
+  onManageAccess: (principal: TenantPrincipalPermission) => void;
   /** Handler to delete a principal's access */
   onDeletePrincipal?: (principalId: string, principalType: PrincipalTypeEnum, displayName?: string | null) => Promise<void>;
   /** Handler to open add principal dialog */
@@ -107,12 +133,107 @@ const getPrincipalTypeLabel = (type: PrincipalTypeEnum) => {
   }
 };
 
+// Get role label from role value
+const getRoleLabel = (role: TenantPermissionEnum): string => {
+  const option = TENANT_ROLE_OPTIONS.find((o) => o.value === role);
+  return option?.label || role;
+};
+
+// Get badge color based on role type
+const getRoleBadgeColor = (role: TenantPermissionEnum): string => {
+  if (role === 'GLOBAL_ADMIN') return 'red';
+  if (role.endsWith('_ADMIN')) return 'orange';
+  if (role.endsWith('_CREATOR')) return 'blue';
+  return 'gray';
+};
+
+// Sort roles by priority (most privileged first)
+const sortRolesByPriority = (roles: TenantPermissionEnum[]): TenantPermissionEnum[] => {
+  return [...roles].sort((a, b) => {
+    const priorityA = ROLE_PRIORITY[a] || 0;
+    const priorityB = ROLE_PRIORITY[b] || 0;
+    return priorityB - priorityA;
+  });
+};
+
+// Role Badge Component with popover for hidden roles
+const RoleBadges: FC<{ roles: TenantPermissionEnum[] }> = ({ roles }) => {
+  const [popoverOpened, setPopoverOpened] = useState(false);
+  
+  const sortedRoles = sortRolesByPriority(roles);
+  const visibleRoles = sortedRoles.slice(0, MAX_VISIBLE_ROLES);
+  const hiddenRoles = sortedRoles.slice(MAX_VISIBLE_ROLES);
+  const hasHiddenRoles = hiddenRoles.length > 0;
+
+  return (
+    <Group gap={4} wrap="wrap">
+      {visibleRoles.map((role) => (
+        <Badge 
+          key={role} 
+          size="sm" 
+          variant="light" 
+          color={getRoleBadgeColor(role)}
+          radius="sm"
+        >
+          {getRoleLabel(role)}
+        </Badge>
+      ))}
+      {hasHiddenRoles && (
+        <Popover
+          position="top"
+          withArrow
+          shadow="md"
+          withinPortal
+          opened={popoverOpened}
+          onChange={setPopoverOpened}
+        >
+          <Popover.Target>
+            <div
+              onMouseEnter={() => setPopoverOpened(true)}
+              onMouseLeave={() => setPopoverOpened(false)}
+              onClick={(e) => e.stopPropagation()}
+              style={{ display: 'inline-block', lineHeight: 1 }}
+            >
+              <Badge 
+                size="sm" 
+                variant="outline" 
+                radius="sm" 
+                style={{ cursor: 'pointer', display: 'inline-flex' }}
+              >
+                +{hiddenRoles.length}
+              </Badge>
+            </div>
+          </Popover.Target>
+          <Popover.Dropdown
+            onMouseEnter={() => setPopoverOpened(true)}
+            onMouseLeave={() => setPopoverOpened(false)}
+          >
+            <Group gap={4} wrap="wrap" maw={300}>
+              {hiddenRoles.map((role) => (
+                <Badge 
+                  key={role} 
+                  size="sm" 
+                  variant="light" 
+                  color={getRoleBadgeColor(role)}
+                  radius="sm"
+                >
+                  {getRoleLabel(role)}
+                </Badge>
+              ))}
+            </Group>
+          </Popover.Dropdown>
+        </Popover>
+      )}
+    </Group>
+  );
+};
+
 export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
   principals,
   isLoading = false,
   hasFetched = true,
   error = null,
-  onRoleChange,
+  onManageAccess,
   onDeletePrincipal,
   onAddPrincipal,
 }) => {
@@ -125,9 +246,6 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
   
   // Role filter state
   const [roleFilter, setRoleFilter] = useState<string[]>([]);
-  
-  // Loading states for individual role changes
-  const [loadingRoles, setLoadingRoles] = useState<Set<string>>(new Set());
   
   // Delete confirmation dialog state
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -172,7 +290,8 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
   }, [principals, debouncedSearch, roleFilter]);
 
   // Handle delete click - open confirmation dialog
-  const handleDeleteClick = useCallback((principal: TenantPrincipalPermission) => {
+  const handleDeleteClick = useCallback((e: React.MouseEvent, principal: TenantPrincipalPermission) => {
+    e.stopPropagation();
     setDeleteDialog({
       open: true,
       principalId: principal.principalId,
@@ -193,43 +312,10 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
     }
   }, [onDeletePrincipal, deleteDialog]);
 
-  // Handle role checkbox change
-  const handleRoleToggle = useCallback(
-    async (principal: TenantPrincipalPermission, role: TenantPermissionEnum, enabled: boolean) => {
-      // If removing the last remaining role, show delete dialog instead of direct removal
-      if (
-        !enabled &&
-        principal.roles.length === 1 &&
-        principal.roles[0] === role &&
-        onDeletePrincipal
-      ) {
-        setDeleteDialog({
-          open: true,
-          principalId: principal.principalId,
-          principalType: principal.principalType,
-          displayName: principal.displayName,
-        });
-        return;
-      }
-      const key = `${principal.principalId}-${role}`;
-      setLoadingRoles((prev) => new Set(prev).add(key));
-      try {
-        await onRoleChange(principal.principalId, principal.principalType, role, enabled);
-      } finally {
-        setLoadingRoles((prev) => {
-          const next = new Set(prev);
-          next.delete(key);
-          return next;
-        });
-      }
-    },
-    [onRoleChange, onDeletePrincipal]
-  );
-
-  // Check if a specific role checkbox is loading
-  const isRoleLoading = (principalId: string, role: string) => {
-    return loadingRoles.has(`${principalId}-${role}`);
-  };
+  // Handle row click
+  const handleRowClick = useCallback((principal: TenantPrincipalPermission) => {
+    onManageAccess(principal);
+  }, [onManageAccess]);
 
   if (isLoading) {
     return (
@@ -285,7 +371,8 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
         <Table striped highlightOnHover>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th style={{ width: '300px' }}>Principal</Table.Th>
+              <Table.Th style={{ width: '280px' }}>Principal</Table.Th>
+              <Table.Th style={{ width: '120px' }}>Type</Table.Th>
               <Table.Th>Roles</Table.Th>
               <Table.Th style={{ width: '60px' }}></Table.Th>
             </Table.Tr>
@@ -293,7 +380,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
           <Table.Tbody>
             {filteredPrincipals.length === 0 ? (
               <Table.Tr>
-                <Table.Td colSpan={3}>
+                <Table.Td colSpan={4}>
                   <Center py="xl">
                     <Text c="dimmed">
                       {hasFetched 
@@ -310,7 +397,11 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
                 const isCurrentUser = currentUser?.id === principal.principalId;
 
                 return (
-                  <Table.Tr key={principal.id}>
+                  <Table.Tr 
+                    key={principal.id}
+                    onClick={() => handleRowClick(principal)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     {/* Principal Info */}
                     <Table.Td>
                       <Group gap="sm" wrap="nowrap">
@@ -328,53 +419,25 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
                               </Badge>
                             )}
                           </Group>
-                          {principal.mail && (
+                          {(principal.mail || principal.principalName) && (
                             <Text size="xs" c="dimmed" lineClamp={1}>
-                              {principal.mail}
+                              {principal.mail || principal.principalName}
                             </Text>
                           )}
-                          <Badge size="xs" variant="outline" color="gray">
-                            {getPrincipalTypeLabel(principal.principalType)}
-                          </Badge>
                         </Stack>
                       </Group>
                     </Table.Td>
 
-                    {/* Roles - displayed as badges with checkboxes */}
+                    {/* Type Column */}
                     <Table.Td>
-                      <Group gap="xs" wrap="wrap">
-                        {TENANT_ROLE_OPTIONS.map((roleOption) => {
-                          const hasRole = principal.roles.includes(roleOption.value);
-                          const loading = isRoleLoading(principal.principalId, roleOption.value);
+                      <Badge size="sm" variant="outline" color="gray">
+                        {getPrincipalTypeLabel(principal.principalType)}
+                      </Badge>
+                    </Table.Td>
 
-                          return (
-                            <Tooltip 
-                              key={roleOption.value} 
-                              label={roleOption.description}
-                              withArrow
-                            >
-                              <Box
-                                className={`${classes.roleChip} ${hasRole ? classes.roleChipActive : ''}`}
-                                onClick={() => !loading && handleRoleToggle(principal, roleOption.value, !hasRole)}
-                              >
-                                {loading ? (
-                                  <Loader size={12} />
-                                ) : (
-                                  <Checkbox
-                                    size="xs"
-                                    checked={hasRole}
-                                    onChange={() => {}}
-                                    styles={{ input: { cursor: 'pointer' } }}
-                                  />
-                                )}
-                                <Text size="xs" className={classes.roleChipLabel}>
-                                  {roleOption.label}
-                                </Text>
-                              </Box>
-                            </Tooltip>
-                          );
-                        })}
-                      </Group>
+                    {/* Roles - displayed as badges like tags */}
+                    <Table.Td>
+                      <RoleBadges roles={principal.roles} />
                     </Table.Td>
 
                     {/* Actions */}
@@ -384,7 +447,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
                           <ActionIcon
                             color="red"
                             variant="subtle"
-                            onClick={() => handleDeleteClick(principal)}
+                            onClick={(e) => handleDeleteClick(e, principal)}
                           >
                             <IconTrash size={16} />
                           </ActionIcon>

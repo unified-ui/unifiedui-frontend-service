@@ -29,7 +29,7 @@ import {
   IconEdit,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { PageContainer, ConfirmDeleteDialog } from '../../components/common';
+import { PageContainer, ConfirmDeleteDialog, EditRolesDialog } from '../../components/common';
 import { ManageTenantAccessTable, TENANT_ROLE_OPTIONS } from '../../components/common/ManageTenantAccessTable';
 import type { TenantPrincipalPermission } from '../../components/common/ManageTenantAccessTable';
 import { AddPrincipalDialog } from '../../components/common/AddPrincipalDialog';
@@ -106,6 +106,7 @@ export const TenantSettingsPage: FC = () => {
   const [principalsError, setPrincipalsError] = useState<string | null>(null);
   const [principalsFetched, setPrincipalsFetched] = useState(false);
   const [addPrincipalDialogOpen, setAddPrincipalDialogOpen] = useState(false);
+  const [editPrincipal, setEditPrincipal] = useState<TenantPrincipalPermission | null>(null);
 
   // ===== Custom Groups State =====
   const [customGroups, setCustomGroups] = useState<CustomGroupResponse[]>([]);
@@ -237,30 +238,48 @@ export const TenantSettingsPage: FC = () => {
   };
 
   // ===== Principal Handlers =====
-  const handleRoleChange = useCallback(
-    async (principalId: string, principalType: PrincipalTypeEnum, role: TenantPermissionEnum, enabled: boolean) => {
-      if (!apiClient || !selectedTenant) return;
+  const handleManageAccess = useCallback((principal: TenantPrincipalPermission) => {
+    setEditPrincipal(principal);
+  }, []);
+
+  const handleEditPrincipalRoles = useCallback(
+    async (roles: string[]) => {
+      if (!apiClient || !selectedTenant || !editPrincipal) return;
 
       try {
-        if (enabled) {
-          await apiClient.setTenantPrincipal(selectedTenant.id, {
-            principal_id: principalId,
-            principal_type: principalType,
-            role: role,
-          });
-        } else {
-          await apiClient.deleteTenantPrincipal(selectedTenant.id, {
-            principal_id: principalId,
-            principal_type: principalType,
-            role: role,
-          });
+        // Get current roles and new roles
+        const currentRoles = new Set(editPrincipal.roles);
+        const newRoles = new Set(roles as TenantPermissionEnum[]);
+
+        // Remove roles that are no longer selected
+        for (const role of currentRoles) {
+          if (!newRoles.has(role)) {
+            await apiClient.deleteTenantPrincipal(selectedTenant.id, {
+              principal_id: editPrincipal.principalId,
+              principal_type: editPrincipal.principalType,
+              role: role,
+            });
+          }
         }
+
+        // Add roles that are newly selected
+        for (const role of newRoles) {
+          if (!currentRoles.has(role)) {
+            await apiClient.setTenantPrincipal(selectedTenant.id, {
+              principal_id: editPrincipal.principalId,
+              principal_type: editPrincipal.principalType,
+              role: role,
+            });
+          }
+        }
+
+        setEditPrincipal(null);
         await fetchPrincipals();
       } catch {
         // Error handled by API client
       }
     },
-    [apiClient, selectedTenant, fetchPrincipals]
+    [apiClient, selectedTenant, editPrincipal, fetchPrincipals]
   );
 
   const handleDeletePrincipal = useCallback(
@@ -451,7 +470,7 @@ export const TenantSettingsPage: FC = () => {
                   isLoading={principalsLoading}
                   hasFetched={principalsFetched}
                   error={principalsError}
-                  onRoleChange={handleRoleChange}
+                  onManageAccess={handleManageAccess}
                   onDeletePrincipal={handleDeletePrincipal}
                   onAddPrincipal={() => setAddPrincipalDialogOpen(true)}
                 />
@@ -604,6 +623,18 @@ export const TenantSettingsPage: FC = () => {
         roleOptions={tenantRoleOptions}
         multiSelect={true}
         defaultRoles={['READER']}
+      />
+
+      {/* Edit Principal Roles Dialog */}
+      <EditRolesDialog
+        opened={!!editPrincipal}
+        onClose={() => setEditPrincipal(null)}
+        onSubmit={handleEditPrincipalRoles}
+        principalName={editPrincipal?.displayName || editPrincipal?.principalId || ''}
+        principalType={editPrincipal?.principalType || 'IDENTITY_USER'}
+        principalEmail={editPrincipal?.mail || editPrincipal?.principalName}
+        roleOptions={tenantRoleOptions}
+        currentRoles={editPrincipal?.roles || []}
       />
 
       {/* Create Custom Group Dialog */}

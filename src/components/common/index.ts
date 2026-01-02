@@ -12,5 +12,6 @@ export { ManageTenantAccessTable, TENANT_ROLE_OPTIONS } from './ManageTenantAcce
 export type { TenantPrincipalPermission } from './ManageTenantAccessTable';
 export { AddPrincipalDialog } from './AddPrincipalDialog';
 export type { SelectedPrincipal, RoleOption } from './AddPrincipalDialog';
+export { EditRolesDialog } from './EditRolesDialog';
 export { EntityDetailsForm } from './EntityDetailsForm';
 export type { FieldConfig } from './EntityDetailsForm';

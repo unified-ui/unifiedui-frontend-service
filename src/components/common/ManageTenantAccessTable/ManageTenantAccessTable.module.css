@@ -23,61 +23,8 @@
   color: var(--color-gray-600);
 }
 
-/* Role chip styling */
-.roleChip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  background-color: var(--color-gray-50);
-  border: 1px solid var(--color-gray-200);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  user-select: none;
-}
-
-.roleChip:hover {
-  background-color: var(--color-gray-100);
-  border-color: var(--color-gray-300);
-}
-
-.roleChipActive {
-  background-color: var(--color-primary-50);
-  border-color: var(--color-primary-300);
-}
-
-.roleChipActive:hover {
-  background-color: var(--color-primary-100);
-  border-color: var(--color-primary-400);
-}
-
-.roleChipLabel {
-  white-space: nowrap;
-}
-
 /* Dark mode adjustments */
 [data-mantine-color-scheme='dark'] .principalIcon {
   background-color: var(--color-gray-800);
   color: var(--color-gray-400);
-}
-
-[data-mantine-color-scheme='dark'] .roleChip {
-  background-color: var(--color-gray-800);
-  border-color: var(--color-gray-700);
-}
-
-[data-mantine-color-scheme='dark'] .roleChip:hover {
-  background-color: var(--color-gray-700);
-  border-color: var(--color-gray-600);
-}
-
-[data-mantine-color-scheme='dark'] .roleChipActive {
-  background-color: var(--color-primary-900);
-  border-color: var(--color-primary-700);
-}
-
-[data-mantine-color-scheme='dark'] .roleChipActive:hover {
-  background-color: var(--color-primary-800);
-  border-color: var(--color-primary-600);
 }
