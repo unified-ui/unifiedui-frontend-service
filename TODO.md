@@ -1,22 +1,16 @@
 ## Done
 
-## TODOs
-
-
-- SettingsPage
-    - tab-bar
-        - schöner -> mehr padding
-        - tab in url aufnehmen: ?tab=settings|iam|custom-groups|billing-and-licence
-
-    - tenant settings
-        - Delete Tenant -> 2x Confirm, bevor man killt
-
-    - Manage Access
         - Backend:
             - GET /principals -> response anpassen und principals table joinen, damit man namen etc bekommt -> wie bei applications etc!
             - principals tabelle: is_active (default: true); soll aber anpassbar sein auf false je tenant!
             - principals -> /tenants/{id}/prinicpals/{id}/active {is_active: false|true}
                 - können nur global admins
+## TODOs
+
+
+- SettingsPage
+
+    - Manage Access
         - Add Principal
             - Dialog ist nett;
             - wir müssen aber checkbox items mitgeben können
