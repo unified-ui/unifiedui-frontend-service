@@ -127,7 +127,7 @@ const getPrincipalIcon = (type: PrincipalTypeEnum) => {
 const getPrincipalTypeLabel = (type: PrincipalTypeEnum) => {
   switch (type) {
     case 'IDENTITY_USER':
-      return 'User';
+      return 'Identity User';
     case 'IDENTITY_GROUP':
       return 'Identity Group';
     case 'CUSTOM_GROUP':

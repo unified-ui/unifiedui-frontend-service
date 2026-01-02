@@ -15,7 +15,6 @@ import {
   Checkbox,
   ScrollArea,
   Center,
-  TextInput,
 } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import {
@@ -558,21 +557,9 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
             Select {multiSelect ? 'permissions' : 'permission level'}
           </Text>
           
-          {/* Search for permissions if there are many */}
-          {roleOptions.length > 5 && (
-            <TextInput
-              placeholder="Search permissions..."
-              leftSection={<IconSearch size={14} />}
-              value={permissionSearch}
-              onChange={(e) => setPermissionSearch(e.target.value)}
-              mb="sm"
-              size="sm"
-            />
-          )}
-          
-          <ScrollArea.Autosize mah={200} scrollbarSize={8}>
+          <ScrollArea.Autosize mah={300} scrollbarSize={8}>
             {multiSelect ? (
-              <Stack gap="sm">
+              <Stack gap="sm" pr={8}>
                 {filteredRoleOptions.map((role) => (
                   <Box
                     key={role.value}
@@ -604,7 +591,7 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
                 value={selectedRoles[0] || ''}
                 onChange={(value) => setSelectedRoles([value])}
               >
-                <Stack gap="sm">
+                <Stack gap="sm" pr={8}>
                   {filteredRoleOptions.map((role) => (
                     <Box
                       key={role.value}

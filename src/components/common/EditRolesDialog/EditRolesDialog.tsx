@@ -9,10 +9,9 @@ import {
   Box,
   Checkbox,
   ScrollArea,
-  TextInput,
   Badge,
 } from '@mantine/core';
-import { IconShieldLock, IconSearch, IconUser, IconUsers, IconUsersGroup } from '@tabler/icons-react';
+import { IconShieldLock, IconUser, IconUsers, IconUsersGroup } from '@tabler/icons-react';
 import type { PrincipalTypeEnum } from '../../../api/types';
 import type { RoleOption } from '../AddPrincipalDialog';
 import classes from './EditRolesDialog.module.css';
@@ -163,20 +162,8 @@ export const EditRolesDialog: FC<EditRolesDialogProps> = ({
             Select permissions
           </Text>
           
-          {/* Search for permissions if there are many */}
-          {roleOptions.length > 5 && (
-            <TextInput
-              placeholder="Search permissions..."
-              leftSection={<IconSearch size={14} />}
-              value={permissionSearch}
-              onChange={(e) => setPermissionSearch(e.target.value)}
-              mb="sm"
-              size="sm"
-            />
-          )}
-          
-          <ScrollArea.Autosize mah={300} scrollbarSize={8}>
-            <Stack gap="sm">
+          <ScrollArea.Autosize mah={400} scrollbarSize={8}>
+            <Stack gap="sm" pr={8}>
               {filteredRoleOptions.map((role) => (
                 <Box
                   key={role.value}
