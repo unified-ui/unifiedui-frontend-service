@@ -59,6 +59,14 @@
 - /refresh von identity implementieren
     - FE button in IAM table
 
+- beim wechseln des tenants
+    - context leeren
+        - zB sidebardatalist sind noch die bereits gefetcheten sachen dabei
+
+- language-support einbauen
+    - erstmal alles in englisch
+    - als zweites: über url /de-de /en-us übersetzen (default -> /en-us)
+
 ---
 
 - AB HIER: CHAT UND INTEGRATION

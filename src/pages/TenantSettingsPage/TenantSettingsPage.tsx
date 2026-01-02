@@ -79,7 +79,7 @@ export const TenantSettingsPage: FC = () => {
 
   // ===== Tenant Settings State =====
   const [isSavingTenant, setIsSavingTenant] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteDialogStep, setDeleteDialogStep] = useState<0 | 1 | 2>(0); // 0=closed, 1=first confirm, 2=second confirm
   const [isDeletingTenant, setIsDeletingTenant] = useState(false);
 
   const tenantForm = useForm<TenantSettingsFormValues>({
@@ -225,13 +225,17 @@ export const TenantSettingsPage: FC = () => {
     try {
       await apiClient.deleteTenant(selectedTenant.id);
       await refreshIdentity();
-      setDeleteDialogOpen(false);
+      setDeleteDialogStep(0);
       // Navigation will happen automatically when tenant is gone
     } catch {
       // Error handled by API client
     } finally {
       setIsDeletingTenant(false);
     }
+  };
+
+  const handleFirstDeleteConfirm = () => {
+    setDeleteDialogStep(2); // Move to second confirmation
   };
 
   // ===== Principal Handlers =====
@@ -413,7 +417,7 @@ export const TenantSettingsPage: FC = () => {
                       color="red"
                       variant="outline"
                       leftSection={<IconTrash size={16} />}
-                      onClick={() => setDeleteDialogOpen(true)}
+                      onClick={() => setDeleteDialogStep(1)}
                     >
                       Delete Tenant
                     </Button>
@@ -555,14 +559,29 @@ export const TenantSettingsPage: FC = () => {
         </Stack>
       </PageContainer>
 
-      {/* Delete Tenant Confirmation */}
+      {/* Delete Tenant - First Confirmation */}
       <ConfirmDeleteDialog
-        opened={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
+        opened={deleteDialogStep === 1}
+        onClose={() => setDeleteDialogStep(0)}
+        onConfirm={handleFirstDeleteConfirm}
+        itemName={selectedTenant.name}
+        itemType="Tenant"
+        title="Delete Tenant (Step 1 of 2)"
+        message="Are you sure you want to delete this tenant? This will permanently remove all data including applications, credentials, conversations, and custom groups."
+      />
+
+      {/* Delete Tenant - Second Confirmation */}
+      <ConfirmDeleteDialog
+        opened={deleteDialogStep === 2}
+        onClose={() => setDeleteDialogStep(0)}
         onConfirm={handleDeleteTenant}
         itemName={selectedTenant.name}
         itemType="Tenant"
+        title="Final Confirmation (Step 2 of 2)"
+        message="This action is IRREVERSIBLE. All tenant data will be permanently deleted. Are you absolutely sure?"
         isLoading={isDeletingTenant}
+        confirmButtonText="WIRKLICH LÖSCHEN"
+        reverseButtons
       />
 
       {/* Add Principal Dialog */}

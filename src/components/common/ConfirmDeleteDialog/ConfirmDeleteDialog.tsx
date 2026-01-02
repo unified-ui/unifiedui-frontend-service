@@ -7,9 +7,12 @@ interface ConfirmDeleteDialogProps {
   onClose: () => void;
   onConfirm: () => void;
   title?: string;
+  message?: string;
   itemName?: string;
   itemType?: string;
   isLoading?: boolean;
+  confirmButtonText?: string;
+  reverseButtons?: boolean;
 }
 
 export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
@@ -17,13 +20,22 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
   onClose,
   onConfirm,
   title = 'Löschen bestätigen',
+  message,
   itemName,
   itemType = 'Element',
   isLoading = false,
+  confirmButtonText = 'Löschen',
+  reverseButtons = false,
 }) => {
   const handleConfirm = () => {
     onConfirm();
   };
+
+  // Build display message
+  const displayMessage = message || (itemName
+    ? <>Sind Sie sicher, dass Sie <Text span fw={600} c="var(--text-primary)">{itemName}</Text> löschen möchten?</>
+    : <>Sind Sie sicher, dass Sie dieses {itemType} löschen möchten?</>
+  );
 
   return (
     <Modal
@@ -51,13 +63,7 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
     >
       <Stack gap="lg">
         <Text size="sm" c="dimmed">
-          {itemName ? (
-            <>
-              Sind Sie sicher, dass Sie <Text span fw={600} c="var(--text-primary)">{itemName}</Text> löschen möchten?
-            </>
-          ) : (
-            <>Sind Sie sicher, dass Sie dieses {itemType} löschen möchten?</>
-          )}
+          {displayMessage}
         </Text>
         
         <Text size="xs" c="red.6" style={{
@@ -70,20 +76,41 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
         </Text>
 
         <Group justify="flex-end" gap="sm" mt="sm">
-          <Button 
-            variant="default" 
-            onClick={onClose}
-            disabled={isLoading}
-          >
-            Abbrechen
-          </Button>
-          <Button 
-            color="red" 
-            onClick={handleConfirm}
-            loading={isLoading}
-          >
-            Löschen
-          </Button>
+          {reverseButtons ? (
+            <>
+              <Button 
+                color="red" 
+                onClick={handleConfirm}
+                loading={isLoading}
+              >
+                {confirmButtonText}
+              </Button>
+              <Button 
+                variant="default" 
+                onClick={onClose}
+                disabled={isLoading}
+              >
+                Abbrechen
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button 
+                variant="default" 
+                onClick={onClose}
+                disabled={isLoading}
+              >
+                Abbrechen
+              </Button>
+              <Button 
+                color="red" 
+                onClick={handleConfirm}
+                loading={isLoading}
+              >
+                {confirmButtonText}
+              </Button>
+            </>
+          )}
         </Group>
       </Stack>
     </Modal>
