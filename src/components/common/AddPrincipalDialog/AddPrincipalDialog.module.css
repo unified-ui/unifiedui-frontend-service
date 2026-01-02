@@ -177,3 +177,29 @@
 [data-mantine-color-scheme='dark'] .radioOptionSelected {
   background-color: rgba(33, 150, 243, 0.1);
 }
+
+/* Role option styles - same as radioOption but for the new multi/single select */
+.roleOption {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.roleOption:hover {
+  background-color: var(--color-gray-50);
+}
+
+[data-mantine-color-scheme='dark'] .roleOption:hover {
+  background-color: var(--color-gray-800);
+}
+
+.roleOptionSelected {
+  border-color: var(--color-primary-500);
+  background-color: var(--color-primary-50);
+}
+
+[data-mantine-color-scheme='dark'] .roleOptionSelected {
+  background-color: rgba(33, 150, 243, 0.1);
+}
