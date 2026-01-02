@@ -470,7 +470,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
 
                 return (
                   <Table.Tr 
-                    key={principal.id}
+                    key={`${principal.principalId}-${principal.principalType}`}
                     onClick={() => !isCurrentUser && handleRowClick(principal)}
                     style={{ cursor: isCurrentUser ? 'default' : 'pointer' }}
                   >

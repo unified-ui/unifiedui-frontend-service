@@ -181,7 +181,12 @@ export const TenantSettingsPage: FC = () => {
         setPrincipals(newPrincipals);
         setPrincipalsSkip(PRINCIPALS_PAGE_SIZE);
       } else {
-        setPrincipals(prev => [...prev, ...newPrincipals]);
+        // Append new principals, avoiding duplicates
+        setPrincipals(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const uniqueNewPrincipals = newPrincipals.filter(p => !existingIds.has(p.id));
+          return [...prev, ...uniqueNewPrincipals];
+        });
         setPrincipalsSkip(prev => prev + PRINCIPALS_PAGE_SIZE);
       }
       
