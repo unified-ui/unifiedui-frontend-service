@@ -12,19 +12,14 @@
 
     - Manage Access
         - Add Principal
-            - Dialog ist nett;
-            - wir müssen aber checkbox items mitgeben können
-            - permissions liste sollte skrollbar sien
-            - permissions mit search suchbar
-            - fix des create; method not allowd aktuell
-            - principal input -> liste wird nicht sauber geskrollt
-        - liste
-            - wie bei tags -> Gruppen anzeigen als badge, rest über tooltip 
-                - priviligierte rollen (global admin, admin) zuerst
-            - beim draufklicken -> manage access -> rollen zuweisen
-            - als tabelle! und type als spalte!
+            - permissions skroll -> padding left so breit wie skrollbar + breite hinzu der breite der skrollbar
+        - sich selbst kann man nicht bearbeiten! > kein klick und switch button disabled
             - paginierung -> infinitive scroll
             - serverside search and pagination
+            - order by + order_direction
+
+
+
 
     - custom groups
         - info wie bei Manage access
@@ -47,8 +42,8 @@
             - schöner
             - skrollbar
         - paginierung -> infinity scroll
-        
 
+- paginierungs bei permissions /principals
 
 - /refresh von identity implementieren
     - FE button in IAM table

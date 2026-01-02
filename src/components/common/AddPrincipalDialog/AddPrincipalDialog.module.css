@@ -104,14 +104,12 @@
   z-index: var(--z-dropdown);
   background-color: var(--bg-paper);
   max-height: 300px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .sectionHeader {
   background-color: transparent;
-  position: sticky;
-  top: 0;
-  z-index: 1;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);

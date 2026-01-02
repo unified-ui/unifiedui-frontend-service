@@ -230,6 +230,10 @@ export class UnifiedUIAPIClient {
     return this.request<void>('DELETE', `/api/v1/tenants/${tenantId}/principals`, data, 'Principal removed successfully');
   }
 
+  async updatePrincipalStatus(tenantId: string, principalId: string, principalType: PrincipalTypeEnum, isActive: boolean): Promise<void> {
+    return this.request<void>('PATCH', `/api/v1/tenants/${tenantId}/principals/${principalId}/status`, { principal_type: principalType, is_active: isActive }, isActive ? 'Principal activated' : 'Principal deactivated');
+  }
+
   // ========== Application Endpoints ==========
 
   async listApplications(

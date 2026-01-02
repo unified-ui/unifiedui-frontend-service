@@ -386,170 +386,168 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
           {/* Dropdown */}
           {showDropdown && (
             <Paper ref={dropdownRef} className={classes.dropdown} shadow="md" withBorder>
-              <ScrollArea.Autosize mah={300} scrollbarSize={8}>
-                {isLoading && !hasResults ? (
-                  <Center py="md">
-                    <Loader size="sm" />
-                  </Center>
-                ) : !hasResults ? (
-                  <Center py="md">
-                    <Text size="sm" c="dimmed">
-                      No results found
-                    </Text>
-                  </Center>
-                ) : (
-                  <>
-                    {/* Identity Users Section */}
-                    {users.length > 0 && (
-                      <>
-                        <Text px="sm" py="xs" className={classes.sectionHeader}>
-                          Identity Users
-                        </Text>
-                        {users
-                          .filter(
-                            (u) =>
-                              !selectedPrincipals.some((p) => p.id === u.id) &&
-                              !existingPrincipalIds.includes(u.id)
-                          )
-                          .map((user) => {
-                            currentIndex++;
-                            const idx = currentIndex;
-                            return (
-                              <Box
-                                key={user.id}
-                                data-index={idx}
-                                className={`${classes.suggestion} ${
-                                  highlightedIndex === idx ? classes.suggestionHighlighted : ''
-                                }`}
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  addPrincipal({
-                                    id: user.id,
-                                    displayName: user.display_name,
-                                    email: user.mail,
-                                    type: 'IDENTITY_USER',
-                                  });
-                                }}
-                                onMouseEnter={() => setHighlightedIndex(idx)}
-                              >
-                                <Group gap="sm" wrap="nowrap">
-                                  <Box className={classes.suggestionIcon}>
-                                    <IconUser size={16} />
-                                  </Box>
-                                  <Box>
-                                    <Text size="sm">{user.display_name}</Text>
-                                    {user.mail && (
-                                      <Text size="xs" c="dimmed">
-                                        {user.mail}
-                                      </Text>
-                                    )}
-                                  </Box>
-                                </Group>
-                              </Box>
-                            );
-                          })}
-                      </>
-                    )}
+              {isLoading && !hasResults ? (
+                <Center py="md">
+                  <Loader size="sm" />
+                </Center>
+              ) : !hasResults ? (
+                <Center py="md">
+                  <Text size="sm" c="dimmed">
+                    No results found
+                  </Text>
+                </Center>
+              ) : (
+                <>
+                  {/* Identity Users Section */}
+                  {users.length > 0 && (
+                    <>
+                      <Text px="sm" py="xs" className={classes.sectionHeader}>
+                        Identity Users
+                      </Text>
+                      {users
+                        .filter(
+                          (u) =>
+                            !selectedPrincipals.some((p) => p.id === u.id) &&
+                            !existingPrincipalIds.includes(u.id)
+                        )
+                        .map((user) => {
+                          currentIndex++;
+                          const idx = currentIndex;
+                          return (
+                            <Box
+                              key={user.id}
+                              data-index={idx}
+                              className={`${classes.suggestion} ${
+                                highlightedIndex === idx ? classes.suggestionHighlighted : ''
+                              }`}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                addPrincipal({
+                                  id: user.id,
+                                  displayName: user.display_name,
+                                  email: user.mail,
+                                  type: 'IDENTITY_USER',
+                                });
+                              }}
+                              onMouseEnter={() => setHighlightedIndex(idx)}
+                            >
+                              <Group gap="sm" wrap="nowrap">
+                                <Box className={classes.suggestionIcon}>
+                                  <IconUser size={16} />
+                                </Box>
+                                <Box>
+                                  <Text size="sm">{user.display_name}</Text>
+                                  {user.mail && (
+                                    <Text size="xs" c="dimmed">
+                                      {user.mail}
+                                    </Text>
+                                  )}
+                                </Box>
+                              </Group>
+                            </Box>
+                          );
+                        })}
+                    </>
+                  )}
 
-                    {/* Identity Groups Section */}
-                    {groups.length > 0 && (
-                      <>
-                        {users.length > 0 && <Divider my="xs" />}
-                        <Text px="sm" py="xs" className={classes.sectionHeader}>
-                          Identity Groups
-                        </Text>
-                        {groups
-                          .filter(
-                            (g) =>
-                              !selectedPrincipals.some((p) => p.id === g.id) &&
-                              !existingPrincipalIds.includes(g.id)
-                          )
-                          .map((group) => {
-                            currentIndex++;
-                            const idx = currentIndex;
-                            return (
-                              <Box
-                                key={group.id}
-                                data-index={idx}
-                                className={`${classes.suggestion} ${
-                                  highlightedIndex === idx ? classes.suggestionHighlighted : ''
-                                }`}
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  addPrincipal({
-                                    id: group.id,
-                                    displayName: group.display_name,
-                                    type: 'IDENTITY_GROUP',
-                                  });
-                                }}
-                                onMouseEnter={() => setHighlightedIndex(idx)}
-                              >
-                                <Group gap="sm" wrap="nowrap">
-                                  <Box className={classes.suggestionIcon}>
-                                    <IconUsers size={16} />
-                                  </Box>
-                                  <Text size="sm">{group.display_name}</Text>
-                                </Group>
-                              </Box>
-                            );
-                          })}
-                      </>
-                    )}
+                  {/* Identity Groups Section */}
+                  {groups.length > 0 && (
+                    <>
+                      {users.length > 0 && <Divider my="xs" />}
+                      <Text px="sm" py="xs" className={classes.sectionHeader}>
+                        Identity Groups
+                      </Text>
+                      {groups
+                        .filter(
+                          (g) =>
+                            !selectedPrincipals.some((p) => p.id === g.id) &&
+                            !existingPrincipalIds.includes(g.id)
+                        )
+                        .map((group) => {
+                          currentIndex++;
+                          const idx = currentIndex;
+                          return (
+                            <Box
+                              key={group.id}
+                              data-index={idx}
+                              className={`${classes.suggestion} ${
+                                highlightedIndex === idx ? classes.suggestionHighlighted : ''
+                              }`}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                addPrincipal({
+                                  id: group.id,
+                                  displayName: group.display_name,
+                                  type: 'IDENTITY_GROUP',
+                                });
+                              }}
+                              onMouseEnter={() => setHighlightedIndex(idx)}
+                            >
+                              <Group gap="sm" wrap="nowrap">
+                                <Box className={classes.suggestionIcon}>
+                                  <IconUsers size={16} />
+                                </Box>
+                                <Text size="sm">{group.display_name}</Text>
+                              </Group>
+                            </Box>
+                          );
+                        })}
+                    </>
+                  )}
 
-                    {/* Custom Groups Section */}
-                    {customGroups.length > 0 && (
-                      <>
-                        {(users.length > 0 || groups.length > 0) && <Divider my="xs" />}
-                        <Text px="sm" py="xs" className={classes.sectionHeader}>
-                          Custom Groups
-                        </Text>
-                        {customGroups
-                          .filter(
-                            (cg) =>
-                              !selectedPrincipals.some((p) => p.id === cg.id) &&
-                              !existingPrincipalIds.includes(cg.id)
-                          )
-                          .map((customGroup) => {
-                            currentIndex++;
-                            const idx = currentIndex;
-                            return (
-                              <Box
-                                key={customGroup.id}
-                                data-index={idx}
-                                className={`${classes.suggestion} ${
-                                  highlightedIndex === idx ? classes.suggestionHighlighted : ''
-                                }`}
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  addPrincipal({
-                                    id: customGroup.id,
-                                    displayName: customGroup.name,
-                                    type: 'CUSTOM_GROUP',
-                                  });
-                                }}
-                                onMouseEnter={() => setHighlightedIndex(idx)}
-                              >
-                                <Group gap="sm" wrap="nowrap">
-                                  <Box className={classes.suggestionIcon}>
-                                    <IconUsersGroup size={16} />
-                                  </Box>
-                                  <Box>
-                                    <Text size="sm">{customGroup.name}</Text>
-                                    {customGroup.description && (
-                                      <Text size="xs" c="dimmed" lineClamp={1}>
-                                        {customGroup.description}
-                                      </Text>
-                                    )}
-                                  </Box>
-                                </Group>
-                              </Box>
-                            );
-                          })}
-                      </>
-                    )}
-                  </>
-                )}
-              </ScrollArea.Autosize>
+                  {/* Custom Groups Section */}
+                  {customGroups.length > 0 && (
+                    <>
+                      {(users.length > 0 || groups.length > 0) && <Divider my="xs" />}
+                      <Text px="sm" py="xs" className={classes.sectionHeader}>
+                        Custom Groups
+                      </Text>
+                      {customGroups
+                        .filter(
+                          (cg) =>
+                            !selectedPrincipals.some((p) => p.id === cg.id) &&
+                            !existingPrincipalIds.includes(cg.id)
+                        )
+                        .map((customGroup) => {
+                          currentIndex++;
+                          const idx = currentIndex;
+                          return (
+                            <Box
+                              key={customGroup.id}
+                              data-index={idx}
+                              className={`${classes.suggestion} ${
+                                highlightedIndex === idx ? classes.suggestionHighlighted : ''
+                              }`}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                addPrincipal({
+                                  id: customGroup.id,
+                                  displayName: customGroup.name,
+                                  type: 'CUSTOM_GROUP',
+                                });
+                              }}
+                              onMouseEnter={() => setHighlightedIndex(idx)}
+                            >
+                              <Group gap="sm" wrap="nowrap">
+                                <Box className={classes.suggestionIcon}>
+                                  <IconUsersGroup size={16} />
+                                </Box>
+                                <Box>
+                                  <Text size="sm">{customGroup.name}</Text>
+                                  {customGroup.description && (
+                                    <Text size="xs" c="dimmed" lineClamp={1}>
+                                      {customGroup.description}
+                                    </Text>
+                                  )}
+                                </Box>
+                              </Group>
+                            </Box>
+                          );
+                        })}
+                    </>
+                  )}
+                </>
+              )}
             </Paper>
           )}
         </Box>

@@ -157,6 +157,7 @@ export const TenantSettingsPage: FC = () => {
             mail: principal.mail || null,
             principalName: principal.principal_name || null,
             description: principal.description || null,
+            isActive: principal.is_active,
             roles: principal.roles.map(r => r.role),
           });
         }
@@ -330,6 +331,28 @@ export const TenantSettingsPage: FC = () => {
     [apiClient, selectedTenant, fetchPrincipals]
   );
 
+  const handleStatusChange = useCallback(
+    async (principalId: string, principalType: PrincipalTypeEnum, isActive: boolean) => {
+      if (!apiClient || !selectedTenant) return;
+
+      try {
+        await apiClient.updatePrincipalStatus(selectedTenant.id, principalId, principalType, isActive);
+        // Update local state optimistically
+        setPrincipals((prev) =>
+          prev.map((p) =>
+            p.principalId === principalId && p.principalType === principalType
+              ? { ...p, isActive }
+              : p
+          )
+        );
+      } catch {
+        // Error handled by API client - revert optimistic update by refetching
+        await fetchPrincipals();
+      }
+    },
+    [apiClient, selectedTenant, fetchPrincipals]
+  );
+
   // ===== Custom Group Handlers =====
   const handleDeleteGroup = async () => {
     if (!apiClient || !selectedTenant || !deleteGroupDialog.id) return;
@@ -473,6 +496,7 @@ export const TenantSettingsPage: FC = () => {
                   onManageAccess={handleManageAccess}
                   onDeletePrincipal={handleDeletePrincipal}
                   onAddPrincipal={() => setAddPrincipalDialogOpen(true)}
+                  onStatusChange={handleStatusChange}
                 />
               </Stack>
             </Tabs.Panel>

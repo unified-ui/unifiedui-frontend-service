@@ -16,6 +16,7 @@ import {
   Tooltip,
   ActionIcon,
   Popover,
+  Switch,
 } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconSearch, IconPlus, IconUser, IconUsers, IconUsersGroup, IconTrash } from '@tabler/icons-react';
@@ -87,6 +88,7 @@ export interface TenantPrincipalPermission {
   mail?: string | null;
   principalName?: string | null;
   description?: string | null;
+  isActive: boolean;
   roles: TenantPermissionEnum[];
 }
 
@@ -105,6 +107,8 @@ interface ManageTenantAccessTableProps {
   onDeletePrincipal?: (principalId: string, principalType: PrincipalTypeEnum, displayName?: string | null) => Promise<void>;
   /** Handler to open add principal dialog */
   onAddPrincipal: () => void;
+  /** Handler to update principal's active status */
+  onStatusChange?: (principalId: string, principalType: PrincipalTypeEnum, isActive: boolean) => Promise<void>;
 }
 
 const getPrincipalIcon = (type: PrincipalTypeEnum) => {
@@ -130,6 +134,20 @@ const getPrincipalTypeLabel = (type: PrincipalTypeEnum) => {
       return 'Custom Group';
     default:
       return type;
+  }
+};
+
+// Get badge color for principal type
+const getPrincipalTypeBadgeColor = (type: PrincipalTypeEnum): string => {
+  switch (type) {
+    case 'IDENTITY_USER':
+      return 'blue';
+    case 'IDENTITY_GROUP':
+      return 'violet';
+    case 'CUSTOM_GROUP':
+      return 'teal';
+    default:
+      return 'gray';
   }
 };
 
@@ -236,6 +254,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
   onManageAccess,
   onDeletePrincipal,
   onAddPrincipal,
+  onStatusChange,
 }) => {
   // Get current user to prevent self-modification
   const { user: currentUser } = useIdentity();
@@ -373,6 +392,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
             <Table.Tr>
               <Table.Th style={{ width: '280px' }}>Principal</Table.Th>
               <Table.Th style={{ width: '120px' }}>Type</Table.Th>
+              <Table.Th style={{ width: '100px' }}>Status</Table.Th>
               <Table.Th>Roles</Table.Th>
               <Table.Th style={{ width: '60px' }}></Table.Th>
             </Table.Tr>
@@ -380,7 +400,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
           <Table.Tbody>
             {filteredPrincipals.length === 0 ? (
               <Table.Tr>
-                <Table.Td colSpan={4}>
+                <Table.Td colSpan={5}>
                   <Center py="xl">
                     <Text c="dimmed">
                       {hasFetched 
@@ -399,8 +419,8 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
                 return (
                   <Table.Tr 
                     key={principal.id}
-                    onClick={() => handleRowClick(principal)}
-                    style={{ cursor: 'pointer' }}
+                    onClick={() => !isCurrentUser && handleRowClick(principal)}
+                    style={{ cursor: isCurrentUser ? 'default' : 'pointer' }}
                   >
                     {/* Principal Info */}
                     <Table.Td>
@@ -430,9 +450,28 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
 
                     {/* Type Column */}
                     <Table.Td>
-                      <Badge size="sm" variant="outline" color="gray">
+                      <Badge size="sm" variant="light" color={getPrincipalTypeBadgeColor(principal.principalType)}>
                         {getPrincipalTypeLabel(principal.principalType)}
                       </Badge>
+                    </Table.Td>
+
+                    {/* Status Column with Switch */}
+                    <Table.Td onClick={(e) => e.stopPropagation()}>
+                      <Group gap="xs" wrap="nowrap">
+                        <Switch
+                          checked={principal.isActive}
+                          disabled={isCurrentUser || !onStatusChange}
+                          onChange={(e) => {
+                            if (onStatusChange && !isCurrentUser) {
+                              onStatusChange(principal.principalId, principal.principalType, e.currentTarget.checked);
+                            }
+                          }}
+                          size="sm"
+                        />
+                        <Text size="xs" c={principal.isActive ? 'green' : 'dimmed'}>
+                          {principal.isActive ? 'Active' : 'Inactive'}
+                        </Text>
+                      </Group>
                     </Table.Td>
 
                     {/* Roles - displayed as badges like tags */}
