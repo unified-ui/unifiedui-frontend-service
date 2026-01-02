@@ -28,7 +28,7 @@ import {
   IconEdit,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { PageContainer, PageHeader, ConfirmDeleteDialog } from '../../components/common';
+import { PageContainer, ConfirmDeleteDialog } from '../../components/common';
 import { ManageTenantAccessTable } from '../../components/common/ManageTenantAccessTable';
 import type { TenantPrincipalPermission } from '../../components/common/ManageTenantAccessTable';
 import { AddPrincipalDialog } from '../../components/common/AddPrincipalDialog';
@@ -322,29 +322,33 @@ export const TenantSettingsPage: FC = () => {
     <MainLayout>
       <PageContainer>
         <Stack gap="lg">
-          <PageHeader
-            title="Settings"
-            description={`Manage settings for ${selectedTenant.name}`}
-          />
-
-          <Tabs value={activeTab} onChange={(value) => setActiveTab(value as TabValue)}>
+          <Tabs
+            value={activeTab}
+            onChange={(value) => setActiveTab(value as TabValue)}
+            classNames={{
+              root: classes.tabs,
+              list: classes.tabsList,
+              tab: classes.tab,
+              panel: classes.tabPanel,
+            }}
+          >
             <Tabs.List>
-              <Tabs.Tab value="settings" leftSection={<IconSettings size={16} />}>
+              <Tabs.Tab value="settings" leftSection={<IconSettings size={20} />}>
                 Tenant Settings
               </Tabs.Tab>
-              <Tabs.Tab value="access" leftSection={<IconUsers size={16} />}>
+              <Tabs.Tab value="access" leftSection={<IconUsers size={20} />}>
                 Manage Access
               </Tabs.Tab>
-              <Tabs.Tab value="groups" leftSection={<IconUsersGroup size={16} />}>
+              <Tabs.Tab value="groups" leftSection={<IconUsersGroup size={20} />}>
                 Custom Groups
               </Tabs.Tab>
-              <Tabs.Tab value="billing" leftSection={<IconCreditCard size={16} />}>
+              <Tabs.Tab value="billing" leftSection={<IconCreditCard size={20} />}>
                 Billing & Licence
               </Tabs.Tab>
             </Tabs.List>
 
             {/* Tenant Settings Tab */}
-            <Tabs.Panel value="settings" pt="md">
+            <Tabs.Panel value="settings">
               <Stack gap="lg">
                 <Paper p="lg" withBorder>
                   <form onSubmit={handleSaveTenant}>
@@ -398,7 +402,7 @@ export const TenantSettingsPage: FC = () => {
             </Tabs.Panel>
 
             {/* Access Management Tab */}
-            <Tabs.Panel value="access" pt="md">
+            <Tabs.Panel value="access">
               <Stack gap="md">
                 <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
                   <Text size="sm">
@@ -420,7 +424,7 @@ export const TenantSettingsPage: FC = () => {
             </Tabs.Panel>
 
             {/* Custom Groups Tab */}
-            <Tabs.Panel value="groups" pt="md">
+            <Tabs.Panel value="groups">
               <Stack gap="md">
                 <Group justify="space-between">
                   <Text size="sm" c="dimmed">
@@ -497,7 +501,7 @@ export const TenantSettingsPage: FC = () => {
             </Tabs.Panel>
 
             {/* Billing Tab */}
-            <Tabs.Panel value="billing" pt="md">
+            <Tabs.Panel value="billing">
               <Stack gap="lg">
                 <Paper p="lg" withBorder>
                   <Stack gap="md">

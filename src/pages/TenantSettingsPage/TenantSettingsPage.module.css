@@ -3,6 +3,25 @@
   min-height: 100vh;
 }
 
+.tabs {
+  margin-bottom: var(--spacing-md);
+}
+
+.tabsList {
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.tab {
+  font-size: var(--mantine-font-size-md);
+  font-weight: 500;
+  padding: var(--spacing-md) var(--spacing-lg);
+  min-height: 52px;
+}
+
+.tabPanel {
+  padding-top: var(--spacing-xl);
+}
+
 .dangerZone {
   border-color: var(--color-error-300);
 }
