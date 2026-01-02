@@ -30,10 +30,10 @@ import {
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { PageContainer, ConfirmDeleteDialog } from '../../components/common';
-import { ManageTenantAccessTable } from '../../components/common/ManageTenantAccessTable';
+import { ManageTenantAccessTable, TENANT_ROLE_OPTIONS } from '../../components/common/ManageTenantAccessTable';
 import type { TenantPrincipalPermission } from '../../components/common/ManageTenantAccessTable';
 import { AddPrincipalDialog } from '../../components/common/AddPrincipalDialog';
-import type { SelectedPrincipal } from '../../components/common/AddPrincipalDialog';
+import type { SelectedPrincipal, RoleOption } from '../../components/common/AddPrincipalDialog';
 import {
   CreateCustomGroupDialog,
   EditCustomGroupDialog,
@@ -141,23 +141,21 @@ export const TenantSettingsPage: FC = () => {
     try {
       const response = await apiClient.getTenantPrincipals(selectedTenant.id);
       
-      // Transform response: group roles by principal
+      // Transform response: use display_name, mail, principal_name from principal level
       const principalMap = new Map<string, TenantPrincipalPermission>();
       
       for (const principal of response.principals) {
         const key = `${principal.principal_id}-${principal.principal_type}`;
         
         if (!principalMap.has(key)) {
-          // Get display name from the first role entry
-          const firstRole = principal.roles[0];
           principalMap.set(key, {
             id: key,
             principalId: principal.principal_id,
             principalType: principal.principal_type,
-            displayName: firstRole?.display_name || null,
-            mail: null,
-            principalName: null,
-            description: null,
+            displayName: principal.display_name || null,
+            mail: principal.mail || null,
+            principalName: principal.principal_name || null,
+            description: principal.description || null,
             roles: principal.roles.map(r => r.role),
           });
         }
@@ -290,17 +288,19 @@ export const TenantSettingsPage: FC = () => {
   );
 
   const handleAddPrincipals = useCallback(
-    async (selectedPrincipals: SelectedPrincipal[], _role: string) => {
+    async (selectedPrincipals: SelectedPrincipal[], roles: string[]) => {
       if (!apiClient || !selectedTenant) return;
 
       try {
         for (const principal of selectedPrincipals) {
-          // Add with READER role by default (ignore role from dialog)
-          await apiClient.setTenantPrincipal(selectedTenant.id, {
-            principal_id: principal.id,
-            principal_type: principal.type,
-            role: 'READER',
-          });
+          // Add each selected role for each principal
+          for (const role of roles) {
+            await apiClient.setTenantPrincipal(selectedTenant.id, {
+              principal_id: principal.id,
+              principal_type: principal.type,
+              role: role as TenantPermissionEnum,
+            });
+          }
         }
         setAddPrincipalDialogOpen(false);
         await fetchPrincipals();
@@ -331,6 +331,16 @@ export const TenantSettingsPage: FC = () => {
   const existingPrincipalIds = useMemo(
     () => principals.map((p) => p.principalId),
     [principals]
+  );
+
+  // Convert TENANT_ROLE_OPTIONS to RoleOption format for AddPrincipalDialog
+  const tenantRoleOptions: RoleOption[] = useMemo(
+    () => TENANT_ROLE_OPTIONS.map((r) => ({
+      value: r.value,
+      label: r.label,
+      description: r.description,
+    })),
+    []
   );
 
   if (!selectedTenant) {
@@ -591,6 +601,9 @@ export const TenantSettingsPage: FC = () => {
         onSubmit={handleAddPrincipals}
         existingPrincipalIds={existingPrincipalIds}
         entityName="tenant"
+        roleOptions={tenantRoleOptions}
+        multiSelect={true}
+        defaultRoles={['READER']}
       />
 
       {/* Create Custom Group Dialog */}

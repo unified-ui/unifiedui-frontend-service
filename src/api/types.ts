@@ -228,16 +228,36 @@ export interface DeletePrincipalRequest {
   role: TenantPermissionEnum;
 }
 
+// Role detail with creation info
+export interface TenantRoleDetail {
+  role: TenantPermissionEnum;
+  display_name?: string;
+  created_at?: string;
+}
+
+// Single principal in tenant principals response
+export interface TenantPrincipalDetail {
+  principal_id: string;
+  principal_type: PrincipalTypeEnum;
+  display_name?: string;
+  principal_name?: string;
+  mail?: string;
+  description?: string;
+  is_active: boolean;
+  roles: TenantRoleDetail[];
+}
+
 export interface PrincipalsResponse {
   tenant_id: string;
   principal_id: string;
   principal_type: PrincipalTypeEnum;
-  roles: TenantRole[];
+  is_active: boolean;
+  roles: string[];
 }
 
 export interface TenantPrincipalsResponse {
   tenant_id: string;
-  principals: PrincipalsResponse[];
+  principals: TenantPrincipalDetail[];
 }
 
 // ========== Application Types ==========

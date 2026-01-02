@@ -223,7 +223,7 @@ export class UnifiedUIAPIClient {
   }
 
   async setTenantPrincipal(tenantId: string, data: SetPrincipalRequest): Promise<void> {
-    return this.request<void>('POST', `/api/v1/tenants/${tenantId}/principals`, data, 'Principal added successfully');
+    return this.request<void>('PUT', `/api/v1/tenants/${tenantId}/principals`, data, 'Principal added successfully');
   }
 
   async deleteTenantPrincipal(tenantId: string, data: DeletePrincipalRequest): Promise<void> {

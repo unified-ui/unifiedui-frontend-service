@@ -12,8 +12,10 @@ import {
   Paper,
   Divider,
   Radio,
+  Checkbox,
   ScrollArea,
   Center,
+  TextInput,
 } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import {
@@ -28,7 +30,6 @@ import type {
   IdentityUser,
   IdentityGroup,
   CustomGroupResponse,
-  PermissionActionEnum,
   PrincipalTypeEnum,
 } from '../../../api/types';
 import classes from './AddPrincipalDialog.module.css';
@@ -41,27 +42,41 @@ export interface SelectedPrincipal {
   type: PrincipalTypeEnum;
 }
 
+// Role option that can be passed to the dialog
+export interface RoleOption {
+  value: string;
+  label: string;
+  description?: string;
+}
+
 interface AddPrincipalDialogProps {
   /** Whether the dialog is open */
   opened: boolean;
   /** Close handler */
   onClose: () => void;
-  /** Submit handler with selected principals and role */
-  onSubmit: (principals: SelectedPrincipal[], role: PermissionActionEnum) => Promise<void>;
+  /** Submit handler with selected principals and selected roles */
+  onSubmit: (principals: SelectedPrincipal[], roles: string[]) => Promise<void>;
   /** Entity name for labels (e.g., "application", "credential") */
   entityName?: string;
   /** IDs of principals that already have access (to filter them out) */
   existingPrincipalIds?: string[];
+  /** Custom role options - if not provided, uses default READ/WRITE/ADMIN */
+  roleOptions?: RoleOption[];
+  /** Whether to allow multiple role selection (default: false = single select) */
+  multiSelect?: boolean;
+  /** Default selected role(s) */
+  defaultRoles?: string[];
 }
 
 const SEARCH_DEBOUNCE_MS = 300;
 const INITIAL_FETCH_LIMIT = 10;
 
-const ROLE_DESCRIPTIONS: Record<PermissionActionEnum, string> = {
-  READ: 'Can view this resource and its data',
-  WRITE: 'Can view and edit this resource',
-  ADMIN: 'Full access including managing permissions',
-};
+// Default resource permissions
+const DEFAULT_ROLE_OPTIONS: RoleOption[] = [
+  { value: 'READ', label: 'Read', description: 'Can view this resource and its data' },
+  { value: 'WRITE', label: 'Write', description: 'Can view and edit this resource' },
+  { value: 'ADMIN', label: 'Admin', description: 'Full access including managing permissions' },
+];
 
 export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
   opened,
@@ -69,6 +84,9 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
   onSubmit,
   entityName = 'resource',
   existingPrincipalIds = [],
+  roleOptions = DEFAULT_ROLE_OPTIONS,
+  multiSelect = false,
+  defaultRoles,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
 
@@ -76,6 +94,9 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearch] = useDebouncedValue(searchValue, SEARCH_DEBOUNCE_MS);
   const [showDropdown, setShowDropdown] = useState(false);
+
+  // Permission search state
+  const [permissionSearch, setPermissionSearch] = useState('');
 
   // Loading states
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
@@ -90,7 +111,7 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
 
   // Selection state
   const [selectedPrincipals, setSelectedPrincipals] = useState<SelectedPrincipal[]>([]);
-  const [selectedRole, setSelectedRole] = useState<PermissionActionEnum>('READ');
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(defaultRoles || [roleOptions[0]?.value || 'READ']);
 
   // Highlight state for keyboard navigation
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -98,6 +119,15 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
   // Refs
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Filter role options by search
+  const filteredRoleOptions = roleOptions.filter(
+    (role) =>
+      !permissionSearch ||
+      role.label.toLowerCase().includes(permissionSearch.toLowerCase()) ||
+      role.description?.toLowerCase().includes(permissionSearch.toLowerCase())
+  );
 
   // Build flat list of all suggestions for keyboard navigation
   const allSuggestions = [
@@ -168,11 +198,12 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
     if (opened) {
       setSearchValue('');
       setSelectedPrincipals([]);
-      setSelectedRole('READ');
+      setSelectedRoles(defaultRoles || [roleOptions[0]?.value || 'READ']);
       setShowDropdown(false);
       setHighlightedIndex(-1);
+      setPermissionSearch('');
     }
-  }, [opened]);
+  }, [opened, defaultRoles, roleOptions]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -193,7 +224,6 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
     setSearchValue('');
     setShowDropdown(false);
     setHighlightedIndex(-1);
-    // Blur input so user needs to click again to select more
     inputRef.current?.blur();
   }, [selectedPrincipals]);
 
@@ -202,6 +232,21 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
     setSelectedPrincipals((prev) => prev.filter((p) => p.id !== principalId));
   }, []);
 
+  // Handle role selection
+  const handleRoleSelect = useCallback((roleValue: string) => {
+    if (multiSelect) {
+      setSelectedRoles((prev) => {
+        if (prev.includes(roleValue)) {
+          if (prev.length === 1) return prev;
+          return prev.filter((r) => r !== roleValue);
+        }
+        return [...prev, roleValue];
+      });
+    } else {
+      setSelectedRoles([roleValue]);
+    }
+  }, [multiSelect]);
+
   // Handle keyboard navigation
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
@@ -209,9 +254,17 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
       setHighlightedIndex((prev) =>
         prev < allSuggestions.length - 1 ? prev + 1 : prev
       );
+      setTimeout(() => {
+        const highlighted = dropdownRef.current?.querySelector(`[data-index="${highlightedIndex + 1}"]`);
+        highlighted?.scrollIntoView({ block: 'nearest' });
+      }, 0);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+      setTimeout(() => {
+        const highlighted = dropdownRef.current?.querySelector(`[data-index="${highlightedIndex - 1}"]`);
+        highlighted?.scrollIntoView({ block: 'nearest' });
+      }, 0);
     } else if (e.key === 'Enter' && highlightedIndex >= 0) {
       e.preventDefault();
       const suggestion = allSuggestions[highlightedIndex];
@@ -233,11 +286,11 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
 
   // Handle submit
   const handleSubmit = async () => {
-    if (selectedPrincipals.length === 0) return;
+    if (selectedPrincipals.length === 0 || selectedRoles.length === 0) return;
 
     setIsSubmitting(true);
     try {
-      await onSubmit(selectedPrincipals, selectedRole);
+      await onSubmit(selectedPrincipals, selectedRoles);
       onClose();
     } finally {
       setIsSubmitting(false);
@@ -332,8 +385,8 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
 
           {/* Dropdown */}
           {showDropdown && (
-            <Paper className={classes.dropdown} shadow="md" withBorder>
-              <ScrollArea.Autosize mah={300}>
+            <Paper ref={dropdownRef} className={classes.dropdown} shadow="md" withBorder>
+              <ScrollArea.Autosize mah={300} scrollbarSize={8}>
                 {isLoading && !hasResults ? (
                   <Center py="md">
                     <Loader size="sm" />
@@ -364,6 +417,7 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
                             return (
                               <Box
                                 key={user.id}
+                                data-index={idx}
                                 className={`${classes.suggestion} ${
                                   highlightedIndex === idx ? classes.suggestionHighlighted : ''
                                 }`}
@@ -416,6 +470,7 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
                             return (
                               <Box
                                 key={group.id}
+                                data-index={idx}
                                 className={`${classes.suggestion} ${
                                   highlightedIndex === idx ? classes.suggestionHighlighted : ''
                                 }`}
@@ -460,6 +515,7 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
                             return (
                               <Box
                                 key={customGroup.id}
+                                data-index={idx}
                                 className={`${classes.suggestion} ${
                                   highlightedIndex === idx ? classes.suggestionHighlighted : ''
                                 }`}
@@ -501,37 +557,84 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
         {/* Role Selection */}
         <Box>
           <Text size="sm" fw={500} mb="xs">
-            Select permission level
+            Select {multiSelect ? 'permissions' : 'permission level'}
           </Text>
-          <Radio.Group
-            value={selectedRole}
-            onChange={(value) => setSelectedRole(value as PermissionActionEnum)}
-          >
-            <Stack gap="sm">
-              {(['READ', 'WRITE', 'ADMIN'] as PermissionActionEnum[]).map((role) => (
-                <Box
-                  key={role}
-                  className={`${classes.radioOption} ${selectedRole === role ? classes.radioOptionSelected : ''}`}
-                  onClick={() => setSelectedRole(role)}
-                >
-                  <Radio
-                    value={role}
-                    label={
-                      <Box>
-                        <Text size="sm" fw={500}>
-                          {role.charAt(0) + role.slice(1).toLowerCase()}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          {ROLE_DESCRIPTIONS[role]}
-                        </Text>
-                      </Box>
-                    }
-                    styles={{ radio: { cursor: 'pointer' }, label: { cursor: 'pointer' } }}
-                  />
-                </Box>
-              ))}
-            </Stack>
-          </Radio.Group>
+          
+          {/* Search for permissions if there are many */}
+          {roleOptions.length > 5 && (
+            <TextInput
+              placeholder="Search permissions..."
+              leftSection={<IconSearch size={14} />}
+              value={permissionSearch}
+              onChange={(e) => setPermissionSearch(e.target.value)}
+              mb="sm"
+              size="sm"
+            />
+          )}
+          
+          <ScrollArea.Autosize mah={200} scrollbarSize={8}>
+            {multiSelect ? (
+              <Stack gap="sm">
+                {filteredRoleOptions.map((role) => (
+                  <Box
+                    key={role.value}
+                    className={`${classes.roleOption} ${selectedRoles.includes(role.value) ? classes.roleOptionSelected : ''}`}
+                    onClick={() => handleRoleSelect(role.value)}
+                  >
+                    <Checkbox
+                      checked={selectedRoles.includes(role.value)}
+                      onChange={() => handleRoleSelect(role.value)}
+                      label={
+                        <Box>
+                          <Text size="sm" fw={500}>
+                            {role.label}
+                          </Text>
+                          {role.description && (
+                            <Text size="xs" c="dimmed">
+                              {role.description}
+                            </Text>
+                          )}
+                        </Box>
+                      }
+                      styles={{ input: { cursor: 'pointer' }, label: { cursor: 'pointer' } }}
+                    />
+                  </Box>
+                ))}
+              </Stack>
+            ) : (
+              <Radio.Group
+                value={selectedRoles[0] || ''}
+                onChange={(value) => setSelectedRoles([value])}
+              >
+                <Stack gap="sm">
+                  {filteredRoleOptions.map((role) => (
+                    <Box
+                      key={role.value}
+                      className={`${classes.roleOption} ${selectedRoles.includes(role.value) ? classes.roleOptionSelected : ''}`}
+                      onClick={() => handleRoleSelect(role.value)}
+                    >
+                      <Radio
+                        value={role.value}
+                        label={
+                          <Box>
+                            <Text size="sm" fw={500}>
+                              {role.label}
+                            </Text>
+                            {role.description && (
+                              <Text size="xs" c="dimmed">
+                                {role.description}
+                              </Text>
+                            )}
+                          </Box>
+                        }
+                        styles={{ radio: { cursor: 'pointer' }, label: { cursor: 'pointer' } }}
+                      />
+                    </Box>
+                  ))}
+                </Stack>
+              </Radio.Group>
+            )}
+          </ScrollArea.Autosize>
         </Box>
 
         {/* Actions */}
@@ -542,7 +645,7 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
           <Button
             onClick={handleSubmit}
             loading={isSubmitting}
-            disabled={selectedPrincipals.length === 0}
+            disabled={selectedPrincipals.length === 0 || selectedRoles.length === 0}
           >
             Add Access
           </Button>
