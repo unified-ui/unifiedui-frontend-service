@@ -1,0 +1,121 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  padding: 0 var(--spacing-lg);
+  background: var(--bg-paper);
+  border-bottom: 1px solid var(--border-default);
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+}
+
+/* Logo Section */
+.logo {
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.logoWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500));
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.logoText {
+  font-weight: 700;
+  background: linear-gradient(135deg, 
+    var(--color-primary-600) 0%, 
+    var(--color-secondary-600) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-mantine-color-scheme='dark'] .logoText {
+  background: linear-gradient(135deg, 
+    var(--color-primary-400) 0%, 
+    var(--color-secondary-400) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Search Bar */
+.search {
+  flex: 1;
+  max-width: 600px;
+}
+
+/* User Account */
+.userAccountWrapper {
+  position: relative;
+}
+
+.userAccount {
+  cursor: pointer;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-xl);
+  transition: background-color var(--transition-fast) ease;
+}
+
+.userAccount:hover {
+  background-color: var(--gray-100);
+}
+
+[data-mantine-color-scheme='dark'] .userAccount:hover {
+  background-color: var(--gray-800);
+}
+
+.userDropdown {
+  position: absolute;
+  top: calc(100% + var(--spacing-xs));
+  right: 0;
+  min-width: 280px;
+  background: var(--bg-paper);
+  border: 1px solid var(--border-default);
+  z-index: var(--z-dropdown);
+}
+
+.menuLink {
+  width: 100%;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast) ease;
+}
+
+.menuLink:hover {
+  background-color: var(--gray-100);
+}
+
+[data-mantine-color-scheme='dark'] .menuLink:hover {
+  background-color: var(--gray-800);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .search {
+    max-width: 300px;
+  }
+  
+  .logoText {
+    display: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .search {
+    display: none;
+  }
+}

@@ -1,0 +1,47 @@
+.container {
+  width: 100%;
+}
+
+.searchInput {
+  flex: 1;
+  max-width: 300px;
+}
+
+.roleFilter {
+  min-width: 200px;
+  max-width: 300px;
+}
+
+.principalIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-600);
+}
+
+/* Dark mode adjustments */
+[data-mantine-color-scheme='dark'] .principalIcon {
+  background-color: var(--color-gray-800);
+  color: var(--color-gray-400);
+}
+
+.tableScrollArea {
+  /* Dynamic height: fills remaining viewport space with bottom padding */
+  max-height: calc(100vh - 380px);
+  min-height: 200px;
+}
+
+.tableHeader {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--bg-app);
+}
+
+.loadMoreTrigger {
+  min-height: 40px;
+}

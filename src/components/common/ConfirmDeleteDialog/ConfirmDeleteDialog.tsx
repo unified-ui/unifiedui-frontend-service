@@ -1,0 +1,118 @@
+import type { FC } from 'react';
+import { Modal, Text, Group, Button, Stack, ThemeIcon } from '@mantine/core';
+import { IconAlertTriangle } from '@tabler/icons-react';
+
+interface ConfirmDeleteDialogProps {
+  opened: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title?: string;
+  message?: string;
+  itemName?: string;
+  itemType?: string;
+  isLoading?: boolean;
+  confirmButtonText?: string;
+  reverseButtons?: boolean;
+}
+
+export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
+  opened,
+  onClose,
+  onConfirm,
+  title = 'Löschen bestätigen',
+  message,
+  itemName,
+  itemType = 'Element',
+  isLoading = false,
+  confirmButtonText = 'Löschen',
+  reverseButtons = false,
+}) => {
+  const handleConfirm = () => {
+    onConfirm();
+  };
+
+  // Build display message
+  const displayMessage = message || (itemName
+    ? <>Sind Sie sicher, dass Sie <Text span fw={600} c="var(--text-primary)">{itemName}</Text> löschen möchten?</>
+    : <>Sind Sie sicher, dass Sie dieses {itemType} löschen möchten?</>
+  );
+
+  return (
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={
+        <Group gap="sm">
+          <ThemeIcon color="red" variant="light" size="lg" radius="xl">
+            <IconAlertTriangle size={20} />
+          </ThemeIcon>
+          <Text fw={600} size="lg">{title}</Text>
+        </Group>
+      }
+      centered
+      size="md"
+      styles={{
+        header: {
+          borderBottom: '1px solid var(--border-default)',
+          paddingBottom: 'var(--spacing-sm)',
+        },
+        body: {
+          paddingTop: 'var(--spacing-lg)',
+        },
+      }}
+    >
+      <Stack gap="lg">
+        <Text size="sm" c="dimmed">
+          {displayMessage}
+        </Text>
+        
+        <Text size="xs" c="red.6" style={{
+          padding: 'var(--spacing-sm) var(--spacing-sm)',
+          backgroundColor: 'var(--color-error-50)',
+          borderRadius: 'var(--radius-sm)',
+          borderLeft: '3px solid var(--color-error-500)',
+        }}>
+          Diese Aktion kann nicht rückgängig gemacht werden.
+        </Text>
+
+        <Group justify="flex-end" gap="sm" mt="sm">
+          {reverseButtons ? (
+            <>
+              <Button 
+                color="red" 
+                onClick={handleConfirm}
+                loading={isLoading}
+              >
+                {confirmButtonText}
+              </Button>
+              <Button 
+                variant="default" 
+                onClick={onClose}
+                disabled={isLoading}
+              >
+                Abbrechen
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button 
+                variant="default" 
+                onClick={onClose}
+                disabled={isLoading}
+              >
+                Abbrechen
+              </Button>
+              <Button 
+                color="red" 
+                onClick={handleConfirm}
+                loading={isLoading}
+              >
+                {confirmButtonText}
+              </Button>
+            </>
+          )}
+        </Group>
+      </Stack>
+    </Modal>
+  );
+};

@@ -1,0 +1,21 @@
+.header {
+  padding: var(--spacing-lg) 0;
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.description {
+  max-width: 600px;
+}
+
+.actionButton {
+  flex-shrink: 0;
+}

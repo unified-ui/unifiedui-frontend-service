@@ -1,0 +1,1 @@
+export { DevelopmentPlatformDetailsPage } from './DevelopmentPlatformDetailsPage';

@@ -1,0 +1,109 @@
+.sidebar {
+  position: fixed;
+  top: 70px; /* Below header */
+  left: 0;
+  bottom: 0;
+  width: 100px;
+  background: var(--bg-paper);
+  border-right: 1px solid var(--border-default);
+  overflow-y: auto;
+  z-index: var(--z-dropdown);
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-md) 0;
+}
+
+.navMain {
+  flex: 1;
+  padding: 0;
+  gap: var(--spacing-lg);
+}
+
+.navBottom {
+  padding: 0;
+  margin-top: auto;
+  gap: var(--spacing-lg);
+}
+
+.navDivider {
+  width: 50%;
+  margin: var(--spacing-sm) auto;
+  border-color: var(--color-gray-500) !important;
+}
+
+[data-mantine-color-scheme='dark'] .navDivider {
+  border-color: var(--color-gray-500) !important;
+}
+
+.navItem {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: 16px var(--spacing-xs);
+  margin: 2px 0;
+  width: 100%;
+  height: 75px;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: none;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-md);
+}
+
+.navItem:hover {
+  background-color: transparent !important;
+  color: var(--color-primary-600) !important;
+}
+
+[data-mantine-color-scheme='dark'] .navItem:hover {
+  background-color: transparent !important;
+  color: var(--color-primary-400) !important;
+}
+
+.navItemActive {
+  background-color: transparent !important;
+  color: var(--color-primary-700) !important;
+  border-left: 4px solid var(--color-primary-600) !important;
+}
+
+.navItemActive .navLabel {
+  font-weight: var(--font-weight-bold) !important;
+}
+
+[data-mantine-color-scheme='dark'] .navItemActive {
+  background-color: transparent !important;
+  color: var(--color-primary-300) !important;
+  border-left: 4px solid var(--color-primary-400) !important;
+}
+
+.navItemHovered {
+  background-color: var(--color-primary-50) !important;
+  color: var(--color-primary-600) !important;
+}
+
+[data-mantine-color-scheme='dark'] .navItemHovered {
+  background-color: rgba(66, 165, 245, 0.1) !important;
+  color: var(--color-primary-400) !important;
+}
+
+.navLabel {
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+/* Mobile responsive */
+@media (max-width: 576px) {
+  .sidebar {
+    width: 60px;
+  }
+  
+  .navLabel {
+    font-size: 10px;
+  }
+}

@@ -1,0 +1,4 @@
+.pagination {
+  margin-top: var(--spacing-sm);
+  background: var(--bg-paper);
+}

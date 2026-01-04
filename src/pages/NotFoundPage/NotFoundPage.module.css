@@ -1,0 +1,17 @@
+.container {
+  padding: var(--spacing-xl);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  font-size: 8rem;
+  font-weight: 900;
+  color: var(--color-primary-600);
+}
+
+[data-mantine-color-scheme='dark'] .title {
+  color: var(--color-primary-400);
+}

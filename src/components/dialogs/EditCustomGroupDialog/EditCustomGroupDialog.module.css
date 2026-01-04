@@ -1,0 +1,72 @@
+.modalContent {
+  border-radius: var(--radius-lg);
+  min-height: 600px;
+}
+
+.modalHeader {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: none;
+}
+
+.modalBody {
+  padding: var(--spacing-lg);
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+}
+
+.titleIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500));
+  color: white;
+}
+
+.tabContainer {
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.segmentedControl {
+  background-color: var(--color-gray-200);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xs);
+}
+
+[data-mantine-color-scheme='dark'] .segmentedControl {
+  background-color: var(--bg-app);
+}
+
+.segmentedControl :global(.mantine-SegmentedControl-indicator) {
+  background-color: var(--bg-paper);
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-sm);
+}
+
+[data-mantine-color-scheme='dark'] .segmentedControl :global(.mantine-SegmentedControl-indicator) {
+  background-color: #292929;
+}
+
+.segmentedControl :global(.mantine-SegmentedControl-label) {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  transition: color var(--transition-fast) ease;
+}
+
+.segmentedControl :global(.mantine-SegmentedControl-label[data-active]) {
+  color: var(--color-primary-600);
+}
+
+[data-mantine-color-scheme='dark'] .segmentedControl :global(.mantine-SegmentedControl-label[data-active]) {
+  color: var(--color-primary-400);
+}
+
+.iamContainer {
+  flex: 1;
+  min-height: 380px;
+}

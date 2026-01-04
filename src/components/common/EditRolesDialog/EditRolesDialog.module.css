@@ -1,0 +1,52 @@
+.principalInfo {
+  padding: var(--spacing-md);
+  background-color: var(--color-gray-50);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+}
+
+[data-mantine-color-scheme='dark'] .principalInfo {
+  background-color: var(--color-gray-800);
+}
+
+.principalIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-600);
+}
+
+[data-mantine-color-scheme='dark'] .principalIcon {
+  background-color: var(--color-primary-900);
+  color: var(--color-primary-300);
+}
+
+/* Role option styles */
+.roleOption {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.roleOption:hover {
+  background-color: var(--color-gray-50);
+}
+
+[data-mantine-color-scheme='dark'] .roleOption:hover {
+  background-color: var(--color-gray-800);
+}
+
+.roleOptionSelected {
+  border-color: var(--color-primary-500);
+  background-color: var(--color-primary-50);
+}
+
+[data-mantine-color-scheme='dark'] .roleOptionSelected {
+  background-color: rgba(33, 150, 243, 0.1);
+}

@@ -1,0 +1,26 @@
+.layout {
+  height: 100vh;
+  width: 100%;
+  background: var(--bg-app);
+  overflow: hidden; /* Prevent page scroll */
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  margin-top: 70px; /* Header height */
+  margin-left: 100px; /* Sidebar width */
+  height: calc(100vh - 70px); /* Fixed height */
+  overflow: hidden; /* Children handle their own scroll */
+  padding: var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Mobile responsive */
+@media (max-width: 576px) {
+  .content {
+    margin-left: 60px; /* Narrower sidebar on mobile */
+    padding: var(--spacing-md);
+  }
+}

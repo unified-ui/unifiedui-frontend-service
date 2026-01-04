@@ -1,0 +1,80 @@
+.container {
+  width: 100%;
+}
+
+.searchInput {
+  flex: 1;
+  max-width: 300px;
+}
+
+.roleFilter {
+  min-width: 200px;
+}
+
+.tableContainer {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  max-height: 350px;
+}
+
+.table {
+  min-width: 700px;
+}
+
+
+
+.table thead tr th {
+  border-bottom: 1px solid var(--border-default);
+  text-align: left;
+}
+
+.table thead tr th.roleHeader {
+  width: 80px;
+  text-align: center;
+}
+
+.roleCell {
+  text-align: center;
+}
+
+.roleCell > div,
+.roleCell > label {
+  display: flex;
+  justify-content: center;
+}
+
+.actionHeader {
+  width: 60px;
+}
+
+.actionCell {
+  text-align: center;
+}
+
+.principalIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-gray-100);
+  color: var(--text-secondary);
+}
+
+[data-mantine-color-scheme='dark'] .principalIcon {
+  background-color: var(--color-gray-700);
+}
+
+.principalNameContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.principalNameContainerCentered {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
