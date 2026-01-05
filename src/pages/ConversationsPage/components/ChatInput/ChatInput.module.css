@@ -10,7 +10,7 @@
 .inputOuterWrapper {
   width: 80%;
   max-width: 900px;
-  background-color: var(--bg-paper);
+  background-color: var(--bg-app);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
   padding: var(--spacing-md);
@@ -114,6 +114,7 @@
 /* Input wrapper */
 .inputWrapper {
   position: relative;
+  background-color: var(--bg-app);
 }
 
 .inputContainer {
@@ -123,12 +124,7 @@
   padding: var(--spacing-xs);
   background-color: var(--bg-app);
   border-radius: var(--radius-lg);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.inputContainer:focus-within {
-  border-color: var(--color-primary-400);
-  box-shadow: 0 0 0 2px var(--color-primary-100);
+  border: none;
 }
 
 .fileInput {
@@ -200,14 +196,4 @@
 [data-mantine-color-scheme="dark"] .filePreview {
   background-color: var(--color-gray-800);
   color: var(--color-gray-400);
-}
-
-[data-mantine-color-scheme="dark"] .inputContainer {
-  background-color: var(--color-gray-800);
-  border-color: var(--color-gray-700);
-}
-
-[data-mantine-color-scheme="dark"] .inputContainer:focus-within {
-  border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 2px var(--color-primary-900);
 }

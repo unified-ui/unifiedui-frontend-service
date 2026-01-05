@@ -82,12 +82,7 @@
   max-width: 400px;
 }
 
-.centeredInputWrapper {
-  display: flex;
-  justify-content: center;
-  padding: var(--spacing-xl);
-  width: 100%;
-}
+
 
 /* Drop zone overlay for the main chat area */
 .dropZoneOverlay {

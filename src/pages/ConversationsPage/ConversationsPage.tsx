@@ -298,8 +298,8 @@ export const ConversationsPage: FC = () => {
         
         activeConversationId = newConv.id;
         
-        // Update URL without full navigation
-        window.history.replaceState(null, '', `/conversations/${newConv.id}`);
+        // Navigate to the new conversation (this updates conversationId param and triggers selected state)
+        navigate(`/conversations/${newConv.id}`, { replace: true });
         
         // Update state
         setCurrentConversation(newConv);
@@ -582,32 +582,34 @@ export const ConversationsPage: FC = () => {
 
           {/* Content */}
           {isNewChat && messages.length === 0 ? (
-            <Box className={classes.contentArea}>
-              <Box className={classes.emptyState}>
-                <IconMessageCircle size={64} className={classes.emptyStateIcon} />
-                <Text className={classes.emptyStateTitle}>
-                  Start a new conversation
-                </Text>
-                <Text className={classes.emptyStateDescription}>
-                  {selectedApplicationId
-                    ? 'Type your message below to begin chatting'
-                    : 'Select a chat agent from the header to start'}
-                </Text>
+            <>
+              <Box className={classes.contentArea}>
+                <Box className={classes.emptyState}>
+                  <IconMessageCircle size={64} className={classes.emptyStateIcon} />
+                  <Text className={classes.emptyStateTitle}>
+                    Start a new conversation
+                  </Text>
+                  <Text className={classes.emptyStateDescription}>
+                    {selectedApplicationId
+                      ? 'Type your message below to begin chatting'
+                      : 'Select a chat agent from the header to start'}
+                  </Text>
+                </Box>
               </Box>
-              <Box className={classes.centeredInputWrapper}>
-                <ChatInput
-                  ref={chatInputRef}
-                  onSend={handleSendMessage}
-                  isDisabled={!selectedApplicationId}
-                  isStreaming={isStreaming}
-                  placeholder={
-                    selectedApplicationId
-                      ? 'Type a message to start...'
-                      : 'Select a chat agent to start'
-                  }
-                />
-              </Box>
-            </Box>
+
+              {/* Input - same structure as existing chat */}
+              <ChatInput
+                ref={chatInputRef}
+                onSend={handleSendMessage}
+                isDisabled={!selectedApplicationId}
+                isStreaming={isStreaming}
+                placeholder={
+                  selectedApplicationId
+                    ? 'Type a message to start...'
+                    : 'Select a chat agent to start'
+                }
+              />
+            </>
           ) : (
             <>
               <Box className={classes.contentArea}>
