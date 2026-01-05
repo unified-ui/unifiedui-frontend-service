@@ -863,13 +863,13 @@ export class UnifiedUIAPIClient {
       headers['X-Microsoft-Foundry-API-Key'] = foundryToken;
     }
 
-    // Transform request data to snake_case for Go backend
+    // Build request body with camelCase field names (matching Go backend)
     const requestBody = {
       conversationId: data.conversationId,
       applicationId: data.applicationId,
       message: data.message,
       invokeConfig: data.invokeConfig,
-      ext_conversation_id: data.extConversationId, // Transform to snake_case
+      extConversationId: data.extConversationId,
     };
 
     const response = await fetch(

@@ -311,8 +311,9 @@ export const ConversationsPage: FC = () => {
       foundryToken = token ?? undefined;
     }
 
-    // Determine conversation ID - create new conversation if needed
+    // Determine conversation ID and ext_conversation_id - create new conversation if needed
     let activeConversationId = conversationId;
+    let activeExtConversationId = currentConversation?.ext_conversation_id;
     
     // If this is a new chat, create conversation first via platform service
     if (!activeConversationId) {
@@ -327,6 +328,8 @@ export const ConversationsPage: FC = () => {
         );
         
         activeConversationId = newConv.id;
+        // IMPORTANT: Use ext_conversation_id from create response for Foundry apps
+        activeExtConversationId = newConv.ext_conversation_id;
         
         // Mark this conversation as just created to prevent useEffect from overwriting our state
         justCreatedConversationRef.current = newConv.id;
@@ -388,7 +391,7 @@ export const ConversationsPage: FC = () => {
             attachments: attachmentUrls.length > 0 ? attachmentUrls : undefined,
           },
           // Include external conversation ID for Foundry apps (used for continuing threads)
-          extConversationId: isFoundryApp ? currentConversation?.ext_conversation_id : undefined,
+          extConversationId: isFoundryApp ? activeExtConversationId : undefined,
         },
         // onStreamStart
         (messageId: string, _newConversationId: string) => {
