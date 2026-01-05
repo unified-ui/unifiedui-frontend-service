@@ -1,29 +1,14 @@
+import { useState, useEffect, useCallback } from 'react';
 import type { FC } from 'react';
-import { useState, useEffect } from 'react';
-import {
-  Modal,
-  Stack,
-  TextInput,
-  Select,
-  Button,
-  Group,
-  Text,
-  Loader,
-  ActionIcon,
-  Paper,
-  Badge,
-  Divider,
-} from '@mantine/core';
-import { notifications } from '@mantine/notifications';
-import { IconSearch, IconX, IconUser, IconUsers } from '@tabler/icons-react';
+import { Modal, Text, Group, Box } from '@mantine/core';
+import { IconMessageShare } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
-import type {
-  ConversationResponse,
-  PrincipalWithRolesResponse,
-  PermissionActionEnum,
-  PrincipalTypeEnum,
-} from '../../api/types';
-
+import { ManageAccessTable, AddPrincipalDialog } from '../common';
+import type { SelectedPrincipal } from '../common/AddPrincipalDialog/AddPrincipalDialog';
+import type { ConversationResponse, PrincipalWithRolesResponse } from '../../api/types';
+import { PrincipalTypeEnum, PermissionActionEnum } from '../../api/types';
+import type { PrincipalPermission } from '../common/ManageAccessTable/ManageAccessTable';
+import classes from './ShareConversationDialog.module.css';
 
 interface ShareConversationDialogProps {
   opened: boolean;
@@ -31,301 +16,182 @@ interface ShareConversationDialogProps {
   conversation: ConversationResponse | null;
 }
 
-const ROLE_OPTIONS = [
-  { value: 'READ', label: 'Read Only' },
-  { value: 'WRITE', label: 'Can Edit' },
-  { value: 'ADMIN', label: 'Admin' },
-];
-
 export const ShareConversationDialog: FC<ShareConversationDialogProps> = ({
   opened,
   onClose,
   conversation,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [principals, setPrincipals] = useState<PrincipalWithRolesResponse[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPrincipalId, setSelectedPrincipalId] = useState<string>('');
-  const [selectedRole, setSelectedRole] = useState<PermissionActionEnum>('READ' as PermissionActionEnum);
-  const [principalType, setPrincipalType] = useState<PrincipalTypeEnum>('IDENTITY_USER' as PrincipalTypeEnum);
 
-  // Load existing principals
-  useEffect(() => {
-    if (!opened || !conversation || !apiClient || !selectedTenant) return;
+  const [principals, setPrincipals] = useState<PrincipalPermission[]>([]);
+  const [isPrincipalsLoading, setIsPrincipalsLoading] = useState(false);
+  const [hasPrincipalsFetched, setHasPrincipalsFetched] = useState(false);
+  const [principalsError, setPrincipalsError] = useState<string | null>(null);
+  const [isAddPrincipalOpen, setIsAddPrincipalOpen] = useState(false);
 
-    const loadPrincipals = async () => {
-      setIsLoading(true);
-      try {
-        const response = await apiClient.getConversationPrincipals(
-          selectedTenant.id,
-          conversation.id
-        );
-        setPrincipals(response.principals);
-      } catch (error) {
-        console.error('Failed to load principals:', error);
-        notifications.show({
-          title: 'Error',
-          message: 'Failed to load sharing settings',
-          color: 'red',
-        });
-      } finally {
-        setIsLoading(false);
+  // Fetch principals
+  const fetchPrincipals = useCallback(
+    async (showLoading = true) => {
+      if (!apiClient || !selectedTenant || !conversation) return;
+
+      if (showLoading) {
+        setIsPrincipalsLoading(true);
       }
-    };
+      setPrincipalsError(null);
 
-    loadPrincipals();
-  }, [opened, conversation, apiClient, selectedTenant]);
+      try {
+        const response = await apiClient.getConversationPrincipals(selectedTenant.id, conversation.id);
 
-  const handleAddPrincipal = async () => {
-    if (!selectedPrincipalId || !apiClient || !selectedTenant || !conversation) return;
+        const transformedPrincipals: PrincipalPermission[] = (response.principals || []).map(
+          (p: PrincipalWithRolesResponse) => ({
+            id: p.principal_id,
+            principalId: p.principal_id,
+            principalType: p.principal_type,
+            displayName: p.display_name,
+            mail: p.mail,
+            principalName: p.principal_name,
+            description: p.description,
+            roles: p.roles || [],
+          })
+        );
 
-    setIsSaving(true);
-    try {
-      await apiClient.setConversationPermission(
-        selectedTenant.id,
-        conversation.id,
-        {
-          principal_id: selectedPrincipalId,
-          principal_type: principalType,
-          role: selectedRole,
+        setPrincipals(transformedPrincipals);
+      } catch (err) {
+        console.error('Failed to fetch principals:', err);
+        setPrincipalsError('Failed to load access permissions');
+      } finally {
+        setIsPrincipalsLoading(false);
+        setHasPrincipalsFetched(true);
+      }
+    },
+    [apiClient, selectedTenant, conversation]
+  );
+
+  useEffect(() => {
+    if (opened && conversation) {
+      fetchPrincipals();
+    } else if (!opened) {
+      setHasPrincipalsFetched(false);
+    }
+  }, [opened, conversation, fetchPrincipals]);
+
+  // Handle role change
+  const handleRoleChange = useCallback(
+    async (
+      principalId: string,
+      principalType: PrincipalTypeEnum,
+      role: PermissionActionEnum,
+      enabled: boolean
+    ) => {
+      if (!apiClient || !selectedTenant || !conversation) return;
+
+      try {
+        if (enabled) {
+          await apiClient.setConversationPermission(selectedTenant.id, conversation.id, {
+            principal_id: principalId,
+            principal_type: principalType,
+            role,
+          });
+        } else {
+          await apiClient.deleteConversationPermission(
+            selectedTenant.id,
+            conversation.id,
+            principalId,
+            principalType,
+            role
+          );
         }
+
+        await fetchPrincipals(false);
+      } catch (error) {
+        console.error('Failed to update permission:', error);
+        await fetchPrincipals(false);
+      }
+    },
+    [apiClient, selectedTenant, conversation, fetchPrincipals]
+  );
+
+  // Handle adding principals
+  const handleAddPrincipals = useCallback(
+    async (selectedPrincipals: SelectedPrincipal[], roles: string[]) => {
+      if (!apiClient || !selectedTenant || !conversation) return;
+
+      const role = (roles[0] as PermissionActionEnum) || PermissionActionEnum.READ;
+      for (const principal of selectedPrincipals) {
+        await apiClient.setConversationPermission(selectedTenant.id, conversation.id, {
+          principal_id: principal.id,
+          principal_type: principal.type,
+          role,
+        });
+      }
+
+      await fetchPrincipals(false);
+    },
+    [apiClient, selectedTenant, conversation, fetchPrincipals]
+  );
+
+  // Handle deleting principal
+  const handleDeletePrincipal = useCallback(
+    async (principalId: string, principalType: PrincipalTypeEnum) => {
+      if (!apiClient || !selectedTenant || !conversation) return;
+
+      const principal = principals.find(
+        (p) => p.principalId === principalId && p.principalType === principalType
       );
-
-      // Reload principals
-      const response = await apiClient.getConversationPrincipals(
-        selectedTenant.id,
-        conversation.id
-      );
-      setPrincipals(response.principals);
-
-      // Reset form
-      setSelectedPrincipalId('');
-      setSelectedRole('READ' as PermissionActionEnum);
-
-      notifications.show({
-        title: 'Success',
-        message: 'Permission added successfully',
-        color: 'green',
-      });
-    } catch (error) {
-      console.error('Failed to add permission:', error);
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to add permission',
-        color: 'red',
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleRemovePrincipal = async (principalId: string) => {
-    if (!apiClient || !selectedTenant || !conversation) return;
-
-    try {
-      const principal = principals.find(p => p.principal_id === principalId);
-      if (!principal || !principal.roles || principal.roles.length === 0) return;
-
-      await apiClient.deleteConversationPermission(
-        selectedTenant.id,
-        conversation.id,
-        principalId,
-        principal.principal_type,
-        principal.roles[0]
-      );
-
-      // Update local state
-      setPrincipals(prev => prev.filter(p => p.principal_id !== principalId));
-
-      notifications.show({
-        title: 'Success',
-        message: 'Permission removed successfully',
-        color: 'green',
-      });
-    } catch (error) {
-      console.error('Failed to remove permission:', error);
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to remove permission',
-        color: 'red',
-      });
-    }
-  };
-
-  const handleUpdateRole = async (principalId: string, newRole: PermissionActionEnum) => {
-    if (!apiClient || !selectedTenant || !conversation) return;
-
-    const principal = principals.find(p => p.principal_id === principalId);
-    if (!principal) return;
-
-    try {
-      await apiClient.setConversationPermission(
-        selectedTenant.id,
-        conversation.id,
-        {
-          principal_id: principalId,
-          principal_type: principal.principal_type,
-          role: newRole,
+      if (principal) {
+        for (const role of principal.roles) {
+          await apiClient.deleteConversationPermission(
+            selectedTenant.id,
+            conversation.id,
+            principalId,
+            principalType,
+            role
+          );
         }
-      );
+      }
 
-      // Update local state
-      setPrincipals(prev =>
-        prev.map(p =>
-          p.principal_id === principalId ? { ...p, role: newRole } : p
-        )
-      );
-
-      notifications.show({
-        title: 'Success',
-        message: 'Permission updated successfully',
-        color: 'green',
-      });
-    } catch (error) {
-      console.error('Failed to update permission:', error);
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to update permission',
-        color: 'red',
-      });
-    }
-  };
-
-  const filteredPrincipals = principals.filter(p =>
-    p.principal_id.toLowerCase().includes(searchQuery.toLowerCase())
+      await fetchPrincipals(false);
+    },
+    [apiClient, selectedTenant, conversation, principals, fetchPrincipals]
   );
 
   return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      title={`Share: ${conversation?.name || 'Conversation'}`}
-      size="lg"
-    >
-      <Stack gap="md">
-        {/* Add Principal Section */}
-        <Paper p="md" withBorder>
-          <Stack gap="sm">
-            <Text size="sm" fw={500}>
-              Add people or groups
+    <>
+      <Modal
+        opened={opened}
+        onClose={onClose}
+        title={
+          <Group gap="sm">
+            <Box className={classes.titleIcon}>
+              <IconMessageShare size={20} />
+            </Box>
+            <Text fw={600} size="lg">
+              Share Conversation
             </Text>
-            <Group gap="sm" align="flex-end">
-              <Select
-                label="Type"
-                value={principalType}
-                onChange={(value) => setPrincipalType((value || 'IDENTITY_USER') as PrincipalTypeEnum)}
-                data={[
-                  { value: 'IDENTITY_USER', label: 'User' },
-                  { value: 'IDENTITY_GROUP', label: 'Identity Group' },
-                  { value: 'CUSTOM_GROUP', label: 'Custom Group' },
-                ]}
-                style={{ width: 150 }}
-              />
-              <TextInput
-                label="ID"
-                placeholder="Enter user/group ID"
-                value={selectedPrincipalId}
-                onChange={(e) => setSelectedPrincipalId(e.currentTarget.value)}
-                style={{ flex: 1 }}
-              />
-              <Select
-                label="Role"
-                value={selectedRole}
-                onChange={(value) => setSelectedRole(value as PermissionActionEnum)}
-                data={ROLE_OPTIONS}
-                style={{ width: 150 }}
-              />
-              <Button
-                onClick={handleAddPrincipal}
-                disabled={!selectedPrincipalId || isSaving}
-                loading={isSaving}
-              >
-                Add
-              </Button>
-            </Group>
-          </Stack>
-        </Paper>
-
-        <Divider />
-
-        {/* Current Principals */}
-        <Stack gap="sm">
-          <Group justify="space-between">
-            <Text size="sm" fw={500}>
-              Who has access
-            </Text>
-            <TextInput
-              placeholder="Search..."
-              size="xs"
-              leftSection={<IconSearch size={14} />}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.currentTarget.value)}
-              style={{ width: 200 }}
-            />
           </Group>
+        }
+        size={1000}
+        centered
+      >
+        <ManageAccessTable
+          principals={principals}
+          isLoading={isPrincipalsLoading}
+          hasFetched={hasPrincipalsFetched}
+          error={principalsError}
+          onRoleChange={handleRoleChange}
+          onDeletePrincipal={handleDeletePrincipal}
+          onAddPrincipal={() => setIsAddPrincipalOpen(true)}
+          entityName="conversation"
+        />
+      </Modal>
 
-          {isLoading ? (
-            <Group justify="center" py="xl">
-              <Loader size="sm" />
-            </Group>
-          ) : filteredPrincipals.length === 0 ? (
-            <Text c="dimmed" size="sm" ta="center" py="xl">
-              {searchQuery ? 'No matching principals found' : 'No one has access yet'}
-            </Text>
-          ) : (
-            <Stack gap="xs">
-              {filteredPrincipals.map((principal) => (
-                <Paper key={principal.principal_id} p="sm" withBorder>
-                  <Group justify="space-between">
-                    <Group gap="sm">
-                      {principal.principal_type === 'IDENTITY_USER' ? (
-                        <IconUser size={20} />
-                      ) : (
-                        <IconUsers size={20} />
-                      )}
-                      <div>
-                        <Text size="sm">{principal.principal_id}</Text>
-                        <Badge size="xs" variant="light">
-                          {principal.principal_type}
-                        </Badge>
-                      </div>
-                    </Group>
-                    <Group gap="xs">
-                      <Select
-                        value={principal.roles && principal.roles.length > 0 ? principal.roles[0] : 'READ'}
-                        onChange={(value) =>
-                          handleUpdateRole(
-                            principal.principal_id,
-                            value as PermissionActionEnum
-                          )
-                        }
-                        data={ROLE_OPTIONS}
-                        size="xs"
-                        style={{ width: 120 }}
-                      />
-                      <ActionIcon
-                        color="red"
-                        variant="subtle"
-                        onClick={() => handleRemovePrincipal(principal.principal_id)}
-                      >
-                        <IconX size={16} />
-                      </ActionIcon>
-                    </Group>
-                  </Group>
-                </Paper>
-              ))}
-            </Stack>
-          )}
-        </Stack>
-
-        <Group justify="flex-end" mt="md">
-          <Button variant="default" onClick={onClose}>
-            Close
-          </Button>
-        </Group>
-      </Stack>
-    </Modal>
+      <AddPrincipalDialog
+        opened={isAddPrincipalOpen}
+        onClose={() => setIsAddPrincipalOpen(false)}
+        onSubmit={handleAddPrincipals}
+        entityName="conversation"
+        existingPrincipalIds={principals.map((p) => p.principalId)}
+      />
+    </>
   );
 };

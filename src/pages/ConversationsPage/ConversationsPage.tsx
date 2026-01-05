@@ -129,7 +129,8 @@ export const ConversationsPage: FC = () => {
         ]);
 
         setCurrentConversation(convData);
-        setMessages(messagesData.messages);
+        // Reverse messages to show oldest first
+        setMessages([...messagesData.messages].reverse());
         setSelectedApplicationId(convData.application_id);
       } catch (error) {
         console.error('Failed to load conversation:', error);

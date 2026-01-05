@@ -13,6 +13,7 @@ import {
   SegmentedControl,
   Skeleton,
   Box,
+  TextInput,
 } from '@mantine/core';
 import {
   IconPlus,
@@ -26,7 +27,11 @@ import {
   IconLayoutList,
   IconApps,
   IconEdit,
+  IconCheck,
+  IconX,
 } from '@tabler/icons-react';
+import { ConfirmDeleteDialog } from '../../../../components/common';
+import { useIdentity } from '../../../../contexts';
 import type { ConversationResponse, ApplicationResponse } from '../../../../api/types';
 import classes from './ChatSidebar.module.css';
 
@@ -66,8 +71,63 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
   onDeleteConversation,
   onSearchOpen,
 }) => {
+  const { apiClient, selectedTenant } = useIdentity();
   const [searchQuery] = useState('');
   const [groupMode, setGroupMode] = useState<GroupMode>('time');
+
+  // Rename state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+
+  // Delete state
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    conversationId: string;
+    conversationName: string;
+  }>({ open: false, conversationId: '', conversationName: '' });
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Rename handlers
+  const handleRenameStart = (id: string, currentName: string) => {
+    setEditingId(id);
+    setEditingName(currentName);
+  };
+
+  const handleRenameSave = async () => {
+    if (!editingId || !apiClient || !selectedTenant) return;
+    
+    try {
+      await apiClient.updateConversation(selectedTenant.id, editingId, {
+        name: editingName,
+      });
+      setEditingId(null);
+      setEditingName('');
+    } catch (error) {
+      console.error('Failed to rename conversation:', error);
+    }
+  };
+
+  const handleRenameCancel = () => {
+    setEditingId(null);
+    setEditingName('');
+  };
+
+  // Delete handlers
+  const handleDeleteClick = (id: string, name: string) => {
+    setDeleteDialog({ open: true, conversationId: id, conversationName: name });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.conversationId) return;
+    
+    setIsDeleting(true);
+    try {
+      await onDeleteConversation?.(deleteDialog.conversationId);
+      setDeleteDialog({ open: false, conversationId: '', conversationName: '' });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Get application name by ID
   const getApplicationName = (applicationId: string): string => {
@@ -295,7 +355,13 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
                     applicationName={getApplicationName(conversation.application_id)}
                     onClick={() => onSelectConversation(conversation.id)}
                     onToggleFavorite={() => onToggleFavorite?.(conversation.id)}
-                    onDelete={() => onDeleteConversation?.(conversation.id)}
+                    onRename={(id) => handleRenameStart(id, conversation.name)}
+                    onDelete={(id) => handleDeleteClick(id, conversation.name)}
+                    isEditing={editingId === conversation.id}
+                    editingName={editingName}
+                    onEditingNameChange={setEditingName}
+                    onSaveRename={handleRenameSave}
+                    onCancelRename={handleRenameCancel}
                   />
                 ))}
               </div>
@@ -303,6 +369,16 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
           </Stack>
         )}
       </ScrollArea>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDeleteDialog
+        opened={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, conversationId: '', conversationName: '' })}
+        onConfirm={handleDeleteConfirm}
+        itemName={deleteDialog.conversationName}
+        itemType="Conversation"
+        isLoading={isDeleting}
+      />
     </div>
   );
 };
@@ -314,7 +390,13 @@ interface ConversationItemProps {
   applicationName: string;
   onClick: () => void;
   onToggleFavorite?: () => void;
-  onDelete?: () => void;
+  onRename?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  isEditing?: boolean;
+  editingName?: string;
+  onEditingNameChange?: (name: string) => void;
+  onSaveRename?: () => void;
+  onCancelRename?: () => void;
 }
 
 const ConversationItem: FC<ConversationItemProps> = ({
@@ -324,16 +406,22 @@ const ConversationItem: FC<ConversationItemProps> = ({
   applicationName,
   onClick,
   onToggleFavorite,
+  onRename,
   onDelete,
+  isEditing = false,
+  editingName = '',
+  onEditingNameChange,
+  onSaveRename,
+  onCancelRename,
 }) => {
   return (
     <Box
       className={`${classes.conversationItem} ${isSelected ? classes.selected : ''}`}
-      onClick={onClick}
+      onClick={isEditing ? undefined : onClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (!isEditing && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           onClick?.();
         }
@@ -342,58 +430,103 @@ const ConversationItem: FC<ConversationItemProps> = ({
       <Group gap="sm" wrap="nowrap" className={classes.conversationContent}>
         <IconMessage size={16} className={classes.conversationIcon} />
         <div className={classes.conversationInfo}>
-          <Text size="sm" lineClamp={1} className={classes.conversationName}>
-            {isFavorite && <IconPinned size={12} className={classes.pinnedIcon} />}
-            {conversation.name}
-          </Text>
+          {isEditing ? (
+            <div className={classes.editingContainer}>
+              <TextInput
+                value={editingName}
+                onChange={(e) => onEditingNameChange?.(e.currentTarget.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    onSaveRename?.();
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    onCancelRename?.();
+                  }
+                }}
+                onBlur={onSaveRename}
+                autoFocus
+                size="xs"
+                className={classes.editInput}
+              />
+              <ActionIcon
+                size="xs"
+                color="green"
+                variant="subtle"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSaveRename?.();
+                }}
+              >
+                <IconCheck size={14} />
+              </ActionIcon>
+              <ActionIcon
+                size="xs"
+                color="red"
+                variant="subtle"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCancelRename?.();
+                }}
+              >
+                <IconX size={14} />
+              </ActionIcon>
+            </div>
+          ) : (
+            <Text size="sm" lineClamp={1} className={classes.conversationName}>
+              {isFavorite && <IconPinned size={12} className={classes.pinnedIcon} />}
+              {conversation.name}
+            </Text>
+          )}
           <Text size="xs" c="dimmed" lineClamp={1}>
             {applicationName}
           </Text>
         </div>
-        <Menu position="right-start" withinPortal shadow="md">
-          <Menu.Target>
-            <ActionIcon
-              variant="subtle"
-              size="sm"
-              className={classes.menuButton}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <IconDots size={14} />
-            </ActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<IconPinned size={14} />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleFavorite?.();
-              }}
-            >
-              {isFavorite ? 'Unpin' : 'Pin'}
-            </Menu.Item>
-            <Menu.Item
-              leftSection={<IconEdit size={14} />}
-              onClick={(e) => {
-                e.stopPropagation();
-                // TODO: Implement rename dialog
-                console.log('Rename conversation:', conversation.id);
-              }}
-            >
-              Rename
-            </Menu.Item>
-            <Menu.Divider />
-            <Menu.Item
-              color="red"
-              leftSection={<IconTrash size={14} />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete?.();
-              }}
-            >
-              Delete
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
+        {!isEditing && (
+          <Menu position="right-start" withinPortal shadow="md">
+            <Menu.Target>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                className={classes.menuButton}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <IconDots size={14} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<IconPinned size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite?.();
+                }}
+              >
+                {isFavorite ? 'Unpin' : 'Pin'}
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconEdit size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRename?.(conversation.id);
+                }}
+              >
+                Rename
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item
+                color="red"
+                leftSection={<IconTrash size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.(conversation.id);
+                }}
+              >
+                Delete
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        )}
       </Group>
     </Box>
   );

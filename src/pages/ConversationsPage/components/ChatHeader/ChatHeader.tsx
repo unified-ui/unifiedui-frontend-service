@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { FC } from 'react';
 import {
   Group,
@@ -17,6 +18,7 @@ import {
   IconChevronDown,
   IconSparkles,
 } from '@tabler/icons-react';
+import { ConfirmDeleteDialog } from '../../../../components/common';
 import type { ApplicationResponse, ConversationResponse } from '../../../../api/types';
 import classes from './ChatHeader.module.css';
 
@@ -33,6 +35,7 @@ interface ChatHeaderProps {
 }
 
 export const ChatHeader: FC<ChatHeaderProps> = ({
+  conversation,
   applications,
   selectedApplicationId,
   isNewChat,
@@ -43,6 +46,22 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
   onDelete,
 }) => {
   const selectedApp = applications.find(a => a.id === selectedApplicationId);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
+    try {
+      await onDelete?.();
+      setDeleteDialogOpen(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
   
   // Prepare application options for select
   const applicationOptions = applications
@@ -122,7 +141,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
                   <Menu.Item
                     color="red"
                     leftSection={<IconTrash size={16} />}
-                    onClick={onDelete}
+                    onClick={handleDeleteClick}
                     disabled={isNewChat}
                   >
                     Delete chat
@@ -133,6 +152,16 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
           )}
         </Group>
       </Group>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDeleteDialog
+        opened={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        itemName={conversation?.name || 'this conversation'}
+        itemType="Conversation"
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

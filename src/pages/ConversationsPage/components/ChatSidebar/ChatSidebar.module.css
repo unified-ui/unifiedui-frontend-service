@@ -99,10 +99,16 @@
 
 .groupLabel {
   padding: var(--spacing-xs) var(--spacing-md);
+  padding-left: var(--spacing-sm);
+  margin-top: var(--spacing-md);
   text-transform: uppercase;
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.5px;
   font-size: 10px;
+}
+
+.groupLabel:first-of-type {
+  margin-top: 0;
 }
 
 .conversationItem {
@@ -161,7 +167,14 @@
 .conversationItem:hover .menuButton {
   opacity: 1;
 }
+.editingContainer {
+  flex: 1;
+  padding: var(--spacing-xs);
+}
 
+.editInput {
+  flex: 1;
+}
 .menuButton:hover {
   background-color: var(--bg-elevated);
 }

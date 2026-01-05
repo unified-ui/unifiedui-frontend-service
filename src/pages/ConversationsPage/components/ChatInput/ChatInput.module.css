@@ -1,7 +1,7 @@
 .container {
   position: relative;
   padding: var(--spacing-md);
-  background-color: transparent;
+  background-color: var(--bg-app);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -11,9 +11,15 @@
   width: 80%;
   max-width: 900px;
   background-color: var(--bg-paper);
-  border: 1px solid var(--border-default);
+  border: 2px solid var(--border-default);
   border-radius: var(--radius-xl);
   padding: var(--spacing-md);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.inputOuterWrapper:focus-within {
+  border-color: var(--color-primary-600);
+  box-shadow: 0 0 0 1px var(--color-primary-200);
 }
 
 .dragging {
@@ -140,14 +146,15 @@
   min-height: 24px;
   max-height: 200px;
   padding: var(--spacing-xs) 0;
-  border: none;
-  background: transparent;
+  border: none !important;
+  background: transparent !important;
   resize: none;
   font-family: inherit;
   font-size: var(--font-size-md);
   line-height: 1.5;
   color: var(--text-primary);
-  outline: none;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .textarea::placeholder {
