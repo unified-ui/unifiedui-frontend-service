@@ -35,12 +35,15 @@ import {
   PermissionActionEnum,
   N8NApiVersionEnum,
   N8NWorkflowTypeEnum,
+  FoundryAgentTypeEnum,
+  FoundryApiVersionEnum,
   CredentialTypeEnum,
   type ApplicationResponse,
   type PrincipalTypeEnum,
   type PrincipalWithRolesResponse,
   type CredentialResponse,
   type N8NApplicationConfig,
+  type FoundryApplicationConfig,
 } from '../../../api/types';
 import { TagInput, ManageAccessTable, AddPrincipalDialog } from '../../common';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
@@ -60,6 +63,15 @@ const N8N_API_VERSIONS = [
 
 const N8N_WORKFLOW_TYPES = [
   { value: N8NWorkflowTypeEnum.N8N_CHAT_AGENT_WORKFLOW, label: 'Chat Agent Workflow' },
+];
+
+const FOUNDRY_AGENT_TYPES = [
+  { value: FoundryAgentTypeEnum.AGENT, label: 'Agent' },
+  { value: FoundryAgentTypeEnum.MULTI_AGENT, label: 'Multi-Agent' },
+];
+
+const FOUNDRY_API_VERSIONS = [
+  { value: FoundryApiVersionEnum.V2025_11_15_PREVIEW, label: '2025-11-15-preview' },
 ];
 
 export type EditDialogTab = 'details' | 'iam';
@@ -89,6 +101,11 @@ interface FormValues {
   n8n_chat_url: string;
   n8n_api_api_key_credential_id: string;
   n8n_chat_auth_credential_id: string;
+  // Foundry Config
+  foundry_agent_type: string;
+  foundry_api_version: string;
+  foundry_project_endpoint: string;
+  foundry_agent_name: string;
 }
 
 export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
@@ -135,6 +152,11 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       n8n_chat_url: '',
       n8n_api_api_key_credential_id: '',
       n8n_chat_auth_credential_id: '',
+      // Foundry Config defaults
+      foundry_agent_type: FoundryAgentTypeEnum.AGENT,
+      foundry_api_version: FoundryApiVersionEnum.V2025_11_15_PREVIEW,
+      foundry_project_endpoint: '',
+      foundry_agent_name: '',
     },
     validate: {
       name: (value) => {
@@ -187,6 +209,27 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
         }
         return null;
       },
+      foundry_project_endpoint: (value, values) => {
+        if (values.type === ApplicationTypeEnum.MICROSOFT_FOUNDRY) {
+          if (!value || value.trim().length === 0) {
+            return 'Project Endpoint ist erforderlich';
+          }
+          try {
+            new URL(value);
+          } catch {
+            return 'Ungültige URL';
+          }
+        }
+        return null;
+      },
+      foundry_agent_name: (value, values) => {
+        if (values.type === ApplicationTypeEnum.MICROSOFT_FOUNDRY) {
+          if (!value || value.trim().length === 0) {
+            return 'Agent Name ist erforderlich';
+          }
+        }
+        return null;
+      },
     },
   });
 
@@ -229,8 +272,13 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
   const initializeFromData = useCallback((data: ApplicationResponse) => {
     setApplication(data);
     
-    // Parse N8N config from application
-    const n8nConfig = data.config as unknown as N8NApplicationConfig | undefined;
+    // Parse config from application based on type
+    const n8nConfig = data.type === ApplicationTypeEnum.N8N 
+      ? (data.config as unknown as N8NApplicationConfig | undefined) 
+      : undefined;
+    const foundryConfig = data.type === ApplicationTypeEnum.MICROSOFT_FOUNDRY 
+      ? (data.config as unknown as FoundryApplicationConfig | undefined) 
+      : undefined;
     
     form.setValues({
       name: data.name,
@@ -246,6 +294,11 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       n8n_chat_url: n8nConfig?.chat_url || '',
       n8n_api_api_key_credential_id: n8nConfig?.api_api_key_credential_id || '',
       n8n_chat_auth_credential_id: n8nConfig?.chat_auth_credential_id || '',
+      // Foundry Config from data
+      foundry_agent_type: foundryConfig?.agent_type || FoundryAgentTypeEnum.AGENT,
+      foundry_api_version: foundryConfig?.api_version || FoundryApiVersionEnum.V2025_11_15_PREVIEW,
+      foundry_project_endpoint: foundryConfig?.project_endpoint || '',
+      foundry_agent_name: foundryConfig?.agent_name || '',
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -340,7 +393,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
 
     try {
       // Build config based on application type
-      let config: N8NApplicationConfig | undefined;
+      let config: N8NApplicationConfig | FoundryApplicationConfig | undefined;
       
       if (values.type === ApplicationTypeEnum.N8N) {
         config = {
@@ -351,6 +404,13 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
           chat_url: values.n8n_chat_url.trim(),
           api_api_key_credential_id: values.n8n_api_api_key_credential_id,
           chat_auth_credential_id: values.n8n_chat_auth_credential_id || undefined,
+        };
+      } else if (values.type === ApplicationTypeEnum.MICROSOFT_FOUNDRY) {
+        config = {
+          agent_type: values.foundry_agent_type as FoundryAgentTypeEnum,
+          api_version: values.foundry_api_version as FoundryApiVersionEnum,
+          project_endpoint: values.foundry_project_endpoint.trim(),
+          agent_name: values.foundry_agent_name.trim(),
         };
       }
 
@@ -706,6 +766,46 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
                       {...form.getInputProps('n8n_chat_history_count')}
                     />
                   )}
+                </>
+              )}
+
+              {/* Microsoft Foundry Configuration Section */}
+              {form.values.type === ApplicationTypeEnum.MICROSOFT_FOUNDRY && (
+                <>
+                  <Divider label="Microsoft Foundry Konfiguration" labelPosition="center" />
+
+                  <Group grow>
+                    <Select
+                      label="Agent Type"
+                      required
+                      withAsterisk
+                      data={FOUNDRY_AGENT_TYPES}
+                      {...form.getInputProps('foundry_agent_type')}
+                    />
+                    <Select
+                      label="API Version"
+                      required
+                      withAsterisk
+                      data={FOUNDRY_API_VERSIONS}
+                      {...form.getInputProps('foundry_api_version')}
+                    />
+                  </Group>
+
+                  <TextInput
+                    label="Project Endpoint"
+                    placeholder="https://your-project.services.ai.azure.com/api/..."
+                    required
+                    withAsterisk
+                    {...form.getInputProps('foundry_project_endpoint')}
+                  />
+
+                  <TextInput
+                    label="Agent Name"
+                    placeholder="Name of the Foundry agent"
+                    required
+                    withAsterisk
+                    {...form.getInputProps('foundry_agent_name')}
+                  />
                 </>
               )}
 

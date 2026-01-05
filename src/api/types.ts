@@ -94,6 +94,28 @@ export interface N8NApplicationConfig {
   chat_auth_credential_id?: string;
 }
 
+// ========== Microsoft Foundry Application Config Types ==========
+
+export const FoundryAgentTypeEnum = {
+  AGENT: 'AGENT',
+  MULTI_AGENT: 'MULTI_AGENT',
+} as const;
+
+export type FoundryAgentTypeEnum = typeof FoundryAgentTypeEnum[keyof typeof FoundryAgentTypeEnum];
+
+export const FoundryApiVersionEnum = {
+  V2025_11_15_PREVIEW: '2025-11-15-preview',
+} as const;
+
+export type FoundryApiVersionEnum = typeof FoundryApiVersionEnum[keyof typeof FoundryApiVersionEnum];
+
+export interface FoundryApplicationConfig {
+  agent_type: FoundryAgentTypeEnum;
+  api_version: FoundryApiVersionEnum;
+  project_endpoint: string;
+  agent_name: string;
+}
+
 // ========== Agent Service Types ==========
 
 // Message Types
@@ -162,6 +184,7 @@ export interface SendMessageRequest {
   applicationId: string;
   message: MessageContent;
   invokeConfig?: InvokeConfig;
+  extConversationId?: string; // External conversation ID for Foundry
 }
 
 export interface SendMessageResponse {
@@ -233,6 +256,7 @@ export interface UpdateTracesResponse {
 export const SSEStreamMessageType = {
   STREAM_START: 'STREAM_START',
   TEXT_STREAM: 'TEXT_STREAM',
+  STREAM_NEW_MESSAGE: 'STREAM_NEW_MESSAGE',
   STREAM_END: 'STREAM_END',
   ERROR: 'ERROR',
 } as const;
@@ -598,6 +622,7 @@ export interface ConversationResponse {
   name: string;
   description?: string;
   is_active: boolean;
+  ext_conversation_id?: string; // External conversation ID (e.g., Foundry conversation ID)
   created_at: string;
   updated_at: string;
   created_by?: string;

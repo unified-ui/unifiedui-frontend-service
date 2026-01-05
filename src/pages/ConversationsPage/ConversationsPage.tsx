@@ -14,6 +14,7 @@ import { ChatContent } from './components/ChatContent';
 import { ChatInput, type ChatInputRef } from './components/ChatInput';
 import {
   FavoriteResourceTypeEnum,
+  ApplicationTypeEnum,
   type ConversationResponse,
   type ApplicationResponse,
   type MessageResponse,
@@ -28,7 +29,7 @@ export const ConversationsPage: FC = () => {
   const { conversationId } = useParams<{ conversationId?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { apiClient, selectedTenant, user } = useIdentity();
+  const { apiClient, selectedTenant, user, getFoundryToken } = useIdentity();
   const { onSidebarHoverEnter, onSidebarHoverLeave } = useChatSidebar();
 
   // State
@@ -301,16 +302,29 @@ export const ConversationsPage: FC = () => {
     }
     abortControllerRef.current = new AbortController();
 
+    // Check if this is a Microsoft Foundry application and get token if needed (BEFORE any API calls)
+    const selectedApp = applications.find(app => app.id === selectedApplicationId);
+    const isFoundryApp = selectedApp?.type === ApplicationTypeEnum.MICROSOFT_FOUNDRY;
+    let foundryToken: string | undefined;
+    if (isFoundryApp) {
+      const token = await getFoundryToken();
+      foundryToken = token ?? undefined;
+    }
+
     // Determine conversation ID - create new conversation if needed
     let activeConversationId = conversationId;
     
     // If this is a new chat, create conversation first via platform service
     if (!activeConversationId) {
       try {
-        const newConv = await apiClient.createConversation(selectedTenant.id, {
-          application_id: selectedApplicationId,
-          name: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
-        });
+        const newConv = await apiClient.createConversation(
+          selectedTenant.id,
+          {
+            application_id: selectedApplicationId,
+            name: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
+          },
+          foundryToken // Pass Foundry token for Foundry apps
+        );
         
         activeConversationId = newConv.id;
         
@@ -373,6 +387,8 @@ export const ConversationsPage: FC = () => {
             content,
             attachments: attachmentUrls.length > 0 ? attachmentUrls : undefined,
           },
+          // Include external conversation ID for Foundry apps (used for continuing threads)
+          extConversationId: isFoundryApp ? currentConversation?.ext_conversation_id : undefined,
         },
         // onStreamStart
         (messageId: string, _newConversationId: string) => {
@@ -405,6 +421,41 @@ export const ConversationsPage: FC = () => {
         (chunk: string) => {
           accumulatedContent += chunk;
           setStreamingContent(accumulatedContent);
+        },
+        // onNewMessage - Handle multi-message responses (e.g., from Foundry agents)
+        (newMessageId: string, _conversationId: string) => {
+          // Save the current message's accumulated content before starting a new one
+          if (currentStreamingMessageId && accumulatedContent) {
+            const previousMessageId = currentStreamingMessageId;
+            const previousContent = accumulatedContent;
+            setMessages(prev => prev.map(m => 
+              m.id === previousMessageId
+                ? { ...m, content: previousContent, status: 'completed' as const }
+                : m
+            ));
+          }
+          
+          // Reset accumulated content for the new message
+          accumulatedContent = '';
+          setStreamingContent('');
+          
+          // Update current streaming message ID
+          currentStreamingMessageId = newMessageId;
+          setStreamingMessageId(newMessageId);
+          
+          // Add a new streaming assistant message to the messages array
+          const newStreamingMessage: MessageResponse = {
+            id: newMessageId,
+            type: 'assistant',
+            conversationId: activeConversationId || '',
+            applicationId: selectedApplicationId,
+            content: '',
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          
+          setMessages(prev => [...prev, newStreamingMessage]);
         },
         // onStreamEnd
         () => {
@@ -440,7 +491,9 @@ export const ConversationsPage: FC = () => {
             message: message || 'Failed to send message',
             color: 'red',
           });
-        }
+        },
+        // Foundry token for Microsoft Foundry applications
+        foundryToken
       );
 
       // Consume the stream
@@ -470,7 +523,7 @@ export const ConversationsPage: FC = () => {
         });
       }
     }
-  }, [apiClient, selectedTenant, selectedApplicationId, conversationId]);
+  }, [apiClient, selectedTenant, selectedApplicationId, conversationId, applications, currentConversation, getFoundryToken]);
 
   // Handle share
   const handleShare = useCallback(() => {

@@ -117,7 +117,7 @@ export class UnifiedUIAPIClient {
     path: string,
     body?: unknown,
     successMessage?: string,
-    options?: { noCache?: boolean }
+    options?: { noCache?: boolean; additionalHeaders?: Record<string, string> }
   ): Promise<T> {
     try {
       const token = await this.getAccessToken();
@@ -132,6 +132,11 @@ export class UnifiedUIAPIClient {
       // Add X-Use-Cache header when noCache is true
       if (options?.noCache) {
         headers['X-Use-Cache'] = 'false';
+      }
+
+      // Add any additional headers
+      if (options?.additionalHeaders) {
+        Object.assign(headers, options.additionalHeaders);
       }
 
       const response = await fetch(`${this.baseURL}${path}`, {
@@ -361,8 +366,9 @@ export class UnifiedUIAPIClient {
     return this.request<ConversationResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/conversations/${conversationId}`);
   }
 
-  async createConversation(tenantId: string, data: CreateConversationRequest): Promise<ConversationResponse> {
-    return this.request<ConversationResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/conversations`, data, 'Conversation created successfully');
+  async createConversation(tenantId: string, data: CreateConversationRequest, foundryToken?: string): Promise<ConversationResponse> {
+    const options = foundryToken ? { additionalHeaders: { 'X-Microsoft-Foundry-API-Key': foundryToken } } : undefined;
+    return this.request<ConversationResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/conversations`, data, 'Conversation created successfully', options);
   }
 
   async updateConversation(tenantId: string, conversationId: string, data: UpdateConversationRequest): Promise<ConversationResponse> {
@@ -837,8 +843,10 @@ export class UnifiedUIAPIClient {
     data: SendMessageRequest,
     onStreamStart?: (messageId: string, conversationId: string) => void,
     onTextChunk?: (content: string) => void,
+    onNewMessage?: (messageId: string, conversationId: string) => void,
     onStreamEnd?: () => void,
-    onError?: (code: string, message: string, details: string) => void
+    onError?: (code: string, message: string, details: string) => void,
+    foundryToken?: string
   ): AsyncGenerator<SSEEvent, void, unknown> {
     const token = await this.getAccessToken();
     const headers: Record<string, string> = {
@@ -850,12 +858,26 @@ export class UnifiedUIAPIClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    // Add Foundry token header if provided
+    if (foundryToken) {
+      headers['X-Microsoft-Foundry-API-Key'] = foundryToken;
+    }
+
+    // Transform request data to snake_case for Go backend
+    const requestBody = {
+      conversationId: data.conversationId,
+      applicationId: data.applicationId,
+      message: data.message,
+      invokeConfig: data.invokeConfig,
+      ext_conversation_id: data.extConversationId, // Transform to snake_case
+    };
+
     const response = await fetch(
       `${this.getAgentServiceURL()}/api/v1/agent-service/tenants/${tenantId}/conversation/messages`,
       {
         method: 'POST',
         headers,
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestBody),
       }
     );
 
@@ -908,6 +930,16 @@ export class UnifiedUIAPIClient {
                   case 'TEXT_STREAM':
                     if (onTextChunk && streamMsg.content) {
                       onTextChunk(streamMsg.content);
+                    }
+                    break;
+                  case 'STREAM_NEW_MESSAGE':
+                    // Signal that a new message is starting (for multi-message responses)
+                    // The next STREAM_START will contain the new messageId
+                    if (onNewMessage && streamMsg.config) {
+                      onNewMessage(
+                        streamMsg.config.messageId || '',
+                        streamMsg.config.conversationId || ''
+                      );
                     }
                     break;
                   case 'STREAM_END':

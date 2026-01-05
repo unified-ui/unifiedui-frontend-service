@@ -13,6 +13,7 @@ interface IdentityContextType {
   apiClient: UnifiedUIAPIClient | null;
   refreshIdentity: () => Promise<void>;
   selectTenant: (tenantId: string) => void;
+  getFoundryToken: () => Promise<string | null>;
 }
 
 const IdentityContext = createContext<IdentityContextType | undefined>(undefined);
@@ -26,7 +27,7 @@ interface IdentityProviderProps {
 }
 
 export const IdentityProvider: FC<IdentityProviderProps> = ({ children }) => {
-  const { isAuthenticated, getAccessToken } = useAuth();
+  const { isAuthenticated, getAccessToken, getFoundryToken } = useAuth();
   const [user, setUser] = useState<IdentityUser | null>(null);
   const [tenants, setTenants] = useState<TenantResponse[]>([]);
   const [selectedTenant, setSelectedTenant] = useState<TenantResponse | null>(null);
@@ -165,6 +166,7 @@ export const IdentityProvider: FC<IdentityProviderProps> = ({ children }) => {
     apiClient,
     refreshIdentity,
     selectTenant,
+    getFoundryToken,
   };
 
   return (
