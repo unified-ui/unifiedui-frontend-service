@@ -10,6 +10,7 @@ interface AuthContextType {
   login: () => Promise<void>;
   logout: () => Promise<void>;
   getAccessToken: () => Promise<string | null>;
+  getFoundryToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,6 +67,33 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  const getFoundryToken = async (): Promise<string | null> => {
+    if (!isAuthenticated || accounts.length === 0) {
+      return null;
+    }
+
+    try {
+      const response = await instance.acquireTokenSilent({
+        scopes: ['https://ai.azure.com/.default'],
+        account: accounts[0],
+      });
+      return response.accessToken;
+    } catch (error) {
+      console.error('Foundry token acquisition failed:', error);
+      // Fallback to interactive if silent fails
+      try {
+        const response = await instance.acquireTokenPopup({
+          scopes: ['https://ai.azure.com/.default'],
+          account: accounts[0],
+        });
+        return response.accessToken;
+      } catch (popupError) {
+        console.error('Foundry token popup failed:', popupError);
+        return null;
+      }
+    }
+  };
+
   const value: AuthContextType = {
     isLoading,
     isAuthenticated,
@@ -73,6 +101,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     login,
     logout,
     getAccessToken,
+    getFoundryToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
