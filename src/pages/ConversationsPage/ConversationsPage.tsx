@@ -232,6 +232,18 @@ export const ConversationsPage: FC = () => {
     }
   }, [apiClient, selectedTenant, user, favoriteIds]);
 
+  // Handle rename conversation (update local state)
+  const handleRenameConversation = useCallback((id: string, newName: string) => {
+    setConversations(prev => prev.map(c => 
+      c.id === id ? { ...c, name: newName } : c
+    ));
+    
+    // Also update current conversation if it's the renamed one
+    if (currentConversation?.id === id) {
+      setCurrentConversation(prev => prev ? { ...prev, name: newName } : null);
+    }
+  }, [currentConversation]);
+
   // Handle delete conversation
   const handleDeleteConversation = useCallback(async (id: string) => {
     if (!apiClient || !selectedTenant) return;
@@ -523,6 +535,7 @@ export const ConversationsPage: FC = () => {
             onNewChat={handleNewChat}
             onSelectConversation={handleSelectConversation}
             onToggleFavorite={handleToggleFavorite}
+            onRenameConversation={handleRenameConversation}
             onDeleteConversation={handleDeleteConversation}
             onSearchOpen={handleSearchOpen}
           />

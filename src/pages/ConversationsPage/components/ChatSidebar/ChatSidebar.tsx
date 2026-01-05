@@ -46,6 +46,7 @@ interface ChatSidebarProps {
   onNewChat: () => void;
   onSelectConversation: (conversationId: string) => void;
   onToggleFavorite?: (conversationId: string) => void;
+  onRenameConversation?: (conversationId: string, newName: string) => void;
   onDeleteConversation?: (conversationId: string) => void;
   onSearchOpen?: () => void;
 }
@@ -68,6 +69,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
   onNewChat,
   onSelectConversation,
   onToggleFavorite,
+  onRenameConversation,
   onDeleteConversation,
   onSearchOpen,
 }) => {
@@ -100,6 +102,10 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
       await apiClient.updateConversation(selectedTenant.id, editingId, {
         name: editingName,
       });
+      
+      // Update parent state immediately
+      onRenameConversation?.(editingId, editingName);
+      
       setEditingId(null);
       setEditingName('');
     } catch (error) {
