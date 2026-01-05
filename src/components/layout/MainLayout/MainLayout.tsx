@@ -5,14 +5,15 @@ import classes from './MainLayout.module.css';
 
 interface MainLayoutProps {
   children: ReactNode;
+  noPadding?: boolean;
 }
 
-export const MainLayout: FC<MainLayoutProps> = ({ children }) => {
+export const MainLayout: FC<MainLayoutProps> = ({ children, noPadding = false }) => {
   return (
     <div className={classes.layout}>
       <Header />
       <Sidebar />
-      <main className={classes.content}>
+      <main className={`${classes.content} ${noPadding ? classes.noPadding : ''}`}>
         {children}
       </main>
     </div>

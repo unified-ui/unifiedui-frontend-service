@@ -97,7 +97,29 @@ export interface N8NApplicationConfig {
 // ========== Agent Service Types ==========
 
 // Message Types
-export interface MessageMetadata {
+export const MessageType = {
+  USER: 'user',
+  ASSISTANT: 'assistant',
+} as const;
+
+export type MessageType = typeof MessageType[keyof typeof MessageType];
+
+export const MessageStatus = {
+  PENDING: 'pending',
+  PROCESSING: 'processing',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+} as const;
+
+export type MessageStatus = typeof MessageStatus[keyof typeof MessageStatus];
+
+export interface StatusTrace {
+  status: string;
+  timestamp: string;
+  message?: string;
+}
+
+export interface AssistantMetadata {
   model?: string;
   tokensInput?: number;
   tokensOutput?: number;
@@ -108,30 +130,44 @@ export interface MessageMetadata {
 
 export interface MessageResponse {
   id: string;
+  type: MessageType;
   conversationId: string;
-  role: string;
+  applicationId: string;
   content: string;
-  agentId?: string;
   userId?: string;
+  userMessageId?: string;
+  status?: MessageStatus;
+  errorMessage?: string;
+  statusTraces?: StatusTrace[];
+  metadata?: AssistantMetadata;
   createdAt: string;
-  metadata?: MessageMetadata;
+  updatedAt: string;
 }
 
 export interface GetMessagesResponse {
   messages: MessageResponse[];
-  total: number;
-  limit: number;
-  offset: number;
+}
+
+export interface MessageContent {
+  content: string;
+  attachments?: string[];
+}
+
+export interface InvokeConfig {
+  chatHistoryMessageCount?: number;
 }
 
 export interface SendMessageRequest {
-  content: string;
-  agentId: string;
-  stream?: boolean;
+  conversationId?: string;
+  applicationId: string;
+  message: MessageContent;
+  invokeConfig?: InvokeConfig;
 }
 
 export interface SendMessageResponse {
-  message: MessageResponse;
+  userMessageId: string;
+  assistantMessageId: string;
+  conversationId: string;
 }
 
 // Trace Types
@@ -194,6 +230,27 @@ export interface UpdateTracesResponse {
 }
 
 // SSE Event Types
+export const SSEStreamMessageType = {
+  STREAM_START: 'STREAM_START',
+  TEXT_STREAM: 'TEXT_STREAM',
+  STREAM_END: 'STREAM_END',
+  ERROR: 'ERROR',
+} as const;
+
+export type SSEStreamMessageType = typeof SSEStreamMessageType[keyof typeof SSEStreamMessageType];
+
+export interface SSEStreamMessage {
+  type: SSEStreamMessageType;
+  content?: string;
+  config?: {
+    messageId?: string;
+    conversationId?: string;
+    code?: string;
+    message?: string;
+    details?: string;
+  };
+}
+
 export interface SSEMessageEvent {
   content: string;
   messageId?: string;
@@ -218,7 +275,7 @@ export type SSEEventType = 'message' | 'trace' | 'error' | 'done';
 
 export interface SSEEvent {
   type: SSEEventType;
-  data: SSEMessageEvent | SSETraceEvent | SSEErrorEvent | null;
+  data: SSEStreamMessage | SSETraceEvent | SSEErrorEvent | null;
 }
 
 // ========== Tag Types ==========
@@ -537,6 +594,7 @@ export interface SetAutonomousAgentPermissionRequest {
 export interface ConversationResponse {
   id: string;
   tenant_id: string;
+  application_id: string;
   name: string;
   description?: string;
   is_active: boolean;
@@ -547,6 +605,7 @@ export interface ConversationResponse {
 }
 
 export interface CreateConversationRequest {
+  application_id: string;
   name: string;
   description?: string;
   is_active?: boolean;

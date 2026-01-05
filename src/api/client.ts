@@ -73,14 +73,11 @@ import type {
   // Agent Service Types
   GetMessagesResponse,
   SendMessageRequest,
-  SendMessageResponse,
   GetTracesResponse,
   BatchUpdateTracesRequest,
   UpdateTracesResponse,
   SSEEvent,
-  SSEMessageEvent,
-  SSETraceEvent,
-  SSEErrorEvent,
+  SSEStreamMessage,
   // Misc Types
   HealthCheckResponse,
   PrincipalTypeEnum,
@@ -830,29 +827,16 @@ export class UnifiedUIAPIClient {
   }
 
   /**
-   * Send a message (non-streaming).
-   */
-  async sendMessage(
-    tenantId: string,
-    conversationId: string,
-    data: SendMessageRequest
-  ): Promise<SendMessageResponse> {
-    const query = this.buildQueryString({ conversationId });
-    return this.agentServiceRequest<SendMessageResponse>(
-      'POST',
-      `/api/v1/agent-service/tenants/${tenantId}/conversation/messages${query}`,
-      { ...data, stream: false }
-    );
-  }
-
-  /**
    * Send a message with SSE streaming.
    * Returns an async generator that yields SSE events.
    */
   async *sendMessageStream(
     tenantId: string,
-    conversationId: string,
-    data: Omit<SendMessageRequest, 'stream'>
+    data: SendMessageRequest,
+    onStreamStart?: (messageId: string, conversationId: string) => void,
+    onTextChunk?: (content: string) => void,
+    onStreamEnd?: () => void,
+    onError?: (code: string, message: string, details: string) => void
   ): AsyncGenerator<SSEEvent, void, unknown> {
     const token = await this.getAccessToken();
     const headers: Record<string, string> = {
@@ -864,13 +848,12 @@ export class UnifiedUIAPIClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const query = this.buildQueryString({ conversationId });
     const response = await fetch(
-      `${this.getAgentServiceURL()}/api/v1/agent-service/tenants/${tenantId}/conversation/messages${query}`,
+      `${this.getAgentServiceURL()}/api/v1/agent-service/tenants/${tenantId}/conversation/messages`,
       {
         method: 'POST',
         headers,
-        body: JSON.stringify({ ...data, stream: true }),
+        body: JSON.stringify(data),
       }
     );
 
@@ -907,6 +890,41 @@ export class UnifiedUIAPIClient {
           } else if (line === '' && currentEvent && currentData) {
             try {
               const parsed = JSON.parse(currentData);
+              
+              // Handle unified stream message format
+              if (currentEvent === 'message' && parsed.type) {
+                const streamMsg = parsed as SSEStreamMessage;
+                switch (streamMsg.type) {
+                  case 'STREAM_START':
+                    if (onStreamStart && streamMsg.config) {
+                      onStreamStart(
+                        streamMsg.config.messageId || '',
+                        streamMsg.config.conversationId || ''
+                      );
+                    }
+                    break;
+                  case 'TEXT_STREAM':
+                    if (onTextChunk && streamMsg.content) {
+                      onTextChunk(streamMsg.content);
+                    }
+                    break;
+                  case 'STREAM_END':
+                    if (onStreamEnd) {
+                      onStreamEnd();
+                    }
+                    break;
+                  case 'ERROR':
+                    if (onError && streamMsg.config) {
+                      onError(
+                        streamMsg.config.code || 'UNKNOWN_ERROR',
+                        streamMsg.config.message || 'An error occurred',
+                        streamMsg.config.details || ''
+                      );
+                    }
+                    break;
+                }
+              }
+              
               yield {
                 type: currentEvent as SSEEvent['type'],
                 data: parsed,

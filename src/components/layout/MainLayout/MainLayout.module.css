@@ -17,10 +17,18 @@
   flex-direction: column;
 }
 
+.content.noPadding {
+  padding: 0;
+}
+
 /* Mobile responsive */
 @media (max-width: 576px) {
   .content {
     margin-left: 60px; /* Narrower sidebar on mobile */
     padding: var(--spacing-md);
+  }
+  
+  .content.noPadding {
+    padding: 0;
   }
 }

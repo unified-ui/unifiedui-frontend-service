@@ -1,0 +1,177 @@
+.container {
+  position: relative;
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--border-default);
+  background-color: var(--bg-paper);
+}
+
+.dragging {
+  background-color: var(--color-primary-50);
+  border-color: var(--color-primary-400);
+}
+
+.dragOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  background-color: rgba(var(--color-primary-100-rgb), 0.9);
+  border: 2px dashed var(--color-primary-500);
+  border-radius: var(--radius-md);
+  z-index: 10;
+  color: var(--color-primary-600);
+}
+
+/* Attachments */
+.attachmentsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  padding-bottom: var(--spacing-sm);
+}
+
+.attachmentPreview {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs);
+  padding-right: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-app);
+  max-width: 200px;
+}
+
+.imagePreview {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-xs);
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.filePreview {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-xs);
+  background-color: var(--color-gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-gray-600);
+}
+
+.attachmentInfo {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.removeButton {
+  flex-shrink: 0;
+}
+
+/* Input wrapper */
+.inputWrapper {
+  position: relative;
+}
+
+.inputContainer {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs);
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inputContainer:focus-within {
+  border-color: var(--color-primary-400);
+  box-shadow: 0 0 0 2px var(--color-primary-100);
+}
+
+.fileInput {
+  display: none;
+}
+
+.attachButton {
+  flex-shrink: 0;
+  margin-bottom: 2px;
+}
+
+.textarea {
+  flex: 1;
+  min-height: 24px;
+  max-height: 200px;
+  padding: var(--spacing-xs) 0;
+  border: none;
+  background: transparent;
+  resize: none;
+  font-family: inherit;
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.textarea::placeholder {
+  color: var(--text-secondary);
+}
+
+.textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.sendButton {
+  flex-shrink: 0;
+  margin-bottom: 2px;
+  border-radius: var(--radius-md);
+}
+
+.sendButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.charCount {
+  position: absolute;
+  right: var(--spacing-sm);
+  bottom: calc(-1 * var(--spacing-md));
+}
+
+.hint {
+  margin-top: var(--spacing-xs);
+  opacity: 0.7;
+}
+
+/* Dark mode adjustments */
+[data-mantine-color-scheme="dark"] .dragging {
+  background-color: var(--color-primary-900);
+}
+
+[data-mantine-color-scheme="dark"] .dragOverlay {
+  background-color: rgba(var(--color-primary-900-rgb), 0.9);
+  color: var(--color-primary-300);
+}
+
+[data-mantine-color-scheme="dark"] .filePreview {
+  background-color: var(--color-gray-800);
+  color: var(--color-gray-400);
+}
+
+[data-mantine-color-scheme="dark"] .inputContainer {
+  background-color: var(--color-gray-800);
+  border-color: var(--color-gray-700);
+}
+
+[data-mantine-color-scheme="dark"] .inputContainer:focus-within {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 2px var(--color-primary-900);
+}

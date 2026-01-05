@@ -230,7 +230,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
     setApplication(data);
     
     // Parse N8N config from application
-    const n8nConfig = data.config as N8NApplicationConfig | undefined;
+    const n8nConfig = data.config as unknown as N8NApplicationConfig | undefined;
     
     form.setValues({
       name: data.name,

@@ -1,4 +1,30 @@
-.container {
-  padding: var(--spacing-xl);
-  min-height: 100vh;
+.pageContainer {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--bg-app);
+  border-radius: var(--radius-md);
+}
+
+.mainArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: var(--bg-paper);
+}
+
+.contentArea {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .pageContainer {
+    /* On mobile, sidebar overlays the main area */
+    position: relative;
+  }
 }

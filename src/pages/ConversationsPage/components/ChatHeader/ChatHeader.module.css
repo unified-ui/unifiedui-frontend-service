@@ -1,0 +1,44 @@
+.header {
+  height: 60px;
+  min-height: 60px;
+  border-bottom: 1px solid var(--border-default);
+  background-color: var(--bg-paper);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-md);
+}
+
+.headerContent {
+  width: 100%;
+}
+
+.leftSection {
+  flex: 1;
+  min-width: 0;
+  max-width: 400px;
+}
+
+.rightSection {
+  flex-shrink: 0;
+}
+
+.applicationSelect {
+  width: 100%;
+  max-width: 300px;
+}
+
+.applicationSelect input {
+  font-weight: var(--font-weight-medium);
+}
+
+.applicationInfo {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-app);
+  max-width: 350px;
+}
+
+.applicationIcon {
+  color: var(--color-primary-500);
+  flex-shrink: 0;
+}

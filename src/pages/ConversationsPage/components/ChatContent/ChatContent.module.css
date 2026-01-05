@@ -1,0 +1,222 @@
+.scrollArea {
+  flex: 1;
+  height: 100%;
+}
+
+.messagesContainer {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+  padding-bottom: var(--spacing-2xl);
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--spacing-xl);
+}
+
+.emptyIcon {
+  color: var(--color-primary-400);
+  opacity: 0.5;
+}
+
+.messageWrapper {
+  width: 100%;
+}
+
+/* User message - right aligned */
+.userMessage {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.userBubble {
+  max-width: 70%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-primary-600);
+  color: white;
+  border-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-xs);
+}
+
+[data-mantine-color-scheme='dark'] .userBubble {
+  background-color: var(--color-primary-500);
+}
+
+/* Assistant message - left aligned */
+.assistantMessage {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.avatar {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.assistantContent {
+  max-width: 85%;
+}
+
+/* Markdown Content Styling */
+.markdownContent {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  color: var(--text-primary);
+}
+
+.markdownContent > *:first-child {
+  margin-top: 0;
+}
+
+.markdownContent > *:last-child {
+  margin-bottom: 0;
+}
+
+.paragraph {
+  margin: var(--spacing-sm) 0;
+}
+
+.inlineCode {
+  background-color: var(--bg-app);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family-mono);
+  font-size: 0.9em;
+  color: var(--color-primary-700);
+}
+
+[data-mantine-color-scheme='dark'] .inlineCode {
+  background-color: var(--color-gray-700);
+  color: var(--color-primary-300);
+}
+
+.codeBlock {
+  margin: var(--spacing-md) 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-gray-900);
+}
+
+.codeHeader {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--color-gray-800);
+  border-bottom: 1px solid var(--color-gray-700);
+}
+
+.pre {
+  margin: 0;
+  padding: var(--spacing-md);
+  overflow-x: auto;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  color: var(--color-gray-100);
+}
+
+.list {
+  margin: var(--spacing-sm) 0;
+  padding-left: var(--spacing-lg);
+}
+
+.listItem {
+  margin: var(--spacing-xs) 0;
+}
+
+.link {
+  color: var(--text-link);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+  color: var(--text-link-hover);
+}
+
+.blockquote {
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-left: 3px solid var(--color-primary-400);
+  background-color: var(--bg-app);
+  font-style: italic;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  margin: var(--spacing-md) 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.tableHeader {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  background-color: var(--bg-app);
+  border-bottom: 2px solid var(--border-default);
+}
+
+.tableCell {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--border-default);
+}
+
+/* Typing Indicator Animation */
+.typingIndicator {
+  display: flex;
+  gap: 4px;
+  padding: var(--spacing-xs) 0;
+  margin-top: var(--spacing-xs);
+}
+
+.typingIndicator span {
+  width: 6px;
+  height: 6px;
+  background-color: var(--color-primary-400);
+  border-radius: 50%;
+  animation: typing 1.4s infinite ease-in-out both;
+}
+
+.typingIndicator span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typingIndicator span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.typingIndicator span:nth-child(3) {
+  animation-delay: 0;
+}
+
+@keyframes typing {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
