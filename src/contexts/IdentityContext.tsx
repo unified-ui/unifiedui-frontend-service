@@ -19,6 +19,7 @@ const IdentityContext = createContext<IdentityContextType | undefined>(undefined
 
 const SELECTED_TENANT_KEY = 'unified-ui-selected-tenant-id';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const AGENT_SERVICE_URL = import.meta.env.VITE_AGENT_SERVICE_URL || 'http://localhost:8085';
 
 interface IdentityProviderProps {
   children: ReactNode;
@@ -59,6 +60,8 @@ export const IdentityProvider: FC<IdentityProviderProps> = ({ children }) => {
           });
         },
       });
+      // Configure agent service URL
+      client.setAgentServiceURL(AGENT_SERVICE_URL);
       setApiClient(client);
     } else {
       setApiClient(null);

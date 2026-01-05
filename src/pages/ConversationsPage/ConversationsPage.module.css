@@ -13,7 +13,7 @@
   bottom: 0;
   width: 280px;
   z-index: var(--z-dropdown);
-  background-color: var(--bg-paper);
+  background-color: var(--bg-app);
   border-right: 1px solid var(--border-default);
   transition: transform var(--transition-normal) var(--easing-ease-in-out),
               opacity var(--transition-normal) var(--easing-ease-in-out);

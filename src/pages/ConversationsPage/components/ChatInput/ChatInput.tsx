@@ -167,79 +167,82 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
         </Box>
       )}
 
-      {/* Attachments preview */}
-      {attachments.length > 0 && (
-        <Box className={classes.attachmentsContainer}>
-          {attachments.map((file, index) => (
-            <AttachmentPreview
-              key={`${file.name}-${index}`}
-              file={file}
-              onRemove={() => removeAttachment(index)}
-            />
-          ))}
-        </Box>
-      )}
-
-      {/* Input area */}
-      <Box className={classes.inputWrapper}>
-        <Box className={classes.inputContainer}>
-          {/* Attachment button */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="image/*,.pdf,.doc,.docx,.txt,.md"
-            onChange={handleFileSelect}
-            className={classes.fileInput}
-          />
-          <Tooltip label="Attach files">
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              className={classes.attachButton}
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isDisabled || isStreaming}
-            >
-              <IconPaperclip size={20} />
-            </ActionIcon>
-          </Tooltip>
-
-          {/* Textarea */}
-          <textarea
-            ref={textareaRef}
-            className={classes.textarea}
-            placeholder={placeholder}
-            value={content}
-            onChange={handleContentChange}
-            onKeyDown={handleKeyDown}
-            disabled={isDisabled || isStreaming}
-            rows={1}
-          />
-
-          {/* Send button */}
-          <Tooltip label={isStreaming ? 'Generating...' : 'Send message'}>
-            <ActionIcon
-              variant="filled"
-              color="primary"
-              className={classes.sendButton}
-              onClick={handleSend}
-              disabled={!canSend}
-            >
-              {isStreaming ? (
-                <Loader size={16} color="white" />
-              ) : (
-                <IconSend size={18} />
-              )}
-            </ActionIcon>
-          </Tooltip>
-        </Box>
-
-        {/* Character count */}
-        {content.length > maxLength * 0.8 && (
-          <Text size="xs" c={content.length >= maxLength ? 'red' : 'dimmed'} className={classes.charCount}>
-            {content.length}/{maxLength}
-          </Text>
+      {/* Centered input wrapper */}
+      <Box className={classes.inputOuterWrapper}>
+        {/* Attachments preview */}
+        {attachments.length > 0 && (
+          <Box className={classes.attachmentsContainer}>
+            {attachments.map((file, index) => (
+              <AttachmentPreview
+                key={`${file.name}-${index}`}
+                file={file}
+                onRemove={() => removeAttachment(index)}
+              />
+            ))}
+          </Box>
         )}
+
+        {/* Input area */}
+        <Box className={classes.inputWrapper}>
+          <Box className={classes.inputContainer}>
+            {/* Attachment button */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*,.pdf,.doc,.docx,.txt,.md"
+              onChange={handleFileSelect}
+              className={classes.fileInput}
+            />
+            <Tooltip label="Attach files">
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                className={classes.attachButton}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isDisabled || isStreaming}
+              >
+                <IconPaperclip size={20} />
+              </ActionIcon>
+            </Tooltip>
+
+            {/* Textarea */}
+            <textarea
+              ref={textareaRef}
+              className={classes.textarea}
+              placeholder={placeholder}
+              value={content}
+              onChange={handleContentChange}
+              onKeyDown={handleKeyDown}
+              disabled={isDisabled || isStreaming}
+              rows={1}
+            />
+
+            {/* Send button */}
+            <Tooltip label={isStreaming ? 'Generating...' : 'Send message'}>
+              <ActionIcon
+                variant="filled"
+                color="primary"
+                className={classes.sendButton}
+                onClick={handleSend}
+                disabled={!canSend}
+              >
+                {isStreaming ? (
+                  <Loader size={16} color="white" />
+                ) : (
+                  <IconSend size={18} />
+                )}
+              </ActionIcon>
+            </Tooltip>
+          </Box>
+
+          {/* Character count */}
+          {content.length > maxLength * 0.8 && (
+            <Text size="xs" c={content.length >= maxLength ? 'red' : 'dimmed'} className={classes.charCount}>
+              {content.length}/{maxLength}
+            </Text>
+          )}
+        </Box>
       </Box>
 
       {/* Hint text */}

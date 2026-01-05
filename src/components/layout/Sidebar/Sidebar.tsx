@@ -11,7 +11,7 @@ import {
   IconBrandWechat
 } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useSidebarData, type EntityType } from '../../../contexts';
+import { useSidebarData, useChatSidebar, type EntityType } from '../../../contexts';
 import { SidebarDataList, type DataListItem } from './SidebarDataList';
 import {
   CreateApplicationDialog,
@@ -59,6 +59,9 @@ interface EntityConfig {
 export const Sidebar: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Use ChatSidebar context for hover behavior
+  const { onNavItemHoverEnter: onChatSidebarHoverEnter, onNavItemHoverLeave: onChatSidebarHoverLeave } = useChatSidebar();
   
   // Use global sidebar data context
   const {
@@ -347,15 +350,33 @@ export const Sidebar: FC = () => {
   const renderNavItem = (item: NavItem) => {
     const Icon = item.icon;
     const IconFilled = item.iconFilled || item.icon;
-    const isActive = location.pathname === item.path;
+    const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
     const isEntityHovered = item.entityType === activeEntity;
+    const isConversationsItem = item.path === '/conversations';
+
+    const handleMouseEnter = () => {
+      // Trigger chat sidebar hover for Conversations item
+      if (isConversationsItem) {
+        onChatSidebarHoverEnter();
+      }
+      // Trigger data list hover for items with data lists
+      handleNavItemHoverEnter(item);
+    };
+
+    const handleMouseLeave = () => {
+      // Trigger chat sidebar hover leave for Conversations item
+      if (isConversationsItem) {
+        onChatSidebarHoverLeave();
+      }
+      handleNavItemHoverLeave();
+    };
 
     return (
       <Tooltip key={item.path} label={item.label} position="right" withArrow>
         <UnstyledButton
           onClick={() => navigate(item.path)}
-          onMouseEnter={() => handleNavItemHoverEnter(item)}
-          onMouseLeave={handleNavItemHoverLeave}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           className={`${classes.navItem} ${isActive ? classes.navItemActive : ''} ${isEntityHovered ? classes.navItemHovered : ''}`}
         >
           {isActive ? <IconFilled size={24} stroke={isActive && item.iconFilled ? 0 : 1.5} /> : <Icon size={24} stroke={1.5} />}

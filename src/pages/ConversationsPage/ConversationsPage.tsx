@@ -5,7 +5,7 @@ import { Box, Loader, Center, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconUpload } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { useIdentity } from '../../contexts';
+import { useIdentity, useChatSidebar } from '../../contexts';
 import { ChatSidebar } from './components/ChatSidebar';
 import { ChatHeader } from './components/ChatHeader';
 import { ChatContent } from './components/ChatContent';
@@ -27,6 +27,7 @@ export const ConversationsPage: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { apiClient, selectedTenant, user } = useIdentity();
+  const { onSidebarHoverEnter, onSidebarHoverLeave } = useChatSidebar();
 
   // State
   const [conversations, setConversations] = useState<ConversationResponse[]>([]);
@@ -267,11 +268,41 @@ export const ConversationsPage: FC = () => {
     }
     abortControllerRef.current = new AbortController();
 
+    // Determine conversation ID - create new conversation if needed
+    let activeConversationId = conversationId;
+    
+    // If this is a new chat, create conversation first via platform service
+    if (!activeConversationId) {
+      try {
+        const newConv = await apiClient.createConversation(selectedTenant.id, {
+          application_id: selectedApplicationId,
+          name: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
+        });
+        
+        activeConversationId = newConv.id;
+        
+        // Update URL without full navigation
+        window.history.replaceState(null, '', `/conversations/${newConv.id}`);
+        
+        // Update state
+        setCurrentConversation(newConv);
+        setConversations(prev => [newConv, ...prev]);
+      } catch (error) {
+        console.error('Failed to create conversation:', error);
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to create conversation',
+          color: 'red',
+        });
+        return;
+      }
+    }
+
     // Create optimistic user message
     const optimisticUserMessage: MessageResponse = {
       id: `temp-${Date.now()}`,
       type: 'user',
-      conversationId: conversationId || '',
+      conversationId: activeConversationId,
       applicationId: selectedApplicationId,
       content,
       status: 'pending',
@@ -295,11 +326,11 @@ export const ConversationsPage: FC = () => {
         console.log('Attachments:', attachments);
       }
 
-      // Send message via SSE stream
+      // Send message via SSE stream to agent-service
       const stream = apiClient.sendMessageStream(
         selectedTenant.id,
         {
-          conversationId: conversationId || undefined,
+          conversationId: activeConversationId,
           applicationId: selectedApplicationId,
           message: {
             content,
@@ -307,35 +338,8 @@ export const ConversationsPage: FC = () => {
           },
         },
         // onStreamStart
-        (messageId: string, newConversationId: string) => {
+        (messageId: string, _newConversationId: string) => {
           setStreamingMessageId(messageId);
-          
-          // If new conversation was created, navigate to it
-          if (!conversationId && newConversationId) {
-            // Update URL without full navigation to preserve state
-            window.history.replaceState(null, '', `/conversations/${newConversationId}`);
-            
-            // Create new conversation object for UI
-            const newConversation: ConversationResponse = {
-              id: newConversationId,
-              tenant_id: selectedTenant.id,
-              application_id: selectedApplicationId,
-              name: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
-              is_active: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            };
-            
-            setCurrentConversation(newConversation);
-            setConversations(prev => [newConversation, ...prev]);
-            
-            // Update user message with real conversation ID
-            setMessages(prev => prev.map(m => 
-              m.id === optimisticUserMessage.id 
-                ? { ...m, conversationId: newConversationId }
-                : m
-            ));
-          }
         },
         // onTextChunk
         (chunk: string) => {
@@ -352,7 +356,7 @@ export const ConversationsPage: FC = () => {
             const assistantMessage: MessageResponse = {
               id: `assistant-${Date.now()}`,
               type: 'assistant',
-              conversationId: conversationId || currentConversation?.id || '',
+              conversationId: activeConversationId || '',
               applicationId: selectedApplicationId,
               content: finalContent,
               status: 'completed',
@@ -416,7 +420,7 @@ export const ConversationsPage: FC = () => {
         });
       }
     }
-  }, [apiClient, selectedTenant, selectedApplicationId, conversationId, currentConversation, applications]);
+  }, [apiClient, selectedTenant, selectedApplicationId, conversationId]);
 
   // Handle share (placeholder)
   const handleShare = useCallback(() => {
@@ -485,6 +489,8 @@ export const ConversationsPage: FC = () => {
         {/* Fixed Chat Sidebar - attached to main layout sidebar */}
         <Box 
           className={`${classes.chatSidebarWrapper} ${sidebarCollapsed ? classes.collapsed : ''}`}
+          onMouseEnter={onSidebarHoverEnter}
+          onMouseLeave={onSidebarHoverLeave}
         >
           <ChatSidebar
             conversations={conversations}

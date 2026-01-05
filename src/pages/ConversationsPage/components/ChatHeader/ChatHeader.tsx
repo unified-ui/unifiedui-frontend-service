@@ -33,7 +33,6 @@ interface ChatHeaderProps {
 }
 
 export const ChatHeader: FC<ChatHeaderProps> = ({
-  conversation,
   applications,
   selectedApplicationId,
   isNewChat,
@@ -92,13 +91,14 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
 
         {/* Right side - Actions */}
         <Group gap="xs" className={classes.rightSection}>
-          {!isNewChat && conversation && (
+          {selectedApplicationId && (
             <>
               <Tooltip label="Share conversation">
                 <ActionIcon
                   variant="subtle"
                   onClick={onShare}
                   aria-label="Share conversation"
+                  disabled={isNewChat}
                 >
                   <IconShare size={18} />
                 </ActionIcon>
@@ -114,6 +114,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
                   <Menu.Item
                     leftSection={<IconPinned size={16} />}
                     onClick={onToggleFavorite}
+                    disabled={isNewChat}
                   >
                     {isFavorite ? 'Unpin chat' : 'Pin chat'}
                   </Menu.Item>
@@ -122,6 +123,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
                     color="red"
                     leftSection={<IconTrash size={16} />}
                     onClick={onDelete}
+                    disabled={isNewChat}
                   >
                     Delete chat
                   </Menu.Item>
