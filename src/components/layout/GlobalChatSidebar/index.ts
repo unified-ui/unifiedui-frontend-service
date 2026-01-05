@@ -1,0 +1,1 @@
+export { GlobalChatSidebar } from './GlobalChatSidebar';

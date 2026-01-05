@@ -351,9 +351,17 @@ const ConversationItem: FC<ConversationItemProps> = ({
   onDelete,
 }) => {
   return (
-    <UnstyledButton
+    <Box
       className={`${classes.conversationItem} ${isSelected ? classes.selected : ''}`}
       onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
     >
       <Group gap="sm" wrap="nowrap" className={classes.conversationContent}>
         <IconMessageCircle size={16} className={classes.conversationIcon} />
@@ -401,6 +409,6 @@ const ConversationItem: FC<ConversationItemProps> = ({
           </Menu.Dropdown>
         </Menu>
       </Group>
-    </UnstyledButton>
+    </Box>
   );
 };

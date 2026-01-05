@@ -317,6 +317,7 @@ export const ConversationsPage: FC = () => {
 
     // Store current streaming content in a local variable for closure
     let accumulatedContent = '';
+    let currentStreamingMessageId = '';
 
     try {
       // Process attachments if any (convert to base64 or upload)
@@ -339,7 +340,30 @@ export const ConversationsPage: FC = () => {
         },
         // onStreamStart
         (messageId: string, _newConversationId: string) => {
+          currentStreamingMessageId = messageId;
           setStreamingMessageId(messageId);
+          
+          // Add a streaming assistant message to the messages array
+          const streamingAssistantMessage: MessageResponse = {
+            id: messageId,
+            type: 'assistant',
+            conversationId: activeConversationId || '',
+            applicationId: selectedApplicationId,
+            content: '', // Will be updated via streamingContent
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          
+          // Update optimistic user message to completed and add streaming assistant message
+          setMessages(prev => {
+            const updated = prev.map(m => 
+              m.id === optimisticUserMessage.id 
+                ? { ...m, status: 'completed' as const }
+                : m
+            );
+            return [...updated, streamingAssistantMessage];
+          });
         },
         // onTextChunk
         (chunk: string) => {
@@ -350,28 +374,14 @@ export const ConversationsPage: FC = () => {
         () => {
           setIsStreaming(false);
           
-          // Convert streaming content to a proper message
+          // Update the streaming message with final content
           const finalContent = accumulatedContent;
-          if (finalContent) {
-            const assistantMessage: MessageResponse = {
-              id: `assistant-${Date.now()}`,
-              type: 'assistant',
-              conversationId: activeConversationId || '',
-              applicationId: selectedApplicationId,
-              content: finalContent,
-              status: 'completed',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            };
-            
-            setMessages(prev => {
-              // Remove optimistic user message and add real messages
-              const filtered = prev.filter(m => m.id !== optimisticUserMessage.id);
-              return [...filtered, 
-                { ...optimisticUserMessage, id: `user-${Date.now()}`, status: 'completed' as const },
-                assistantMessage
-              ];
-            });
+          if (finalContent && currentStreamingMessageId) {
+            setMessages(prev => prev.map(m => 
+              m.id === currentStreamingMessageId
+                ? { ...m, content: finalContent, status: 'completed' as const }
+                : m
+            ));
           }
           
           setStreamingContent('');
@@ -384,8 +394,10 @@ export const ConversationsPage: FC = () => {
           setStreamingContent('');
           setStreamingMessageId(undefined);
           
-          // Remove optimistic message on error
-          setMessages(prev => prev.filter(m => m.id !== optimisticUserMessage.id));
+          // Remove optimistic user message and streaming assistant message on error
+          setMessages(prev => prev.filter(m => 
+            m.id !== optimisticUserMessage.id && m.id !== currentStreamingMessageId
+          ));
           
           notifications.show({
             title: 'Error',
@@ -409,8 +421,10 @@ export const ConversationsPage: FC = () => {
       setStreamingContent('');
       setStreamingMessageId(undefined);
       
-      // Remove optimistic message on error
-      setMessages(prev => prev.filter(m => m.id !== optimisticUserMessage.id));
+      // Remove optimistic user message and streaming assistant message on error
+      setMessages(prev => prev.filter(m => 
+        m.id !== optimisticUserMessage.id && m.id !== currentStreamingMessageId
+      ));
       
       if ((error as Error).name !== 'AbortError') {
         notifications.show({
