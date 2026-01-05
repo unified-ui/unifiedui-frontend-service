@@ -3,8 +3,30 @@
   height: 100%;
   width: 100%;
   overflow: hidden;
-  background-color: var(--bg-app);
-  border-radius: var(--radius-md);
+  background-color: transparent;
+}
+
+.chatSidebarWrapper {
+  position: fixed;
+  top: 70px; /* Header height */
+  left: 100px; /* Main sidebar width */
+  bottom: 0;
+  width: 280px;
+  z-index: var(--z-dropdown);
+  background-color: var(--bg-paper);
+  border-right: 1px solid var(--border-default);
+  transition: transform var(--transition-normal) var(--easing-ease-in-out),
+              opacity var(--transition-normal) var(--easing-ease-in-out);
+}
+
+.chatSidebarWrapper.collapsed {
+  width: 56px;
+}
+
+.chatSidebarWrapper.hidden {
+  transform: translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .mainArea {
@@ -12,7 +34,17 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  background-color: var(--bg-paper);
+  background-color: transparent;
+  margin-left: 280px; /* Chat sidebar width */
+  transition: margin-left var(--transition-normal) var(--easing-ease-in-out);
+}
+
+.mainArea.sidebarCollapsed {
+  margin-left: 56px;
+}
+
+.mainArea.sidebarHidden {
+  margin-left: 0;
 }
 
 .contentArea {
@@ -21,10 +53,46 @@
   overflow: hidden;
 }
 
+/* Drop zone overlay for the main chat area */
+.dropZoneOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(var(--color-primary-rgb), 0.1);
+  border: 2px dashed var(--color-primary-500);
+  border-radius: var(--radius-lg);
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+
+.dropZoneOverlay.active {
+  opacity: 1;
+}
+
+.dropZoneContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  color: var(--color-primary-600);
+}
+
+[data-mantine-color-scheme='dark'] .dropZoneContent {
+  color: var(--color-primary-400);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .pageContainer {
-    /* On mobile, sidebar overlays the main area */
-    position: relative;
+  .chatSidebarWrapper {
+    width: 100%;
+    left: 0;
+  }
+  
+  .mainArea {
+    margin-left: 0;
   }
 }

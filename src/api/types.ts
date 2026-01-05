@@ -53,10 +53,10 @@ export const ChatWidgetTypeEnum = {
 export type ChatWidgetTypeEnum = typeof ChatWidgetTypeEnum[keyof typeof ChatWidgetTypeEnum];
 
 export const FavoriteResourceTypeEnum = {
-  APPLICATION: 'application',
-  AUTONOMOUS_AGENT: 'autonomous_agent',
-  CONVERSATION: 'conversation',
-  DEVELOPMENT_PLATFORM: 'development_platform',
+  APPLICATION: 'applications',
+  AUTONOMOUS_AGENT: 'autonomous-agents',
+  CONVERSATION: 'conversations',
+  DEVELOPMENT_PLATFORM: 'development-platforms',
 } as const;
 
 export type FavoriteResourceTypeEnum = typeof FavoriteResourceTypeEnum[keyof typeof FavoriteResourceTypeEnum];

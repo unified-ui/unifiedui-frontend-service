@@ -3,16 +3,18 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Loader, Center, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { IconUpload } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { useIdentity } from '../../contexts';
 import { ChatSidebar } from './components/ChatSidebar';
 import { ChatHeader } from './components/ChatHeader';
 import { ChatContent } from './components/ChatContent';
-import { ChatInput } from './components/ChatInput';
-import type {
-  ConversationResponse,
-  ApplicationResponse,
-  MessageResponse,
+import { ChatInput, type ChatInputRef } from './components/ChatInput';
+import {
+  FavoriteResourceTypeEnum,
+  type ConversationResponse,
+  type ApplicationResponse,
+  type MessageResponse,
 } from '../../api/types';
 import classes from './ConversationsPage.module.css';
 
@@ -47,6 +49,11 @@ export const ConversationsPage: FC = () => {
 
   // Refs for abort controller
   const abortControllerRef = useRef<AbortController | null>(null);
+  const chatInputRef = useRef<ChatInputRef>(null);
+
+  // Drag and drop state
+  const [isDragOver, setIsDragOver] = useState(false);
+  const dragCounterRef = useRef(0);
 
   // Determine if this is a new chat
   const isNewChat = !conversationId;
@@ -194,7 +201,7 @@ export const ConversationsPage: FC = () => {
       await apiClient.toggleFavorite(
         selectedTenant.id, 
         user.id, 
-        'conversation' as const, 
+        FavoriteResourceTypeEnum.CONVERSATION, 
         id, 
         isFavorite
       );
@@ -420,6 +427,42 @@ export const ConversationsPage: FC = () => {
     });
   }, []);
 
+  // Drag and drop handlers for the main chat area
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current += 1;
+    if (e.dataTransfer.types.includes('Files')) {
+      setIsDragOver(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current -= 1;
+    if (dragCounterRef.current === 0) {
+      setIsDragOver(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current = 0;
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0 && chatInputRef.current) {
+      chatInputRef.current.handleFileDrop(files);
+    }
+  }, []);
+
   // Show initial loading
   if (isLoadingConversations && !conversations.length) {
     return (
@@ -439,23 +482,43 @@ export const ConversationsPage: FC = () => {
   return (
     <MainLayout noPadding>
       <Box className={classes.pageContainer}>
-        {/* Sidebar */}
-        <ChatSidebar
-          conversations={conversations}
-          applications={applications}
-          selectedConversationId={conversationId}
-          favoriteIds={favoriteIds}
-          isLoading={isLoadingConversations}
-          isCollapsed={sidebarCollapsed}
-          onCollapsedChange={handleSidebarCollapse}
-          onNewChat={handleNewChat}
-          onSelectConversation={handleSelectConversation}
-          onToggleFavorite={handleToggleFavorite}
-          onDeleteConversation={handleDeleteConversation}
-        />
+        {/* Fixed Chat Sidebar - attached to main layout sidebar */}
+        <Box 
+          className={`${classes.chatSidebarWrapper} ${sidebarCollapsed ? classes.collapsed : ''}`}
+        >
+          <ChatSidebar
+            conversations={conversations}
+            applications={applications}
+            selectedConversationId={conversationId}
+            favoriteIds={favoriteIds}
+            isLoading={isLoadingConversations}
+            isCollapsed={sidebarCollapsed}
+            onCollapsedChange={handleSidebarCollapse}
+            onNewChat={handleNewChat}
+            onSelectConversation={handleSelectConversation}
+            onToggleFavorite={handleToggleFavorite}
+            onDeleteConversation={handleDeleteConversation}
+          />
+        </Box>
 
-        {/* Main chat area */}
-        <Box className={classes.mainArea}>
+        {/* Main chat area - margin left adjusts based on sidebar state */}
+        <Box 
+          className={`${classes.mainArea} ${sidebarCollapsed ? classes.sidebarCollapsed : ''}`}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          style={{ position: 'relative' }}
+        >
+          {/* Drop zone overlay */}
+          <Box className={`${classes.dropZoneOverlay} ${isDragOver ? classes.active : ''}`}>
+            <Box className={classes.dropZoneContent}>
+              <IconUpload size={48} stroke={1.5} />
+              <Text size="lg" fw={500}>Drop files here</Text>
+              <Text size="sm" c="dimmed">Files will be attached to your message</Text>
+            </Box>
+          </Box>
+
           {/* Header */}
           <ChatHeader
             conversation={currentConversation}
@@ -490,6 +553,7 @@ export const ConversationsPage: FC = () => {
 
           {/* Input */}
           <ChatInput
+            ref={chatInputRef}
             onSend={handleSendMessage}
             isDisabled={!selectedApplicationId}
             isStreaming={isStreaming}

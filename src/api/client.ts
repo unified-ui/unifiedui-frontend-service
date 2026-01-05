@@ -69,7 +69,6 @@ import type {
   // User Favorites Types
   UserFavoriteResponse,
   UserFavoritesListResponse,
-  FavoriteResourceTypeEnum,
   // Agent Service Types
   GetMessagesResponse,
   SendMessageRequest,
@@ -83,6 +82,9 @@ import type {
   PrincipalTypeEnum,
   PermissionActionEnum,
 } from './types';
+
+// Import enums as values (not type-only)
+import { FavoriteResourceTypeEnum } from './types';
 
 // ========== API Client Configuration ==========
 
@@ -712,19 +714,19 @@ export class UnifiedUIAPIClient {
   // ========== Convenience Methods for Favorites ==========
 
   async listApplicationFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
-    return this.listUserFavorites(tenantId, userId, 'application' as FavoriteResourceTypeEnum);
+    return this.listUserFavorites(tenantId, userId, FavoriteResourceTypeEnum.APPLICATION);
   }
 
   async listAutonomousAgentFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
-    return this.listUserFavorites(tenantId, userId, 'autonomous_agent' as FavoriteResourceTypeEnum);
+    return this.listUserFavorites(tenantId, userId, FavoriteResourceTypeEnum.AUTONOMOUS_AGENT);
   }
 
   async listConversationFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
-    return this.listUserFavorites(tenantId, userId, 'conversation' as FavoriteResourceTypeEnum);
+    return this.listUserFavorites(tenantId, userId, FavoriteResourceTypeEnum.CONVERSATION);
   }
 
   async listDevelopmentPlatformFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
-    return this.listUserFavorites(tenantId, userId, 'development_platform' as FavoriteResourceTypeEnum);
+    return this.listUserFavorites(tenantId, userId, FavoriteResourceTypeEnum.DEVELOPMENT_PLATFORM);
   }
 
   async toggleFavorite(tenantId: string, userId: string, resourceType: FavoriteResourceTypeEnum, resourceId: string, isFavorite: boolean): Promise<void> {

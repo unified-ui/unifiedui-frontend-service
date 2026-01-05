@@ -1,5 +1,5 @@
 import type { FC, KeyboardEvent, DragEvent, ChangeEvent } from 'react';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import {
   Box,
   ActionIcon,
@@ -25,13 +25,17 @@ interface ChatInputProps {
   maxLength?: number;
 }
 
-export const ChatInput: FC<ChatInputProps> = ({
+export interface ChatInputRef {
+  handleFileDrop: (files: File[]) => void;
+}
+
+export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
   onSend,
   isDisabled,
   isStreaming,
   placeholder = 'Type a message...',
   maxLength = 32000,
-}) => {
+}, ref) => {
   const [content, setContent] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -98,6 +102,13 @@ export const ChatInput: FC<ChatInputProps> = ({
     const newAttachments = [...attachments, ...files].slice(0, maxAttachments);
     setAttachments(newAttachments);
   };
+
+  // Expose handleFileDrop method to parent via ref
+  useImperativeHandle(ref, () => ({
+    handleFileDrop: (files: File[]) => {
+      addFiles(files);
+    },
+  }), [attachments]);
 
   const removeAttachment = (index: number) => {
     setAttachments(prev => prev.filter((_, i) => i !== index));
@@ -237,7 +248,9 @@ export const ChatInput: FC<ChatInputProps> = ({
       </Text>
     </Box>
   );
-};
+});
+
+ChatInput.displayName = 'ChatInput';
 
 interface AttachmentPreviewProps {
   file: File;
