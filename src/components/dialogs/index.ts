@@ -11,3 +11,5 @@ export { EditChatWidgetDialog } from './EditChatWidgetDialog';
 export { EditCredentialDialog } from './EditCredentialDialog';
 export { EditCustomGroupDialog } from './EditCustomGroupDialog';
 export { EditDevelopmentPlatformDialog } from './EditDevelopmentPlatformDialog';
+export { ShareConversationDialog } from './ShareConversationDialog';
+export { SearchConversationsDialog } from './SearchConversationsDialog';

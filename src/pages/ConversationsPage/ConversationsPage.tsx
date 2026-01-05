@@ -3,9 +3,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Loader, Center, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconUpload } from '@tabler/icons-react';
+import { IconUpload, IconMessageCircle } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { useIdentity, useChatSidebar } from '../../contexts';
+import { ShareConversationDialog } from '../../components/dialogs/ShareConversationDialog';
+import { SearchConversationsDialog } from '../../components/dialogs/SearchConversationsDialog';
 import { ChatSidebar } from './components/ChatSidebar';
 import { ChatHeader } from './components/ChatHeader';
 import { ChatContent } from './components/ChatContent';
@@ -47,6 +49,8 @@ export const ConversationsPage: FC = () => {
     const stored = localStorage.getItem(STORAGE_KEY_SIDEBAR_COLLAPSED);
     return stored === 'true';
   });
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
 
   // Refs for abort controller
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -436,13 +440,14 @@ export const ConversationsPage: FC = () => {
     }
   }, [apiClient, selectedTenant, selectedApplicationId, conversationId]);
 
-  // Handle share (placeholder)
+  // Handle share
   const handleShare = useCallback(() => {
-    notifications.show({
-      title: 'Coming Soon',
-      message: 'Share functionality will be available soon',
-      color: 'blue',
-    });
+    setShareDialogOpen(true);
+  }, []);
+
+  // Handle search open
+  const handleSearchOpen = useCallback(() => {
+    setSearchDialogOpen(true);
   }, []);
 
   // Drag and drop handlers for the main chat area
@@ -518,6 +523,7 @@ export const ConversationsPage: FC = () => {
             onSelectConversation={handleSelectConversation}
             onToggleFavorite={handleToggleFavorite}
             onDeleteConversation={handleDeleteConversation}
+            onSearchOpen={handleSearchOpen}
           />
         </Box>
 
@@ -561,30 +567,76 @@ export const ConversationsPage: FC = () => {
           />
 
           {/* Content */}
-          <Box className={classes.contentArea}>
-            <ChatContent
-              messages={messages}
-              isLoading={isLoadingMessages}
-              isStreaming={isStreaming}
-              streamingContent={streamingContent}
-              streamingMessageId={streamingMessageId}
-            />
-          </Box>
+          {isNewChat && messages.length === 0 ? (
+            <Box className={classes.contentArea}>
+              <Box className={classes.emptyState}>
+                <IconMessageCircle size={64} className={classes.emptyStateIcon} />
+                <Text className={classes.emptyStateTitle}>
+                  Start a new conversation
+                </Text>
+                <Text className={classes.emptyStateDescription}>
+                  {selectedApplicationId
+                    ? 'Type your message below to begin chatting'
+                    : 'Select a chat agent from the header to start'}
+                </Text>
+              </Box>
+              <Box className={classes.centeredInputWrapper}>
+                <ChatInput
+                  ref={chatInputRef}
+                  onSend={handleSendMessage}
+                  isDisabled={!selectedApplicationId}
+                  isStreaming={isStreaming}
+                  placeholder={
+                    selectedApplicationId
+                      ? 'Type a message to start...'
+                      : 'Select a chat agent to start'
+                  }
+                />
+              </Box>
+            </Box>
+          ) : (
+            <>
+              <Box className={classes.contentArea}>
+                <ChatContent
+                  messages={messages}
+                  isLoading={isLoadingMessages}
+                  isStreaming={isStreaming}
+                  streamingContent={streamingContent}
+                  streamingMessageId={streamingMessageId}
+                />
+              </Box>
 
-          {/* Input */}
-          <ChatInput
-            ref={chatInputRef}
-            onSend={handleSendMessage}
-            isDisabled={!selectedApplicationId}
-            isStreaming={isStreaming}
-            placeholder={
-              selectedApplicationId
-                ? 'Type a message...'
-                : 'Select a chat agent to start'
-            }
-          />
+              {/* Input */}
+              <ChatInput
+                ref={chatInputRef}
+                onSend={handleSendMessage}
+                isDisabled={!selectedApplicationId}
+                isStreaming={isStreaming}
+                placeholder={
+                  selectedApplicationId
+                    ? 'Type a message...'
+                    : 'Select a chat agent to start'
+                }
+              />
+            </>
+          )}
         </Box>
       </Box>
+
+      {/* Share Dialog */}
+      <ShareConversationDialog
+        opened={shareDialogOpen}
+        onClose={() => setShareDialogOpen(false)}
+        conversation={currentConversation}
+      />
+
+      {/* Search Dialog */}
+      <SearchConversationsDialog
+        opened={searchDialogOpen}
+        onClose={() => setSearchDialogOpen(false)}
+        conversations={conversations}
+        applications={applications}
+      />
     </MainLayout>
   );
 };

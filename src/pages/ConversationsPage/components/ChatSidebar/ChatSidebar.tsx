@@ -2,7 +2,6 @@ import type { FC } from 'react';
 import { useState, useMemo } from 'react';
 import {
   Stack,
-  TextInput,
   ActionIcon,
   Text,
   UnstyledButton,
@@ -20,13 +19,13 @@ import {
   IconSearch,
   IconChevronLeft,
   IconChevronRight,
-  IconMessageCircle,
+  IconMessage,
   IconPinned,
   IconTrash,
   IconDots,
   IconLayoutList,
   IconApps,
-  IconX,
+  IconEdit,
 } from '@tabler/icons-react';
 import type { ConversationResponse, ApplicationResponse } from '../../../../api/types';
 import classes from './ChatSidebar.module.css';
@@ -67,7 +66,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
   onDeleteConversation,
   onSearchOpen,
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery] = useState('');
   const [groupMode, setGroupMode] = useState<GroupMode>('time');
 
   // Get application name by ID
@@ -231,29 +230,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
         </Tooltip>
       </div>
 
-      {/* Search */}
-      <div className={classes.searchContainer}>
-        <TextInput
-          placeholder="Search conversations..."
-          size="sm"
-          leftSection={<IconSearch size={16} />}
-          rightSection={
-            searchQuery && (
-              <ActionIcon
-                size="xs"
-                variant="subtle"
-                onClick={() => setSearchQuery('')}
-              >
-                <IconX size={14} />
-              </ActionIcon>
-            )
-          }
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.currentTarget.value)}
-          className={classes.searchInput}
-        />
-      </div>
-
       {/* Group Mode Toggle */}
       <div className={classes.groupToggle}>
         <SegmentedControl
@@ -364,7 +340,7 @@ const ConversationItem: FC<ConversationItemProps> = ({
       }}
     >
       <Group gap="sm" wrap="nowrap" className={classes.conversationContent}>
-        <IconMessageCircle size={16} className={classes.conversationIcon} />
+        <IconMessage size={16} className={classes.conversationIcon} />
         <div className={classes.conversationInfo}>
           <Text size="sm" lineClamp={1} className={classes.conversationName}>
             {isFavorite && <IconPinned size={12} className={classes.pinnedIcon} />}
@@ -394,6 +370,16 @@ const ConversationItem: FC<ConversationItemProps> = ({
               }}
             >
               {isFavorite ? 'Unpin' : 'Pin'}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<IconEdit size={14} />}
+              onClick={(e) => {
+                e.stopPropagation();
+                // TODO: Implement rename dialog
+                console.log('Rename conversation:', conversation.id);
+              }}
+            >
+              Rename
             </Menu.Item>
             <Menu.Divider />
             <Menu.Item
