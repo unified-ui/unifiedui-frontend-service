@@ -841,9 +841,9 @@ export class UnifiedUIAPIClient {
   async *sendMessageStream(
     tenantId: string,
     data: SendMessageRequest,
-    onStreamStart?: (messageId: string, conversationId: string) => void,
+    onStreamStart?: (messageId: string, conversationId: string, isNewMessage: boolean) => void,
     onTextChunk?: (content: string) => void,
-    onNewMessage?: (messageId: string, conversationId: string) => void,
+    onNewMessage?: () => void,
     onStreamEnd?: () => void,
     onError?: (code: string, message: string, details: string) => void,
     foundryToken?: string
@@ -893,6 +893,7 @@ export class UnifiedUIAPIClient {
 
     const decoder = new TextDecoder();
     let buffer = '';
+    let pendingNewMessage = false; // Track if STREAM_NEW_MESSAGE was received
 
     try {
       while (true) {
@@ -921,10 +922,13 @@ export class UnifiedUIAPIClient {
                 switch (streamMsg.type) {
                   case 'STREAM_START':
                     if (onStreamStart && streamMsg.config) {
+                      // Pass isNewMessage flag to indicate if this is a new message after STREAM_NEW_MESSAGE
                       onStreamStart(
                         streamMsg.config.messageId || '',
-                        streamMsg.config.conversationId || ''
+                        streamMsg.config.conversationId || '',
+                        pendingNewMessage
                       );
+                      pendingNewMessage = false; // Reset the flag
                     }
                     break;
                   case 'TEXT_STREAM':
@@ -935,11 +939,9 @@ export class UnifiedUIAPIClient {
                   case 'STREAM_NEW_MESSAGE':
                     // Signal that a new message is starting (for multi-message responses)
                     // The next STREAM_START will contain the new messageId
-                    if (onNewMessage && streamMsg.config) {
-                      onNewMessage(
-                        streamMsg.config.messageId || '',
-                        streamMsg.config.conversationId || ''
-                      );
+                    pendingNewMessage = true;
+                    if (onNewMessage) {
+                      onNewMessage();
                     }
                     break;
                   case 'STREAM_END':

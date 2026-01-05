@@ -393,40 +393,63 @@ export const ConversationsPage: FC = () => {
           // Include external conversation ID for Foundry apps (used for continuing threads)
           extConversationId: isFoundryApp ? activeExtConversationId : undefined,
         },
-        // onStreamStart
-        (messageId: string, _newConversationId: string) => {
-          currentStreamingMessageId = messageId;
-          setStreamingMessageId(messageId);
-          
-          // Add a streaming assistant message to the messages array
-          const streamingAssistantMessage: MessageResponse = {
-            id: messageId,
-            type: 'assistant',
-            conversationId: activeConversationId || '',
-            applicationId: selectedApplicationId,
-            content: '', // Will be updated via streamingContent
-            status: 'pending',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
-          
-          // Update optimistic user message to completed and add streaming assistant message
-          setMessages(prev => {
-            const updated = prev.map(m => 
-              m.id === optimisticUserMessage.id 
-                ? { ...m, status: 'completed' as const }
-                : m
-            );
-            return [...updated, streamingAssistantMessage];
-          });
+        // onStreamStart - called for first message AND after STREAM_NEW_MESSAGE for subsequent messages
+        (messageId: string, _newConversationId: string, isNewMessage: boolean) => {
+          if (isNewMessage) {
+            // This is a new message after STREAM_NEW_MESSAGE
+            // The current message's content was already saved by onNewMessage
+            currentStreamingMessageId = messageId;
+            setStreamingMessageId(messageId);
+            
+            // Add a new streaming assistant message to the messages array
+            const newStreamingMessage: MessageResponse = {
+              id: messageId,
+              type: 'assistant',
+              conversationId: activeConversationId || '',
+              applicationId: selectedApplicationId,
+              content: '',
+              status: 'pending',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+            
+            setMessages(prev => [...prev, newStreamingMessage]);
+          } else {
+            // First message in the stream
+            currentStreamingMessageId = messageId;
+            setStreamingMessageId(messageId);
+            
+            // Add a streaming assistant message to the messages array
+            const streamingAssistantMessage: MessageResponse = {
+              id: messageId,
+              type: 'assistant',
+              conversationId: activeConversationId || '',
+              applicationId: selectedApplicationId,
+              content: '', // Will be updated via streamingContent
+              status: 'pending',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+            
+            // Update optimistic user message to completed and add streaming assistant message
+            setMessages(prev => {
+              const updated = prev.map(m => 
+                m.id === optimisticUserMessage.id 
+                  ? { ...m, status: 'completed' as const }
+                  : m
+              );
+              return [...updated, streamingAssistantMessage];
+            });
+          }
         },
         // onTextChunk
         (chunk: string) => {
           accumulatedContent += chunk;
           setStreamingContent(accumulatedContent);
         },
-        // onNewMessage - Handle multi-message responses (e.g., from Foundry agents)
-        (newMessageId: string, _conversationId: string) => {
+        // onNewMessage - Called when STREAM_NEW_MESSAGE is received (before the new STREAM_START)
+        // This signals: save current message content, reset accumulator, prepare for new message
+        () => {
           // Save the current message's accumulated content before starting a new one
           if (currentStreamingMessageId && accumulatedContent) {
             const previousMessageId = currentStreamingMessageId;
@@ -441,24 +464,6 @@ export const ConversationsPage: FC = () => {
           // Reset accumulated content for the new message
           accumulatedContent = '';
           setStreamingContent('');
-          
-          // Update current streaming message ID
-          currentStreamingMessageId = newMessageId;
-          setStreamingMessageId(newMessageId);
-          
-          // Add a new streaming assistant message to the messages array
-          const newStreamingMessage: MessageResponse = {
-            id: newMessageId,
-            type: 'assistant',
-            conversationId: activeConversationId || '',
-            applicationId: selectedApplicationId,
-            content: '',
-            status: 'pending',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
-          
-          setMessages(prev => [...prev, newStreamingMessage]);
         },
         // onStreamEnd
         () => {
