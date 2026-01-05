@@ -243,7 +243,7 @@ export const ApplicationsPage: FC = () => {
   }, []);
 
   const handleOpen = useCallback((id: string) => {
-    navigate(`/applications/${id}`);
+    navigate(`/conversations?chat-agent=${id}`);
   }, [navigate]);
 
   // Open edit dialog with details tab
@@ -352,6 +352,7 @@ export const ApplicationsPage: FC = () => {
           onFilterChange={handleFilterChange}
           onTagSearch={handleTagSearch}
           onStatusChange={handleStatusChange}
+          onRowClick={handleOpen}
           onOpen={handleOpen}
           onEdit={handleEdit}
           onShare={handleShare}

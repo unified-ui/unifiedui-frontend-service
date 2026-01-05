@@ -106,7 +106,7 @@ export const Sidebar: FC = () => {
       icon: <IconSparkles size={24} />,
       addButtonLabel: 'Add Chat Agent',
       fetchData: () => fetchEntityData('applications'),
-      getLink: (id) => `/applications/${id}`,
+      getLink: (id) => `/conversations?chat-agent=${id}`,
     },
     'autonomous-agents': {
       title: 'Autonomous Agents',

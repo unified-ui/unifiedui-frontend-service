@@ -55,6 +55,7 @@ export const ConversationsPage: FC = () => {
   // Refs for abort controller
   const abortControllerRef = useRef<AbortController | null>(null);
   const chatInputRef = useRef<ChatInputRef>(null);
+  const justCreatedConversationRef = useRef<string | null>(null);
 
   // Drag and drop state
   const [isDragOver, setIsDragOver] = useState(false);
@@ -116,6 +117,12 @@ export const ConversationsPage: FC = () => {
     if (!apiClient || !selectedTenant || !conversationId) {
       setCurrentConversation(null);
       setMessages([]);
+      return;
+    }
+
+    // Skip loading if we just created this conversation (we already have the state from handleSendMessage)
+    if (justCreatedConversationRef.current === conversationId) {
+      justCreatedConversationRef.current = null;
       return;
     }
 
@@ -297,6 +304,9 @@ export const ConversationsPage: FC = () => {
         });
         
         activeConversationId = newConv.id;
+        
+        // Mark this conversation as just created to prevent useEffect from overwriting our state
+        justCreatedConversationRef.current = newConv.id;
         
         // Navigate to the new conversation (this updates conversationId param and triggers selected state)
         navigate(`/conversations/${newConv.id}`, { replace: true });
