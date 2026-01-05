@@ -112,6 +112,15 @@ export const ConversationsPage: FC = () => {
     loadInitialData();
   }, [apiClient, selectedTenant, user]);
 
+  // Update selectedApplicationId when query param changes (e.g., from sidebar navigation)
+  useEffect(() => {
+    const queryAppId = searchParams.get('chat-agent');
+    if (queryAppId && queryAppId !== selectedApplicationId) {
+      setSelectedApplicationId(queryAppId);
+      localStorage.setItem(STORAGE_KEY_LAST_APP, queryAppId);
+    }
+  }, [searchParams, selectedApplicationId]);
+
   // Load conversation details and messages when conversationId changes
   useEffect(() => {
     if (!apiClient || !selectedTenant || !conversationId) {

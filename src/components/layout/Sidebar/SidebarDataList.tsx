@@ -21,7 +21,7 @@ import {
   IconInbox,
   IconRefresh,
 } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import classes from './SidebarDataList.module.css';
 
 export interface DataListItem {
@@ -81,6 +81,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
   isRefreshing = false,
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [showLoading, setShowLoading] = useState(false);
@@ -151,10 +152,18 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
   // Handle item click
   const handleItemClick = useCallback(
     (item: DataListItem) => {
-      navigate(item.link);
+      const [targetPath] = item.link.split('?');
+      const currentPath = location.pathname;
+      
+      // If we're on the same path, use replace to force query param update
+      if (currentPath === targetPath) {
+        navigate(item.link, { replace: true });
+      } else {
+        navigate(item.link);
+      }
       onClose();
     },
-    [navigate, onClose]
+    [navigate, onClose, location.pathname]
   );
 
   // Handle search change
