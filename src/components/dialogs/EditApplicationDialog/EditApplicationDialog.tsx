@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Modal,
   TextInput,
@@ -16,6 +16,10 @@ import {
   Switch,
   Divider,
   Badge,
+  NumberInput,
+  ActionIcon,
+  Tooltip,
+  Loader,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import {
@@ -23,16 +27,23 @@ import {
   IconInfoCircle,
   IconShieldLock,
   IconAlertCircle,
+  IconPlus,
 } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import {
   ApplicationTypeEnum,
   PermissionActionEnum,
+  N8NApiVersionEnum,
+  N8NWorkflowTypeEnum,
+  CredentialTypeEnum,
   type ApplicationResponse,
   type PrincipalTypeEnum,
   type PrincipalWithRolesResponse,
+  type CredentialResponse,
+  type N8NApplicationConfig,
 } from '../../../api/types';
 import { TagInput, ManageAccessTable, AddPrincipalDialog } from '../../common';
+import { CreateCredentialDialog } from '../CreateCredentialDialog';
 import type { PrincipalPermission } from '../../common/ManageAccessTable/ManageAccessTable';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
 import classes from './EditApplicationDialog.module.css';
@@ -41,6 +52,14 @@ const APPLICATION_TYPES = [
   { value: ApplicationTypeEnum.N8N, label: 'n8n' },
   { value: ApplicationTypeEnum.MICROSOFT_FOUNDRY, label: 'Microsoft Foundry' },
   { value: ApplicationTypeEnum.REST_API, label: 'REST API' },
+];
+
+const N8N_API_VERSIONS = [
+  { value: N8NApiVersionEnum.V1, label: 'v1' },
+];
+
+const N8N_WORKFLOW_TYPES = [
+  { value: N8NWorkflowTypeEnum.N8N_CHAT_AGENT_WORKFLOW, label: 'Chat Agent Workflow' },
 ];
 
 export type EditDialogTab = 'details' | 'iam';
@@ -62,6 +81,14 @@ interface FormValues {
   description: string;
   tags: string[];
   is_active: boolean;
+  // N8N Config
+  n8n_api_version: string;
+  n8n_workflow_type: string;
+  n8n_use_unified_chat_history: boolean;
+  n8n_chat_history_count: number;
+  n8n_chat_url: string;
+  n8n_api_api_key_credential_id: string;
+  n8n_chat_auth_credential_id: string;
 }
 
 export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
@@ -80,6 +107,12 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [application, setApplication] = useState<ApplicationResponse | null>(null);
   
+  // Credentials state
+  const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
+  const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
+  const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
+  const [credentialFieldTarget, setCredentialFieldTarget] = useState<'api_key' | 'chat_auth' | null>(null);
+  
   // Principals state
   const [principals, setPrincipals] = useState<PrincipalPermission[]>([]);
   const [isPrincipalsLoading, setIsPrincipalsLoading] = useState(false);
@@ -94,6 +127,14 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       description: '',
       tags: [],
       is_active: true,
+      // N8N Config defaults
+      n8n_api_version: N8NApiVersionEnum.V1,
+      n8n_workflow_type: N8NWorkflowTypeEnum.N8N_CHAT_AGENT_WORKFLOW,
+      n8n_use_unified_chat_history: true,
+      n8n_chat_history_count: 30,
+      n8n_chat_url: '',
+      n8n_api_api_key_credential_id: '',
+      n8n_chat_auth_credential_id: '',
     },
     validate: {
       name: (value) => {
@@ -117,6 +158,35 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
         }
         return null;
       },
+      n8n_chat_url: (value, values) => {
+        if (values.type === ApplicationTypeEnum.N8N) {
+          if (!value || value.trim().length === 0) {
+            return 'Chat URL ist erforderlich';
+          }
+          try {
+            new URL(value);
+          } catch {
+            return 'Ungültige URL';
+          }
+        }
+        return null;
+      },
+      n8n_api_api_key_credential_id: (value, values) => {
+        if (values.type === ApplicationTypeEnum.N8N) {
+          if (!value || value.trim().length === 0) {
+            return 'API Key Credential ist erforderlich';
+          }
+        }
+        return null;
+      },
+      n8n_chat_history_count: (value, values) => {
+        if (values.type === ApplicationTypeEnum.N8N && values.n8n_use_unified_chat_history) {
+          if (value < 1 || value > 100) {
+            return 'Chat History Count muss zwischen 1 und 100 liegen';
+          }
+        }
+        return null;
+      },
     },
   });
 
@@ -125,15 +195,57 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
     setActiveTab(initialTab);
   }, [initialTab]);
 
+  // Load credentials when dialog opens
+  const loadCredentials = useCallback(async () => {
+    if (!apiClient || !selectedTenant) return;
+    
+    setIsLoadingCredentials(true);
+    try {
+      const response = await apiClient.listCredentials(selectedTenant.id, { limit: 999 });
+      // listCredentials returns an array directly, not an object with items property
+      setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
+    } catch (error) {
+      console.error('Failed to load credentials:', error);
+    } finally {
+      setIsLoadingCredentials(false);
+    }
+  }, [apiClient, selectedTenant]);
+
+  // Filter credentials by type for API Key dropdown (only API_KEY type)
+  const apiKeyCredentials = useMemo(() => {
+    return credentials
+      .filter((c) => c.type === CredentialTypeEnum.API_KEY)
+      .map((c) => ({ value: c.id, label: c.name }));
+  }, [credentials]);
+
+  // Filter credentials by type for Chat Auth dropdown (BASIC_AUTH type)
+  const chatAuthCredentials = useMemo(() => {
+    return credentials
+      .filter((c) => c.type === CredentialTypeEnum.BASIC_AUTH)
+      .map((c) => ({ value: c.id, label: c.name }));
+  }, [credentials]);
+
   // Initialize from initialData when provided
   const initializeFromData = useCallback((data: ApplicationResponse) => {
     setApplication(data);
+    
+    // Parse N8N config from application
+    const n8nConfig = data.config as N8NApplicationConfig | undefined;
+    
     form.setValues({
       name: data.name,
       type: data.type,
       description: data.description || '',
       tags: data.tags?.map((t) => t.name) || [],
       is_active: data.is_active,
+      // N8N Config from data
+      n8n_api_version: n8nConfig?.api_version || N8NApiVersionEnum.V1,
+      n8n_workflow_type: n8nConfig?.workflow_type || N8NWorkflowTypeEnum.N8N_CHAT_AGENT_WORKFLOW,
+      n8n_use_unified_chat_history: n8nConfig?.use_unified_chat_history ?? true,
+      n8n_chat_history_count: n8nConfig?.chat_history_count ?? 30,
+      n8n_chat_url: n8nConfig?.chat_url || '',
+      n8n_api_api_key_credential_id: n8nConfig?.api_api_key_credential_id || '',
+      n8n_chat_auth_credential_id: n8nConfig?.chat_auth_credential_id || '',
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -204,11 +316,13 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       }
       // Always fetch principals (they're not in the list data)
       fetchPrincipals();
+      // Load credentials for dropdowns
+      loadCredentials();
     } else if (!opened) {
       // Reset hasPrincipalsFetched when dialog closes
       setHasPrincipalsFetched(false);
     }
-  }, [opened, applicationId, initialData, initializeFromData, fetchApplication, fetchPrincipals]);
+  }, [opened, applicationId, initialData, initializeFromData, fetchApplication, fetchPrincipals, loadCredentials]);
 
   // Handle tab change
   const handleTabChange = (value: string) => {
@@ -225,12 +339,28 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
     setError(null);
 
     try {
+      // Build config based on application type
+      let config: N8NApplicationConfig | undefined;
+      
+      if (values.type === ApplicationTypeEnum.N8N) {
+        config = {
+          api_version: values.n8n_api_version as N8NApiVersionEnum,
+          workflow_type: values.n8n_workflow_type as N8NWorkflowTypeEnum,
+          use_unified_chat_history: values.n8n_use_unified_chat_history,
+          chat_history_count: values.n8n_use_unified_chat_history ? values.n8n_chat_history_count : undefined,
+          chat_url: values.n8n_chat_url.trim(),
+          api_api_key_credential_id: values.n8n_api_api_key_credential_id,
+          chat_auth_credential_id: values.n8n_chat_auth_credential_id || undefined,
+        };
+      }
+
       // Update application
       await apiClient.updateApplication(selectedTenant.id, applicationId, {
         name: values.name.trim(),
         type: values.type as ApplicationTypeEnum,
         description: values.description?.trim() || undefined,
         is_active: values.is_active,
+        config: config as Record<string, unknown> | undefined,
       });
 
       // Update tags if changed
@@ -249,6 +379,28 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Handle opening create credential dialog
+  const handleOpenCreateCredential = (target: 'api_key' | 'chat_auth') => {
+    setCredentialFieldTarget(target);
+    setCreateCredentialOpen(true);
+  };
+
+  // Handle credential created callback
+  const handleCredentialCreated = async (credential?: { id: string; name: string }) => {
+    // Refresh credentials list
+    await loadCredentials();
+    
+    // Auto-select the newly created credential
+    if (credential && credentialFieldTarget) {
+      if (credentialFieldTarget === 'api_key') {
+        form.setFieldValue('n8n_api_api_key_credential_id', credential.id);
+      } else if (credentialFieldTarget === 'chat_auth') {
+        form.setFieldValue('n8n_chat_auth_credential_id', credential.id);
+      }
+    }
+    setCredentialFieldTarget(null);
   };
 
   // Handle role change for a principal
@@ -452,6 +604,111 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
                 classNames={{ track: classes.switchTrack }}
               />
 
+              {/* N8N Configuration Section */}
+              {form.values.type === ApplicationTypeEnum.N8N && (
+                <>
+                  <Divider label="N8N Konfiguration" labelPosition="center" />
+
+                  <Group grow>
+                    <Select
+                      label="API Version"
+                      required
+                      withAsterisk
+                      data={N8N_API_VERSIONS}
+                      {...form.getInputProps('n8n_api_version')}
+                    />
+                    <Select
+                      label="Workflow Type"
+                      required
+                      withAsterisk
+                      data={N8N_WORKFLOW_TYPES}
+                      {...form.getInputProps('n8n_workflow_type')}
+                    />
+                  </Group>
+
+                  <TextInput
+                    label="Chat URL"
+                    placeholder="https://your-n8n-instance.com/webhook/..."
+                    required
+                    withAsterisk
+                    {...form.getInputProps('n8n_chat_url')}
+                  />
+
+                  {/* API Key Credential with Add Button */}
+                  <Group gap="xs" align="flex-end">
+                    <Select
+                      label="API Key Credential"
+                      placeholder={isLoadingCredentials ? 'Laden...' : 'Wählen Sie ein Credential'}
+                      required
+                      withAsterisk
+                      data={apiKeyCredentials}
+                      rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
+                      disabled={isLoadingCredentials}
+                      style={{ flex: 1 }}
+                      {...form.getInputProps('n8n_api_api_key_credential_id')}
+                    />
+                    <Tooltip label="Neues API Key Credential erstellen">
+                      <ActionIcon
+                        variant="light"
+                        color="blue"
+                        size="lg"
+                        onClick={() => handleOpenCreateCredential('api_key')}
+                      >
+                        <IconPlus size={18} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
+
+                  {apiKeyCredentials.length === 0 && !isLoadingCredentials && (
+                    <Alert icon={<IconAlertCircle size={16} />} color="yellow" variant="light">
+                      Keine API Key Credentials vorhanden. Erstellen Sie zuerst ein Credential.
+                    </Alert>
+                  )}
+
+                  {/* Chat Auth Credential (Optional) with Add Button */}
+                  <Group gap="xs" align="flex-end">
+                    <Select
+                      label="Chat Auth Credential (Optional)"
+                      placeholder={isLoadingCredentials ? 'Laden...' : 'Wählen Sie ein Credential (optional)'}
+                      data={chatAuthCredentials}
+                      rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
+                      disabled={isLoadingCredentials}
+                      clearable
+                      style={{ flex: 1 }}
+                      {...form.getInputProps('n8n_chat_auth_credential_id')}
+                    />
+                    <Tooltip label="Neues Basic Auth Credential erstellen">
+                      <ActionIcon
+                        variant="light"
+                        color="blue"
+                        size="lg"
+                        onClick={() => handleOpenCreateCredential('chat_auth')}
+                      >
+                        <IconPlus size={18} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
+
+                  <Divider label="Chat History" labelPosition="center" />
+
+                  <Switch
+                    label="Unified Chat History verwenden"
+                    description="Wenn aktiviert, wird der Chat-Verlauf im Agent Service verwaltet"
+                    {...form.getInputProps('n8n_use_unified_chat_history', { type: 'checkbox' })}
+                  />
+
+                  {form.values.n8n_use_unified_chat_history && (
+                    <NumberInput
+                      label="Chat History Count"
+                      description="Anzahl der Nachrichten im Chat-Verlauf (1-100)"
+                      min={1}
+                      max={100}
+                      {...form.getInputProps('n8n_chat_history_count')}
+                    />
+                  )}
+                </>
+              )}
+
               <TagInput
                 label="Tags"
                 placeholder="Enter a tag and press Space to add..."
@@ -503,6 +760,13 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
         onSubmit={handleAddPrincipals}
         entityName="chat agent"
         existingPrincipalIds={principals.map((p) => p.principalId)}
+      />
+
+      {/* Create Credential Dialog */}
+      <CreateCredentialDialog
+        opened={createCredentialOpen}
+        onClose={() => setCreateCredentialOpen(false)}
+        onSuccess={handleCredentialCreated}
       />
     </>
   );

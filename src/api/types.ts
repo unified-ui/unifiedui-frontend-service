@@ -61,6 +61,166 @@ export const FavoriteResourceTypeEnum = {
 
 export type FavoriteResourceTypeEnum = typeof FavoriteResourceTypeEnum[keyof typeof FavoriteResourceTypeEnum];
 
+// ========== Credential Type Enum ==========
+
+export const CredentialTypeEnum = {
+  API_KEY: 'API_KEY',
+  BASIC_AUTH: 'BASIC_AUTH',
+} as const;
+
+export type CredentialTypeEnum = typeof CredentialTypeEnum[keyof typeof CredentialTypeEnum];
+
+// ========== N8N Application Config Types ==========
+
+export const N8NApiVersionEnum = {
+  V1: 'v1',
+} as const;
+
+export type N8NApiVersionEnum = typeof N8NApiVersionEnum[keyof typeof N8NApiVersionEnum];
+
+export const N8NWorkflowTypeEnum = {
+  N8N_CHAT_AGENT_WORKFLOW: 'N8N_CHAT_AGENT_WORKFLOW',
+} as const;
+
+export type N8NWorkflowTypeEnum = typeof N8NWorkflowTypeEnum[keyof typeof N8NWorkflowTypeEnum];
+
+export interface N8NApplicationConfig {
+  api_version: N8NApiVersionEnum;
+  workflow_type: N8NWorkflowTypeEnum;
+  use_unified_chat_history: boolean;
+  chat_history_count?: number; // 1-100, default 30
+  chat_url: string;
+  api_api_key_credential_id: string;
+  chat_auth_credential_id?: string;
+}
+
+// ========== Agent Service Types ==========
+
+// Message Types
+export interface MessageMetadata {
+  model?: string;
+  tokensInput?: number;
+  tokensOutput?: number;
+  latencyMs?: number;
+  agentType?: string;
+  custom?: Record<string, unknown>;
+}
+
+export interface MessageResponse {
+  id: string;
+  conversationId: string;
+  role: string;
+  content: string;
+  agentId?: string;
+  userId?: string;
+  createdAt: string;
+  metadata?: MessageMetadata;
+}
+
+export interface GetMessagesResponse {
+  messages: MessageResponse[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface SendMessageRequest {
+  content: string;
+  agentId: string;
+  stream?: boolean;
+}
+
+export interface SendMessageResponse {
+  message: MessageResponse;
+}
+
+// Trace Types
+export interface TraceMetadata {
+  model?: string;
+  tokensInput?: number;
+  tokensOutput?: number;
+  toolName?: string;
+  toolInput?: unknown;
+  toolOutput?: unknown;
+  custom?: Record<string, unknown>;
+}
+
+export interface TraceResponse {
+  id: string;
+  messageId: string;
+  agentId: string;
+  parentTraceId?: string;
+  type: string;
+  name: string;
+  status: string;
+  input?: unknown;
+  output?: unknown;
+  error?: string;
+  startedAt: string;
+  endedAt?: string;
+  durationMs?: number;
+  metadata?: TraceMetadata;
+}
+
+export interface GetTracesResponse {
+  traces: TraceResponse[];
+  total: number;
+}
+
+export interface UpdateTraceRequest {
+  traceId: string;
+  conversationId: string;
+  messageId: string;
+  parentTraceId?: string;
+  type: string;
+  name: string;
+  status: string;
+  input?: unknown;
+  output?: unknown;
+  error?: string;
+  startedAt?: string;
+  endedAt?: string;
+  durationMs?: number;
+  metadata?: TraceMetadata;
+}
+
+export interface BatchUpdateTracesRequest {
+  traces: UpdateTraceRequest[];
+}
+
+export interface UpdateTracesResponse {
+  updated: number;
+  created: number;
+}
+
+// SSE Event Types
+export interface SSEMessageEvent {
+  content: string;
+  messageId?: string;
+  done: boolean;
+}
+
+export interface SSETraceEvent {
+  traceId: string;
+  type: string;
+  name: string;
+  status: string;
+  data?: unknown;
+}
+
+export interface SSEErrorEvent {
+  code: string;
+  message: string;
+  details?: string;
+}
+
+export type SSEEventType = 'message' | 'trace' | 'error' | 'done';
+
+export interface SSEEvent {
+  type: SSEEventType;
+  data: SSEMessageEvent | SSETraceEvent | SSEErrorEvent | null;
+}
+
 // ========== Tag Types ==========
 
 export interface TagSummary {

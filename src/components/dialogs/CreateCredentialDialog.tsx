@@ -13,30 +13,30 @@ import {
 import { useForm } from '@mantine/form';
 import { IconKey } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
+import { CredentialTypeEnum } from '../../api/types';
 import { TagInput } from '../common';
 
 interface CreateCredentialDialogProps {
   opened: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (credential?: { id: string; name: string }) => void;
 }
 
 interface FormValues {
   name: string;
   description: string;
   credential_type: string;
+  // For API_KEY
   secret_value: string;
+  // For BASIC_AUTH
+  username: string;
+  password: string;
   tags: string[];
 }
 
 const CREDENTIAL_TYPES = [
-  { value: 'API_KEY', label: 'API Key' },
-  { value: 'PASSWORD', label: 'Password' },
-  { value: 'TOKEN', label: 'Token' },
-  { value: 'SECRET', label: 'Secret' },
-  { value: 'CONNECTION_STRING', label: 'Connection String' },
-  { value: 'CERTIFICATE', label: 'Certificate' },
-  { value: 'OTHER', label: 'Sonstiges' },
+  { value: CredentialTypeEnum.API_KEY, label: 'API Key' },
+  { value: CredentialTypeEnum.BASIC_AUTH, label: 'Basic Auth (Username/Password)' },
 ];
 
 export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
@@ -53,6 +53,8 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
       description: '',
       credential_type: '',
       secret_value: '',
+      username: '',
+      password: '',
       tags: [],
     },
     validate: {
@@ -77,9 +79,27 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
         }
         return null;
       },
-      secret_value: (value) => {
-        if (!value || value.trim().length === 0) {
-          return 'Secret ist erforderlich';
+      secret_value: (value, values) => {
+        if (values.credential_type === CredentialTypeEnum.API_KEY) {
+          if (!value || value.trim().length === 0) {
+            return 'API Key ist erforderlich';
+          }
+        }
+        return null;
+      },
+      username: (value, values) => {
+        if (values.credential_type === CredentialTypeEnum.BASIC_AUTH) {
+          if (!value || value.trim().length === 0) {
+            return 'Username ist erforderlich';
+          }
+        }
+        return null;
+      },
+      password: (value, values) => {
+        if (values.credential_type === CredentialTypeEnum.BASIC_AUTH) {
+          if (!value || value.trim().length === 0) {
+            return 'Password ist erforderlich';
+          }
         }
         return null;
       },
@@ -91,11 +111,23 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
 
     setIsSubmitting(true);
     try {
+      // Build secret_value based on credential type
+      let secretValue: string;
+      if (values.credential_type === CredentialTypeEnum.BASIC_AUTH) {
+        // For BASIC_AUTH, store as JSON string
+        secretValue = JSON.stringify({
+          username: values.username,
+          password: values.password,
+        });
+      } else {
+        secretValue = values.secret_value;
+      }
+
       const credential = await apiClient.createCredential(selectedTenant.id, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
         credential_type: values.credential_type,
-        secret_value: values.secret_value,
+        secret_value: secretValue,
       });
 
       // If tags were added, save them to the credential
@@ -112,7 +144,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
       }
 
       form.reset();
-      onSuccess?.();
+      onSuccess?.({ id: credential.id, name: credential.name });
       onClose();
     } catch (error) {
       // Error handling is done by the API client
@@ -125,6 +157,8 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
     form.reset();
     onClose();
   };
+
+  const credentialType = form.values.credential_type;
 
   return (
     <Modal
@@ -157,17 +191,39 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
             required
             withAsterisk
             data={CREDENTIAL_TYPES}
-            searchable
             {...form.getInputProps('credential_type')}
           />
 
-          <PasswordInput
-            label="Secret"
-            placeholder="Geben Sie den geheimen Wert ein"
-            required
-            withAsterisk
-            {...form.getInputProps('secret_value')}
-          />
+          {/* API Key field - shown when API_KEY is selected */}
+          {credentialType === CredentialTypeEnum.API_KEY && (
+            <PasswordInput
+              label="API Key"
+              placeholder="Geben Sie den API Key ein"
+              required
+              withAsterisk
+              {...form.getInputProps('secret_value')}
+            />
+          )}
+
+          {/* Username/Password fields - shown when BASIC_AUTH is selected */}
+          {credentialType === CredentialTypeEnum.BASIC_AUTH && (
+            <>
+              <TextInput
+                label="Username"
+                placeholder="Geben Sie den Benutzernamen ein"
+                required
+                withAsterisk
+                {...form.getInputProps('username')}
+              />
+              <PasswordInput
+                label="Password"
+                placeholder="Geben Sie das Passwort ein"
+                required
+                withAsterisk
+                {...form.getInputProps('password')}
+              />
+            </>
+          )}
 
           <TagInput
             label="Tags"

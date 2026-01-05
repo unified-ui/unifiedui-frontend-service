@@ -70,6 +70,17 @@ import type {
   UserFavoriteResponse,
   UserFavoritesListResponse,
   FavoriteResourceTypeEnum,
+  // Agent Service Types
+  GetMessagesResponse,
+  SendMessageRequest,
+  SendMessageResponse,
+  GetTracesResponse,
+  BatchUpdateTracesRequest,
+  UpdateTracesResponse,
+  SSEEvent,
+  SSEMessageEvent,
+  SSETraceEvent,
+  SSEErrorEvent,
   // Misc Types
   HealthCheckResponse,
   PrincipalTypeEnum,
@@ -725,5 +736,221 @@ export class UnifiedUIAPIClient {
     } else {
       await this.addUserFavorite(tenantId, userId, resourceType, resourceId);
     }
+  }
+
+  // ========== Agent Service Endpoints ==========
+
+  private agentServiceBaseURL: string | null = null;
+
+  /**
+   * Set the agent service base URL for message/trace endpoints.
+   * Must be called before using agent service methods.
+   */
+  setAgentServiceURL(url: string): void {
+    this.agentServiceBaseURL = url;
+  }
+
+  /**
+   * Get the configured agent service URL or throw error if not set.
+   */
+  private getAgentServiceURL(): string {
+    if (!this.agentServiceBaseURL) {
+      throw new Error('Agent service URL not configured. Call setAgentServiceURL() first.');
+    }
+    return this.agentServiceBaseURL;
+  }
+
+  /**
+   * Helper method for agent service requests.
+   */
+  private async agentServiceRequest<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+    successMessage?: string
+  ): Promise<T> {
+    try {
+      const token = await this.getAccessToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${this.getAgentServiceURL()}${path}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      if (response.status === 204) {
+        if (successMessage && this.onSuccess) {
+          this.onSuccess(successMessage);
+        }
+        return undefined as T;
+      }
+
+      const data = await response.json();
+
+      if (successMessage && this.onSuccess) {
+        this.onSuccess(successMessage);
+      }
+
+      return data;
+    } catch (error) {
+      if (this.onError && error instanceof Error) {
+        this.onError(error);
+      }
+      throw error;
+    }
+  }
+
+  // ========== Messages Endpoints ==========
+
+  /**
+   * Get messages for a conversation.
+   */
+  async getMessages(
+    tenantId: string,
+    conversationId: string,
+    params?: { skip?: number; limit?: number }
+  ): Promise<GetMessagesResponse> {
+    const query = this.buildQueryString({ conversationId, ...params });
+    return this.agentServiceRequest<GetMessagesResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/conversation/messages${query}`
+    );
+  }
+
+  /**
+   * Send a message (non-streaming).
+   */
+  async sendMessage(
+    tenantId: string,
+    conversationId: string,
+    data: SendMessageRequest
+  ): Promise<SendMessageResponse> {
+    const query = this.buildQueryString({ conversationId });
+    return this.agentServiceRequest<SendMessageResponse>(
+      'POST',
+      `/api/v1/agent-service/tenants/${tenantId}/conversation/messages${query}`,
+      { ...data, stream: false }
+    );
+  }
+
+  /**
+   * Send a message with SSE streaming.
+   * Returns an async generator that yields SSE events.
+   */
+  async *sendMessageStream(
+    tenantId: string,
+    conversationId: string,
+    data: Omit<SendMessageRequest, 'stream'>
+  ): AsyncGenerator<SSEEvent, void, unknown> {
+    const token = await this.getAccessToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'text/event-stream',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const query = this.buildQueryString({ conversationId });
+    const response = await fetch(
+      `${this.getAgentServiceURL()}/api/v1/agent-service/tenants/${tenantId}/conversation/messages${query}`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ ...data, stream: true }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Response body is not readable');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        let currentEvent = '';
+        let currentData = '';
+
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            currentEvent = line.slice(7).trim();
+          } else if (line.startsWith('data: ')) {
+            currentData = line.slice(6);
+          } else if (line === '' && currentEvent && currentData) {
+            try {
+              const parsed = JSON.parse(currentData);
+              yield {
+                type: currentEvent as SSEEvent['type'],
+                data: parsed,
+              };
+            } catch {
+              // Skip malformed JSON
+            }
+            currentEvent = '';
+            currentData = '';
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
+
+  // ========== Trace Endpoints ==========
+
+  /**
+   * Get traces for a message.
+   */
+  async getMessageTraces(
+    tenantId: string,
+    messageId: string
+  ): Promise<GetTracesResponse> {
+    return this.agentServiceRequest<GetTracesResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/conversation/messages/${messageId}/traces`
+    );
+  }
+
+  /**
+   * Update traces for an autonomous agent.
+   */
+  async updateAgentTraces(
+    tenantId: string,
+    agentId: string,
+    data: BatchUpdateTracesRequest
+  ): Promise<UpdateTracesResponse> {
+    return this.agentServiceRequest<UpdateTracesResponse>(
+      'PUT',
+      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces`,
+      data
+    );
   }
 }
