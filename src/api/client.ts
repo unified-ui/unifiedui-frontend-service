@@ -207,7 +207,7 @@ export class UnifiedUIAPIClient {
   }
 
   async refreshPrincipal(principalId: string, data: RefreshPrincipalRequest): Promise<PrincipalResponse> {
-    return this.request<PrincipalResponse>('PUT', `/api/v1/platform-service/identity/principals/${principalId}/refresh`, data, 'Principal refreshed successfully');
+    return this.request<PrincipalResponse>('PUT', `/api/v1/platform-service/identity/principals/${principalId}`, data, 'Principal refreshed successfully');
   }
 
   // ========== Tenant Endpoints ==========
