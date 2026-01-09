@@ -99,6 +99,7 @@ interface FormValues {
   n8n_use_unified_chat_history: boolean;
   n8n_chat_history_count: number;
   n8n_chat_url: string;
+  n8n_workflow_endpoint: string;
   n8n_api_api_key_credential_id: string;
   n8n_chat_auth_credential_id: string;
   // Foundry Config
@@ -150,6 +151,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       n8n_use_unified_chat_history: true,
       n8n_chat_history_count: 30,
       n8n_chat_url: '',
+      n8n_workflow_endpoint: '',
       n8n_api_api_key_credential_id: '',
       n8n_chat_auth_credential_id: '',
       // Foundry Config defaults
@@ -187,6 +189,22 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
           }
           try {
             new URL(value);
+          } catch {
+            return 'Ungültige URL';
+          }
+        }
+        return null;
+      },
+      n8n_workflow_endpoint: (value, values) => {
+        if (values.type === ApplicationTypeEnum.N8N) {
+          if (!value || value.trim().length === 0) {
+            return 'Workflow Endpoint ist erforderlich';
+          }
+          try {
+            const url = new URL(value);
+            if (!url.pathname.includes('/workflow/')) {
+              return 'URL muss "/workflow/" enthalten';
+            }
           } catch {
             return 'Ungültige URL';
           }
@@ -292,6 +310,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       n8n_use_unified_chat_history: n8nConfig?.use_unified_chat_history ?? true,
       n8n_chat_history_count: n8nConfig?.chat_history_count ?? 30,
       n8n_chat_url: n8nConfig?.chat_url || '',
+      n8n_workflow_endpoint: n8nConfig?.workflow_endpoint || '',
       n8n_api_api_key_credential_id: n8nConfig?.api_api_key_credential_id || '',
       n8n_chat_auth_credential_id: n8nConfig?.chat_auth_credential_id || '',
       // Foundry Config from data
@@ -402,6 +421,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
           use_unified_chat_history: values.n8n_use_unified_chat_history,
           chat_history_count: values.n8n_use_unified_chat_history ? values.n8n_chat_history_count : undefined,
           chat_url: values.n8n_chat_url.trim(),
+          workflow_endpoint: values.n8n_workflow_endpoint.trim(),
           api_api_key_credential_id: values.n8n_api_api_key_credential_id,
           chat_auth_credential_id: values.n8n_chat_auth_credential_id || undefined,
         };
@@ -692,6 +712,15 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
                     required
                     withAsterisk
                     {...form.getInputProps('n8n_chat_url')}
+                  />
+
+                  <TextInput
+                    label="Workflow Endpoint"
+                    placeholder="https://your-n8n-instance.com/workflow/abc123"
+                    description="Die URL zum N8N Workflow (z.B. https://n8n.example.com/workflow/abc123)"
+                    required
+                    withAsterisk
+                    {...form.getInputProps('n8n_workflow_endpoint')}
                   />
 
                   {/* API Key Credential with Add Button */}

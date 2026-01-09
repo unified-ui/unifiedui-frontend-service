@@ -104,6 +104,7 @@ export interface N8NApplicationConfig {
   use_unified_chat_history: boolean;
   chat_history_count?: number; // 1-100, default 30
   chat_url: string;
+  workflow_endpoint: string;
   api_api_key_credential_id: string;
   chat_auth_credential_id?: string;
 }
