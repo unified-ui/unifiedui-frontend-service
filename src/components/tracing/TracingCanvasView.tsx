@@ -1,21 +1,35 @@
 /**
- * TracingCanvasView - Simple Canvas-based workflow visualization
+ * TracingCanvasView - @xyflow/react based canvas visualization
  * 
- * Displays trace nodes in a canvas with pan/zoom, connections between nodes.
- * This is a simplified version that does not require @xyflow/react.
- * 
- * NOTE: To enable full React Flow features, install @xyflow/react:
- * npm install @xyflow/react
+ * Displays trace nodes as a workflow diagram using React Flow.
+ * Features:
+ * - Automatic layout with dagre
+ * - Custom node components with status indicators
+ * - Arrows between nodes (sequential + hierarchical)
+ * - Pan/zoom controls
+ * - Layout direction toggle (horizontal/vertical)
  */
 
-import { type FC, useState, useRef, useMemo, useCallback } from 'react';
+import { type FC, useMemo, useCallback, useEffect } from 'react';
 import {
-  Box,
-  Text,
-  Group,
-  ActionIcon,
-  Tooltip,
-} from '@mantine/core';
+  ReactFlow,
+  Background,
+  Controls,
+  MiniMap,
+  useNodesState,
+  useEdgesState,
+  MarkerType,
+  type Node,
+  type Edge,
+  type NodeTypes,
+  Handle,
+  Position,
+  useReactFlow,
+  ReactFlowProvider,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import Dagre from '@dagrejs/dagre';
+import { Box, Group, ActionIcon, Tooltip, Text } from '@mantine/core';
 import {
   IconRobot,
   IconTool,
@@ -32,17 +46,32 @@ import {
   IconBan,
   IconLayoutRows,
   IconLayoutColumns,
-  IconZoomIn,
-  IconZoomOut,
   IconZoomReset,
 } from '@tabler/icons-react';
 import type { TraceNodeResponse, TraceNodeStatus, TraceNodeType } from '../../api/types';
 import { useTracing } from './TracingContext';
 import classes from './TracingCanvasView.module.css';
 
-/**
- * Icon mapping for node types
- */
+// ============================================================================
+// Types
+// ============================================================================
+
+// Must satisfy Record<string, unknown> for @xyflow/react
+interface CanvasNodeData extends Record<string, unknown> {
+  id: string;
+  name: string;
+  type: TraceNodeType | string;
+  status: TraceNodeStatus | string;
+  duration?: number;
+  hasSubNodes: boolean;
+  isSubNode: boolean;
+  parentId?: string;
+}
+
+// ============================================================================
+// Icon and Status Helpers
+// ============================================================================
+
 const getNodeTypeIcon = (type: TraceNodeType | string): React.ReactNode => {
   const iconProps = { size: 14 };
   const iconMap: Record<string, React.ReactNode> = {
@@ -62,216 +91,297 @@ const getNodeTypeIcon = (type: TraceNodeType | string): React.ReactNode => {
   return iconMap[type] || <IconForms {...iconProps} />;
 };
 
-/**
- * Status color mapping
- */
 const getStatusColor = (status: TraceNodeStatus | string): string => {
   const colors: Record<string, string> = {
-    completed: 'var(--color-success-500)',
-    failed: 'var(--color-error-500)',
-    running: 'var(--color-warning-500)',
-    pending: 'var(--color-gray-400)',
-    skipped: 'var(--color-gray-500)',
-    cancelled: 'var(--color-gray-600)',
+    completed: '#4caf50',
+    failed: '#f44336',
+    running: '#ff9800',
+    pending: '#9e9e9e',
+    skipped: '#757575',
+    cancelled: '#616161',
   };
-  return colors[status] || 'var(--color-gray-400)';
+  return colors[status] || '#9e9e9e';
 };
 
-/**
- * Status icon mapping
- */
 const getStatusIcon = (status: TraceNodeStatus | string): React.ReactNode => {
   const iconProps = { size: 12 };
   switch (status) {
     case 'completed':
-      return <IconCheck {...iconProps} color="var(--color-success-500)" />;
+      return <IconCheck {...iconProps} color="#4caf50" />;
     case 'failed':
-      return <IconX {...iconProps} color="var(--color-error-500)" />;
+      return <IconX {...iconProps} color="#f44336" />;
     case 'running':
-      return <IconClock {...iconProps} color="var(--color-warning-500)" />;
+      return <IconClock {...iconProps} color="#ff9800" />;
     case 'skipped':
-      return <IconPlayerSkipForward {...iconProps} color="var(--color-gray-500)" />;
+      return <IconPlayerSkipForward {...iconProps} color="#757575" />;
     case 'cancelled':
-      return <IconBan {...iconProps} color="var(--color-gray-600)" />;
+      return <IconBan {...iconProps} color="#616161" />;
     default:
-      return <IconClock {...iconProps} color="var(--color-gray-400)" />;
+      return <IconClock {...iconProps} color="#9e9e9e" />;
   }
 };
 
-interface CanvasNodeProps {
-  node: TraceNodeResponse;
-  x: number;
-  y: number;
-  isSelected: boolean;
-  onClick: () => void;
+// ============================================================================
+// Custom Node Component
+// ============================================================================
+
+interface CustomNodeProps {
+  data: CanvasNodeData;
+  selected: boolean;
 }
 
-/**
- * Canvas Node Component
- */
-const CanvasNode: FC<CanvasNodeProps> = ({ node, x, y, isSelected, onClick }) => {
+const CustomNode: FC<CustomNodeProps> = ({ data, selected }) => {
+  const statusColor = getStatusColor(data.status);
+  
   return (
     <div
-      className={`${classes.flowNode} ${isSelected ? classes.flowNodeSelected : ''}`}
-      style={{
-        position: 'absolute',
-        left: x,
-        top: y,
-        transform: 'translate(-50%, -50%)',
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
+      className={`${classes.customNode} ${selected ? classes.selected : ''} ${data.isSubNode ? classes.subNode : ''}`}
+      style={{ borderColor: statusColor }}
     >
-      <Group gap="xs" wrap="nowrap" className={classes.nodeContent}>
-        <Box
-          className={classes.statusIndicator}
-          style={{ backgroundColor: getStatusColor(node.status) }}
-        />
-        <Group gap={4} wrap="nowrap">
-          {getNodeTypeIcon(node.type)}
-          <Text size="xs" fw={500} className={classes.nodeLabel} truncate>
-            {node.name}
-          </Text>
-        </Group>
-        <Group gap={4} wrap="nowrap" ml="auto">
-          {node.duration !== undefined && (
-            <Text size="xs" c="dimmed">
-              {node.duration.toFixed(2)}s
-            </Text>
+      {/* Handles for connections */}
+      <Handle type="target" position={Position.Left} className={classes.handle} />
+      <Handle type="source" position={Position.Right} className={classes.handle} />
+      <Handle type="target" position={Position.Top} className={classes.handleTop} />
+      <Handle type="source" position={Position.Bottom} className={classes.handleBottom} />
+      
+      <div className={classes.nodeContent}>
+        <div className={classes.nodeHeader}>
+          <div
+            className={classes.statusDot}
+            style={{ backgroundColor: statusColor }}
+          />
+          <span className={classes.nodeIcon}>{getNodeTypeIcon(data.type)}</span>
+          <span className={classes.nodeName}>{data.name}</span>
+        </div>
+        <div className={classes.nodeFooter}>
+          {data.duration !== undefined && (
+            <span className={classes.duration}>{data.duration.toFixed(2)}s</span>
           )}
-          {getStatusIcon(node.status)}
-        </Group>
-      </Group>
+          <span className={classes.statusIcon}>{getStatusIcon(data.status)}</span>
+        </div>
+      </div>
+      
+      {data.hasSubNodes && (
+        <div className={classes.subNodeIndicator}>
+          <IconChartDots size={10} />
+        </div>
+      )}
     </div>
   );
 };
 
-interface TracingCanvasViewProps {
-  /** Width of the canvas */
+const nodeTypes: NodeTypes = {
+  custom: CustomNode,
+};
+
+// ============================================================================
+// Dagre Layout
+// ============================================================================
+
+const getLayoutedElements = (
+  nodes: Node[],
+  edges: Edge[],
+  direction: 'LR' | 'TB'
+): { nodes: Node[]; edges: Edge[] } => {
+  const dagreGraph = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+  
+  dagreGraph.setGraph({
+    rankdir: direction,
+    nodesep: 60,
+    ranksep: 80,
+    edgesep: 30,
+    marginx: 20,
+    marginy: 20,
+  });
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: 180, height: 50 });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  Dagre.layout(dagreGraph);
+
+  const layoutedNodes = nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    return {
+      ...node,
+      position: {
+        x: nodeWithPosition.x - 90, // Center the node
+        y: nodeWithPosition.y - 25,
+      },
+    };
+  });
+
+  return { nodes: layoutedNodes, edges };
+};
+
+// ============================================================================
+// Transform Trace Data to React Flow
+// ============================================================================
+
+const transformTraceToFlow = (
+  traceNodes: TraceNodeResponse[],
+  collapsedNodes: Set<string>
+): { nodes: Node<CanvasNodeData>[]; edges: Edge[] } => {
+  const flowNodes: Node<CanvasNodeData>[] = [];
+  const flowEdges: Edge[] = [];
+
+  const processNodes = (
+    nodes: TraceNodeResponse[],
+    parentId?: string,
+    isSubNode = false
+  ) => {
+    nodes.forEach((node, index) => {
+      const hasSubNodes = node.nodes && node.nodes.length > 0;
+      const isCollapsed = collapsedNodes.has(node.id);
+
+      // Create flow node
+      flowNodes.push({
+        id: node.id,
+        type: 'custom',
+        position: { x: 0, y: 0 }, // Will be calculated by dagre
+        data: {
+          id: node.id,
+          name: node.name,
+          type: node.type,
+          status: node.status,
+          duration: node.duration,
+          hasSubNodes: hasSubNodes ?? false,
+          isSubNode,
+          parentId,
+        },
+      });
+
+      // Create edge from previous sibling (sequential connection)
+      if (index > 0 && !isSubNode) {
+        const prevNode = nodes[index - 1];
+        flowEdges.push({
+          id: `seq-${prevNode.id}-${node.id}`,
+          source: prevNode.id,
+          target: node.id,
+          type: 'smoothstep',
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: '#42a5f5',
+            width: 20,
+            height: 20,
+          },
+          style: { stroke: '#42a5f5', strokeWidth: 2 },
+          animated: node.status === 'running',
+        });
+      }
+
+      // Create edge from parent (hierarchical connection)
+      if (parentId) {
+        flowEdges.push({
+          id: `parent-${parentId}-${node.id}`,
+          source: parentId,
+          target: node.id,
+          type: 'smoothstep',
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: '#9e9e9e',
+            width: 16,
+            height: 16,
+          },
+          style: { stroke: '#9e9e9e', strokeWidth: 1.5 },
+          animated: node.status === 'running',
+          label: String(index + 1),
+          labelStyle: { fill: '#757575', fontSize: 10, fontWeight: 600 },
+          labelBgStyle: { fill: '#fff', stroke: '#9e9e9e' },
+          labelBgPadding: [4, 4] as [number, number],
+          labelBgBorderRadius: 8,
+        });
+      }
+
+      // Recursively process sub-nodes if not collapsed
+      if (hasSubNodes && !isCollapsed) {
+        processNodes(node.nodes!, node.id, true);
+      }
+    });
+  };
+
+  processNodes(traceNodes);
+
+  return { nodes: flowNodes, edges: flowEdges };
+};
+
+// ============================================================================
+// Inner Canvas Component (needs ReactFlow context)
+// ============================================================================
+
+interface CanvasInnerProps {
   width?: string | number;
-  /** Height of the canvas */
   height?: string | number;
 }
 
-interface NodePosition {
-  node: TraceNodeResponse;
-  x: number;
-  y: number;
-}
-
-export const TracingCanvasView: FC<TracingCanvasViewProps> = ({
-  width = '100%',
-  height = '100%',
-}) => {
+const CanvasInner: FC<CanvasInnerProps> = ({ width = '100%', height = '100%' }) => {
   const {
     selectedTrace,
-    selectedNode,
     selectNode,
     layoutDirection,
     setLayoutDirection,
-    zoomLevel,
-    setZoomLevel,
+    canvasCollapsed,
   } = useTracing();
 
-  const [pan, setPan] = useState({ x: 50, y: 50 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
+  const { fitView } = useReactFlow();
 
-  const isHorizontal = layoutDirection === 'horizontal';
-
-  /**
-   * Calculate node positions
-   */
-  const nodePositions = useMemo((): NodePosition[] => {
-    if (!selectedTrace?.nodes) return [];
-
-    const positions: NodePosition[] = [];
-    const nodeWidth = 200;
-    const nodeHeight = 50;
-    const horizontalGap = 80;
-    const verticalGap = 100;
-
-    const calculatePositions = (
-      nodes: TraceNodeResponse[],
-      startX: number,
-      startY: number,
-      depth: number
-    ): void => {
-      nodes.forEach((node, index) => {
-        const x = isHorizontal
-          ? startX + depth * (nodeWidth + horizontalGap)
-          : startX + index * (nodeWidth + horizontalGap);
-        const y = isHorizontal
-          ? startY + index * (nodeHeight + verticalGap)
-          : startY + depth * (nodeHeight + verticalGap);
-
-        positions.push({ node, x, y });
-
-        if (node.nodes && node.nodes.length > 0) {
-          calculatePositions(
-            node.nodes,
-            isHorizontal ? x : x + 20,
-            isHorizontal ? y + 20 : y,
-            depth + 1
-          );
-        }
-      });
-    };
-
-    calculatePositions(selectedTrace.nodes, 100, 100, 0);
-    return positions;
-  }, [selectedTrace, isHorizontal]);
-
-  /**
-   * Handle mouse events for panning
-   */
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button === 0) {
-      setIsDragging(true);
-      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+  // Transform trace data to React Flow format
+  const { initialNodes, initialEdges } = useMemo(() => {
+    if (!selectedTrace?.nodes) {
+      return { initialNodes: [], initialEdges: [] };
     }
-  }, [pan]);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (isDragging) {
-      setPan({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
-      });
-    }
-  }, [isDragging, dragStart]);
+    const { nodes, edges } = transformTraceToFlow(
+      selectedTrace.nodes,
+      canvasCollapsed ?? new Set<string>()
+    );
 
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
+    // Apply layout
+    const direction = layoutDirection === 'horizontal' ? 'LR' : 'TB';
+    const layouted = getLayoutedElements(nodes, edges, direction);
 
-  /**
-   * Handle wheel for zoom
-   */
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setZoomLevel(Math.max(0.1, Math.min(2, zoomLevel + delta)));
-  }, [zoomLevel, setZoomLevel]);
+    return { initialNodes: layouted.nodes, initialEdges: layouted.edges };
+  }, [selectedTrace, canvasCollapsed, layoutDirection]);
 
-  /**
-   * Toggle layout direction
-   */
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Update nodes/edges when trace changes
+  useEffect(() => {
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+    
+    // Fit view after nodes are set
+    setTimeout(() => {
+      fitView({ padding: 0.2, duration: 300 });
+    }, 50);
+  }, [initialNodes, initialEdges, setNodes, setEdges, fitView]);
+
+  // Handle node click
+  const onNodeClick = useCallback(
+    (_: React.MouseEvent, node: Node) => {
+      selectNode(node.id);
+    },
+    [selectNode]
+  );
+
+  // Handle pane click (deselect)
+  const onPaneClick = useCallback(() => {
+    selectNode(null);
+  }, [selectNode]);
+
+  // Toggle layout direction
   const toggleLayout = () => {
-    setLayoutDirection(isHorizontal ? 'vertical' : 'horizontal');
+    setLayoutDirection(layoutDirection === 'horizontal' ? 'vertical' : 'horizontal');
   };
 
-  /**
-   * Zoom controls
-   */
-  const zoomIn = () => setZoomLevel(Math.min(2, zoomLevel + 0.2));
-  const zoomOut = () => setZoomLevel(Math.max(0.1, zoomLevel - 0.2));
-  const resetZoom = () => {
-    setZoomLevel(1);
-    setPan({ x: 50, y: 50 });
+  // Handle fit view
+  const handleFitView = () => {
+    fitView({ padding: 0.2, duration: 300 });
   };
 
   if (!selectedTrace) {
@@ -288,242 +398,71 @@ export const TracingCanvasView: FC<TracingCanvasViewProps> = ({
     <Box className={classes.container} style={{ width, height }}>
       {/* Toolbar */}
       <Group className={classes.toolbar} gap="xs">
-        <Tooltip label={isHorizontal ? 'Vertikal' : 'Horizontal'}>
+        <Tooltip label={layoutDirection === 'horizontal' ? 'Vertikal' : 'Horizontal'}>
           <ActionIcon variant="subtle" size="sm" onClick={toggleLayout}>
-            {isHorizontal ? <IconLayoutRows size={16} /> : <IconLayoutColumns size={16} />}
+            {layoutDirection === 'horizontal' ? (
+              <IconLayoutRows size={16} />
+            ) : (
+              <IconLayoutColumns size={16} />
+            )}
           </ActionIcon>
         </Tooltip>
 
-        <ActionIcon variant="subtle" size="sm" onClick={zoomOut}>
-          <IconZoomOut size={16} />
-        </ActionIcon>
-
-        <Text size="xs" c="dimmed" style={{ minWidth: 45, textAlign: 'center' }}>
-          {Math.round(zoomLevel * 100)}%
-        </Text>
-
-        <ActionIcon variant="subtle" size="sm" onClick={zoomIn}>
-          <IconZoomIn size={16} />
-        </ActionIcon>
-
-        <ActionIcon variant="subtle" size="sm" onClick={resetZoom}>
-          <IconZoomReset size={16} />
-        </ActionIcon>
+        <Tooltip label="Ansicht zurücksetzen">
+          <ActionIcon variant="subtle" size="sm" onClick={handleFitView}>
+            <IconZoomReset size={16} />
+          </ActionIcon>
+        </Tooltip>
       </Group>
 
-      {/* Canvas */}
-      <Box
-        ref={containerRef}
-        className={classes.canvas}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onWheel={handleWheel}
-        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+      {/* React Flow Canvas */}
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
+        nodeTypes={nodeTypes}
+        fitView
+        fitViewOptions={{ padding: 0.2 }}
+        minZoom={0.1}
+        maxZoom={2}
+        defaultEdgeOptions={{
+          type: 'smoothstep',
+        }}
+        proOptions={{ hideAttribution: true }}
+        className={classes.reactFlow}
       >
-        <Box
-          className={classes.canvasContent}
-          style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoomLevel})`,
-            transformOrigin: '0 0',
+        <Background color="#e0e0e0" gap={16} />
+        <Controls showInteractive={false} className={classes.controls} />
+        <MiniMap
+          nodeColor={(node) => {
+            const data = node.data as CanvasNodeData | undefined;
+            return data ? getStatusColor(data.status) : '#9e9e9e';
           }}
-        >
-          {/* SVG for connections */}
-          <svg className={classes.connectionsSvg}>
-            {/* Define arrow markers */}
-            <defs>
-              <marker
-                id="arrowhead-primary"
-                markerWidth="10"
-                markerHeight="7"
-                refX="9"
-                refY="3.5"
-                orient="auto"
-                markerUnits="strokeWidth"
-              >
-                <polygon points="0 0, 10 3.5, 0 7" fill="#42a5f5" />
-              </marker>
-              <marker
-                id="arrowhead-secondary"
-                markerWidth="8"
-                markerHeight="6"
-                refX="7"
-                refY="3"
-                orient="auto"
-                markerUnits="strokeWidth"
-              >
-                <polygon points="0 0, 8 3, 0 6" fill="#9e9e9e" />
-              </marker>
-            </defs>
-
-            {/* Sequential connections between root nodes */}
-            {selectedTrace?.nodes && selectedTrace.nodes.length > 1 && 
-              selectedTrace.nodes.slice(0, -1).map((node, index) => {
-                const currentPos = nodePositions.find((p) => p.node.id === node.id);
-                const nextNode = selectedTrace.nodes[index + 1];
-                const nextPos = nodePositions.find((p) => p.node.id === nextNode.id);
-                if (!currentPos || !nextPos) return null;
-                
-                // Calculate direction and endpoint at node edge (not center)
-                // Node dimensions: 200px wide, 50px high (centered at position)
-                const nodeHalfWidth = 100;
-                const nodeHalfHeight = 25;
-                const arrowPadding = 8; // Extra padding for arrow visibility
-                
-                const dx = nextPos.x - currentPos.x;
-                const dy = nextPos.y - currentPos.y;
-                
-                // Determine start and end points at node edges
-                let startX = currentPos.x;
-                let startY = currentPos.y;
-                let endX = nextPos.x;
-                let endY = nextPos.y;
-                
-                if (Math.abs(dx) > Math.abs(dy)) {
-                  // Primarily horizontal connection
-                  if (dx > 0) {
-                    startX = currentPos.x + nodeHalfWidth;
-                    endX = nextPos.x - nodeHalfWidth - arrowPadding;
-                  } else {
-                    startX = currentPos.x - nodeHalfWidth;
-                    endX = nextPos.x + nodeHalfWidth + arrowPadding;
-                  }
-                } else {
-                  // Primarily vertical connection
-                  if (dy > 0) {
-                    startY = currentPos.y + nodeHalfHeight;
-                    endY = nextPos.y - nodeHalfHeight - arrowPadding;
-                  } else {
-                    startY = currentPos.y - nodeHalfHeight;
-                    endY = nextPos.y + nodeHalfHeight + arrowPadding;
-                  }
-                }
-                
-                return (
-                  <line
-                    key={`seq-${node.id}-${nextNode.id}`}
-                    x1={startX}
-                    y1={startY}
-                    x2={endX}
-                    y2={endY}
-                    stroke="#42a5f5"
-                    strokeWidth={2}
-                    markerEnd="url(#arrowhead-primary)"
-                  />
-                );
-              })
-            }
-
-            {/* Parent-to-child connections with curved paths and labels */}
-            {nodePositions.map(({ node, x, y }) => {
-              if (!node.nodes || node.nodes.length === 0) return null;
-              
-              return node.nodes.map((child, childIndex) => {
-                const childPos = nodePositions.find((p) => p.node.id === child.id);
-                if (!childPos) return null;
-                
-                // Node dimensions: 200px wide, 50px high (centered at position)
-                const nodeHalfWidth = 100;
-                const nodeHalfHeight = 25;
-                const arrowPadding = 6;
-                
-                const dx = childPos.x - x;
-                const dy = childPos.y - y;
-                
-                // Calculate start and end at node edges
-                let startX = x;
-                let startY = y;
-                let endX = childPos.x;
-                let endY = childPos.y;
-                
-                if (Math.abs(dx) > Math.abs(dy)) {
-                  // Primarily horizontal
-                  if (dx > 0) {
-                    startX = x + nodeHalfWidth;
-                    endX = childPos.x - nodeHalfWidth - arrowPadding;
-                  } else {
-                    startX = x - nodeHalfWidth;
-                    endX = childPos.x + nodeHalfWidth + arrowPadding;
-                  }
-                } else {
-                  // Primarily vertical
-                  if (dy > 0) {
-                    startY = y + nodeHalfHeight;
-                    endY = childPos.y - nodeHalfHeight - arrowPadding;
-                  } else {
-                    startY = y - nodeHalfHeight;
-                    endY = childPos.y + nodeHalfHeight + arrowPadding;
-                  }
-                }
-                
-                // Calculate midpoint for label
-                const midX = (startX + endX) / 2;
-                const midY = (startY + endY) / 2;
-                
-                // Create bezier curve from edge to edge
-                const isVertical = Math.abs(dy) > Math.abs(dx);
-                const controlOffset = 30;
-                
-                let path: string;
-                if (isVertical) {
-                  const cpY = startY + (dy > 0 ? controlOffset : -controlOffset);
-                  path = `M ${startX} ${startY} Q ${startX} ${cpY}, ${midX} ${midY} T ${endX} ${endY}`;
-                } else {
-                  const cpX = startX + (dx > 0 ? controlOffset : -controlOffset);
-                  path = `M ${startX} ${startY} Q ${cpX} ${startY}, ${midX} ${midY} T ${endX} ${endY}`;
-                }
-                
-                return (
-                  <g key={`${node.id}-${child.id}`}>
-                    {/* Curved path with arrow */}
-                    <path
-                      d={path}
-                      fill="none"
-                      stroke="#9e9e9e"
-                      strokeWidth={1.5}
-                      markerEnd="url(#arrowhead-secondary)"
-                    />
-                    {/* Index label in circle */}
-                    <circle
-                      cx={midX}
-                      cy={midY}
-                      r={10}
-                      fill="#ffffff"
-                      stroke="#9e9e9e"
-                      strokeWidth={1}
-                    />
-                    <text
-                      x={midX}
-                      y={midY}
-                      textAnchor="middle"
-                      dominantBaseline="central"
-                      fontSize={10}
-                      fontWeight={600}
-                      fill="#757575"
-                    >
-                      {childIndex + 1}
-                    </text>
-                  </g>
-                );
-              });
-            })}
-          </svg>
-
-          {/* Render nodes */}
-          {nodePositions.map(({ node, x, y }) => (
-            <CanvasNode
-              key={node.id}
-              node={node}
-              x={x}
-              y={y}
-              isSelected={selectedNode?.id === node.id}
-              onClick={() => selectNode(node.id)}
-            />
-          ))}
-        </Box>
-      </Box>
+          maskColor="rgba(0, 0, 0, 0.1)"
+          className={classes.minimap}
+        />
+      </ReactFlow>
     </Box>
+  );
+};
+
+// ============================================================================
+// Main Component (wraps with ReactFlowProvider)
+// ============================================================================
+
+interface TracingCanvasViewProps {
+  width?: string | number;
+  height?: string | number;
+}
+
+export const TracingCanvasView: FC<TracingCanvasViewProps> = (props) => {
+  return (
+    <ReactFlowProvider>
+      <CanvasInner {...props} />
+    </ReactFlowProvider>
   );
 };
 
