@@ -52,6 +52,19 @@ export const ChatWidgetTypeEnum = {
 
 export type ChatWidgetTypeEnum = typeof ChatWidgetTypeEnum[keyof typeof ChatWidgetTypeEnum];
 
+export const AutonomousAgentTypeEnum = {
+  N8N: 'N8N',
+} as const;
+
+export type AutonomousAgentTypeEnum = typeof AutonomousAgentTypeEnum[keyof typeof AutonomousAgentTypeEnum];
+
+// ========== Autonomous Agent Config Types ==========
+
+export interface N8NAutonomousAgentConfig {
+  workflow_endpoint: string;
+  api_api_key_credential_id: string;
+}
+
 export const FavoriteResourceTypeEnum = {
   APPLICATION: 'applications',
   AUTONOMOUS_AGENT: 'autonomous-agents',
@@ -584,8 +597,10 @@ export interface AutonomousAgentResponse {
   tenant_id: string;
   name: string;
   description?: string;
+  type: AutonomousAgentTypeEnum;
   config: Record<string, unknown>;
   is_active: boolean;
+  last_full_import?: string;
   tags: TagSummary[];
   created_at: string;
   updated_at: string;
@@ -596,7 +611,8 @@ export interface AutonomousAgentResponse {
 export interface CreateAutonomousAgentRequest {
   name: string;
   description?: string;
-  config?: Record<string, unknown>;
+  type: AutonomousAgentTypeEnum;
+  config: Record<string, unknown>;
   is_active?: boolean;
 }
 
@@ -611,6 +627,11 @@ export interface SetAutonomousAgentPermissionRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
   role: PermissionActionEnum;
+}
+
+export interface AutonomousAgentKeyResponse {
+  key: string;
+  key_number: number;
 }
 
 // ========== Conversation Types ==========
@@ -689,6 +710,11 @@ export interface SetCredentialPermissionRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
   role: PermissionActionEnum;
+}
+
+export interface CredentialSecretResponse {
+  credential_id: string;
+  secret_value: string;
 }
 
 // ========== Development Platform Types ==========

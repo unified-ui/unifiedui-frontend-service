@@ -32,6 +32,7 @@ import type {
   CreateAutonomousAgentRequest,
   UpdateAutonomousAgentRequest,
   SetAutonomousAgentPermissionRequest,
+  AutonomousAgentKeyResponse,
   // Conversation Types
   ConversationResponse,
   CreateConversationRequest,
@@ -42,6 +43,7 @@ import type {
   CreateCredentialRequest,
   UpdateCredentialRequest,
   SetCredentialPermissionRequest,
+  CredentialSecretResponse,
   // Development Platform Types
   DevelopmentPlatformResponse,
   CreateDevelopmentPlatformRequest,
@@ -355,6 +357,24 @@ export class UnifiedUIAPIClient {
     );
   }
 
+  // ========== Autonomous Agent Keys ==========
+
+  async getAutonomousAgentKey(tenantId: string, agentId: string, keyNumber: 1 | 2): Promise<AutonomousAgentKeyResponse> {
+    return this.request<AutonomousAgentKeyResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/keys/${keyNumber}`
+    );
+  }
+
+  async rotateAutonomousAgentKey(tenantId: string, agentId: string, keyNumber: 1 | 2): Promise<AutonomousAgentKeyResponse> {
+    return this.request<AutonomousAgentKeyResponse>(
+      'PUT',
+      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/keys/${keyNumber}/rotate`,
+      undefined,
+      'API key rotated successfully'
+    );
+  }
+
   // ========== Conversation Endpoints ==========
 
   async listConversations(tenantId: string, params?: PaginationParams): Promise<ConversationResponse[]> {
@@ -429,6 +449,15 @@ export class UnifiedUIAPIClient {
 
   async deleteCredential(tenantId: string, credentialId: string): Promise<void> {
     return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/credentials/${credentialId}`, undefined, 'Credential deleted successfully');
+  }
+
+  // ========== Credential Secret ==========
+
+  async getCredentialSecret(tenantId: string, credentialId: string): Promise<CredentialSecretResponse> {
+    return this.request<CredentialSecretResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/credentials/${credentialId}/secret`
+    );
   }
 
   // ========== Credential Permissions ==========

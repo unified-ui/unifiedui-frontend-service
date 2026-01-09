@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Modal,
   TextInput,
@@ -15,15 +15,20 @@ import {
   SegmentedControl,
   Divider,
   Switch,
+  Select,
+  ActionIcon,
+  Tooltip,
+  Loader,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconAlertCircle, IconRobot, IconInfoCircle, IconShieldLock } from '@tabler/icons-react';
+import { IconAlertCircle, IconRobot, IconInfoCircle, IconShieldLock, IconPlus } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { useEntityPermissions } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
-import type { AutonomousAgentResponse, PrincipalTypeEnum } from '../../../api/types';
-import { PermissionActionEnum } from '../../../api/types';
+import type { AutonomousAgentResponse, PrincipalTypeEnum, CredentialResponse } from '../../../api/types';
+import { PermissionActionEnum, AutonomousAgentTypeEnum, CredentialTypeEnum } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
+import { CreateCredentialDialog } from '../CreateCredentialDialog';
 import classes from './EditAutonomousAgentDialog.module.css';
 
 export type EditDialogTab = 'details' | 'iam';
@@ -33,6 +38,9 @@ interface FormValues {
   description: string;
   tags: string[];
   is_active: boolean;
+  // N8N Config
+  n8n_workflow_endpoint: string;
+  n8n_api_api_key_credential_id: string;
 }
 
 export interface EditAutonomousAgentDialogProps {
@@ -60,6 +68,9 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAddPrincipalOpen, setIsAddPrincipalOpen] = useState(false);
+  const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
+  const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
+  const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
 
   // Use the generic permissions hook
   const {
@@ -83,6 +94,8 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
       description: '',
       tags: [],
       is_active: true,
+      n8n_workflow_endpoint: '',
+      n8n_api_api_key_credential_id: '',
     },
     validate: {
       name: (value) => {
@@ -90,18 +103,74 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         if (value.length > 255) return 'Name must be 255 characters or less';
         return null;
       },
+      n8n_workflow_endpoint: (value) => {
+        if (autonomousAgent?.type === AutonomousAgentTypeEnum.N8N) {
+          if (!value || value.trim().length === 0) {
+            return 'Workflow Endpoint is required';
+          }
+          try {
+            const url = new URL(value);
+            if (!url.pathname.includes('/workflow/')) {
+              return 'URL must contain /workflow/ in path';
+            }
+          } catch {
+            return 'Invalid URL';
+          }
+        }
+        return null;
+      },
+      n8n_api_api_key_credential_id: (value) => {
+        if (autonomousAgent?.type === AutonomousAgentTypeEnum.N8N) {
+          if (!value || value.trim().length === 0) {
+            return 'API Key Credential is required';
+          }
+        }
+        return null;
+      },
     },
   });
+
+  // Load credentials when dialog opens
+  useEffect(() => {
+    const loadCredentials = async () => {
+      if (!opened || !apiClient || !selectedTenant) return;
+
+      setIsLoadingCredentials(true);
+      try {
+        const response = await apiClient.listCredentials(selectedTenant.id, { limit: 999 });
+        setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
+      } catch (err) {
+        console.error('Failed to load credentials:', err);
+      } finally {
+        setIsLoadingCredentials(false);
+      }
+    };
+
+    loadCredentials();
+  }, [opened, apiClient, selectedTenant]);
+
+  // Filter credentials by type for API Key dropdown (only API_KEY type)
+  const apiKeyCredentials = useMemo(() => {
+    return credentials
+      .filter((c) => c.type === CredentialTypeEnum.API_KEY)
+      .map((c) => ({ value: c.id, label: c.name }));
+  }, [credentials]);
 
   // Initialize form from data
   const initializeFromData = useCallback(
     (data: AutonomousAgentResponse) => {
       setAutonomousAgent(data);
+      
+      // Extract N8N config if available
+      const config = data.config || {};
+      
       form.setValues({
         name: data.name,
         description: data.description || '',
         tags: data.tags?.map((t) => t.name) || [],
         is_active: data.is_active,
+        n8n_workflow_endpoint: (config.workflow_endpoint as string) || '',
+        n8n_api_api_key_credential_id: (config.api_api_key_credential_id as string) || '',
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -155,11 +224,21 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
     setError(null);
 
     try {
+      // Build config if this is an N8N agent
+      let config: Record<string, unknown> | undefined;
+      if (autonomousAgent?.type === AutonomousAgentTypeEnum.N8N) {
+        config = {
+          workflow_endpoint: values.n8n_workflow_endpoint.trim(),
+          api_api_key_credential_id: values.n8n_api_api_key_credential_id,
+        };
+      }
+
       // Update autonomous agent
       await apiClient.updateAutonomousAgent(selectedTenant.id, autonomousAgentId, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
         is_active: values.is_active,
+        config,
       });
 
       // Update tags if changed
@@ -179,6 +258,32 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
       setIsSaving(false);
     }
   };
+
+  // Handle open create credential dialog
+  const handleOpenCreateCredential = () => {
+    setCreateCredentialOpen(true);
+  };
+
+  // Handle credential created
+  const handleCredentialCreated = async (credential?: { id: string; name: string }) => {
+    // Refresh credentials list
+    if (apiClient && selectedTenant) {
+      try {
+        const response = await apiClient.listCredentials(selectedTenant.id, { limit: 999 });
+        setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
+
+        // Auto-select the newly created credential
+        if (credential) {
+          form.setFieldValue('n8n_api_api_key_credential_id', credential.id);
+        }
+      } catch (err) {
+        console.error('Failed to refresh credentials:', err);
+      }
+    }
+  };
+
+  // Check if this is an N8N agent
+  const isN8N = autonomousAgent?.type === AutonomousAgentTypeEnum.N8N;
 
   // Handle adding principals with callback
   const handleAddPrincipalsWithRole = useCallback(
@@ -305,13 +410,65 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
                 {...form.getInputProps('name')}
               />
 
-              <Switch
-                label="Active"
-                description="Enable or disable this autonomous agent"
-                checked={form.values.is_active}
-                onChange={(e) => form.setFieldValue('is_active', e.currentTarget.checked)}
-                classNames={{ track: classes.switchTrack }}
-              />
+              <Group gap="md">
+                <Badge size="lg" variant="light" color="blue">
+                  {autonomousAgent?.type || 'Unknown'}
+                </Badge>
+                <Switch
+                  label="Active"
+                  description="Enable or disable this autonomous agent"
+                  checked={form.values.is_active}
+                  onChange={(e) => form.setFieldValue('is_active', e.currentTarget.checked)}
+                  classNames={{ track: classes.switchTrack }}
+                />
+              </Group>
+
+              {/* N8N Configuration Section */}
+              {isN8N && (
+                <>
+                  <Divider label="n8n Configuration" labelPosition="center" />
+
+                  <TextInput
+                    label="Workflow Endpoint"
+                    placeholder="https://your-n8n.com/webhook/.../workflow/..."
+                    description="URL must contain /workflow/ in path"
+                    required
+                    withAsterisk
+                    {...form.getInputProps('n8n_workflow_endpoint')}
+                  />
+
+                  {/* API Key Credential with Add Button */}
+                  <Group gap="xs" align="flex-end">
+                    <Select
+                      label="API Key Credential"
+                      placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
+                      required
+                      withAsterisk
+                      data={apiKeyCredentials}
+                      rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
+                      disabled={isLoadingCredentials}
+                      style={{ flex: 1 }}
+                      {...form.getInputProps('n8n_api_api_key_credential_id')}
+                    />
+                    <Tooltip label="Create new API Key Credential">
+                      <ActionIcon
+                        variant="light"
+                        color="blue"
+                        size="lg"
+                        onClick={handleOpenCreateCredential}
+                      >
+                        <IconPlus size={18} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
+
+                  {apiKeyCredentials.length === 0 && !isLoadingCredentials && (
+                    <Alert icon={<IconAlertCircle size={16} />} color="yellow" variant="light">
+                      No API Key Credentials available. Create one first.
+                    </Alert>
+                  )}
+                </>
+              )}
 
               <TagInput
                 label="Tags"
@@ -364,6 +521,13 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         onSubmit={handleAddPrincipalsWithRole}
         entityName="autonomous agent"
         existingPrincipalIds={principals.map((p) => p.principalId)}
+      />
+
+      {/* Create Credential Dialog */}
+      <CreateCredentialDialog
+        opened={createCredentialOpen}
+        onClose={() => setCreateCredentialOpen(false)}
+        onSuccess={handleCredentialCreated}
       />
     </>
   );
