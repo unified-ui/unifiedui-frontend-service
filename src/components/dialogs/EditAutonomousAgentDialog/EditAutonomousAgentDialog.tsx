@@ -33,12 +33,17 @@ import classes from './EditAutonomousAgentDialog.module.css';
 
 export type EditDialogTab = 'details' | 'iam';
 
+const API_VERSIONS = [
+  { value: 'v1', label: 'v1' },
+];
+
 interface FormValues {
   name: string;
   description: string;
   tags: string[];
   is_active: boolean;
   // N8N Config
+  n8n_api_version: string;
   n8n_workflow_endpoint: string;
   n8n_api_api_key_credential_id: string;
 }
@@ -94,6 +99,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
       description: '',
       tags: [],
       is_active: true,
+      n8n_api_version: 'v1',
       n8n_workflow_endpoint: '',
       n8n_api_api_key_credential_id: '',
     },
@@ -169,6 +175,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         description: data.description || '',
         tags: data.tags?.map((t) => t.name) || [],
         is_active: data.is_active,
+        n8n_api_version: (config.api_version as string) || 'v1',
         n8n_workflow_endpoint: (config.workflow_endpoint as string) || '',
         n8n_api_api_key_credential_id: (config.api_api_key_credential_id as string) || '',
       });
@@ -228,6 +235,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
       let config: Record<string, unknown> | undefined;
       if (autonomousAgent?.type === AutonomousAgentTypeEnum.N8N) {
         config = {
+          api_version: values.n8n_api_version,
           workflow_endpoint: values.n8n_workflow_endpoint.trim(),
           api_api_key_credential_id: values.n8n_api_api_key_credential_id,
         };
@@ -427,6 +435,15 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
               {isN8N && (
                 <>
                   <Divider label="n8n Configuration" labelPosition="center" />
+
+                  <Select
+                    label="API Version"
+                    placeholder="Select a version"
+                    required
+                    withAsterisk
+                    data={API_VERSIONS}
+                    {...form.getInputProps('n8n_api_version')}
+                  />
 
                   <TextInput
                     label="Workflow Endpoint"

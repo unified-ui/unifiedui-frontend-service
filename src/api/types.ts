@@ -61,6 +61,7 @@ export type AutonomousAgentTypeEnum = typeof AutonomousAgentTypeEnum[keyof typeo
 // ========== Autonomous Agent Config Types ==========
 
 export interface N8NAutonomousAgentConfig {
+  api_version: string;
   workflow_endpoint: string;
   api_api_key_credential_id: string;
 }

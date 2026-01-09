@@ -30,6 +30,10 @@ const AUTONOMOUS_AGENT_TYPES = [
   { value: AutonomousAgentTypeEnum.N8N, label: 'n8n' },
 ];
 
+const API_VERSIONS = [
+  { value: 'v1', label: 'v1' },
+];
+
 interface CreateAutonomousAgentDialogProps {
   opened: boolean;
   onClose: () => void;
@@ -42,6 +46,7 @@ interface FormValues {
   description: string;
   tags: string[];
   // N8N Config
+  n8n_api_version: string;
   n8n_workflow_endpoint: string;
   n8n_api_api_key_credential_id: string;
 }
@@ -64,6 +69,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
       description: '',
       tags: [],
       // N8N Config defaults
+      n8n_api_version: 'v1',
       n8n_workflow_endpoint: '',
       n8n_api_api_key_credential_id: '',
     },
@@ -152,6 +158,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
 
       if (values.type === AutonomousAgentTypeEnum.N8N) {
         config = {
+          api_version: values.n8n_api_version,
           workflow_endpoint: values.n8n_workflow_endpoint.trim(),
           api_api_key_credential_id: values.n8n_api_api_key_credential_id,
         };
@@ -255,6 +262,15 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
             {isN8N && (
               <>
                 <Divider label="n8n Konfiguration" labelPosition="center" />
+
+                <Select
+                  label="API Version"
+                  placeholder="Wählen Sie eine Version"
+                  required
+                  withAsterisk
+                  data={API_VERSIONS}
+                  {...form.getInputProps('n8n_api_version')}
+                />
 
                 <TextInput
                   label="Workflow Endpoint"
