@@ -1,0 +1,149 @@
+/**
+ * TracingDataSection Styles
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-paper);
+  border-left: 1px solid var(--border-default);
+  overflow: hidden;
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  padding: var(--spacing-xl);
+}
+
+/* Node Info Header */
+.nodeInfo {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  background-color: var(--bg-paper);
+}
+
+/* Main Tabs */
+.mainTabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mainTabs > [data-mantine-tabs-list] {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-default);
+  padding: 0 var(--spacing-sm);
+}
+
+.tabPanel {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Input/Output Tabs */
+.ioTabs {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.ioTabs > [data-mantine-tabs-list] {
+  flex-shrink: 0;
+  padding: 0 var(--spacing-sm);
+  background-color: var(--color-gray-50);
+}
+
+[data-mantine-color-scheme='dark'] .ioTabs > [data-mantine-tabs-list] {
+  background-color: var(--color-gray-800);
+}
+
+.ioPanel {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Text Content */
+.textContent {
+  padding: var(--spacing-sm);
+  background-color: var(--color-gray-50);
+}
+
+[data-mantine-color-scheme='dark'] .textContent {
+  background-color: var(--color-gray-800);
+}
+
+/* JSON Viewer */
+.jsonContainer {
+  overflow: hidden;
+}
+
+.jsonHeader {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px solid var(--border-default);
+  background-color: var(--color-gray-50);
+}
+
+[data-mantine-color-scheme='dark'] .jsonHeader {
+  background-color: var(--color-gray-800);
+}
+
+.jsonScroll {
+  max-height: 300px;
+}
+
+.jsonCode {
+  font-size: 11px;
+  background-color: transparent;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Logs Section */
+.logsScroll {
+  height: 100%;
+}
+
+.logEntry {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--color-gray-50);
+}
+
+[data-mantine-color-scheme='dark'] .logEntry {
+  background-color: var(--color-gray-800);
+}
+
+.logText {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Metadata Section */
+.metadataScroll {
+  height: 100%;
+}
+
+.metadataAccordion {
+  padding: var(--spacing-sm);
+}
+
+.metadataAccordion [data-mantine-accordion-item] {
+  border-color: var(--border-default);
+}
+
+.metadataAccordion [data-mantine-accordion-control] {
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.metadataAccordion [data-mantine-accordion-panel] {
+  padding: 0;
+}

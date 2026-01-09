@@ -79,6 +79,8 @@ import type {
   UpdateTracesResponse,
   SSEEvent,
   SSEStreamMessage,
+  // Full Trace Types (hierarchical)
+  FullTracesListResponse,
   // Misc Types
   HealthCheckResponse,
   PrincipalTypeEnum,
@@ -1034,6 +1036,36 @@ export class UnifiedUIAPIClient {
       'PUT',
       `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces`,
       data
+    );
+  }
+
+  // ========== Full Trace Endpoints (Hierarchical Traces) ==========
+
+  /**
+   * Get traces for a conversation.
+   * Returns hierarchical traces with nodes.
+   */
+  async getConversationTraces(
+    tenantId: string,
+    conversationId: string
+  ): Promise<FullTracesListResponse> {
+    return this.agentServiceRequest<FullTracesListResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/conversations/${conversationId}/traces`
+    );
+  }
+
+  /**
+   * Get traces for an autonomous agent.
+   * Returns hierarchical traces with nodes.
+   */
+  async getAutonomousAgentTraces(
+    tenantId: string,
+    agentId: string
+  ): Promise<FullTracesListResponse> {
+    return this.agentServiceRequest<FullTracesListResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces`
     );
   }
 }

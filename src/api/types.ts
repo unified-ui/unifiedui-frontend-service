@@ -208,7 +208,106 @@ export interface SendMessageResponse {
   conversationId: string;
 }
 
-// Trace Types
+// ========== Trace Types (Full Hierarchical Traces) ==========
+
+export const TraceContextType = {
+  CONVERSATION: 'conversation',
+  AUTONOMOUS_AGENT: 'autonomous_agent',
+} as const;
+
+export type TraceContextType = typeof TraceContextType[keyof typeof TraceContextType];
+
+export const TraceNodeType = {
+  AGENT: 'agent',
+  TOOL: 'tool',
+  LLM: 'llm',
+  CHAIN: 'chain',
+  RETRIEVER: 'retriever',
+  WORKFLOW: 'workflow',
+  FUNCTION: 'function',
+  HTTP: 'http',
+  CODE: 'code',
+  CONDITIONAL: 'conditional',
+  LOOP: 'loop',
+  CUSTOM: 'custom',
+} as const;
+
+export type TraceNodeType = typeof TraceNodeType[keyof typeof TraceNodeType];
+
+export const TraceNodeStatus = {
+  PENDING: 'pending',
+  RUNNING: 'running',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  SKIPPED: 'skipped',
+  CANCELLED: 'cancelled',
+} as const;
+
+export type TraceNodeStatus = typeof TraceNodeStatus[keyof typeof TraceNodeStatus];
+
+/** Node data IO (input/output) - flexible to accommodate various backends */
+export interface TraceNodeDataIO {
+  text?: string;
+  arguments?: Record<string, unknown>;
+  extraData?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+  /** Allow additional arbitrary fields */
+  [key: string]: unknown;
+}
+
+/** Node data containing input and output */
+export interface TraceNodeData {
+  input?: TraceNodeDataIO | null;
+  output?: TraceNodeDataIO | null;
+}
+
+/** A single node in the trace tree (can be hierarchical) */
+export interface TraceNodeResponse {
+  id: string;
+  name: string;
+  type: TraceNodeType | string;
+  referenceId?: string;
+  startAt?: string;
+  endAt?: string;
+  duration?: number; // Duration in seconds
+  status: TraceNodeStatus | string;
+  error?: string;
+  logs?: string[];
+  data?: TraceNodeData;
+  nodes?: TraceNodeResponse[]; // Sub-nodes (hierarchical)
+  metadata?: Record<string, unknown>;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+/** Full trace response from agent-service */
+export interface FullTraceResponse {
+  id: string;
+  tenantId: string;
+  applicationId?: string;
+  conversationId?: string;
+  autonomousAgentId?: string;
+  contextType: TraceContextType | string;
+  referenceId?: string;
+  referenceName?: string;
+  referenceMetadata?: Record<string, unknown>;
+  logs?: Array<string | Record<string, unknown>>;
+  nodes: TraceNodeResponse[];
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+/** Response for listing traces */
+export interface FullTracesListResponse {
+  traces: FullTraceResponse[];
+  total: number;
+}
+
+// ========== Legacy Trace Types (for message-level traces) ==========
 export interface TraceMetadata {
   model?: string;
   tokensInput?: number;

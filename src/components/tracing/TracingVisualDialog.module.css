@@ -1,0 +1,145 @@
+/**
+ * TracingVisualDialog Styles
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--bg-paper);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* Header */
+.header {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--bg-paper);
+  border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
+}
+
+.traceSelect {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-paper);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.traceSelect:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+}
+
+/* Content Layout */
+.content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.hierarchyPanel {
+  width: 280px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-default);
+  overflow: hidden;
+}
+
+.canvasPanel {
+  flex: 1;
+  min-width: 300px;
+  overflow: hidden;
+}
+
+.dataPanel {
+  width: 350px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* Loading State */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: var(--spacing-xl);
+}
+
+/* Error State */
+.errorContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: var(--spacing-xl);
+}
+
+/* Empty State */
+.emptyContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: var(--spacing-xl);
+}
+
+/* Modal Styles */
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.modalBody {
+  flex: 1;
+  overflow: hidden;
+  padding: 0 !important;
+  border-radius: var(--radius-lg);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .hierarchyPanel {
+    width: 240px;
+  }
+
+  .dataPanel {
+    width: 300px;
+  }
+}
+
+@media (max-width: 900px) {
+  .hierarchyPanel {
+    display: none;
+  }
+
+  .dataPanel {
+    width: 280px;
+  }
+}
+
+@media (max-width: 700px) {
+  .content {
+    flex-direction: column;
+  }
+
+  .canvasPanel {
+    flex: 1;
+    min-height: 300px;
+  }
+
+  .dataPanel {
+    width: 100%;
+    height: 300px;
+    flex-shrink: 0;
+    border-left: none;
+    border-top: 1px solid var(--border-default);
+  }
+}
