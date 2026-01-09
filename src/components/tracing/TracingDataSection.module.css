@@ -1,13 +1,15 @@
 /**
  * TracingDataSection Styles
+ * Layout: Logs left | Input + Output side by side on right
  */
 
 .container {
   display: flex;
   flex-direction: column;
   background-color: var(--bg-paper);
-  border-left: 1px solid var(--border-default);
+  border-top: 1px solid var(--border-default);
   overflow: hidden;
+  height: 100%;
 }
 
 .emptyState {
@@ -16,63 +18,87 @@
   justify-content: center;
   height: 100%;
   width: 100%;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-md);
 }
 
-/* Node Info Header */
-.nodeInfo {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: 0;
-  border-left: none;
-  border-right: none;
-  border-top: none;
-  background-color: var(--bg-paper);
+.emptyStateSmall {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: var(--spacing-md);
 }
 
-/* Main Tabs */
-.mainTabs {
+/* Horizontal Layout */
+.horizontalLayout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Logs Section - Left */
+.logsSection {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-default);
+  overflow: hidden;
+}
+
+/* I/O Section - Right */
+.ioSection {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* Each I/O Panel */
+.ioPanel {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
 }
 
-.mainTabs > [data-mantine-tabs-list] {
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--border-default);
-  padding: 0 var(--spacing-sm);
+.ioPanel:first-child {
+  border-right: 1px solid var(--border-default);
 }
 
-.tabPanel {
-  flex: 1;
-  overflow: hidden;
-}
-
-/* Input/Output Tabs */
-.ioTabs {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.ioTabs > [data-mantine-tabs-list] {
-  flex-shrink: 0;
-  padding: 0 var(--spacing-sm);
+/* Section Header */
+.sectionHeader {
+  padding: var(--spacing-xs) var(--spacing-sm);
   background-color: var(--color-gray-50);
+  border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
 }
 
-[data-mantine-color-scheme='dark'] .ioTabs > [data-mantine-tabs-list] {
+[data-mantine-color-scheme='dark'] .sectionHeader {
   background-color: var(--color-gray-800);
 }
 
-.ioPanel {
+/* Scroll Content */
+.scrollContent {
   flex: 1;
   overflow-y: auto;
 }
 
+/* Log Entry */
+.logEntry {
+  background-color: var(--bg-paper);
+}
+
+.logText {
+  font-family: monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* Text Content */
 .textContent {
-  padding: var(--spacing-sm);
   background-color: var(--color-gray-50);
 }
 
@@ -83,6 +109,7 @@
 /* JSON Viewer */
 .jsonContainer {
   overflow: hidden;
+  background-color: var(--bg-paper);
 }
 
 .jsonHeader {
@@ -96,54 +123,40 @@
 }
 
 .jsonScroll {
-  max-height: 300px;
+  max-height: 200px;
 }
 
 .jsonCode {
   font-size: 11px;
+  line-height: 1.4;
   background-color: transparent;
-  white-space: pre-wrap;
-  word-break: break-all;
 }
 
-/* Logs Section */
-.logsScroll {
-  height: 100%;
+/* Responsive */
+@media (max-width: 900px) {
+  .horizontalLayout {
+    flex-direction: column;
+  }
+
+  .logsSection {
+    width: 100%;
+    height: 120px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .ioSection {
+    flex: 1;
+  }
 }
 
-.logEntry {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background-color: var(--color-gray-50);
-}
+@media (max-width: 600px) {
+  .ioSection {
+    flex-direction: column;
+  }
 
-[data-mantine-color-scheme='dark'] .logEntry {
-  background-color: var(--color-gray-800);
-}
-
-.logText {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-/* Metadata Section */
-.metadataScroll {
-  height: 100%;
-}
-
-.metadataAccordion {
-  padding: var(--spacing-sm);
-}
-
-.metadataAccordion [data-mantine-accordion-item] {
-  border-color: var(--border-default);
-}
-
-.metadataAccordion [data-mantine-accordion-control] {
-  padding: var(--spacing-xs) var(--spacing-sm);
-}
-
-.metadataAccordion [data-mantine-accordion-panel] {
-  padding: 0;
+  .ioPanel:first-child {
+    border-right: none;
+    border-bottom: 1px solid var(--border-default);
+  }
 }

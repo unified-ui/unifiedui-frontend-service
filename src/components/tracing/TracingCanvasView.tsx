@@ -331,6 +331,32 @@ export const TracingCanvasView: FC<TracingCanvasViewProps> = ({
         >
           {/* SVG for connections */}
           <svg className={classes.connectionsSvg}>
+            {/* Define arrow markers */}
+            <defs>
+              <marker
+                id="arrowhead-primary"
+                markerWidth="10"
+                markerHeight="7"
+                refX="9"
+                refY="3.5"
+                orient="auto"
+                markerUnits="strokeWidth"
+              >
+                <polygon points="0 0, 10 3.5, 0 7" fill="#42a5f5" />
+              </marker>
+              <marker
+                id="arrowhead-secondary"
+                markerWidth="8"
+                markerHeight="6"
+                refX="7"
+                refY="3"
+                orient="auto"
+                markerUnits="strokeWidth"
+              >
+                <polygon points="0 0, 8 3, 0 6" fill="#9e9e9e" />
+              </marker>
+            </defs>
+
             {/* Sequential connections between root nodes */}
             {selectedTrace?.nodes && selectedTrace.nodes.length > 1 && 
               selectedTrace.nodes.slice(0, -1).map((node, index) => {
@@ -338,40 +364,149 @@ export const TracingCanvasView: FC<TracingCanvasViewProps> = ({
                 const nextNode = selectedTrace.nodes[index + 1];
                 const nextPos = nodePositions.find((p) => p.node.id === nextNode.id);
                 if (!currentPos || !nextPos) return null;
+                
+                // Calculate direction and endpoint at node edge (not center)
+                // Node dimensions: 200px wide, 50px high (centered at position)
+                const nodeHalfWidth = 100;
+                const nodeHalfHeight = 25;
+                const arrowPadding = 8; // Extra padding for arrow visibility
+                
+                const dx = nextPos.x - currentPos.x;
+                const dy = nextPos.y - currentPos.y;
+                
+                // Determine start and end points at node edges
+                let startX = currentPos.x;
+                let startY = currentPos.y;
+                let endX = nextPos.x;
+                let endY = nextPos.y;
+                
+                if (Math.abs(dx) > Math.abs(dy)) {
+                  // Primarily horizontal connection
+                  if (dx > 0) {
+                    startX = currentPos.x + nodeHalfWidth;
+                    endX = nextPos.x - nodeHalfWidth - arrowPadding;
+                  } else {
+                    startX = currentPos.x - nodeHalfWidth;
+                    endX = nextPos.x + nodeHalfWidth + arrowPadding;
+                  }
+                } else {
+                  // Primarily vertical connection
+                  if (dy > 0) {
+                    startY = currentPos.y + nodeHalfHeight;
+                    endY = nextPos.y - nodeHalfHeight - arrowPadding;
+                  } else {
+                    startY = currentPos.y - nodeHalfHeight;
+                    endY = nextPos.y + nodeHalfHeight + arrowPadding;
+                  }
+                }
+                
                 return (
                   <line
                     key={`seq-${node.id}-${nextNode.id}`}
-                    x1={currentPos.x}
-                    y1={currentPos.y}
-                    x2={nextPos.x}
-                    y2={nextPos.y}
-                    stroke="var(--color-primary-400)"
+                    x1={startX}
+                    y1={startY}
+                    x2={endX}
+                    y2={endY}
+                    stroke="#42a5f5"
                     strokeWidth={2}
+                    markerEnd="url(#arrowhead-primary)"
                   />
                 );
               })
             }
-            {/* Parent-to-child connections */}
+
+            {/* Parent-to-child connections with curved paths and labels */}
             {nodePositions.map(({ node, x, y }) => {
-              // Draw connections to children (sub-nodes)
-              if (node.nodes && node.nodes.length > 0) {
-                return node.nodes.map((child) => {
-                  const childPos = nodePositions.find((p) => p.node.id === child.id);
-                  if (!childPos) return null;
-                  return (
-                    <line
-                      key={`${node.id}-${child.id}`}
-                      x1={x}
-                      y1={y}
-                      x2={childPos.x}
-                      y2={childPos.y}
-                      stroke="var(--border-default)"
+              if (!node.nodes || node.nodes.length === 0) return null;
+              
+              return node.nodes.map((child, childIndex) => {
+                const childPos = nodePositions.find((p) => p.node.id === child.id);
+                if (!childPos) return null;
+                
+                // Node dimensions: 200px wide, 50px high (centered at position)
+                const nodeHalfWidth = 100;
+                const nodeHalfHeight = 25;
+                const arrowPadding = 6;
+                
+                const dx = childPos.x - x;
+                const dy = childPos.y - y;
+                
+                // Calculate start and end at node edges
+                let startX = x;
+                let startY = y;
+                let endX = childPos.x;
+                let endY = childPos.y;
+                
+                if (Math.abs(dx) > Math.abs(dy)) {
+                  // Primarily horizontal
+                  if (dx > 0) {
+                    startX = x + nodeHalfWidth;
+                    endX = childPos.x - nodeHalfWidth - arrowPadding;
+                  } else {
+                    startX = x - nodeHalfWidth;
+                    endX = childPos.x + nodeHalfWidth + arrowPadding;
+                  }
+                } else {
+                  // Primarily vertical
+                  if (dy > 0) {
+                    startY = y + nodeHalfHeight;
+                    endY = childPos.y - nodeHalfHeight - arrowPadding;
+                  } else {
+                    startY = y - nodeHalfHeight;
+                    endY = childPos.y + nodeHalfHeight + arrowPadding;
+                  }
+                }
+                
+                // Calculate midpoint for label
+                const midX = (startX + endX) / 2;
+                const midY = (startY + endY) / 2;
+                
+                // Create bezier curve from edge to edge
+                const isVertical = Math.abs(dy) > Math.abs(dx);
+                const controlOffset = 30;
+                
+                let path: string;
+                if (isVertical) {
+                  const cpY = startY + (dy > 0 ? controlOffset : -controlOffset);
+                  path = `M ${startX} ${startY} Q ${startX} ${cpY}, ${midX} ${midY} T ${endX} ${endY}`;
+                } else {
+                  const cpX = startX + (dx > 0 ? controlOffset : -controlOffset);
+                  path = `M ${startX} ${startY} Q ${cpX} ${startY}, ${midX} ${midY} T ${endX} ${endY}`;
+                }
+                
+                return (
+                  <g key={`${node.id}-${child.id}`}>
+                    {/* Curved path with arrow */}
+                    <path
+                      d={path}
+                      fill="none"
+                      stroke="#9e9e9e"
                       strokeWidth={1.5}
+                      markerEnd="url(#arrowhead-secondary)"
                     />
-                  );
-                });
-              }
-              return null;
+                    {/* Index label in circle */}
+                    <circle
+                      cx={midX}
+                      cy={midY}
+                      r={10}
+                      fill="#ffffff"
+                      stroke="#9e9e9e"
+                      strokeWidth={1}
+                    />
+                    <text
+                      x={midX}
+                      y={midY}
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fontSize={10}
+                      fontWeight={600}
+                      fill="#757575"
+                    >
+                      {childIndex + 1}
+                    </text>
+                  </g>
+                );
+              });
             })}
           </svg>
 

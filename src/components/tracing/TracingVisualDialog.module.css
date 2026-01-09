@@ -39,24 +39,36 @@
   display: flex;
   flex: 1;
   overflow: hidden;
+  min-height: 0;
+}
+
+/* Main Area - Canvas + Data stacked vertically */
+.mainArea {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.canvasPanel {
+  flex: 2;
+  min-height: 200px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.dataPanel {
+  flex: 1;
+  min-height: 150px;
+  overflow: hidden;
+  border-top: none;
 }
 
 .hierarchyPanel {
   width: 280px;
   flex-shrink: 0;
-  border-right: 1px solid var(--border-default);
-  overflow: hidden;
-}
-
-.canvasPanel {
-  flex: 1;
-  min-width: 300px;
-  overflow: hidden;
-}
-
-.dataPanel {
-  width: 350px;
-  flex-shrink: 0;
+  border-left: 1px solid var(--border-default);
   overflow: hidden;
 }
 
@@ -95,13 +107,18 @@
   flex-direction: column;
   border-radius: var(--radius-lg);
   overflow: hidden;
+  height: 100%;
 }
 
 .modalBody {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   padding: 0 !important;
   border-radius: var(--radius-lg);
+  height: 100%;
+  min-height: 0;
 }
 
 /* Responsive */
@@ -109,19 +126,11 @@
   .hierarchyPanel {
     width: 240px;
   }
-
-  .dataPanel {
-    width: 300px;
-  }
 }
 
 @media (max-width: 900px) {
   .hierarchyPanel {
     display: none;
-  }
-
-  .dataPanel {
-    width: 280px;
   }
 }
 
@@ -130,16 +139,16 @@
     flex-direction: column;
   }
 
+  .mainArea {
+    flex: 1;
+  }
+
   .canvasPanel {
     flex: 1;
-    min-height: 300px;
+    min-height: 200px;
   }
 
   .dataPanel {
-    width: 100%;
-    height: 300px;
-    flex-shrink: 0;
-    border-left: none;
-    border-top: 1px solid var(--border-default);
+    min-height: 200px;
   }
 }

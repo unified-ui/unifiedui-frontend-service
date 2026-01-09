@@ -217,24 +217,27 @@ const TracingContent: FC<TracingContentProps> = ({
       {/* Main Content */}
       {!isLoading && selectedTrace && (
         <Box className={classes.content}>
-          {/* Left Panel - Hierarchy */}
+          {/* Left Area - Canvas + Data stacked */}
+          <Box className={classes.mainArea}>
+            {/* Canvas Area (2/3 height) */}
+            {(viewMode === 'canvas' || viewMode === 'split') && (
+              <Box className={classes.canvasPanel}>
+                <TracingCanvasView />
+              </Box>
+            )}
+
+            {/* Data Section (1/3 height) */}
+            {panels.data && (
+              <Box className={classes.dataPanel}>
+                <TracingDataSection />
+              </Box>
+            )}
+          </Box>
+
+          {/* Right Panel - Hierarchy (full height) */}
           {panels.hierarchy && viewMode !== 'canvas' && (
             <Box className={classes.hierarchyPanel}>
               <TracingHierarchyView />
-            </Box>
-          )}
-
-          {/* Center - Canvas */}
-          {(viewMode === 'canvas' || viewMode === 'split') && (
-            <Box className={classes.canvasPanel}>
-              <TracingCanvasView />
-            </Box>
-          )}
-
-          {/* Right Panel - Data */}
-          {panels.data && (
-            <Box className={classes.dataPanel}>
-              <TracingDataSection />
             </Box>
           )}
         </Box>
