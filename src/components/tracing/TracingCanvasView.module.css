@@ -1,206 +1,152 @@
 /**
  * TracingCanvasView - CSS Module
- * Styles for the @xyflow/react based canvas visualization
  */
 
 .container {
   position: relative;
-  background: var(--bg-paper);
+  width: 100%;
+  height: 100%;
+  background: var(--bg-app);
   border-radius: var(--radius-md);
   overflow: hidden;
 }
 
-.emptyState {
+.emptyContainer {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
+  background: var(--bg-app);
   color: var(--text-secondary);
+  font-size: var(--font-size-md);
 }
 
-/* Toolbar */
-.toolbar {
+/* ============================================ */
+/* CONTROLS (Top Right)                         */
+/* ============================================ */
+
+.controls {
   position: absolute;
   top: var(--spacing-sm);
-  left: var(--spacing-sm);
-  z-index: 10;
-  background: var(--bg-paper);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-default);
+  right: var(--spacing-sm);
+  z-index: var(--z-sticky);
 }
 
-/* React Flow Container */
-.reactFlow {
-  width: 100%;
-  height: 100%;
-}
+/* ============================================ */
+/* CUSTOM NODE STYLING                          */
+/* ============================================ */
 
-/* Controls positioning */
-.controls {
-  background: var(--bg-paper) !important;
-  border: 1px solid var(--border-default) !important;
-  border-radius: var(--radius-sm) !important;
-  box-shadow: var(--shadow-sm) !important;
-}
-
-.controls button {
-  background: var(--bg-paper) !important;
-  border-bottom: 1px solid var(--border-default) !important;
-}
-
-.controls button:hover {
-  background: var(--bg-hover) !important;
-}
-
-.controls button:last-child {
-  border-bottom: none !important;
-}
-
-/* MiniMap */
-.minimap {
-  background: var(--bg-paper) !important;
-  border: 1px solid var(--border-default) !important;
-  border-radius: var(--radius-sm) !important;
-  box-shadow: var(--shadow-sm) !important;
-}
-
-/* Custom Node */
 .customNode {
+  width: 140px;
+  height: 90px;
   background: var(--bg-paper);
   border: 2px solid var(--border-default);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  min-width: 160px;
-  max-width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs);
   cursor: pointer;
-  transition: box-shadow 0.2s ease, transform 0.1s ease;
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
   position: relative;
 }
 
 .customNode:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.customNodeSelected {
   box-shadow: var(--shadow-md);
-}
-
-.customNode.selected {
-  box-shadow: 0 0 0 2px var(--color-primary-400), var(--shadow-md);
-  transform: scale(1.02);
-}
-
-.customNode.subNode {
-  border-style: dashed;
-  opacity: 0.9;
-}
-
-/* Node Content */
-.nodeContent {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.nodeHeader {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
-
-.statusDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
+  border-width: 3px;
 }
 
 .nodeIcon {
-  display: flex;
-  align-items: center;
-  color: var(--text-secondary);
-  flex-shrink: 0;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
 }
 
-.nodeName {
-  font-size: 12px;
+.nodeLabel {
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
-  white-space: nowrap;
+  text-align: center;
+  line-height: 1.3;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
+  white-space: nowrap;
 }
 
-.nodeFooter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 2px;
-}
-
-.duration {
-  font-size: 10px;
-  color: var(--text-secondary);
-}
-
-.statusIcon {
-  display: flex;
-  align-items: center;
-}
-
-/* Sub-node indicator */
-.subNodeIndicator {
+.nodeStatus {
   position: absolute;
-  bottom: -4px;
-  right: -4px;
-  background: var(--bg-paper);
-  border: 1px solid var(--border-default);
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
+  bottom: var(--spacing-xs);
+  right: var(--spacing-xs);
 }
 
-/* Handles */
-.handle {
-  width: 8px !important;
-  height: 8px !important;
-  background: var(--color-primary-400) !important;
-  border: 2px solid var(--bg-paper) !important;
+/* ============================================ */
+/* SPINNING ANIMATION                           */
+/* ============================================ */
+
+.spinningIcon {
+  animation: spin 1s linear infinite;
 }
 
-.handleTop {
-  width: 8px !important;
-  height: 8px !important;
-  background: var(--color-primary-400) !important;
-  border: 2px solid var(--bg-paper) !important;
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.handleBottom {
-  width: 8px !important;
-  height: 8px !important;
-  background: var(--color-primary-400) !important;
-  border: 2px solid var(--bg-paper) !important;
+/* ============================================ */
+/* XYFLOW OVERRIDES                             */
+/* ============================================ */
+
+.flowControls {
+  background: var(--bg-paper) !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--border-default) !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 
-/* Hide handles by default, show on hover */
-.customNode .handle,
-.customNode .handleTop,
-.customNode .handleBottom {
-  opacity: 0;
-  transition: opacity 0.2s ease;
+.flowControls button {
+  background: var(--bg-paper) !important;
+  border-bottom: 1px solid var(--border-default) !important;
+  color: var(--text-primary) !important;
 }
 
-.customNode:hover .handle,
-.customNode:hover .handleTop,
-.customNode:hover .handleBottom {
-  opacity: 1;
+.flowControls button:hover {
+  background: var(--bg-elevated) !important;
 }
 
-/* Dark mode overrides for React Flow */
-:global(.dark) .reactFlow {
-  --xy-background-color: var(--bg-app);
+.flowControls button:last-child {
+  border-bottom: none !important;
+}
+
+.miniMap {
+  background: var(--bg-paper) !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--border-default) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* ============================================ */
+/* REACT FLOW BASE OVERRIDES                    */
+/* ============================================ */
+
+:global(.react-flow__node) {
+  border-radius: var(--radius-md);
+}
+
+:global(.react-flow__edge-path) {
+  stroke: var(--color-primary-400);
+  stroke-width: 2;
+}
+
+:global(.react-flow__handle) {
+  visibility: hidden;
 }

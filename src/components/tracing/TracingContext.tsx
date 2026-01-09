@@ -1,93 +1,148 @@
 /**
- * TracingContext - Global state for tracing visualization
- * 
- * This context manages the state for the tracing visualization components,
- * including trace/node selection, collapse states, and canvas settings.
+ * TracingContext - Global state management for tracing visualization
  */
 
-import { createContext, useContext, useState, useCallback, useMemo, type FC, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  type FC,
+  type ReactNode,
+} from 'react';
 import type { FullTraceResponse, TraceNodeResponse } from '../../api/types';
-import type { TracingContextValue, CanvasLayoutDirection } from './types';
-import { findNodeById } from './types';
 
-const TracingContext = createContext<TracingContextValue | null>(null);
+// ============================================================================
+// Types
+// ============================================================================
 
-export interface TracingProviderProps {
-  children: ReactNode;
-  /** Traces to display */
+export type LayoutDirection = 'horizontal' | 'vertical';
+
+interface TracingContextState {
+  // Data
   traces: FullTraceResponse[];
-  /** Initial selected trace ID */
-  initialTraceId?: string;
-  /** Initial selected node ID */
-  initialNodeId?: string;
-  /** Loading state */
-  isLoading?: boolean;
-  /** Error message */
-  error?: string | null;
+  selectedTrace: FullTraceResponse | null;
+  selectedNode: TraceNodeResponse | null;
+
+  // UI State
+  layoutDirection: LayoutDirection;
+  hierarchyCollapsed: Set<string>;
+  canvasCollapsed: Set<string>;
+
+  // Actions
+  selectTrace: (traceId: string | null) => void;
+  selectNode: (nodeId: string | null) => void;
+  toggleHierarchyCollapse: (nodeId: string) => void;
+  toggleCanvasCollapse: (nodeId: string) => void;
+  setLayoutDirection: (dir: LayoutDirection) => void;
+  centerOnNode: (nodeId: string) => void;
+  resetCanvasView: () => void;
 }
+
+// ============================================================================
+// Context
+// ============================================================================
+
+const TracingContext = createContext<TracingContextState | null>(null);
+
+// ============================================================================
+// Helper: Find node by ID recursively
+// ============================================================================
+
+const findNodeById = (
+  nodes: TraceNodeResponse[],
+  nodeId: string
+): TraceNodeResponse | null => {
+  for (const node of nodes) {
+    if (node.id === nodeId) {
+      return node;
+    }
+    if (node.nodes && node.nodes.length > 0) {
+      const found = findNodeById(node.nodes, nodeId);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
+// ============================================================================
+// Provider Props
+// ============================================================================
+
+interface TracingProviderProps {
+  children: ReactNode;
+  traces: FullTraceResponse[];
+  initialTraceId?: string;
+}
+
+// ============================================================================
+// Provider Component
+// ============================================================================
 
 export const TracingProvider: FC<TracingProviderProps> = ({
   children,
   traces,
   initialTraceId,
-  initialNodeId,
-  isLoading = false,
-  error = null,
 }) => {
-  // Selected trace
-  const [selectedTraceId, setSelectedTraceId] = useState<string | null>(
-    initialTraceId || (traces.length > 0 ? traces[0].id : null)
+  // Find initial trace
+  const initialTrace = useMemo(() => {
+    if (initialTraceId) {
+      return traces.find((t) => t.id === initialTraceId) || traces[0] || null;
+    }
+    return traces[0] || null;
+  }, [traces, initialTraceId]);
+
+  // State
+  const [selectedTrace, setSelectedTrace] = useState<FullTraceResponse | null>(
+    initialTrace
   );
-
-  // Selected node
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(initialNodeId || null);
-  const [selectionPath, setSelectionPath] = useState<string[]>([]);
-
-  // Collapse states
-  const [hierarchyCollapsed, setHierarchyCollapsed] = useState<Set<string>>(new Set());
+  const [selectedNode, setSelectedNode] = useState<TraceNodeResponse | null>(null);
+  const [layoutDirection, setLayoutDirectionState] =
+    useState<LayoutDirection>('horizontal');
+  const [hierarchyCollapsed, setHierarchyCollapsed] = useState<Set<string>>(
+    new Set()
+  );
   const [canvasCollapsed, setCanvasCollapsed] = useState<Set<string>>(new Set());
 
-  // Canvas settings
-  const [layoutDirection, setLayoutDirection] = useState<CanvasLayoutDirection>('horizontal');
-  const [zoomLevel, setZoomLevel] = useState(1);
+  // Callback for centering on node (will be connected to canvas)
+  const [, setCenterNodeId] = useState<string | null>(null);
 
-  // Get selected trace object
-  const selectedTrace = useMemo(() => {
-    if (!selectedTraceId) return traces[0] || null;
-    return traces.find(t => t.id === selectedTraceId) || traces[0] || null;
-  }, [traces, selectedTraceId]);
+  // Actions
+  const selectTrace = useCallback(
+    (traceId: string | null) => {
+      if (traceId === null) {
+        setSelectedTrace(null);
+        setSelectedNode(null);
+        return;
+      }
+      const trace = traces.find((t) => t.id === traceId);
+      if (trace) {
+        setSelectedTrace(trace);
+        setSelectedNode(null); // Reset node selection when changing trace
+      }
+    },
+    [traces]
+  );
 
-  // Get selected node object
-  const selectedNode = useMemo((): TraceNodeResponse | null => {
-    if (!selectedTrace || !selectedNodeId) return null;
-    const result = findNodeById(selectedTrace.nodes, selectedNodeId);
-    return result?.node || null;
-  }, [selectedTrace, selectedNodeId]);
+  const selectNode = useCallback(
+    (nodeId: string | null) => {
+      if (nodeId === null) {
+        setSelectedNode(null);
+        return;
+      }
+      if (!selectedTrace) return;
 
-  // Select a trace
-  const selectTrace = useCallback((traceId: string) => {
-    setSelectedTraceId(traceId);
-    setSelectedNodeId(null);
-    setSelectionPath([]);
-  }, []);
+      const node = findNodeById(selectedTrace.nodes, nodeId);
+      if (node) {
+        setSelectedNode(node);
+      }
+    },
+    [selectedTrace]
+  );
 
-  // Select a node
-  const selectNode = useCallback((nodeId: string | null, path?: string[]) => {
-    setSelectedNodeId(nodeId);
-    if (path) {
-      setSelectionPath(path);
-    } else if (nodeId && selectedTrace) {
-      // Calculate path if not provided
-      const result = findNodeById(selectedTrace.nodes, nodeId);
-      setSelectionPath(result?.path || []);
-    } else {
-      setSelectionPath([]);
-    }
-  }, [selectedTrace]);
-
-  // Toggle hierarchy collapse
   const toggleHierarchyCollapse = useCallback((nodeId: string) => {
-    setHierarchyCollapsed(prev => {
+    setHierarchyCollapsed((prev) => {
       const next = new Set(prev);
       if (next.has(nodeId)) {
         next.delete(nodeId);
@@ -98,9 +153,8 @@ export const TracingProvider: FC<TracingProviderProps> = ({
     });
   }, []);
 
-  // Toggle canvas collapse
   const toggleCanvasCollapse = useCallback((nodeId: string) => {
-    setCanvasCollapsed(prev => {
+    setCanvasCollapsed((prev) => {
       const next = new Set(prev);
       if (next.has(nodeId)) {
         next.delete(nodeId);
@@ -111,56 +165,65 @@ export const TracingProvider: FC<TracingProviderProps> = ({
     });
   }, []);
 
-  // Reset canvas view
-  const resetCanvasView = useCallback(() => {
-    setZoomLevel(1);
-    setCanvasCollapsed(new Set());
+  const setLayoutDirection = useCallback((dir: LayoutDirection) => {
+    setLayoutDirectionState(dir);
   }, []);
 
-  const contextValue: TracingContextValue = useMemo(() => ({
-    traces,
-    selectedTrace,
-    selectedNode,
-    selectionPath,
-    selectTrace,
-    selectNode,
-    hierarchyCollapsed,
-    toggleHierarchyCollapse,
-    canvasCollapsed,
-    toggleCanvasCollapse,
-    layoutDirection,
-    setLayoutDirection,
-    zoomLevel,
-    setZoomLevel,
-    resetCanvasView,
-    isLoading,
-    error,
-  }), [
-    traces,
-    selectedTrace,
-    selectedNode,
-    selectionPath,
-    selectTrace,
-    selectNode,
-    hierarchyCollapsed,
-    toggleHierarchyCollapse,
-    canvasCollapsed,
-    toggleCanvasCollapse,
-    layoutDirection,
-    zoomLevel,
-    resetCanvasView,
-    isLoading,
-    error,
-  ]);
+  const centerOnNode = useCallback((nodeId: string) => {
+    setCenterNodeId(nodeId);
+    // This will be consumed by the canvas component via a separate mechanism
+    // For now, we just update state - the canvas will listen to selectedNode
+  }, []);
+
+  const resetCanvasView = useCallback(() => {
+    setCanvasCollapsed(new Set());
+    setCenterNodeId(null);
+  }, []);
+
+  // Context value
+  const value = useMemo<TracingContextState>(
+    () => ({
+      traces,
+      selectedTrace,
+      selectedNode,
+      layoutDirection,
+      hierarchyCollapsed,
+      canvasCollapsed,
+      selectTrace,
+      selectNode,
+      toggleHierarchyCollapse,
+      toggleCanvasCollapse,
+      setLayoutDirection,
+      centerOnNode,
+      resetCanvasView,
+    }),
+    [
+      traces,
+      selectedTrace,
+      selectedNode,
+      layoutDirection,
+      hierarchyCollapsed,
+      canvasCollapsed,
+      selectTrace,
+      selectNode,
+      toggleHierarchyCollapse,
+      toggleCanvasCollapse,
+      setLayoutDirection,
+      centerOnNode,
+      resetCanvasView,
+    ]
+  );
 
   return (
-    <TracingContext.Provider value={contextValue}>
-      {children}
-    </TracingContext.Provider>
+    <TracingContext.Provider value={value}>{children}</TracingContext.Provider>
   );
 };
 
-export const useTracing = (): TracingContextValue => {
+// ============================================================================
+// Hook
+// ============================================================================
+
+export const useTracing = (): TracingContextState => {
   const context = useContext(TracingContext);
   if (!context) {
     throw new Error('useTracing must be used within a TracingProvider');

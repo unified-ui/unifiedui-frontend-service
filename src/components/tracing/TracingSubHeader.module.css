@@ -1,0 +1,52 @@
+/**
+ * TracingSubHeader - CSS Module
+ */
+
+.container {
+  position: absolute;
+  top: var(--spacing-sm);
+  left: var(--spacing-sm);
+  z-index: var(--z-sticky);
+  background: var(--bg-paper);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-default);
+}
+
+.traceId {
+  font-family: var(--font-family-mono);
+  color: var(--text-secondary);
+}
+
+.nodeName {
+  color: var(--text-primary);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.time {
+  color: var(--text-secondary);
+  font-family: var(--font-family-mono);
+}
+
+.divider {
+  width: 1px;
+  height: 16px;
+  background: var(--border-default);
+}
+
+.spinningIcon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

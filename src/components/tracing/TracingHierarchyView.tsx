@@ -1,336 +1,364 @@
 /**
- * TracingHierarchyView - Hierarchical tree view of trace nodes
+ * TracingHierarchyView - Tree Sidebar für Navigation
  * 
- * Displays a collapsible tree structure of traces and their nodes.
- * Supports selection and navigation.
+ * Features:
+ * - Baum-Struktur mit curved Verbindungslinien (VSCode-Style)
+ * - Type Badge + Name + Status Icon
+ * - Expand/Collapse für Nodes mit Kindern
+ * - Klick = Selektion → Canvas + DataSection update
  */
 
-import { type FC, useCallback } from 'react';
-import { Box, Text, Badge, ActionIcon, Stack, Group, ScrollArea, Collapse, Tooltip } from '@mantine/core';
+import { useCallback, useMemo } from 'react';
+import type { FC } from 'react';
+import { Text, ScrollArea, Badge, UnstyledButton } from '@mantine/core';
 import {
   IconChevronDown,
   IconChevronRight,
-  IconCircleCheck,
-  IconCircleX,
+  // Status Icons
+  IconCheck,
+  IconX,
+  IconLoader2,
   IconClock,
-  IconRobot,
-  IconTool,
-  IconBrain,
-  IconLink,
-  IconSearch,
-  IconGitBranch,
-  IconCode,
-  IconWorld,
-  IconTerminal,
-  IconGitMerge,
-  IconRepeat,
-  IconPuzzle,
-  IconCircle,
-  IconMessage,
+  IconMinus,
 } from '@tabler/icons-react';
-import type { FullTraceResponse, TraceNodeResponse, TraceNodeStatus } from '../../api/types';
 import { useTracing } from './TracingContext';
-import type { TracingHierarchyViewProps } from './types';
+import type { TraceNodeResponse, FullTraceResponse } from '../../api/types';
 import classes from './TracingHierarchyView.module.css';
 
-// ========== Icon Mapping ==========
+// ============================================================================
+// HELPER: Get Type Badge Color
+// ============================================================================
 
-const getNodeIcon = (type: string, size = 14): React.ReactNode => {
-  const iconProps = { size, stroke: 1.5 };
-  const iconMap: Record<string, React.ReactNode> = {
-    agent: <IconRobot {...iconProps} />,
-    tool: <IconTool {...iconProps} />,
-    llm: <IconBrain {...iconProps} />,
-    chain: <IconLink {...iconProps} />,
-    retriever: <IconSearch {...iconProps} />,
-    workflow: <IconGitBranch {...iconProps} />,
-    function: <IconCode {...iconProps} />,
-    http: <IconWorld {...iconProps} />,
-    code: <IconTerminal {...iconProps} />,
-    conditional: <IconGitMerge {...iconProps} />,
-    loop: <IconRepeat {...iconProps} />,
-    custom: <IconPuzzle {...iconProps} />,
-    conversation: <IconMessage {...iconProps} />,
-    autonomous_agent: <IconRobot {...iconProps} />,
-  };
-  return iconMap[type.toLowerCase()] || <IconCircle {...iconProps} />;
+const getTypeBadgeColor = (type: string): string => {
+  switch (type?.toLowerCase()) {
+    case 'llm':
+      return 'blue';
+    case 'tool':
+      return 'orange';
+    case 'agent':
+      return 'grape';
+    case 'workflow':
+      return 'teal';
+    case 'chain':
+      return 'indigo';
+    case 'http':
+      return 'cyan';
+    case 'code':
+    case 'function':
+      return 'pink';
+    case 'conditional':
+      return 'yellow';
+    case 'loop':
+      return 'lime';
+    case 'conversation':
+      return 'blue';
+    case 'autonomous_agent':
+      return 'grape';
+    default:
+      return 'gray';
+  }
 };
 
-const getStatusIcon = (status: TraceNodeStatus | string | undefined) => {
-  if (!status) return null;
-  const statusLower = status.toLowerCase();
-  if (statusLower === 'completed' || statusLower === 'success') {
-    return <IconCircleCheck size={12} style={{ color: 'var(--color-success-500)' }} />;
+// ============================================================================
+// HELPER: Get Status Icon
+// ============================================================================
+
+const getStatusIcon = (status: string, size = 14) => {
+  switch (status?.toLowerCase()) {
+    case 'completed':
+      return <IconCheck size={size} style={{ color: 'var(--color-success-500)' }} />;
+    case 'failed':
+      return <IconX size={size} style={{ color: 'var(--color-error-500)' }} />;
+    case 'running':
+      return <IconLoader2 size={size} className={classes.spinningIcon} style={{ color: 'var(--color-warning-500)' }} />;
+    case 'pending':
+      return <IconClock size={size} style={{ color: 'var(--color-gray-400)' }} />;
+    case 'skipped':
+    case 'cancelled':
+      return <IconMinus size={size} style={{ color: 'var(--color-gray-500)' }} />;
+    default:
+      return <IconCheck size={size} style={{ color: 'var(--color-gray-400)' }} />;
   }
-  if (statusLower === 'failed' || statusLower === 'error' || statusLower === 'cancelled') {
-    return <IconCircleX size={12} style={{ color: 'var(--color-error-500)' }} />;
-  }
-  if (statusLower === 'running' || statusLower === 'pending') {
-    return <IconClock size={12} style={{ color: 'var(--color-warning-500)' }} />;
-  }
-  return null;
 };
 
-// ========== HierarchyNode Component ==========
+// ============================================================================
+// TREE ITEM COMPONENT
+// ============================================================================
 
-interface HierarchyNodeProps {
+interface TreeItemProps {
   node: TraceNodeResponse;
   depth: number;
-  traceId: string;
   isSelected: boolean;
   isExpanded: boolean;
-  onToggle: () => void;
-  onSelect: () => void;
+  onSelect: (nodeId: string) => void;
+  onToggle: (nodeId: string) => void;
 }
 
-const HierarchyNode: FC<HierarchyNodeProps> = ({
+const TreeItem: FC<TreeItemProps> = ({
   node,
   depth,
-  traceId,
   isSelected,
   isExpanded,
-  onToggle,
   onSelect,
+  onToggle,
 }) => {
   const hasChildren = node.nodes && node.nodes.length > 0;
 
-  const handleNodeClick = useCallback(() => {
-    onSelect();
-  }, [onSelect]);
+  const handleClick = useCallback(() => {
+    onSelect(node.id);
+  }, [node.id, onSelect]);
 
-  const handleToggleClick = useCallback((e: React.MouseEvent) => {
+  const handleToggle = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    onToggle();
-  }, [onToggle]);
+    onToggle(node.id);
+  }, [node.id, onToggle]);
+
+  const truncatedName = useMemo(() => {
+    if (node.name.length > 25) {
+      return `${node.name.slice(0, 22)}...`;
+    }
+    return node.name;
+  }, [node.name]);
 
   return (
-    <Box>
-      <Group
-        gap="xs"
-        className={`${classes.nodeItem} ${isSelected ? classes.selected : ''}`}
-        style={{ paddingLeft: `${depth * 16 + 8}px` }}
-        onClick={handleNodeClick}
+    <>
+      {/* Tree Item Row */}
+      <UnstyledButton
+        className={`${classes.treeItem} ${isSelected ? classes.treeItemSelected : ''}`}
+        onClick={handleClick}
+        style={{ paddingLeft: `${depth * 20 + 8}px` }}
       >
-        {/* Expand/Collapse Toggle */}
-        <ActionIcon
-          size="xs"
-          variant="subtle"
-          color="gray"
-          onClick={handleToggleClick}
-          style={{ visibility: hasChildren ? 'visible' : 'hidden' }}
-        >
-          {isExpanded ? <IconChevronDown size={12} /> : <IconChevronRight size={12} />}
-        </ActionIcon>
+        {/* Expand/Collapse Icon */}
+        {hasChildren ? (
+          <span className={classes.expandIcon} onClick={handleToggle}>
+            {isExpanded ? (
+              <IconChevronDown size={14} />
+            ) : (
+              <IconChevronRight size={14} />
+            )}
+          </span>
+        ) : (
+          <span className={classes.expandIconPlaceholder} />
+        )}
 
-        {/* Type Badge with Icon */}
+        {/* Type Badge */}
         <Badge
           size="xs"
           variant="light"
-          color="gray"
-          leftSection={getNodeIcon(node.type, 10)}
+          color={getTypeBadgeColor(node.type)}
           className={classes.typeBadge}
         >
           {node.type}
         </Badge>
 
-        {/* Node Name */}
-        <Tooltip label={node.name} disabled={node.name.length < 25}>
-          <Text size="xs" className={classes.nodeName} lineClamp={1}>
-            {node.name}
-          </Text>
-        </Tooltip>
+        {/* Name */}
+        <Text size="xs" className={classes.nodeName} title={node.name}>
+          {truncatedName}
+        </Text>
 
         {/* Status Icon */}
-        {getStatusIcon(node.status)}
-      </Group>
+        <span className={classes.statusIcon}>
+          {getStatusIcon(node.status)}
+        </span>
+      </UnstyledButton>
 
-      {/* Children */}
-      {hasChildren && (
-        <Collapse in={isExpanded}>
+      {/* Children (wenn expanded) */}
+      {hasChildren && isExpanded && (
+        <div className={classes.childrenContainer}>
+          {/* Vertikale Linie */}
+          <div
+            className={classes.treeLine}
+            style={{ left: `${depth * 20 + 15}px` }}
+          />
           {node.nodes!.map((childNode) => (
-            <HierarchyNodeWrapper
+            <TreeItemWrapper
               key={childNode.id}
               node={childNode}
               depth={depth + 1}
-              traceId={traceId}
             />
           ))}
-        </Collapse>
+        </div>
       )}
-    </Box>
+    </>
   );
 };
 
-// Wrapper component to connect to context
-interface HierarchyNodeWrapperProps {
+// ============================================================================
+// TREE ITEM WRAPPER (Connected to Context)
+// ============================================================================
+
+interface TreeItemWrapperProps {
   node: TraceNodeResponse;
   depth: number;
-  traceId: string;
 }
 
-const HierarchyNodeWrapper: FC<HierarchyNodeWrapperProps> = ({ node, depth, traceId }) => {
-  const { selectedNode, selectNode, hierarchyCollapsed, toggleHierarchyCollapse } = useTracing();
+const TreeItemWrapper: FC<TreeItemWrapperProps> = ({ node, depth }) => {
+  const {
+    selectedNode,
+    hierarchyCollapsed,
+    selectNode,
+    toggleHierarchyCollapse,
+  } = useTracing();
 
   const isSelected = selectedNode?.id === node.id;
   const isExpanded = !hierarchyCollapsed.has(node.id);
 
-  const handleSelect = useCallback(() => {
-    selectNode(node.id);
-  }, [selectNode, node.id]);
-
-  const handleToggle = useCallback(() => {
-    toggleHierarchyCollapse(node.id);
-  }, [toggleHierarchyCollapse, node.id]);
-
   return (
-    <HierarchyNode
+    <TreeItem
       node={node}
       depth={depth}
-      traceId={traceId}
       isSelected={isSelected}
       isExpanded={isExpanded}
-      onToggle={handleToggle}
-      onSelect={handleSelect}
+      onSelect={selectNode}
+      onToggle={toggleHierarchyCollapse}
     />
   );
 };
 
-// ========== TraceRoot Component ==========
+// ============================================================================
+// TRACE ROOT ITEM
+// ============================================================================
 
-interface TraceRootProps {
+interface TraceRootItemProps {
   trace: FullTraceResponse;
   isSelected: boolean;
   isExpanded: boolean;
-  onToggle: () => void;
   onSelect: () => void;
+  onToggle: () => void;
 }
 
-const TraceRoot: FC<TraceRootProps> = ({
+const TraceRootItem: FC<TraceRootItemProps> = ({
   trace,
   isSelected,
   isExpanded,
-  onToggle,
   onSelect,
+  onToggle,
 }) => {
-  const hasChildren = trace.nodes && trace.nodes.length > 0;
+  const hasNodes = trace.nodes && trace.nodes.length > 0;
 
-  const handleClick = useCallback(() => {
-    onSelect();
-  }, [onSelect]);
-
-  const handleToggleClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    onToggle();
-  }, [onToggle]);
+  const truncatedName = useMemo(() => {
+    const name = trace.referenceName || 'Trace';
+    if (name.length > 22) {
+      return `${name.slice(0, 19)}...`;
+    }
+    return name;
+  }, [trace.referenceName]);
 
   return (
-    <Box>
-      <Group
-        gap="xs"
-        className={`${classes.nodeItem} ${classes.rootItem} ${isSelected ? classes.selected : ''}`}
-        onClick={handleClick}
+    <>
+      {/* Root Item Row */}
+      <UnstyledButton
+        className={`${classes.treeItem} ${classes.traceRoot} ${isSelected ? classes.treeItemSelected : ''}`}
+        onClick={onSelect}
       >
-        {/* Expand/Collapse Toggle */}
-        <ActionIcon
-          size="xs"
-          variant="subtle"
-          color="gray"
-          onClick={handleToggleClick}
-          style={{ visibility: hasChildren ? 'visible' : 'hidden' }}
-        >
-          {isExpanded ? <IconChevronDown size={12} /> : <IconChevronRight size={12} />}
-        </ActionIcon>
+        {/* Expand/Collapse Icon */}
+        {hasNodes ? (
+          <span className={classes.expandIcon} onClick={(e) => { e.stopPropagation(); onToggle(); }}>
+            {isExpanded ? (
+              <IconChevronDown size={14} />
+            ) : (
+              <IconChevronRight size={14} />
+            )}
+          </span>
+        ) : (
+          <span className={classes.expandIconPlaceholder} />
+        )}
 
         {/* Context Type Badge */}
         <Badge
           size="xs"
-          variant="filled"
-          color={trace.contextType === 'conversation' ? 'blue' : 'grape'}
-          leftSection={getNodeIcon(trace.contextType, 10)}
+          variant="light"
+          color={getTypeBadgeColor(trace.contextType || '')}
+          className={classes.typeBadge}
         >
-          {trace.contextType === 'conversation' ? 'Conversation' : 'Autonomous Agent'}
+          {trace.contextType === 'autonomous_agent' ? 'agent' : trace.contextType}
         </Badge>
 
-        {/* Reference Name */}
-        <Tooltip label={trace.referenceName || 'Trace'} disabled={(trace.referenceName || 'Trace').length < 20}>
-          <Text size="xs" className={classes.nodeName} fw={500} lineClamp={1}>
-            {trace.referenceName || 'Trace'}
-          </Text>
-        </Tooltip>
-      </Group>
+        {/* Name */}
+        <Text size="xs" className={classes.nodeName} title={trace.referenceName || 'Trace'}>
+          {truncatedName}
+        </Text>
 
-      {/* Nodes */}
-      {hasChildren && (
-        <Collapse in={isExpanded}>
+        {/* Status based on first node or default */}
+        <span className={classes.statusIcon}>
+          {getStatusIcon(trace.nodes?.[0]?.status || 'completed')}
+        </span>
+      </UnstyledButton>
+
+      {/* Nodes (wenn expanded) */}
+      {hasNodes && isExpanded && (
+        <div className={classes.childrenContainer}>
+          {/* Vertikale Linie */}
+          <div className={classes.treeLine} style={{ left: '15px' }} />
           {trace.nodes.map((node) => (
-            <HierarchyNodeWrapper
+            <TreeItemWrapper
               key={node.id}
               node={node}
               depth={1}
-              traceId={trace.id}
             />
           ))}
-        </Collapse>
+        </div>
       )}
-    </Box>
+    </>
   );
 };
 
-// ========== Main Component ==========
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 
-export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
-  height = '100%',
-  onNodeSelect,
-}) => {
+export const TracingHierarchyView: FC = () => {
   const {
     traces,
     selectedTrace,
     selectedNode,
+    hierarchyCollapsed,
     selectTrace,
     selectNode,
-    hierarchyCollapsed,
     toggleHierarchyCollapse,
   } = useTracing();
 
-  // Check if root (trace) is selected (no node selected)
-  const isRootSelected = selectedNode === null;
-
-  // Toggle for trace root
-  const handleRootToggle = useCallback((traceId: string) => {
-    toggleHierarchyCollapse(`root-${traceId}`);
-  }, [toggleHierarchyCollapse]);
-
-  // Select root (clear node selection)
-  const handleRootSelect = useCallback((traceId: string) => {
-    selectTrace(traceId);
-    selectNode(null);
-    if (onNodeSelect && selectedTrace) {
-      onNodeSelect(null, selectedTrace);
-    }
-  }, [selectTrace, selectNode, onNodeSelect, selectedTrace]);
+  // Wenn keine Traces, leeren State zeigen
+  if (!traces || traces.length === 0) {
+    return (
+      <div className={classes.emptyContainer}>
+        <Text size="sm" c="dimmed">Keine Traces verfügbar</Text>
+      </div>
+    );
+  }
 
   return (
-    <Box className={classes.container} style={{ height }}>
-      <Box className={classes.header}>
-        <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-          Hierarchy
-        </Text>
-      </Box>
-      <ScrollArea className={classes.scrollArea}>
-        <Stack gap={0}>
-          {traces.map((trace) => (
-            <TraceRoot
-              key={trace.id}
-              trace={trace}
-              isSelected={selectedTrace?.id === trace.id && isRootSelected}
-              isExpanded={!hierarchyCollapsed.has(`root-${trace.id}`)}
-              onToggle={() => handleRootToggle(trace.id)}
-              onSelect={() => handleRootSelect(trace.id)}
-            />
-          ))}
-        </Stack>
+    <div className={classes.container}>
+      <div className={classes.header}>
+        <Text size="sm" fw={600}>Hierarchie</Text>
+      </div>
+      <ScrollArea className={classes.scrollArea} type="auto">
+        <div className={classes.treeContainer}>
+          {traces.map((trace) => {
+            // Root ist selektiert wenn selectedNode null ist und dieser Trace selektiert
+            const isRootSelected = selectedTrace?.id === trace.id && selectedNode === null;
+            // Root ist expanded wenn trace.id NICHT in hierarchyCollapsed ist
+            // Wir verwenden hier einen speziellen Key für die Trace-Root
+            const traceRootKey = `trace-root-${trace.id}`;
+            const isExpanded = !hierarchyCollapsed.has(traceRootKey);
+
+            return (
+              <TraceRootItem
+                key={trace.id}
+                trace={trace}
+                isSelected={isRootSelected}
+                isExpanded={isExpanded}
+                onSelect={() => {
+                  selectTrace(trace.id);
+                  selectNode(null);
+                }}
+                onToggle={() => toggleHierarchyCollapse(traceRootKey)}
+              />
+            );
+          })}
+        </div>
       </ScrollArea>
-    </Box>
+    </div>
   );
 };
 

@@ -1,16 +1,16 @@
 /**
- * TracingCanvasView - @xyflow/react based canvas visualization
+ * TracingCanvasView - @xyflow/react Canvas für Trace-Visualisierung
  * 
- * Displays trace nodes as a workflow diagram using React Flow.
  * Features:
- * - Automatic layout with dagre
- * - Custom node components with status indicators
- * - Arrows between nodes (sequential + hierarchical)
- * - Pan/zoom controls
- * - Layout direction toggle (horizontal/vertical)
+ * - Nodes mit Icon, Name, Status
+ * - Verbindungen mit smoothstep Edges
+ * - Dagre Layout für automatische Positionierung
+ * - Zoom, Pan, Reset
+ * - Horizontal/Vertical Layout Toggle
  */
 
-import { type FC, useMemo, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import type { FC } from 'react';
 import {
   ReactFlow,
   Background,
@@ -19,450 +19,442 @@ import {
   useNodesState,
   useEdgesState,
   MarkerType,
-  type Node,
-  type Edge,
-  type NodeTypes,
-  Handle,
   Position,
-  useReactFlow,
-  ReactFlowProvider,
+  ConnectionLineType,
 } from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
-import Dagre from '@dagrejs/dagre';
-import { Box, Group, ActionIcon, Tooltip, Text } from '@mantine/core';
+import type { Node, Edge, ReactFlowInstance } from '@xyflow/react';
+import dagre from '@dagrejs/dagre';
+import { ActionIcon, Group, Tooltip } from '@mantine/core';
 import {
-  IconRobot,
-  IconTool,
+  IconArrowsHorizontal,
+  IconArrowsVertical,
+  IconFocusCentered,
+  // Node Type Icons
   IconBrain,
+  IconTool,
+  IconRobot,
   IconLink,
-  IconWorldWww,
   IconCode,
-  IconForms,
-  IconChartDots,
+  IconGitBranch,
+  IconRepeat,
+  IconMessage,
+  IconCloud,
+  IconSettings,
+  // Status Icons
   IconCheck,
   IconX,
+  IconLoader2,
   IconClock,
-  IconPlayerSkipForward,
-  IconBan,
-  IconLayoutRows,
-  IconLayoutColumns,
-  IconZoomReset,
+  IconMinus,
 } from '@tabler/icons-react';
-import type { TraceNodeResponse, TraceNodeStatus, TraceNodeType } from '../../api/types';
 import { useTracing } from './TracingContext';
+import { TracingSubHeader } from './TracingSubHeader';
+import type { TraceNodeResponse, FullTraceResponse } from '../../api/types';
 import classes from './TracingCanvasView.module.css';
+import '@xyflow/react/dist/style.css';
 
 // ============================================================================
-// Types
+// CONSTANTS
 // ============================================================================
 
-// Must satisfy Record<string, unknown> for @xyflow/react
-interface CanvasNodeData extends Record<string, unknown> {
-  id: string;
-  name: string;
-  type: TraceNodeType | string;
-  status: TraceNodeStatus | string;
-  duration?: number;
-  hasSubNodes: boolean;
-  isSubNode: boolean;
-  parentId?: string;
-}
+const NODE_WIDTH = 140;
+const NODE_HEIGHT = 90;
 
 // ============================================================================
-// Icon and Status Helpers
+// HELPER: Get Node Type Icon
 // ============================================================================
 
-const getNodeTypeIcon = (type: TraceNodeType | string): React.ReactNode => {
-  const iconProps = { size: 14 };
-  const iconMap: Record<string, React.ReactNode> = {
-    agent: <IconRobot {...iconProps} />,
-    tool: <IconTool {...iconProps} />,
-    llm: <IconBrain {...iconProps} />,
-    chain: <IconLink {...iconProps} />,
-    workflow: <IconChartDots {...iconProps} />,
-    http: <IconWorldWww {...iconProps} />,
-    code: <IconCode {...iconProps} />,
-    custom: <IconForms {...iconProps} />,
-    retriever: <IconChartDots {...iconProps} />,
-    function: <IconCode {...iconProps} />,
-    conditional: <IconLink {...iconProps} />,
-    loop: <IconLink {...iconProps} />,
-  };
-  return iconMap[type] || <IconForms {...iconProps} />;
-};
-
-const getStatusColor = (status: TraceNodeStatus | string): string => {
-  const colors: Record<string, string> = {
-    completed: '#4caf50',
-    failed: '#f44336',
-    running: '#ff9800',
-    pending: '#9e9e9e',
-    skipped: '#757575',
-    cancelled: '#616161',
-  };
-  return colors[status] || '#9e9e9e';
-};
-
-const getStatusIcon = (status: TraceNodeStatus | string): React.ReactNode => {
-  const iconProps = { size: 12 };
-  switch (status) {
-    case 'completed':
-      return <IconCheck {...iconProps} color="#4caf50" />;
-    case 'failed':
-      return <IconX {...iconProps} color="#f44336" />;
-    case 'running':
-      return <IconClock {...iconProps} color="#ff9800" />;
-    case 'skipped':
-      return <IconPlayerSkipForward {...iconProps} color="#757575" />;
-    case 'cancelled':
-      return <IconBan {...iconProps} color="#616161" />;
+const getTypeIcon = (type: string, size = 24) => {
+  const iconProps = { size };
+  switch (type?.toLowerCase()) {
+    case 'llm':
+      return <IconBrain {...iconProps} />;
+    case 'tool':
+      return <IconTool {...iconProps} />;
+    case 'agent':
+      return <IconRobot {...iconProps} />;
+    case 'chain':
+      return <IconLink {...iconProps} />;
+    case 'code':
+    case 'function':
+      return <IconCode {...iconProps} />;
+    case 'workflow':
+      return <IconSettings {...iconProps} />;
+    case 'conditional':
+      return <IconGitBranch {...iconProps} />;
+    case 'loop':
+      return <IconRepeat {...iconProps} />;
+    case 'http':
+      return <IconCloud {...iconProps} />;
+    case 'message':
+      return <IconMessage {...iconProps} />;
     default:
-      return <IconClock {...iconProps} color="#9e9e9e" />;
+      return <IconSettings {...iconProps} />;
   }
 };
 
 // ============================================================================
-// Custom Node Component
+// HELPER: Get Status Icon
 // ============================================================================
 
-interface CustomNodeProps {
-  data: CanvasNodeData;
-  selected: boolean;
+const getStatusIcon = (status: string, size = 14) => {
+  switch (status?.toLowerCase()) {
+    case 'completed':
+      return <IconCheck size={size} style={{ color: 'var(--color-success-500)' }} />;
+    case 'failed':
+      return <IconX size={size} style={{ color: 'var(--color-error-500)' }} />;
+    case 'running':
+      return <IconLoader2 size={size} className={classes.spinningIcon} style={{ color: 'var(--color-warning-500)' }} />;
+    case 'pending':
+      return <IconClock size={size} style={{ color: 'var(--color-gray-400)' }} />;
+    case 'skipped':
+    case 'cancelled':
+      return <IconMinus size={size} style={{ color: 'var(--color-gray-500)' }} />;
+    default:
+      return <IconCheck size={size} style={{ color: 'var(--color-gray-400)' }} />;
+  }
+};
+
+// ============================================================================
+// HELPER: Get Border Color by Status
+// ============================================================================
+
+const getStatusBorderColor = (status: string): string => {
+  switch (status?.toLowerCase()) {
+    case 'completed':
+      return 'var(--color-success-500)';
+    case 'failed':
+      return 'var(--color-error-500)';
+    case 'running':
+      return 'var(--color-warning-500)';
+    case 'pending':
+      return 'var(--color-gray-400)';
+    case 'skipped':
+    case 'cancelled':
+      return 'var(--color-gray-500)';
+    default:
+      return 'var(--color-gray-300)';
+  }
+};
+
+// ============================================================================
+// CUSTOM NODE COMPONENT
+// ============================================================================
+
+interface TraceNodeData {
+  label: string;
+  type: string;
+  status: string;
+  isFirst?: boolean;
+  isLast?: boolean;
+  isSelected?: boolean;
+  onClick?: () => void;
 }
 
-const CustomNode: FC<CustomNodeProps> = ({ data, selected }) => {
-  const statusColor = getStatusColor(data.status);
-  
+const TraceCustomNode: FC<{ data: TraceNodeData }> = ({ data }) => {
+  const { label, type, status, isFirst, isLast, isSelected, onClick } = data;
+
+  // Determine border radius
+  let borderRadius = 'var(--radius-md)';
+  if (isFirst && isLast) {
+    borderRadius = 'var(--radius-xl)';
+  } else if (isFirst) {
+    borderRadius = 'var(--radius-xl) var(--radius-md) var(--radius-md) var(--radius-xl)';
+  } else if (isLast) {
+    borderRadius = 'var(--radius-md) var(--radius-xl) var(--radius-xl) var(--radius-md)';
+  }
+
   return (
     <div
-      className={`${classes.customNode} ${selected ? classes.selected : ''} ${data.isSubNode ? classes.subNode : ''}`}
-      style={{ borderColor: statusColor }}
+      className={`${classes.customNode} ${isSelected ? classes.customNodeSelected : ''}`}
+      style={{
+        borderRadius,
+        borderColor: getStatusBorderColor(status),
+      }}
+      onClick={onClick}
     >
-      {/* Handles for connections */}
-      <Handle type="target" position={Position.Left} className={classes.handle} />
-      <Handle type="source" position={Position.Right} className={classes.handle} />
-      <Handle type="target" position={Position.Top} className={classes.handleTop} />
-      <Handle type="source" position={Position.Bottom} className={classes.handleBottom} />
-      
-      <div className={classes.nodeContent}>
-        <div className={classes.nodeHeader}>
-          <div
-            className={classes.statusDot}
-            style={{ backgroundColor: statusColor }}
-          />
-          <span className={classes.nodeIcon}>{getNodeTypeIcon(data.type)}</span>
-          <span className={classes.nodeName}>{data.name}</span>
-        </div>
-        <div className={classes.nodeFooter}>
-          {data.duration !== undefined && (
-            <span className={classes.duration}>{data.duration.toFixed(2)}s</span>
-          )}
-          <span className={classes.statusIcon}>{getStatusIcon(data.status)}</span>
-        </div>
+      <div className={classes.nodeIcon}>
+        {getTypeIcon(type, 28)}
       </div>
-      
-      {data.hasSubNodes && (
-        <div className={classes.subNodeIndicator}>
-          <IconChartDots size={10} />
-        </div>
-      )}
+      <div className={classes.nodeLabel} title={label}>
+        {label.length > 18 ? `${label.slice(0, 16)}...` : label}
+      </div>
+      <div className={classes.nodeStatus}>
+        {getStatusIcon(status, 16)}
+      </div>
     </div>
   );
 };
 
-const nodeTypes: NodeTypes = {
-  custom: CustomNode,
+const nodeTypes = {
+  traceNode: TraceCustomNode,
 };
 
 // ============================================================================
-// Dagre Layout
+// DAGRE LAYOUT
 // ============================================================================
 
-const getLayoutedElements = (
-  nodes: Node[],
-  edges: Edge[],
-  direction: 'LR' | 'TB'
-): { nodes: Node[]; edges: Edge[] } => {
-  const dagreGraph = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
-  
-  dagreGraph.setGraph({
-    rankdir: direction,
-    nodesep: 60,
-    ranksep: 80,
-    edgesep: 30,
-    marginx: 20,
-    marginy: 20,
-  });
-
-  nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: 180, height: 50 });
-  });
-
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
-  });
-
-  Dagre.layout(dagreGraph);
-
-  const layoutedNodes = nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id);
-    return {
-      ...node,
-      position: {
-        x: nodeWithPosition.x - 90, // Center the node
-        y: nodeWithPosition.y - 25,
-      },
-    };
-  });
-
-  return { nodes: layoutedNodes, edges };
-};
-
-// ============================================================================
-// Transform Trace Data to React Flow
-// ============================================================================
-
-const transformTraceToFlow = (
-  traceNodes: TraceNodeResponse[],
-  collapsedNodes: Set<string>
-): { nodes: Node<CanvasNodeData>[]; edges: Edge[] } => {
-  const flowNodes: Node<CanvasNodeData>[] = [];
-  const flowEdges: Edge[] = [];
-
-  const processNodes = (
-    nodes: TraceNodeResponse[],
-    parentId?: string,
-    isSubNode = false
-  ) => {
-    nodes.forEach((node, index) => {
-      const hasSubNodes = node.nodes && node.nodes.length > 0;
-      const isCollapsed = collapsedNodes.has(node.id);
-
-      // Create flow node
-      flowNodes.push({
-        id: node.id,
-        type: 'custom',
-        position: { x: 0, y: 0 }, // Will be calculated by dagre
-        data: {
-          id: node.id,
-          name: node.name,
-          type: node.type,
-          status: node.status,
-          duration: node.duration,
-          hasSubNodes: hasSubNodes ?? false,
-          isSubNode,
-          parentId,
-        },
-      });
-
-      // Create edge from previous sibling (sequential connection)
-      if (index > 0 && !isSubNode) {
-        const prevNode = nodes[index - 1];
-        flowEdges.push({
-          id: `seq-${prevNode.id}-${node.id}`,
-          source: prevNode.id,
-          target: node.id,
-          type: 'smoothstep',
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: '#42a5f5',
-            width: 20,
-            height: 20,
-          },
-          style: { stroke: '#42a5f5', strokeWidth: 2 },
-          animated: node.status === 'running',
-        });
-      }
-
-      // Create edge from parent (hierarchical connection)
-      if (parentId) {
-        flowEdges.push({
-          id: `parent-${parentId}-${node.id}`,
-          source: parentId,
-          target: node.id,
-          type: 'smoothstep',
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: '#9e9e9e',
-            width: 16,
-            height: 16,
-          },
-          style: { stroke: '#9e9e9e', strokeWidth: 1.5 },
-          animated: node.status === 'running',
-          label: String(index + 1),
-          labelStyle: { fill: '#757575', fontSize: 10, fontWeight: 600 },
-          labelBgStyle: { fill: '#fff', stroke: '#9e9e9e' },
-          labelBgPadding: [4, 4] as [number, number],
-          labelBgBorderRadius: 8,
-        });
-      }
-
-      // Recursively process sub-nodes if not collapsed
-      if (hasSubNodes && !isCollapsed) {
-        processNodes(node.nodes!, node.id, true);
-      }
-    });
-  };
-
-  processNodes(traceNodes);
-
-  return { nodes: flowNodes, edges: flowEdges };
-};
-
-// ============================================================================
-// Inner Canvas Component (needs ReactFlow context)
-// ============================================================================
-
-interface CanvasInnerProps {
-  width?: string | number;
-  height?: string | number;
+interface LayoutResult {
+  nodes: Node[];
+  edges: Edge[];
 }
 
-const CanvasInner: FC<CanvasInnerProps> = ({ width = '100%', height = '100%' }) => {
-  const {
-    selectedTrace,
-    selectNode,
-    layoutDirection,
-    setLayoutDirection,
-    canvasCollapsed,
-  } = useTracing();
+const createDagreLayout = (
+  trace: FullTraceResponse,
+  direction: 'horizontal' | 'vertical',
+  selectedNodeId: string | null,
+  onNodeClick: (nodeId: string) => void
+): LayoutResult => {
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-  const { fitView } = useReactFlow();
+  const isHorizontal = direction === 'horizontal';
+  dagreGraph.setGraph({
+    rankdir: isHorizontal ? 'LR' : 'TB',
+    nodesep: 40,
+    ranksep: 80,
+  });
 
-  // Transform trace data to React Flow format
-  const { initialNodes, initialEdges } = useMemo(() => {
-    if (!selectedTrace?.nodes) {
-      return { initialNodes: [], initialEdges: [] };
+  const nodes: Node[] = [];
+  const edges: Edge[] = [];
+
+  // Recursive function to process nodes
+  const processNode = (
+    node: TraceNodeResponse,
+    parentId: string | null,
+    index: number,
+    siblings: TraceNodeResponse[]
+  ) => {
+    const nodeId = node.id;
+    const isFirst = index === 0;
+    const isLast = index === siblings.length - 1;
+    const isSelected = selectedNodeId === nodeId;
+
+    // Add to dagre
+    dagreGraph.setNode(nodeId, { width: NODE_WIDTH, height: NODE_HEIGHT });
+
+    // Add to xyflow nodes
+    nodes.push({
+      id: nodeId,
+      type: 'traceNode',
+      position: { x: 0, y: 0 }, // Will be set by dagre
+      data: {
+        label: node.name,
+        type: node.type,
+        status: node.status,
+        isFirst: isFirst && !parentId, // Only first at root level
+        isLast: isLast && !parentId,   // Only last at root level
+        isSelected,
+        onClick: () => onNodeClick(nodeId),
+      },
+      sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
+      targetPosition: isHorizontal ? Position.Left : Position.Top,
+    });
+
+    // Create edge from parent
+    if (parentId) {
+      dagreGraph.setEdge(parentId, nodeId);
+      edges.push({
+        id: `${parentId}-${nodeId}`,
+        source: parentId,
+        target: nodeId,
+        type: 'smoothstep',
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: 'var(--color-primary-400)',
+        },
+        style: {
+          stroke: 'var(--color-primary-400)',
+          strokeWidth: 2,
+        },
+        animated: node.status === 'running',
+      });
     }
 
-    const { nodes, edges } = transformTraceToFlow(
-      selectedTrace.nodes,
-      canvasCollapsed ?? new Set<string>()
+    // Process sub-nodes
+    if (node.nodes && node.nodes.length > 0) {
+      node.nodes.forEach((subNode, subIndex) => {
+        processNode(subNode, nodeId, subIndex, node.nodes!);
+      });
+    }
+  };
+
+  // Process all root nodes and create edges between sequential root nodes
+  trace.nodes.forEach((node, index, array) => {
+    processNode(node, null, index, array);
+
+    // Create edge to next root node (sequential flow)
+    if (index < array.length - 1) {
+      const nextNode = array[index + 1];
+      dagreGraph.setEdge(node.id, nextNode.id);
+      edges.push({
+        id: `${node.id}-${nextNode.id}`,
+        source: node.id,
+        target: nextNode.id,
+        type: 'smoothstep',
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: 'var(--color-primary-400)',
+        },
+        style: {
+          stroke: 'var(--color-primary-400)',
+          strokeWidth: 2,
+        },
+        animated: nextNode.status === 'running',
+      });
+    }
+  });
+
+  // Run dagre layout
+  dagre.layout(dagreGraph);
+
+  // Apply calculated positions
+  nodes.forEach((node) => {
+    const dagreNode = dagreGraph.node(node.id);
+    if (dagreNode) {
+      node.position = {
+        x: dagreNode.x - NODE_WIDTH / 2,
+        y: dagreNode.y - NODE_HEIGHT / 2,
+      };
+    }
+  });
+
+  return { nodes, edges };
+};
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+export const TracingCanvasView: FC = () => {
+  const {
+    selectedTrace,
+    selectedNode,
+    layoutDirection,
+    selectNode,
+    setLayoutDirection,
+    resetCanvasView,
+  } = useTracing();
+
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  // Calculate layout when trace or direction changes
+  useEffect(() => {
+    if (!selectedTrace) {
+      setNodes([]);
+      setEdges([]);
+      return;
+    }
+
+    const { nodes: layoutNodes, edges: layoutEdges } = createDagreLayout(
+      selectedTrace,
+      layoutDirection,
+      selectedNode?.id || null,
+      (nodeId) => selectNode(nodeId)
     );
 
-    // Apply layout
-    const direction = layoutDirection === 'horizontal' ? 'LR' : 'TB';
-    const layouted = getLayoutedElements(nodes, edges, direction);
+    setNodes(layoutNodes);
+    setEdges(layoutEdges);
+  }, [selectedTrace, layoutDirection, selectedNode, selectNode, setNodes, setEdges]);
 
-    return { initialNodes: layouted.nodes, initialEdges: layouted.edges };
-  }, [selectedTrace, canvasCollapsed, layoutDirection]);
-
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-
-  // Update nodes/edges when trace changes
-  useEffect(() => {
-    setNodes(initialNodes);
-    setEdges(initialEdges);
-    
-    // Fit view after nodes are set
+  // Fit view on load
+  const onInit = useCallback((instance: ReactFlowInstance) => {
+    setReactFlowInstance(instance);
     setTimeout(() => {
-      fitView({ padding: 0.2, duration: 300 });
-    }, 50);
-  }, [initialNodes, initialEdges, setNodes, setEdges, fitView]);
+      instance.fitView({ padding: 0.1 });
+    }, 100);
+  }, []);
 
-  // Handle node click
-  const onNodeClick = useCallback(
-    (_: React.MouseEvent, node: Node) => {
-      selectNode(node.id);
-    },
-    [selectNode]
-  );
+  // Handle reset view
+  const handleResetView = useCallback(() => {
+    if (reactFlowInstance) {
+      reactFlowInstance.fitView({ padding: 0.1 });
+    }
+    resetCanvasView();
+  }, [reactFlowInstance, resetCanvasView]);
 
-  // Handle pane click (deselect)
-  const onPaneClick = useCallback(() => {
-    selectNode(null);
-  }, [selectNode]);
-
-  // Toggle layout direction
-  const toggleLayout = () => {
+  // Handle layout toggle
+  const handleLayoutToggle = useCallback(() => {
     setLayoutDirection(layoutDirection === 'horizontal' ? 'vertical' : 'horizontal');
-  };
+  }, [layoutDirection, setLayoutDirection]);
 
-  // Handle fit view
-  const handleFitView = () => {
-    fitView({ padding: 0.2, duration: 300 });
-  };
+  // MiniMap node color
+  const miniMapNodeColor = useCallback((node: Node) => {
+    const status = node.data?.status as string;
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return 'var(--color-success-500)';
+      case 'failed':
+        return 'var(--color-error-500)';
+      case 'running':
+        return 'var(--color-warning-500)';
+      default:
+        return 'var(--color-gray-400)';
+    }
+  }, []);
 
   if (!selectedTrace) {
     return (
-      <Box className={classes.container} style={{ width, height }}>
-        <Box className={classes.emptyState}>
-          <Text c="dimmed">Kein Trace ausgewählt</Text>
-        </Box>
-      </Box>
+      <div className={classes.emptyContainer}>
+        <p>Kein Trace ausgewählt</p>
+      </div>
     );
   }
 
   return (
-    <Box className={classes.container} style={{ width, height }}>
-      {/* Toolbar */}
-      <Group className={classes.toolbar} gap="xs">
-        <Tooltip label={layoutDirection === 'horizontal' ? 'Vertikal' : 'Horizontal'}>
-          <ActionIcon variant="subtle" size="sm" onClick={toggleLayout}>
-            {layoutDirection === 'horizontal' ? (
-              <IconLayoutRows size={16} />
-            ) : (
-              <IconLayoutColumns size={16} />
-            )}
-          </ActionIcon>
-        </Tooltip>
+    <div className={classes.container}>
+      {/* SubHeader */}
+      <TracingSubHeader />
 
-        <Tooltip label="Ansicht zurücksetzen">
-          <ActionIcon variant="subtle" size="sm" onClick={handleFitView}>
-            <IconZoomReset size={16} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
+      {/* Canvas Controls */}
+      <div className={classes.controls}>
+        <Group gap="xs">
+          <Tooltip label={layoutDirection === 'horizontal' ? 'Zu Vertikal wechseln' : 'Zu Horizontal wechseln'}>
+            <ActionIcon variant="light" onClick={handleLayoutToggle}>
+              {layoutDirection === 'horizontal' ? (
+                <IconArrowsVertical size={18} />
+              ) : (
+                <IconArrowsHorizontal size={18} />
+              )}
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Ansicht zurücksetzen">
+            <ActionIcon variant="light" onClick={handleResetView}>
+              <IconFocusCentered size={18} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+      </div>
 
-      {/* React Flow Canvas */}
+      {/* ReactFlow Canvas */}
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onNodeClick={onNodeClick}
-        onPaneClick={onPaneClick}
+        onInit={onInit}
         nodeTypes={nodeTypes}
+        connectionLineType={ConnectionLineType.SmoothStep}
         fitView
-        fitViewOptions={{ padding: 0.2 }}
+        fitViewOptions={{ padding: 0.1 }}
         minZoom={0.1}
         maxZoom={2}
-        defaultEdgeOptions={{
-          type: 'smoothstep',
-        }}
+        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+        attributionPosition="bottom-left"
         proOptions={{ hideAttribution: true }}
-        className={classes.reactFlow}
       >
-        <Background color="#e0e0e0" gap={16} />
-        <Controls showInteractive={false} className={classes.controls} />
+        <Background gap={16} size={1} color="var(--color-gray-200)" />
+        <Controls showInteractive={false} className={classes.flowControls} />
         <MiniMap
-          nodeColor={(node) => {
-            const data = node.data as CanvasNodeData | undefined;
-            return data ? getStatusColor(data.status) : '#9e9e9e';
-          }}
-          maskColor="rgba(0, 0, 0, 0.1)"
-          className={classes.minimap}
+          nodeColor={miniMapNodeColor}
+          className={classes.miniMap}
+          zoomable
+          pannable
         />
       </ReactFlow>
-    </Box>
-  );
-};
-
-// ============================================================================
-// Main Component (wraps with ReactFlowProvider)
-// ============================================================================
-
-interface TracingCanvasViewProps {
-  width?: string | number;
-  height?: string | number;
-}
-
-export const TracingCanvasView: FC<TracingCanvasViewProps> = (props) => {
-  return (
-    <ReactFlowProvider>
-      <CanvasInner {...props} />
-    </ReactFlowProvider>
+    </div>
   );
 };
 

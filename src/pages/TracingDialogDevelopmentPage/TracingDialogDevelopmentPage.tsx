@@ -41,8 +41,8 @@ export const TracingDialogDevelopmentPage: FC = () => {
 
   // State
   const [traces, setTraces] = useState<FullTraceResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [_isLoading, setIsLoading] = useState(false);
+  const [_error, setError] = useState<string | null>(null);
   const [dialogOpened, setDialogOpened] = useState(false);
   
   // Input state
@@ -232,11 +232,7 @@ export const TracingDialogDevelopmentPage: FC = () => {
       <TracingVisualDialog
         opened={dialogOpened}
         onClose={handleCloseDialog}
-        modal={true}
-        fetchTraces={fetchTraces}
         traces={traces}
-        isLoading={isLoading}
-        error={error}
       />
     </MainLayout>
   );
