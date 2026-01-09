@@ -447,7 +447,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
 
                   <TextInput
                     label="Workflow Endpoint"
-                    placeholder="https://your-n8n.com/webhook/.../workflow/..."
+                    placeholder="https://your-n8n.com/workflow/{id}"
                     description="URL must contain /workflow/ in path"
                     required
                     withAsterisk

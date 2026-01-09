@@ -169,7 +169,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
         name: values.name.trim(),
         type: values.type as AutonomousAgentTypeEnum,
         description: values.description?.trim() || undefined,
-        config: config as Record<string, unknown> | undefined,
+        config: (config ?? {}) as Record<string, unknown>,
       });
 
       // If tags were added, save them to the agent
@@ -274,7 +274,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
 
                 <TextInput
                   label="Workflow Endpoint"
-                  placeholder="https://your-n8n.com/webhook/.../workflow/..."
+                  placeholder="https://your-n8n.com/workflow/{id}"
                   description="URL muss /workflow/ im Pfad enthalten"
                   required
                   withAsterisk
