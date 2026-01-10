@@ -315,7 +315,21 @@ const edgeTypes = {
 };
 
 // ============================================================================
-// DAGRE LAYOUT
+// COLUMN-BASED LAYOUT ALGORITHM (Spaltenbasiert)
+// ============================================================================
+// 
+// Grundprinzip:
+// - Das Canvas wird als TABELLE betrachtet
+// - Spalten (columns) = horizontale Stufen (Root-Nodes N1, N2, N3 definieren Spalte 0, 1, 2)
+// - Zeilen (rows) = vertikale Positionen (lückenlos gefüllt)
+// - Row 0 ist AUSSCHLIESSLICH für Root-Nodes reserviert
+// - SubNodes beginnen ab Row 1 (NIEMALS Row 0)
+// - SubNodes dürfen NIE höher als ihr Parent sein (row >= parent.row)
+// 
+// Sortierung pro Spalte:
+// 1. isRoot = true ZUERST (alle Root-Nodes kommen vor SubNodes)
+// 2. parent.row ASC (SubNodes nach Y-Position des Parents)
+// 3. localIndex ASC (Geschwister-Reihenfolge)
 // ============================================================================
 
 interface LayoutResult {
@@ -324,29 +338,44 @@ interface LayoutResult {
 }
 
 // Layout constants
-const ROOT_GAP = 280;           // Gap between root nodes in main direction
-const SUB_NODE_GAP = 160;       // Gap between sub-nodes  
-const SUB_NODE_OFFSET = 160;    // Offset from parent for sub-nodes (perpendicular direction)
+// Node-Größe: 120px breit, 80px hoch
 
-// Type for tracking node positions
-interface NodePosition {
+// Horizontal Layout: Spalten → X, Zeilen → Y
+const H_COL_GAP = 250;   // Abstand zwischen Spalten (X-Richtung) - muss > 120px (NODE_WIDTH) sein
+const H_ROW_GAP = 120;   // Abstand zwischen Zeilen (Y-Richtung) - muss > 80px (NODE_HEIGHT) sein
+
+// Vertical Layout: Zeilen → X, Spalten → Y
+const V_ROW_GAP = 200;   // Abstand zwischen Rows (X-Richtung) - muss > 120px (NODE_WIDTH) sein
+const V_COL_GAP = 140;   // Abstand zwischen Spalten (Y-Richtung) - muss > 80px (NODE_HEIGHT) sein
+
+// LayoutNode - Erweiterte Node-Struktur für Layout-Berechnung
+interface LayoutNode {
   id: string;
-  x: number;
-  y: number;
-  subNodeCount: number;  // Total count of all descendants
+  column: number;        // Spalte (0 = erste Root-Spalte)
+  row: number;           // Zeile (0 = Root-Zeile, 1+ = SubNode-Zeilen)
+  x: number;             // Berechnete X-Koordinate
+  y: number;             // Berechnete Y-Koordinate
+  parentId: string | null;
+  localIndex: number;    // Index unter Geschwistern
+  isRoot: boolean;       // Ist dies ein Root-Node?
+  hasChildren: boolean;
+  isCollapsed: boolean;
+  originalNode: TraceNodeResponseLike;
 }
 
-// Helper: Count all descendants recursively
-const countAllDescendants = (node: { nodes?: { nodes?: unknown[] }[] }): number => {
-  if (!node.nodes || node.nodes.length === 0) return 0;
-  let count = node.nodes.length;
-  for (const child of node.nodes) {
-    count += countAllDescendants(child as { nodes?: { nodes?: unknown[] }[] });
-  }
-  return count;
-};
+// Type for trace node (simplified for layout)
+interface TraceNodeResponseLike {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  nodes?: TraceNodeResponseLike[];
+}
 
-const createDagreLayout = (
+/**
+ * Hauptfunktion: Erstellt spaltenbasiertes Layout
+ */
+const createColumnBasedLayout = (
   trace: FullTraceResponse,
   direction: 'horizontal' | 'vertical',
   selectedNodeId: string | null,
@@ -355,159 +384,257 @@ const createDagreLayout = (
   onToggleCollapse: (nodeId: string) => void
 ): LayoutResult => {
   const isHorizontal = direction === 'horizontal';
-  const nodes: Node[] = [];
-  const edges: Edge[] = [];
-
+  
   // Handle positions based on direction
   const sourcePos = isHorizontal ? Position.Right : Position.Bottom;
   const targetPos = isHorizontal ? Position.Left : Position.Top;
 
-  // Calculate root node positions (fixed gap, no extra space for sub-nodes)
-  const rootPositions: NodePosition[] = trace.nodes.map((node, index) => {
-    const x = isHorizontal ? index * ROOT_GAP : 0;
-    const y = isHorizontal ? 0 : index * ROOT_GAP;
-    return { id: node.id, x, y, subNodeCount: countAllDescendants(node) };
-  });
-
-  // Recursive function to process nodes and their children
-  const processNode = (
-    node: { 
-      id: string; 
-      name: string; 
-      type: string; 
-      status: string; 
-      nodes?: typeof node[] 
-    },
+  // ========================================================================
+  // SCHRITT 1: Flache Liste aller sichtbaren Nodes erstellen
+  // ========================================================================
+  const flatNodes: LayoutNode[] = [];
+  const nodeMap = new Map<string, LayoutNode>();
+  
+  // Set zur Überprüfung, ob ein Node sichtbar ist (nicht durch collapsed Parent versteckt)
+  const visibleNodeIds = new Set<string>();
+  
+  // Rekursive Funktion zum Sammeln aller Nodes
+  const collectNodes = (
+    node: TraceNodeResponseLike,
     parentId: string | null,
-    baseX: number,
-    baseY: number,
-    depth: number,           // Depth level (0 = root, 1 = first sub-level, etc.)
-    _siblingIndex: number,   // Index among siblings (unused but kept for API consistency)
-    isRootFirst: boolean,
-    isRootLast: boolean
+    column: number,
+    localIndex: number,
+    isVisible: boolean
   ): void => {
-    const isSelected = selectedNodeId === node.id;
-    const isRoot = depth === 0;
     const hasChildren = node.nodes && node.nodes.length > 0;
     const isCollapsed = collapsedNodes.has(node.id);
-
-    // Add node with collapse button data
-    nodes.push({
+    const isRoot = parentId === null;
+    
+    // Node ist sichtbar wenn:
+    // - Es ein Root-Node ist, ODER
+    // - Sein Parent sichtbar ist UND Parent nicht collapsed ist
+    if (isVisible) {
+      visibleNodeIds.add(node.id);
+    }
+    
+    const layoutNode: LayoutNode = {
       id: node.id,
+      column,
+      row: -1,  // Wird später berechnet
+      x: 0,
+      y: 0,
+      parentId,
+      localIndex,
+      isRoot,
+      hasChildren: hasChildren || false,
+      isCollapsed,
+      originalNode: node,
+    };
+    
+    flatNodes.push(layoutNode);
+    nodeMap.set(node.id, layoutNode);
+    
+    // Rekursiv Kinder verarbeiten
+    if (hasChildren) {
+      node.nodes!.forEach((childNode, childIndex) => {
+        // Kind ist sichtbar wenn Parent sichtbar UND Parent nicht collapsed
+        const childVisible = isVisible && !isCollapsed;
+        collectNodes(childNode, node.id, column + 1, childIndex, childVisible);
+      });
+    }
+  };
+  
+  // Root-Nodes sammeln (column = rootIndex, localIndex = rootIndex)
+  trace.nodes.forEach((rootNode, rootIndex) => {
+    collectNodes(rootNode, null, rootIndex, rootIndex, true);
+  });
+  
+  // Nur sichtbare Nodes für Layout verwenden
+  const visibleNodes = flatNodes.filter(n => visibleNodeIds.has(n.id));
+  
+  // ========================================================================
+  // SCHRITT 2: Nodes nach Spalten gruppieren
+  // ========================================================================
+  const columnGroups = new Map<number, LayoutNode[]>();
+  
+  for (const node of visibleNodes) {
+    if (!columnGroups.has(node.column)) {
+      columnGroups.set(node.column, []);
+    }
+    columnGroups.get(node.column)!.push(node);
+  }
+  
+  // ========================================================================
+  // SCHRITT 3 + 4 KOMBINIERT: Spaltenweise Sortierung + Row-Zuweisung
+  // ========================================================================
+  // WICHTIG: Wir müssen Spalte für Spalte vorgehen!
+  // - Erst Spalte 0 sortieren + Rows zuweisen
+  // - DANN Spalte 1 sortieren (jetzt kennen wir parent.row!) + Rows zuweisen
+  // - DANN Spalte 2, usw.
+  //
+  // Sortierregel pro Spalte:
+  // 1. isRoot = true ZUERST (Root-Nodes vor SubNodes)
+  // 2. parent.row ASC (SubNodes nach Y-Position des Parents)
+  // 3. localIndex ASC (Geschwister-Reihenfolge)
+  //
+  // Row-Zuweisung:
+  // - Root-Nodes: IMMER Row 0
+  // - SubNodes: row = MAX(nextAvailableRow, parent.row) - Kein Hochrutschen!
+  
+  const sortedColumns = Array.from(columnGroups.keys()).sort((a, b) => a - b);
+  
+  for (const col of sortedColumns) {
+    const nodesInColumn = columnGroups.get(col)!;
+    
+    // --- SORTIERUNG (parent.row ist jetzt bekannt aus vorheriger Spalte!) ---
+    nodesInColumn.sort((a, b) => {
+      // Regel 1: Root-Nodes zuerst
+      if (a.isRoot && !b.isRoot) return -1;
+      if (!a.isRoot && b.isRoot) return 1;
+      
+      // Beide sind Root-Nodes → nach localIndex
+      if (a.isRoot && b.isRoot) {
+        return a.localIndex - b.localIndex;
+      }
+      
+      // Beide sind SubNodes → nach parent.row, dann localIndex
+      const parentA = a.parentId ? nodeMap.get(a.parentId) : null;
+      const parentB = b.parentId ? nodeMap.get(b.parentId) : null;
+      
+      const parentRowA = parentA?.row ?? 0;
+      const parentRowB = parentB?.row ?? 0;
+      
+      if (parentRowA !== parentRowB) {
+        return parentRowA - parentRowB;
+      }
+      
+      return a.localIndex - b.localIndex;
+    });
+    
+    // --- ROW-ZUWEISUNG (direkt nach Sortierung dieser Spalte!) ---
+    let nextAvailableRow = 0;
+    
+    for (const node of nodesInColumn) {
+      if (node.isRoot) {
+        // Root-Nodes bekommen IMMER Row 0
+        node.row = 0;
+        nextAvailableRow = 1; // SubNodes starten ab Row 1
+      } else {
+        // SubNode: Minimum ist parent.row (Kein Hochrutschen!)
+        const parent = node.parentId ? nodeMap.get(node.parentId) : null;
+        const minRow = parent ? parent.row : 1;
+        
+        // Row = MAX(nächste verfügbare Row, parent.row)
+        node.row = Math.max(nextAvailableRow, minRow);
+        nextAvailableRow = node.row + 1;
+      }
+    }
+  }
+  
+  // ========================================================================
+  // SCHRITT 5: Koordinaten berechnen
+  // ========================================================================
+  for (const node of visibleNodes) {
+    if (isHorizontal) {
+      // Horizontal: Spalten → X-Achse, Zeilen → Y-Achse
+      node.x = node.column * H_COL_GAP;
+      node.y = node.row * H_ROW_GAP;
+    } else {
+      // Vertikal: Zeilen → X-Achse, Spalten → Y-Achse
+      // WICHTIG: Nodes sind breiter als hoch (120x80), daher mehr X-Abstand nötig!
+      node.x = node.row * V_ROW_GAP;
+      node.y = node.column * V_COL_GAP;
+    }
+  }
+  
+  // ========================================================================
+  // SCHRITT 6: ReactFlow Nodes erstellen
+  // ========================================================================
+  const nodes: Node[] = visibleNodes.map((layoutNode, _idx, allNodes) => {
+    const { id, x, y, isRoot, hasChildren, isCollapsed, localIndex, originalNode } = layoutNode;
+    const isSelected = selectedNodeId === id;
+    
+    // Bestimme isFirst und isLast für Root-Nodes
+    const rootNodes = allNodes.filter(n => n.isRoot);
+    const isFirst = isRoot && localIndex === 0;
+    const isLast = isRoot && localIndex === rootNodes.length - 1;
+    
+    return {
+      id,
       type: 'traceNode',
-      position: { x: baseX, y: baseY },
+      position: { x, y },
       data: {
-        label: node.name,
-        type: node.type,
-        status: node.status,
-        isFirst: isRoot && isRootFirst,
-        isLast: isRoot && isRootLast && !hasChildren,
+        label: originalNode.name,
+        type: originalNode.type,
+        status: originalNode.status,
+        isFirst,
+        isLast: isLast && !hasChildren,
         isSelected,
-        onClick: () => onNodeClick(node.id),
+        onClick: () => onNodeClick(id),
         sourcePosition: sourcePos,
         targetPosition: targetPos,
-        // Collapse functionality - button shown on node itself
         hasChildren,
         isCollapsed,
-        onToggleCollapse: hasChildren ? () => onToggleCollapse(node.id) : undefined,
+        onToggleCollapse: hasChildren ? () => onToggleCollapse(id) : undefined,
       },
       sourcePosition: sourcePos,
       targetPosition: targetPos,
+    };
+  });
+  
+  // ========================================================================
+  // SCHRITT 7: Edges erstellen
+  // ========================================================================
+  const edges: Edge[] = [];
+  const visibleNodeIdSet = new Set(visibleNodes.map(n => n.id));
+  
+  // Root-Chain: N1 → N2 → N3 (nur sichtbare)
+  const visibleRoots = visibleNodes.filter(n => n.isRoot).sort((a, b) => a.localIndex - b.localIndex);
+  for (let i = 0; i < visibleRoots.length - 1; i++) {
+    const sourceNode = visibleRoots[i];
+    const targetNode = visibleRoots[i + 1];
+    
+    edges.push({
+      id: `root-${sourceNode.id}-${targetNode.id}`,
+      source: sourceNode.id,
+      target: targetNode.id,
+      type: 'smoothstep',
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: '#42a5f5', // Primary blue for root chain
+      },
+      style: {
+        stroke: '#42a5f5',
+        strokeWidth: 2,
+      },
+      animated: targetNode.originalNode.status === 'running',
     });
-
-    // Edge from parent to this node
-    if (parentId) {
+  }
+  
+  // Parent → Child Edges (nur für sichtbare Nodes)
+  for (const node of visibleNodes) {
+    if (node.parentId && visibleNodeIdSet.has(node.parentId)) {
+      const parent = nodeMap.get(node.parentId)!;
+      const isFirstLevelSubNode = parent.isRoot;
+      
       edges.push({
-        id: `${parentId}-${node.id}`,
-        source: parentId,
+        id: `${node.parentId}-${node.id}`,
+        source: node.parentId,
         target: node.id,
         type: 'smoothstep',
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: depth === 1 ? '#66bb6a' : '#9c27b0',
+          color: isFirstLevelSubNode ? '#66bb6a' : '#9c27b0', // Green for first level, purple for deeper
         },
         style: {
-          stroke: depth === 1 ? '#66bb6a' : '#9c27b0',
+          stroke: isFirstLevelSubNode ? '#66bb6a' : '#9c27b0',
           strokeWidth: 2,
         },
-        animated: node.status === 'running',
+        animated: node.originalNode.status === 'running',
       });
     }
-
-    // Process sub-nodes recursively (only if not collapsed)
-    if (hasChildren && !isCollapsed) {
-      node.nodes!.forEach((subNode, subIndex) => {
-        let subX: number, subY: number;
-
-        if (isHorizontal) {
-          subX = baseX + SUB_NODE_OFFSET + (depth * SUB_NODE_OFFSET);
-          subY = baseY + SUB_NODE_OFFSET + (subIndex * SUB_NODE_GAP);
-        } else {
-          subX = baseX + SUB_NODE_OFFSET + (subIndex * SUB_NODE_GAP);
-          subY = baseY + SUB_NODE_OFFSET + (depth * SUB_NODE_OFFSET);
-        }
-
-        // Edge from this node to sub-node
-        edges.push({
-          id: `${node.id}-${subNode.id}`,
-          source: node.id,
-          target: subNode.id,
-          type: 'smoothstep',
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: depth === 0 ? '#66bb6a' : '#9c27b0',
-          },
-          style: {
-            stroke: depth === 0 ? '#66bb6a' : '#9c27b0',
-            strokeWidth: 2,
-          },
-          animated: subNode.status === 'running',
-        });
-
-        processNode(
-          subNode,
-          null, // Edge already created above
-          subX,
-          subY,
-          depth + 1,
-          subIndex,
-          false,
-          false
-        );
-      });
-    }
-  };
-
-  // Process all root nodes
-  trace.nodes.forEach((node, index, array) => {
-    const pos = rootPositions[index];
-    const isFirst = index === 0;
-    const isLast = index === array.length - 1;
-
-    // Process this root node and all its descendants
-    processNode(node, null, pos.x, pos.y, 0, index, isFirst, isLast);
-
-    // Edge to next root node
-    if (index < array.length - 1) {
-      const nextNode = array[index + 1];
-      edges.push({
-        id: `root-${node.id}-${nextNode.id}`,
-        source: node.id,
-        target: nextNode.id,
-        type: 'smoothstep',
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: '#42a5f5',
-        },
-        style: {
-          stroke: '#42a5f5',
-          strokeWidth: 2,
-        },
-        animated: nextNode.status === 'running',
-      });
-    }
-  });
-
+  }
+  
   return { nodes, edges };
 };
 
@@ -551,7 +678,7 @@ export const TracingCanvasView: FC = () => {
       return;
     }
 
-    const { nodes: layoutNodes, edges: layoutEdges } = createDagreLayout(
+    const { nodes: layoutNodes, edges: layoutEdges } = createColumnBasedLayout(
       selectedTrace,
       layoutDirection,
       selectedNode?.id || null,
