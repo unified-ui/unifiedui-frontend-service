@@ -310,8 +310,97 @@ const CollapsibleEdge: FC<EdgeProps> = ({
   );
 };
 
+// ============================================================================
+// INDEXED EDGE - Edge mit Index-Badge am Target-Ende
+// ============================================================================
+
+interface IndexedEdgeData {
+  localIndex: number;
+  edgeColor: string;
+  depth: number;
+  isSelected?: boolean;
+}
+
+const IndexedEdge: FC<EdgeProps> = ({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  style,
+  markerEnd,
+  data,
+}) => {
+  const edgeData = data as IndexedEdgeData | undefined;
+  const localIndex = edgeData?.localIndex ?? 0;
+  const edgeColor = edgeData?.edgeColor ?? '#666';
+  const isSelected = edgeData?.isSelected ?? false;
+  
+  // Bei Selektion: Blau verwenden
+  const displayColor = isSelected ? '#1e88e5' : edgeColor;
+
+  const [edgePath] = getSmoothStepPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  // Position für Index-Badge: Fester Offset vom Target, basierend auf Eingangsrichtung
+  // SmoothStep-Pfade haben gestufte Wege, daher nicht lineare Interpolation verwenden!
+  // Stattdessen: Offset vom Target in Richtung, aus der der Pfeil kommt
+  const BADGE_OFFSET = 24; // Abstand vom Target-Punkt (vor dem Pfeil)
+  
+  let badgeX = targetX;
+  let badgeY = targetY;
+  
+  // Offset basierend auf targetPosition (wohin der Pfeil zeigt)
+  switch (targetPosition) {
+    case Position.Left:
+      // Pfeil kommt von links → Badge links vom Target
+      badgeX = targetX - BADGE_OFFSET;
+      break;
+    case Position.Right:
+      // Pfeil kommt von rechts → Badge rechts vom Target
+      badgeX = targetX + BADGE_OFFSET;
+      break;
+    case Position.Top:
+      // Pfeil kommt von oben → Badge über dem Target
+      badgeY = targetY - BADGE_OFFSET;
+      break;
+    case Position.Bottom:
+      // Pfeil kommt von unten → Badge unter dem Target
+      badgeY = targetY + BADGE_OFFSET;
+      break;
+  }
+
+  return (
+    <>
+      <BaseEdge id={id} path={edgePath} style={style} markerEnd={markerEnd} />
+      <EdgeLabelRenderer>
+        <div
+          className={classes.edgeIndexBadge}
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${badgeX}px, ${badgeY}px)`,
+            color: displayColor,
+            pointerEvents: 'none',
+          }}
+        >
+          {localIndex + 1}
+        </div>
+      </EdgeLabelRenderer>
+    </>
+  );
+};
+
 const edgeTypes = {
   collapsible: CollapsibleEdge,
+  indexedEdge: IndexedEdge,
 };
 
 // ============================================================================
@@ -645,7 +734,7 @@ const createColumnBasedLayout = (
         id: `${node.parentId}-${node.id}`,
         source: node.parentId,
         target: node.id,
-        type: 'smoothstep',
+        type: 'indexedEdge', // Custom edge type mit Index-Badge
         markerEnd: {
           type: MarkerType.ArrowClosed,
           color: edgeColor,
@@ -655,7 +744,11 @@ const createColumnBasedLayout = (
           strokeWidth: 2,
         },
         animated: node.originalNode.status === 'running',
-        data: { depth: node.depth }, // Speichere depth für spätere Referenz
+        data: { 
+          depth: node.depth,
+          localIndex: node.localIndex, // Index für Badge
+          edgeColor, // Farbe für Badge
+        },
       });
     }
   }
@@ -734,8 +827,11 @@ export const TracingCanvasView: FC = () => {
           markerEnd: {
             type: MarkerType.ArrowClosed,
             color: '#1e88e5',
-            width: 20,
-            height: 20,
+            // Keine width/height → normale Pfeilgröße
+          },
+          data: {
+            ...edge.data,
+            isSelected: true, // Badge soll auch blau werden
           },
           zIndex: 1000, // Bring to front
         };

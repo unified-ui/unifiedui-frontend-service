@@ -60,6 +60,7 @@
 .customNodeSelected {
   box-shadow: var(--shadow-md);
   border-width: 3px;
+  border-color: #1e88e5 !important; /* Primary blue - same as root chain arrows */
 }
 
 .nodeIcon {
@@ -100,6 +101,25 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* ============================================ */
+/* EDGE INDEX BADGE                             */
+/* ============================================ */
+
+.edgeIndexBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg-paper);
+  border: 2px solid currentColor;
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  color: currentColor;
+  pointer-events: none;
 }
 
 /* ============================================ */
