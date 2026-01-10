@@ -22,8 +22,11 @@ import {
   Position,
   ConnectionLineType,
   Handle,
+  BaseEdge,
+  EdgeLabelRenderer,
+  getSmoothStepPath,
 } from '@xyflow/react';
-import type { Node, Edge, ReactFlowInstance } from '@xyflow/react';
+import type { Node, Edge, ReactFlowInstance, EdgeProps } from '@xyflow/react';
 import { ActionIcon, Group, Tooltip } from '@mantine/core';
 import {
   IconArrowsHorizontal,
@@ -46,6 +49,7 @@ import {
   IconLoader2,
   IconClock,
   IconMinus,
+  IconPlus,
 } from '@tabler/icons-react';
 import { useTracing } from './TracingContext';
 import { TracingSubHeader } from './TracingSubHeader';
@@ -144,6 +148,10 @@ interface TraceNodeData {
   onClick?: () => void;
   sourcePosition?: Position;
   targetPosition?: Position;
+  // Collapse functionality
+  hasChildren?: boolean;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 const TraceCustomNode: FC<{ data: TraceNodeData }> = ({ data }) => {
@@ -151,6 +159,9 @@ const TraceCustomNode: FC<{ data: TraceNodeData }> = ({ data }) => {
     label, type, status, isFirst, isLast, isSelected, onClick,
     sourcePosition = Position.Right,
     targetPosition = Position.Left,
+    hasChildren = false,
+    isCollapsed = false,
+    onToggleCollapse,
   } = data;
 
   // Determine border radius
@@ -162,6 +173,11 @@ const TraceCustomNode: FC<{ data: TraceNodeData }> = ({ data }) => {
   } else if (isLast) {
     borderRadius = 'var(--radius-md) var(--radius-xl) var(--radius-xl) var(--radius-md)';
   }
+
+  const handleCollapseClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleCollapse?.();
+  };
 
   return (
     <>
@@ -186,12 +202,116 @@ const TraceCustomNode: FC<{ data: TraceNodeData }> = ({ data }) => {
         </div>
       </div>
       <Handle type="source" position={sourcePosition} />
+      
+      {/* Collapse/Expand button - shown when node has children */}
+      {hasChildren && (
+        <div 
+          className={classes.collapseButton}
+          onClick={handleCollapseClick}
+          style={{
+            // Position based on source handle direction
+            ...(sourcePosition === Position.Right && { right: -30, top: '50%', transform: 'translateY(-50%)' }),
+            ...(sourcePosition === Position.Bottom && { bottom: -30, left: '50%', transform: 'translateX(-50%)' }),
+            ...(sourcePosition === Position.Left && { left: -30, top: '50%', transform: 'translateY(-50%)' }),
+            ...(sourcePosition === Position.Top && { top: -30, left: '50%', transform: 'translateX(-50%)' }),
+          }}
+        >
+          {isCollapsed ? <IconPlus size={14} /> : <IconMinus size={14} />}
+        </div>
+      )}
+    </>
+  );
+};
+
+// Invisible node - renders only handles (no visual content)
+const InvisibleNode: FC<{ data: { sourcePosition?: Position; targetPosition?: Position } }> = ({ data }) => {
+  const { sourcePosition = Position.Right, targetPosition = Position.Left } = data;
+  return (
+    <>
+      <Handle type="target" position={targetPosition} style={{ opacity: 0 }} />
+      <Handle type="source" position={sourcePosition} style={{ opacity: 0 }} />
     </>
   );
 };
 
 const nodeTypes = {
   traceNode: TraceCustomNode,
+  invisibleNode: InvisibleNode,
+};
+
+// ============================================================================
+// CUSTOM EDGE WITH COLLAPSE BUTTON
+// ============================================================================
+
+interface CollapsibleEdgeData {
+  hasChildren: boolean;
+  isCollapsed: boolean;
+  sourceNodeId: string;
+  onToggleCollapse: (nodeId: string) => void;
+}
+
+const CollapsibleEdge: FC<EdgeProps> = ({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  style,
+  markerEnd,
+  data,
+}) => {
+  const edgeData = data as CollapsibleEdgeData | undefined;
+  const hasChildren = edgeData?.hasChildren ?? false;
+  const isCollapsed = edgeData?.isCollapsed ?? false;
+  const sourceNodeId = edgeData?.sourceNodeId ?? '';
+  const onToggleCollapse = edgeData?.onToggleCollapse;
+
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onToggleCollapse && sourceNodeId) {
+      onToggleCollapse(sourceNodeId);
+    }
+  };
+
+  return (
+    <>
+      <BaseEdge id={id} path={edgePath} style={style} markerEnd={markerEnd} />
+      {hasChildren && (
+        <EdgeLabelRenderer>
+          <div
+            className={classes.edgeButton}
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              pointerEvents: 'all',
+            }}
+            onClick={handleClick}
+          >
+            {isCollapsed ? (
+              <IconPlus size={14} />
+            ) : (
+              <IconMinus size={14} />
+            )}
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  );
+};
+
+const edgeTypes = {
+  collapsible: CollapsibleEdge,
 };
 
 // ============================================================================
@@ -230,7 +350,9 @@ const createDagreLayout = (
   trace: FullTraceResponse,
   direction: 'horizontal' | 'vertical',
   selectedNodeId: string | null,
-  onNodeClick: (nodeId: string) => void
+  onNodeClick: (nodeId: string) => void,
+  collapsedNodes: Set<string>,
+  onToggleCollapse: (nodeId: string) => void
 ): LayoutResult => {
   const isHorizontal = direction === 'horizontal';
   const nodes: Node[] = [];
@@ -266,8 +388,10 @@ const createDagreLayout = (
   ): void => {
     const isSelected = selectedNodeId === node.id;
     const isRoot = depth === 0;
+    const hasChildren = node.nodes && node.nodes.length > 0;
+    const isCollapsed = collapsedNodes.has(node.id);
 
-    // Add node
+    // Add node with collapse button data
     nodes.push({
       id: node.id,
       type: 'traceNode',
@@ -277,11 +401,15 @@ const createDagreLayout = (
         type: node.type,
         status: node.status,
         isFirst: isRoot && isRootFirst,
-        isLast: isRoot && isRootLast && (!node.nodes || node.nodes.length === 0),
+        isLast: isRoot && isRootLast && !hasChildren,
         isSelected,
         onClick: () => onNodeClick(node.id),
         sourcePosition: sourcePos,
         targetPosition: targetPos,
+        // Collapse functionality - button shown on node itself
+        hasChildren,
+        isCollapsed,
+        onToggleCollapse: hasChildren ? () => onToggleCollapse(node.id) : undefined,
       },
       sourcePosition: sourcePos,
       targetPosition: targetPos,
@@ -296,7 +424,7 @@ const createDagreLayout = (
         type: 'smoothstep',
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: depth === 1 ? '#66bb6a' : '#9c27b0', // Green for level 1, purple for deeper
+          color: depth === 1 ? '#66bb6a' : '#9c27b0',
         },
         style: {
           stroke: depth === 1 ? '#66bb6a' : '#9c27b0',
@@ -306,25 +434,39 @@ const createDagreLayout = (
       });
     }
 
-    // Process sub-nodes recursively
-    if (node.nodes && node.nodes.length > 0) {
-      node.nodes.forEach((subNode, subIndex) => {
+    // Process sub-nodes recursively (only if not collapsed)
+    if (hasChildren && !isCollapsed) {
+      node.nodes!.forEach((subNode, subIndex) => {
         let subX: number, subY: number;
 
         if (isHorizontal) {
-          // Horizontal: Sub-nodes go DOWN from parent, stacked vertically
-          // Each depth level adds more offset to the right
           subX = baseX + SUB_NODE_OFFSET + (depth * SUB_NODE_OFFSET);
           subY = baseY + SUB_NODE_OFFSET + (subIndex * SUB_NODE_GAP);
         } else {
-          // Vertical: Sub-nodes go RIGHT from parent, stacked horizontally
           subX = baseX + SUB_NODE_OFFSET + (subIndex * SUB_NODE_GAP);
           subY = baseY + SUB_NODE_OFFSET + (depth * SUB_NODE_OFFSET);
         }
 
+        // Edge from this node to sub-node
+        edges.push({
+          id: `${node.id}-${subNode.id}`,
+          source: node.id,
+          target: subNode.id,
+          type: 'smoothstep',
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: depth === 0 ? '#66bb6a' : '#9c27b0',
+          },
+          style: {
+            stroke: depth === 0 ? '#66bb6a' : '#9c27b0',
+            strokeWidth: 2,
+          },
+          animated: subNode.status === 'running',
+        });
+
         processNode(
           subNode,
-          node.id,
+          null, // Edge already created above
           subX,
           subY,
           depth + 1,
@@ -386,8 +528,22 @@ export const TracingCanvasView: FC = () => {
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
 
-  // Calculate layout when trace or direction changes
+  // Toggle collapse state for a node
+  const handleToggleCollapse = useCallback((nodeId: string) => {
+    setCollapsedNodes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(nodeId)) {
+        newSet.delete(nodeId);
+      } else {
+        newSet.add(nodeId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Calculate layout when trace, direction, or collapsed nodes change
   useEffect(() => {
     if (!selectedTrace) {
       setNodes([]);
@@ -399,12 +555,14 @@ export const TracingCanvasView: FC = () => {
       selectedTrace,
       layoutDirection,
       selectedNode?.id || null,
-      (nodeId) => selectNode(nodeId)
+      (nodeId) => selectNode(nodeId),
+      collapsedNodes,
+      handleToggleCollapse
     );
 
     setNodes(layoutNodes);
     setEdges(layoutEdges);
-  }, [selectedTrace, layoutDirection, selectedNode, selectNode, setNodes, setEdges]);
+  }, [selectedTrace, layoutDirection, selectedNode, selectNode, setNodes, setEdges, collapsedNodes, handleToggleCollapse]);
 
   // Fit view on load
   const onInit = useCallback((instance: ReactFlowInstance) => {
@@ -483,6 +641,7 @@ export const TracingCanvasView: FC = () => {
         onEdgesChange={onEdgesChange}
         onInit={onInit}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         connectionLineType={ConnectionLineType.SmoothStep}
         fitView
         fitViewOptions={{ padding: 0.1 }}

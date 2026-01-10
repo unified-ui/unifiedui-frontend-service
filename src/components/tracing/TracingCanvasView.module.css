@@ -158,3 +158,56 @@
 :global(.react-flow__node:hover .react-flow__handle) {
   opacity: 1;
 }
+
+/* ============================================ */
+/* EDGE COLLAPSE BUTTON                         */
+/* ============================================ */
+
+.edgeButton {
+  width: 22px;
+  height: 22px;
+  background: var(--bg-paper);
+  border: 2px solid var(--color-gray-400);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  z-index: var(--z-dropdown);
+}
+
+.edgeButton:hover {
+  background: var(--color-gray-100);
+  border-color: var(--color-primary-500);
+  color: var(--color-primary-600);
+  transform: scale(1.1);
+}
+
+/* ============================================ */
+/* NODE COLLAPSE BUTTON                         */
+/* ============================================ */
+
+.collapseButton {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background: var(--bg-paper);
+  border: 2px solid var(--color-gray-400);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  z-index: var(--z-dropdown);
+}
+
+.collapseButton:hover {
+  background: var(--color-gray-100);
+  border-color: var(--color-primary-500);
+  color: var(--color-primary-600);
+  transform: scale(1.15);
+}
