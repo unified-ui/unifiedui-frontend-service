@@ -148,5 +148,13 @@
 }
 
 :global(.react-flow__handle) {
-  visibility: hidden;
+  width: 8px;
+  height: 8px;
+  background: var(--color-primary-400);
+  border: 2px solid var(--bg-paper);
+  opacity: 0;
+}
+
+:global(.react-flow__node:hover .react-flow__handle) {
+  opacity: 1;
 }

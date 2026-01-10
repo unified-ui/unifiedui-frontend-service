@@ -21,9 +21,9 @@ import {
   MarkerType,
   Position,
   ConnectionLineType,
+  Handle,
 } from '@xyflow/react';
 import type { Node, Edge, ReactFlowInstance } from '@xyflow/react';
-import dagre from '@dagrejs/dagre';
 import { ActionIcon, Group, Tooltip } from '@mantine/core';
 import {
   IconArrowsHorizontal,
@@ -49,16 +49,9 @@ import {
 } from '@tabler/icons-react';
 import { useTracing } from './TracingContext';
 import { TracingSubHeader } from './TracingSubHeader';
-import type { TraceNodeResponse, FullTraceResponse } from '../../api/types';
+import type { FullTraceResponse } from '../../api/types';
 import classes from './TracingCanvasView.module.css';
 import '@xyflow/react/dist/style.css';
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-const NODE_WIDTH = 140;
-const NODE_HEIGHT = 90;
 
 // ============================================================================
 // HELPER: Get Node Type Icon
@@ -149,10 +142,16 @@ interface TraceNodeData {
   isLast?: boolean;
   isSelected?: boolean;
   onClick?: () => void;
+  sourcePosition?: Position;
+  targetPosition?: Position;
 }
 
 const TraceCustomNode: FC<{ data: TraceNodeData }> = ({ data }) => {
-  const { label, type, status, isFirst, isLast, isSelected, onClick } = data;
+  const { 
+    label, type, status, isFirst, isLast, isSelected, onClick,
+    sourcePosition = Position.Right,
+    targetPosition = Position.Left,
+  } = data;
 
   // Determine border radius
   let borderRadius = 'var(--radius-md)';
@@ -165,24 +164,29 @@ const TraceCustomNode: FC<{ data: TraceNodeData }> = ({ data }) => {
   }
 
   return (
-    <div
-      className={`${classes.customNode} ${isSelected ? classes.customNodeSelected : ''}`}
-      style={{
-        borderRadius,
-        borderColor: getStatusBorderColor(status),
-      }}
-      onClick={onClick}
-    >
-      <div className={classes.nodeIcon}>
-        {getTypeIcon(type, 28)}
+    <>
+      {/* Dynamic handles based on layout direction */}
+      <Handle type="target" position={targetPosition} />
+      <div
+        className={`${classes.customNode} ${isSelected ? classes.customNodeSelected : ''}`}
+        style={{
+          borderRadius,
+          borderColor: getStatusBorderColor(status),
+        }}
+        onClick={onClick}
+      >
+        <div className={classes.nodeIcon}>
+          {getTypeIcon(type, 28)}
+        </div>
+        <div className={classes.nodeLabel} title={label}>
+          {label.length > 18 ? `${label.slice(0, 16)}...` : label}
+        </div>
+        <div className={classes.nodeStatus}>
+          {getStatusIcon(status, 16)}
+        </div>
       </div>
-      <div className={classes.nodeLabel} title={label}>
-        {label.length > 18 ? `${label.slice(0, 16)}...` : label}
-      </div>
-      <div className={classes.nodeStatus}>
-        {getStatusIcon(status, 16)}
-      </div>
-    </div>
+      <Handle type="source" position={sourcePosition} />
+    </>
   );
 };
 
@@ -199,123 +203,166 @@ interface LayoutResult {
   edges: Edge[];
 }
 
+// Layout constants
+const ROOT_GAP = 280;           // Gap between root nodes in main direction
+const SUB_NODE_GAP = 160;       // Gap between sub-nodes  
+const SUB_NODE_OFFSET = 160;    // Offset from parent for sub-nodes (perpendicular direction)
+
+// Type for tracking node positions
+interface NodePosition {
+  id: string;
+  x: number;
+  y: number;
+  subNodeCount: number;  // Total count of all descendants
+}
+
+// Helper: Count all descendants recursively
+const countAllDescendants = (node: { nodes?: { nodes?: unknown[] }[] }): number => {
+  if (!node.nodes || node.nodes.length === 0) return 0;
+  let count = node.nodes.length;
+  for (const child of node.nodes) {
+    count += countAllDescendants(child as { nodes?: { nodes?: unknown[] }[] });
+  }
+  return count;
+};
+
 const createDagreLayout = (
   trace: FullTraceResponse,
   direction: 'horizontal' | 'vertical',
   selectedNodeId: string | null,
   onNodeClick: (nodeId: string) => void
 ): LayoutResult => {
-  const dagreGraph = new dagre.graphlib.Graph();
-  dagreGraph.setDefaultEdgeLabel(() => ({}));
-
   const isHorizontal = direction === 'horizontal';
-  dagreGraph.setGraph({
-    rankdir: isHorizontal ? 'LR' : 'TB',
-    nodesep: 40,
-    ranksep: 80,
-  });
-
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 
-  // Recursive function to process nodes
+  // Handle positions based on direction
+  const sourcePos = isHorizontal ? Position.Right : Position.Bottom;
+  const targetPos = isHorizontal ? Position.Left : Position.Top;
+
+  // Calculate root node positions (fixed gap, no extra space for sub-nodes)
+  const rootPositions: NodePosition[] = trace.nodes.map((node, index) => {
+    const x = isHorizontal ? index * ROOT_GAP : 0;
+    const y = isHorizontal ? 0 : index * ROOT_GAP;
+    return { id: node.id, x, y, subNodeCount: countAllDescendants(node) };
+  });
+
+  // Recursive function to process nodes and their children
   const processNode = (
-    node: TraceNodeResponse,
+    node: { 
+      id: string; 
+      name: string; 
+      type: string; 
+      status: string; 
+      nodes?: typeof node[] 
+    },
     parentId: string | null,
-    index: number,
-    siblings: TraceNodeResponse[]
-  ) => {
-    const nodeId = node.id;
-    const isFirst = index === 0;
-    const isLast = index === siblings.length - 1;
-    const isSelected = selectedNodeId === nodeId;
+    baseX: number,
+    baseY: number,
+    depth: number,           // Depth level (0 = root, 1 = first sub-level, etc.)
+    _siblingIndex: number,   // Index among siblings (unused but kept for API consistency)
+    isRootFirst: boolean,
+    isRootLast: boolean
+  ): void => {
+    const isSelected = selectedNodeId === node.id;
+    const isRoot = depth === 0;
 
-    // Add to dagre
-    dagreGraph.setNode(nodeId, { width: NODE_WIDTH, height: NODE_HEIGHT });
-
-    // Add to xyflow nodes
+    // Add node
     nodes.push({
-      id: nodeId,
+      id: node.id,
       type: 'traceNode',
-      position: { x: 0, y: 0 }, // Will be set by dagre
+      position: { x: baseX, y: baseY },
       data: {
         label: node.name,
         type: node.type,
         status: node.status,
-        isFirst: isFirst && !parentId, // Only first at root level
-        isLast: isLast && !parentId,   // Only last at root level
+        isFirst: isRoot && isRootFirst,
+        isLast: isRoot && isRootLast && (!node.nodes || node.nodes.length === 0),
         isSelected,
-        onClick: () => onNodeClick(nodeId),
+        onClick: () => onNodeClick(node.id),
+        sourcePosition: sourcePos,
+        targetPosition: targetPos,
       },
-      sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
-      targetPosition: isHorizontal ? Position.Left : Position.Top,
+      sourcePosition: sourcePos,
+      targetPosition: targetPos,
     });
 
-    // Create edge from parent
+    // Edge from parent to this node
     if (parentId) {
-      dagreGraph.setEdge(parentId, nodeId);
       edges.push({
-        id: `${parentId}-${nodeId}`,
+        id: `${parentId}-${node.id}`,
         source: parentId,
-        target: nodeId,
+        target: node.id,
         type: 'smoothstep',
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: 'var(--color-primary-400)',
+          color: depth === 1 ? '#66bb6a' : '#9c27b0', // Green for level 1, purple for deeper
         },
         style: {
-          stroke: 'var(--color-primary-400)',
+          stroke: depth === 1 ? '#66bb6a' : '#9c27b0',
           strokeWidth: 2,
         },
         animated: node.status === 'running',
       });
     }
 
-    // Process sub-nodes
+    // Process sub-nodes recursively
     if (node.nodes && node.nodes.length > 0) {
       node.nodes.forEach((subNode, subIndex) => {
-        processNode(subNode, nodeId, subIndex, node.nodes!);
+        let subX: number, subY: number;
+
+        if (isHorizontal) {
+          // Horizontal: Sub-nodes go DOWN from parent, stacked vertically
+          // Each depth level adds more offset to the right
+          subX = baseX + SUB_NODE_OFFSET + (depth * SUB_NODE_OFFSET);
+          subY = baseY + SUB_NODE_OFFSET + (subIndex * SUB_NODE_GAP);
+        } else {
+          // Vertical: Sub-nodes go RIGHT from parent, stacked horizontally
+          subX = baseX + SUB_NODE_OFFSET + (subIndex * SUB_NODE_GAP);
+          subY = baseY + SUB_NODE_OFFSET + (depth * SUB_NODE_OFFSET);
+        }
+
+        processNode(
+          subNode,
+          node.id,
+          subX,
+          subY,
+          depth + 1,
+          subIndex,
+          false,
+          false
+        );
       });
     }
   };
 
-  // Process all root nodes and create edges between sequential root nodes
+  // Process all root nodes
   trace.nodes.forEach((node, index, array) => {
-    processNode(node, null, index, array);
+    const pos = rootPositions[index];
+    const isFirst = index === 0;
+    const isLast = index === array.length - 1;
 
-    // Create edge to next root node (sequential flow)
+    // Process this root node and all its descendants
+    processNode(node, null, pos.x, pos.y, 0, index, isFirst, isLast);
+
+    // Edge to next root node
     if (index < array.length - 1) {
       const nextNode = array[index + 1];
-      dagreGraph.setEdge(node.id, nextNode.id);
       edges.push({
-        id: `${node.id}-${nextNode.id}`,
+        id: `root-${node.id}-${nextNode.id}`,
         source: node.id,
         target: nextNode.id,
         type: 'smoothstep',
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: 'var(--color-primary-400)',
+          color: '#42a5f5',
         },
         style: {
-          stroke: 'var(--color-primary-400)',
+          stroke: '#42a5f5',
           strokeWidth: 2,
         },
         animated: nextNode.status === 'running',
       });
-    }
-  });
-
-  // Run dagre layout
-  dagre.layout(dagreGraph);
-
-  // Apply calculated positions
-  nodes.forEach((node) => {
-    const dagreNode = dagreGraph.node(node.id);
-    if (dagreNode) {
-      node.position = {
-        x: dagreNode.x - NODE_WIDTH / 2,
-        y: dagreNode.y - NODE_HEIGHT / 2,
-      };
     }
   });
 
