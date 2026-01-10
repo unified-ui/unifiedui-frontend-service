@@ -357,11 +357,33 @@ interface LayoutNode {
   y: number;             // Berechnete Y-Koordinate
   parentId: string | null;
   localIndex: number;    // Index unter Geschwistern
+  depth: number;         // Hierarchie-Tiefe (0 = Root, 1 = erste SubNode-Ebene, etc.)
   isRoot: boolean;       // Ist dies ein Root-Node?
   hasChildren: boolean;
   isCollapsed: boolean;
   originalNode: TraceNodeResponseLike;
 }
+
+// Farbpalette für SubNode-Ebenen (Depth 1-10+)
+const DEPTH_COLORS = [
+  '#42a5f5', // Depth 0: Root-Chain (blau) - wird separat behandelt
+  '#66bb6a', // Depth 1: Grün
+  '#ab47bc', // Depth 2: Lila
+  '#ff7043', // Depth 3: Orange
+  '#26a69a', // Depth 4: Teal
+  '#ec407a', // Depth 5: Pink
+  '#7e57c2', // Depth 6: Deep Purple
+  '#5c6bc0', // Depth 7: Indigo
+  '#29b6f6', // Depth 8: Light Blue
+  '#9ccc65', // Depth 9: Light Green
+  '#ffca28', // Depth 10+: Amber
+];
+
+const getDepthColor = (depth: number): string => {
+  if (depth <= 0) return DEPTH_COLORS[0];
+  if (depth >= DEPTH_COLORS.length) return DEPTH_COLORS[DEPTH_COLORS.length - 1];
+  return DEPTH_COLORS[depth];
+};
 
 // Type for trace node (simplified for layout)
 interface TraceNodeResponseLike {
@@ -404,6 +426,7 @@ const createColumnBasedLayout = (
     parentId: string | null,
     column: number,
     localIndex: number,
+    depth: number,       // Hierarchie-Tiefe
     isVisible: boolean
   ): void => {
     const hasChildren = node.nodes && node.nodes.length > 0;
@@ -425,6 +448,7 @@ const createColumnBasedLayout = (
       y: 0,
       parentId,
       localIndex,
+      depth,
       isRoot,
       hasChildren: hasChildren || false,
       isCollapsed,
@@ -439,14 +463,14 @@ const createColumnBasedLayout = (
       node.nodes!.forEach((childNode, childIndex) => {
         // Kind ist sichtbar wenn Parent sichtbar UND Parent nicht collapsed
         const childVisible = isVisible && !isCollapsed;
-        collectNodes(childNode, node.id, column + 1, childIndex, childVisible);
+        collectNodes(childNode, node.id, column + 1, childIndex, depth + 1, childVisible);
       });
     }
   };
   
-  // Root-Nodes sammeln (column = rootIndex, localIndex = rootIndex)
+  // Root-Nodes sammeln (column = rootIndex, localIndex = rootIndex, depth = 0)
   trace.nodes.forEach((rootNode, rootIndex) => {
-    collectNodes(rootNode, null, rootIndex, rootIndex, true);
+    collectNodes(rootNode, null, rootIndex, rootIndex, 0, true);
   });
   
   // Nur sichtbare Nodes für Layout verwenden
@@ -614,8 +638,8 @@ const createColumnBasedLayout = (
   // Parent → Child Edges (nur für sichtbare Nodes)
   for (const node of visibleNodes) {
     if (node.parentId && visibleNodeIdSet.has(node.parentId)) {
-      const parent = nodeMap.get(node.parentId)!;
-      const isFirstLevelSubNode = parent.isRoot;
+      // Farbe basierend auf der Tiefe des CHILD-Nodes
+      const edgeColor = getDepthColor(node.depth);
       
       edges.push({
         id: `${node.parentId}-${node.id}`,
@@ -624,13 +648,14 @@ const createColumnBasedLayout = (
         type: 'smoothstep',
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: isFirstLevelSubNode ? '#66bb6a' : '#9c27b0', // Green for first level, purple for deeper
+          color: edgeColor,
         },
         style: {
-          stroke: isFirstLevelSubNode ? '#66bb6a' : '#9c27b0',
+          stroke: edgeColor,
           strokeWidth: 2,
         },
         animated: node.originalNode.status === 'running',
+        data: { depth: node.depth }, // Speichere depth für spätere Referenz
       });
     }
   }
@@ -656,21 +681,30 @@ export const TracingCanvasView: FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
+  const [layoutVersion, setLayoutVersion] = useState(0); // Trigger für Layout-Neuberechnung
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
 
   // Toggle collapse state for a node
+  // Bei EXPAND: Layout neu berechnen, bei COLLAPSE: Nur visuell ausblenden
   const handleToggleCollapse = useCallback((nodeId: string) => {
     setCollapsedNodes(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(nodeId)) {
+      const wasCollapsed = newSet.has(nodeId);
+      
+      if (wasCollapsed) {
+        // EXPAND: Node wird eingeblendet → Layout neu berechnen
         newSet.delete(nodeId);
+        setLayoutVersion(v => v + 1);
       } else {
+        // COLLAPSE: Node wird ausgeblendet → NUR visuell, kein Re-Layout
         newSet.add(nodeId);
       }
       return newSet;
     });
   }, []);
 
-  // Calculate layout when trace, direction, or collapsed nodes change
+  // Calculate layout when trace, direction, layoutVersion changes
+  // NICHT bei collapsedNodes-Änderung (nur visuell filtern)
   useEffect(() => {
     if (!selectedTrace) {
       setNodes([]);
@@ -687,9 +721,31 @@ export const TracingCanvasView: FC = () => {
       handleToggleCollapse
     );
 
+    // Apply selected edge highlighting
+    const highlightedEdges = layoutEdges.map(edge => {
+      if (edge.id === selectedEdgeId) {
+        return {
+          ...edge,
+          style: {
+            ...edge.style,
+            stroke: '#1e88e5', // Primary blue (same as root chain)
+            strokeWidth: 4,    // Dicker
+          },
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: '#1e88e5',
+            width: 20,
+            height: 20,
+          },
+          zIndex: 1000, // Bring to front
+        };
+      }
+      return edge;
+    });
+
     setNodes(layoutNodes);
-    setEdges(layoutEdges);
-  }, [selectedTrace, layoutDirection, selectedNode, selectNode, setNodes, setEdges, collapsedNodes, handleToggleCollapse]);
+    setEdges(highlightedEdges);
+  }, [selectedTrace, layoutDirection, selectedNode, selectNode, setNodes, setEdges, collapsedNodes, handleToggleCollapse, layoutVersion, selectedEdgeId]);
 
   // Fit view on load
   const onInit = useCallback((instance: ReactFlowInstance) => {
@@ -699,13 +755,19 @@ export const TracingCanvasView: FC = () => {
     }, 100);
   }, []);
 
-  // Handle reset view
-  const handleResetView = useCallback(() => {
+  // Handle "Adjust view" - Reset view AND trigger layout recalculation
+  const handleAdjustView = useCallback(() => {
     if (reactFlowInstance) {
       reactFlowInstance.fitView({ padding: 0.1 });
     }
+    setLayoutVersion(v => v + 1); // Layout neu berechnen
     resetCanvasView();
   }, [reactFlowInstance, resetCanvasView]);
+
+  // Handle edge click - highlight selected edge
+  const handleEdgeClick = useCallback((_event: React.MouseEvent, edge: Edge) => {
+    setSelectedEdgeId(prev => prev === edge.id ? null : edge.id);
+  }, []);
 
   // Handle layout toggle
   const handleLayoutToggle = useCallback(() => {
@@ -752,8 +814,8 @@ export const TracingCanvasView: FC = () => {
               )}
             </ActionIcon>
           </Tooltip>
-          <Tooltip label="Ansicht zurücksetzen">
-            <ActionIcon variant="light" onClick={handleResetView}>
+          <Tooltip label="Adjust view">
+            <ActionIcon variant="light" onClick={handleAdjustView}>
               <IconFocusCentered size={18} />
             </ActionIcon>
           </Tooltip>
@@ -766,6 +828,7 @@ export const TracingCanvasView: FC = () => {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onEdgeClick={handleEdgeClick}
         onInit={onInit}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
