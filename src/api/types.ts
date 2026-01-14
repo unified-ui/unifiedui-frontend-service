@@ -192,6 +192,7 @@ export interface MessageContent {
 
 export interface InvokeConfig {
   chatHistoryMessageCount?: number;
+  contextData?: Record<string, string>;
 }
 
 export interface SendMessageRequest {

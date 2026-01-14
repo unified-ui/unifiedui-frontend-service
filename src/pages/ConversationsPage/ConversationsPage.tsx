@@ -25,6 +25,33 @@ import classes from './ConversationsPage.module.css';
 const STORAGE_KEY_LAST_APP = 'unified-ui-last-application-id';
 const STORAGE_KEY_SIDEBAR_COLLAPSED = 'unified-ui-sidebar-collapsed';
 
+// Context data prefix for query parameters
+const CONTEXT_DATA_PREFIX = 'ctx_';
+
+/**
+ * Extracts context data from URL search parameters.
+ * Query params with 'ctx_' prefix are extracted and the prefix is removed from keys.
+ * Example: ctx_imt_internal_id=728173 -> { imt_internal_id: '728173' }
+ */
+function extractContextDataFromSearchParams(
+  searchParams: URLSearchParams
+): Record<string, string> | undefined {
+  const contextData: Record<string, string> = {};
+  
+  searchParams.forEach((value, key) => {
+    if (key.startsWith(CONTEXT_DATA_PREFIX)) {
+      // Remove prefix from key
+      const cleanKey = key.slice(CONTEXT_DATA_PREFIX.length);
+      if (cleanKey) {
+        contextData[cleanKey] = value;
+      }
+    }
+  });
+  
+  // Return undefined if no context data found (to avoid sending empty object)
+  return Object.keys(contextData).length > 0 ? contextData : undefined;
+}
+
 export const ConversationsPage: FC = () => {
   const { conversationId } = useParams<{ conversationId?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -381,6 +408,9 @@ export const ConversationsPage: FC = () => {
       }
 
       // Send message via SSE stream to agent-service
+      // Extract context data from URL query params (ctx_* prefix)
+      const contextData = extractContextDataFromSearchParams(searchParams);
+      
       const stream = apiClient.sendMessageStream(
         selectedTenant.id,
         {
@@ -390,6 +420,8 @@ export const ConversationsPage: FC = () => {
             content,
             attachments: attachmentUrls.length > 0 ? attachmentUrls : undefined,
           },
+          // Include invoke config with context data if present
+          invokeConfig: contextData ? { contextData } : undefined,
           // Include external conversation ID for Foundry apps (used for continuing threads)
           extConversationId: isFoundryApp ? activeExtConversationId : undefined,
         },
