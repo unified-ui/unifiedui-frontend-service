@@ -80,6 +80,9 @@
   --border-focus: var(--color-primary-500);
   --border-error: var(--color-error-500);
 
+  /* ===== INTERACTIVE STATES ===== */
+  --bg-hover: var(--color-gray-100);
+
   /* ===== SPACING ===== */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -163,6 +166,9 @@
   --border-medium: var(--color-gray-600);
   --border-focus: var(--color-primary-400);
   --border-error: var(--color-error-400);
+
+  /* ===== INTERACTIVE STATES ===== */
+  --bg-hover: var(--color-gray-700);
 
   /* Dark Mode Shadows (stärker) */
   --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.3);

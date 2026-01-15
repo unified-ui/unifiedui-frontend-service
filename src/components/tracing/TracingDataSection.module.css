@@ -137,7 +137,7 @@
 
 .dataPanelHeader {
   padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--bg-elevated);
+  background: var(--bg-app);
   border-bottom: 1px solid var(--border-default);
 }
 
@@ -176,7 +176,7 @@
 }
 
 .collapsibleHeader:hover {
-  background: var(--color-gray-100);
+  background: var(--bg-hover);
   color: var(--text-primary);
 }
 
@@ -205,7 +205,7 @@
 }
 
 .jsonToggle:hover {
-  background: var(--color-gray-100);
+  background: var(--bg-hover);
 }
 
 /* ============================================ */

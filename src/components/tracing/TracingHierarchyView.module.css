@@ -57,7 +57,7 @@
 }
 
 .treeItem:hover {
-  background: var(--color-gray-100);
+  background: var(--bg-hover);
 }
 
 .treeItemSelected {
