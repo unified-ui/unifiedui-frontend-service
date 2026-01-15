@@ -61,11 +61,11 @@
 }
 
 .treeItemSelected {
-  background: var(--color-primary-50) !important;
+  background: var(--bg-selected) !important;
 }
 
 .treeItemSelected:hover {
-  background: var(--color-primary-100) !important;
+  background: var(--bg-selected-hover) !important;
 }
 
 .traceRoot {

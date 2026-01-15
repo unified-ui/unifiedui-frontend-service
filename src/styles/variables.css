@@ -82,6 +82,8 @@
 
   /* ===== INTERACTIVE STATES ===== */
   --bg-hover: var(--color-gray-100);
+  --bg-selected: var(--color-primary-50);
+  --bg-selected-hover: var(--color-primary-100);
 
   /* ===== SPACING ===== */
   --spacing-xs: 4px;
@@ -168,7 +170,9 @@
   --border-error: var(--color-error-400);
 
   /* ===== INTERACTIVE STATES ===== */
-  --bg-hover: var(--color-gray-700);
+  --bg-hover: rgba(33, 150, 243, 0.1);
+  --bg-selected: rgba(33, 150, 243, 0.2);
+  --bg-selected-hover: rgba(33, 150, 243, 0.3);
 
   /* Dark Mode Shadows (stärker) */
   --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.3);
