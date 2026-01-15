@@ -104,10 +104,23 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tabs :global(.mantine-Tabs-tab) {
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.tabs :global(.mantine-Tabs-panel) {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .tabPanel {
   flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -117,8 +130,8 @@
 
 .ioContainer {
   display: flex;
-  height: 100%;
-  overflow: hidden;
+  flex: 1;
+  min-height: 0;
 }
 
 .ioDivider {
@@ -132,19 +145,25 @@
   display: flex;
   flex-direction: column;
   min-width: 200px;
-  overflow: hidden;
+  min-height: 0;
 }
 
 .dataPanelHeader {
   padding: var(--spacing-sm) var(--spacing-md);
   background: var(--bg-app);
   border-bottom: 1px solid var(--border-default);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  flex-shrink: 0;
 }
 
 .dataPanelContent {
   flex: 1;
+  min-height: 0;
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: var(--spacing-sm);
-  overflow: auto;
 }
 
 /* ============================================ */
@@ -214,9 +233,9 @@
 
 .codeBlock {
   font-size: var(--font-size-xs);
-  max-height: 300px;
-  overflow: auto;
   background: var(--bg-app) !important;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .codeBlockPreview {
@@ -225,6 +244,8 @@
   overflow: hidden;
   opacity: 0.7;
   background: var(--bg-app) !important;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 /* ============================================ */
@@ -234,4 +255,5 @@
 .metadataPanel {
   height: 100%;
   padding: var(--spacing-sm);
+  overflow: hidden;
 }
