@@ -11,7 +11,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--bg-paper);
+  background: var(--bg-app);
   border-left: 1px solid var(--border-default);
   overflow: hidden;
 }
@@ -21,13 +21,13 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  background: var(--bg-paper);
+  background: var(--bg-app);
 }
 
 .header {
   padding: var(--spacing-sm) var(--spacing-md);
   border-bottom: 1px solid var(--border-default);
-  background: var(--bg-elevated);
+  background: var(--bg-app);
 }
 
 .scrollArea {

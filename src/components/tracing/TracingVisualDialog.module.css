@@ -2,12 +2,30 @@
  * TracingVisualDialog - CSS Module
  */
 
+/* Override Mantine Modal padding via CSS Custom Properties */
+.modal {
+  --mantine-spacing-md: 0;
+  --mantine-spacing-xl: 0;
+}
+
+.modal :global(.mantine-Modal-content) {
+  padding: 0 !important;
+}
+
+.modal :global(.mantine-Modal-header) {
+  display: none;
+}
+
+.modal :global(.mantine-Modal-body) {
+  padding: 0 !important;
+}
+
 .container {
   height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--bg-paper);
+  background: var(--bg-app);
 }
 
 /* Header */
@@ -53,7 +71,7 @@
 .dataContainer {
   overflow: hidden;
   border-top: 1px solid var(--border-default);
-  background: var(--bg-paper);
+  background: var(--bg-app);
 }
 
 /* Hierarchy Container */
@@ -61,7 +79,7 @@
   height: 100%;
   overflow: hidden;
   border-left: 1px solid var(--border-default);
-  background: var(--bg-paper);
+  background: var(--bg-app);
 }
 
 /* Resize Handles */

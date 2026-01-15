@@ -36,8 +36,8 @@ const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
   const { selectedTrace } = useTracing();
 
   // Panel sizes (percentages)
-  const [canvasHeight, setCanvasHeight] = useState(66); // 2/3
-  const [hierarchyWidth, setHierarchyWidth] = useState(25); // 1/4
+  const [canvasHeight, setCanvasHeight] = useState(75); // 75% canvas, 25% data section
+  const [hierarchyWidth, setHierarchyWidth] = useState(20); // 20% hierarchy width
 
   // Resize handlers
   const handleVerticalResize = (e: React.MouseEvent) => {
@@ -198,21 +198,33 @@ export const TracingVisualDialog: FC<TracingVisualDialogProps> = ({
       radius="lg"
       centered
       withCloseButton={false}
+      className={classes.modal}
       overlayProps={{
         backgroundOpacity: 0.5,
         blur: 3,
       }}
       styles={{
+        root: {
+          padding: '0 !important',
+        },
+        inner: {
+          padding: '0 !important',
+        },
         content: {
           height: 'calc(100vh - 60px)',
           display: 'flex',
           flexDirection: 'column',
+          padding: '0 !important',
+        },
+        header: {
+          padding: '0 !important',
+          display: 'none',
         },
         body: {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          padding: 0,
+          padding: '0 !important',
           overflow: 'hidden',
         },
       }}
