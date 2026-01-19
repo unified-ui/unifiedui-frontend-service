@@ -32,6 +32,8 @@ import {
   IconArrowsHorizontal,
   IconArrowsVertical,
   IconFocusCentered,
+  IconLayoutSidebarRight,
+  IconLayoutSidebarRightCollapse,
   // Node Type Icons
   IconBrain,
   IconTool,
@@ -768,6 +770,8 @@ export const TracingCanvasView: FC = () => {
     selectNode,
     setLayoutDirection,
     resetCanvasView,
+    hierarchyVisible,
+    toggleHierarchyVisible,
   } = useTracing();
 
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
@@ -913,6 +917,15 @@ export const TracingCanvasView: FC = () => {
           <Tooltip label="Adjust view">
             <ActionIcon variant="light" onClick={handleAdjustView}>
               <IconFocusCentered size={18} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label={hierarchyVisible ? 'Hierarchie ausblenden' : 'Hierarchie einblenden'}>
+            <ActionIcon variant="light" onClick={toggleHierarchyVisible}>
+              {hierarchyVisible ? (
+                <IconLayoutSidebarRightCollapse size={18} />
+              ) : (
+                <IconLayoutSidebarRight size={18} />
+              )}
             </ActionIcon>
           </Tooltip>
         </Group>

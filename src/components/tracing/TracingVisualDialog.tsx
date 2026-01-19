@@ -33,7 +33,7 @@ interface DialogContentProps {
 }
 
 const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
-  const { selectedTrace } = useTracing();
+  const { selectedTrace, hierarchyVisible } = useTracing();
 
   // Panel sizes (percentages)
   const [canvasHeight, setCanvasHeight] = useState(75); // 75% canvas, 25% data section
@@ -117,7 +117,7 @@ const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
         {/* Left: Canvas + Data Section */}
         <Box
           className={classes.mainContent}
-          style={{ width: `calc(100% - ${hierarchyWidth}%)` }}
+          style={{ width: hierarchyVisible ? `calc(100% - ${hierarchyWidth}%)` : '100%' }}
         >
           {/* SubHeader (floating) */}
           <TracingSubHeader />
@@ -145,19 +145,23 @@ const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
           </Box>
         </Box>
 
-        {/* Horizontal Resize Handle */}
-        <div
-          className={classes.resizeHandleHorizontal}
-          onMouseDown={handleHorizontalResize}
-        />
+        {/* Horizontal Resize Handle - only show when hierarchy is visible */}
+        {hierarchyVisible && (
+          <div
+            className={classes.resizeHandleHorizontal}
+            onMouseDown={handleHorizontalResize}
+          />
+        )}
 
-        {/* Right: Hierarchy View */}
-        <Box
-          className={classes.hierarchyContainer}
-          style={{ width: `${hierarchyWidth}%` }}
-        >
-          <TracingHierarchyView />
-        </Box>
+        {/* Right: Hierarchy View - only show when visible */}
+        {hierarchyVisible && (
+          <Box
+            className={classes.hierarchyContainer}
+            style={{ width: `${hierarchyWidth}%` }}
+          >
+            <TracingHierarchyView />
+          </Box>
+        )}
       </Group>
     </Stack>
   );

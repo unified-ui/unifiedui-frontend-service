@@ -19,6 +19,9 @@ import type { FullTraceResponse, TraceNodeResponse } from '../../api/types';
 
 export type LayoutDirection = 'horizontal' | 'vertical';
 
+// LocalStorage Keys
+const LOCALSTORAGE_KEY_HIERARCHY_VISIBLE = 'unified-ui-tracing-hierarchy-visible';
+
 interface TracingContextState {
   // Data
   traces: FullTraceResponse[];
@@ -29,6 +32,7 @@ interface TracingContextState {
   layoutDirection: LayoutDirection;
   hierarchyCollapsed: Set<string>;
   canvasCollapsed: Set<string>;
+  hierarchyVisible: boolean;
 
   // Actions
   selectTrace: (traceId: string | null) => void;
@@ -38,6 +42,7 @@ interface TracingContextState {
   setLayoutDirection: (dir: LayoutDirection) => void;
   centerOnNode: (nodeId: string) => void;
   resetCanvasView: () => void;
+  toggleHierarchyVisible: () => void;
 }
 
 // ============================================================================
@@ -104,6 +109,10 @@ export const TracingProvider: FC<TracingProviderProps> = ({
     new Set()
   );
   const [canvasCollapsed, setCanvasCollapsed] = useState<Set<string>>(new Set());
+  const [hierarchyVisible, setHierarchyVisible] = useState<boolean>(() => {
+    const stored = localStorage.getItem(LOCALSTORAGE_KEY_HIERARCHY_VISIBLE);
+    return stored === null ? true : stored === 'true';
+  });
 
   // Callback for centering on node (will be connected to canvas)
   const [, setCenterNodeId] = useState<string | null>(null);
@@ -180,6 +189,14 @@ export const TracingProvider: FC<TracingProviderProps> = ({
     setCenterNodeId(null);
   }, []);
 
+  const toggleHierarchyVisible = useCallback(() => {
+    setHierarchyVisible((prev) => {
+      const newValue = !prev;
+      localStorage.setItem(LOCALSTORAGE_KEY_HIERARCHY_VISIBLE, String(newValue));
+      return newValue;
+    });
+  }, []);
+
   // Context value
   const value = useMemo<TracingContextState>(
     () => ({
@@ -189,6 +206,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
       layoutDirection,
       hierarchyCollapsed,
       canvasCollapsed,
+      hierarchyVisible,
       selectTrace,
       selectNode,
       toggleHierarchyCollapse,
@@ -196,6 +214,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
       setLayoutDirection,
       centerOnNode,
       resetCanvasView,
+      toggleHierarchyVisible,
     }),
     [
       traces,
@@ -204,6 +223,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
       layoutDirection,
       hierarchyCollapsed,
       canvasCollapsed,
+      hierarchyVisible,
       selectTrace,
       selectNode,
       toggleHierarchyCollapse,
@@ -211,6 +231,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
       setLayoutDirection,
       centerOnNode,
       resetCanvasView,
+      toggleHierarchyVisible,
     ]
   );
 
