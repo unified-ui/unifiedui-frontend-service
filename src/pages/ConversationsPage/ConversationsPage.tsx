@@ -8,6 +8,7 @@ import { MainLayout } from '../../components/layout/MainLayout';
 import { useIdentity, useChatSidebar } from '../../contexts';
 import { ShareConversationDialog } from '../../components/dialogs/ShareConversationDialog';
 import { SearchConversationsDialog } from '../../components/dialogs/SearchConversationsDialog';
+import { TracingProvider, TracingSidebar, TracingVisualDialog } from '../../components/tracing';
 import { ChatSidebar } from './components/ChatSidebar';
 import { ChatHeader } from './components/ChatHeader';
 import { ChatContent } from './components/ChatContent';
@@ -18,6 +19,7 @@ import {
   type ConversationResponse,
   type ApplicationResponse,
   type MessageResponse,
+  type FullTraceResponse,
 } from '../../api/types';
 import classes from './ConversationsPage.module.css';
 
@@ -79,6 +81,11 @@ export const ConversationsPage: FC = () => {
   });
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
+  
+  // Tracing state
+  const [tracingSidebarVisible, setTracingSidebarVisible] = useState(false);
+  const [tracingDialogOpen, setTracingDialogOpen] = useState(false);
+  const [traces, setTraces] = useState<FullTraceResponse[]>([]);
 
   // Refs for abort controller
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -192,6 +199,26 @@ export const ConversationsPage: FC = () => {
 
     loadConversation();
   }, [apiClient, selectedTenant, conversationId, navigate]);
+
+  // Load traces when conversation changes
+  useEffect(() => {
+    if (!apiClient || !selectedTenant || !conversationId) {
+      setTraces([]);
+      return;
+    }
+
+    const loadTraces = async () => {
+      try {
+        const tracesData = await apiClient.getConversationTraces(selectedTenant.id, conversationId);
+        setTraces(tracesData.traces || []);
+      } catch (error) {
+        console.error('Failed to load traces:', error);
+        setTraces([]);
+      }
+    };
+
+    loadTraces();
+  }, [apiClient, selectedTenant, conversationId]);
 
   // Handle application change
   const handleApplicationChange = useCallback((applicationId: string) => {
@@ -575,6 +602,16 @@ export const ConversationsPage: FC = () => {
     setSearchDialogOpen(true);
   }, []);
 
+  // Handle tracing sidebar toggle
+  const handleToggleTracingSidebar = useCallback(() => {
+    setTracingSidebarVisible(prev => !prev);
+  }, []);
+
+  // Handle tracing fullscreen dialog open
+  const handleOpenTracingFullscreen = useCallback(() => {
+    setTracingDialogOpen(true);
+  }, []);
+
   // Drag and drop handlers for the main chat area
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -656,98 +693,118 @@ export const ConversationsPage: FC = () => {
         {/* Main chat area - margin left adjusts based on sidebar state */}
         <Box 
           className={`${classes.mainArea} ${sidebarCollapsed ? classes.sidebarCollapsed : ''}`}
-          onDragEnter={handleDragEnter}
-          onDragLeave={handleDragLeave}
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
           style={{ position: 'relative' }}
         >
-          {/* Drop zone overlay */}
-          <Box className={`${classes.dropZoneOverlay} ${isDragOver ? classes.active : ''}`}>
-            <Box className={classes.dropZoneContent}>
-              <IconUpload size={48} stroke={1.5} />
-              <Text size="lg" fw={500}>Drop files here</Text>
-              <Text size="sm" c="dimmed">Files will be attached to your message</Text>
-            </Box>
-          </Box>
-
-          {/* Header */}
-          <ChatHeader
-            conversation={currentConversation}
-            applications={applications}
-            selectedApplicationId={selectedApplicationId}
-            isNewChat={isNewChat}
-            isFavorite={currentConversation ? favoriteIds.has(currentConversation.id) : false}
-            onApplicationChange={handleApplicationChange}
-            onShare={handleShare}
-            onToggleFavorite={() => {
-              if (currentConversation) {
-                handleToggleFavorite(currentConversation.id);
-              }
-            }}
-            onDelete={() => {
-              if (currentConversation) {
-                handleDeleteConversation(currentConversation.id);
-              }
-            }}
-          />
-
-          {/* Content */}
-          {isNewChat && messages.length === 0 ? (
-            <>
-              <Box className={classes.contentArea}>
-                <Box className={classes.emptyState}>
-                  <IconMessageCircle size={64} className={classes.emptyStateIcon} />
-                  <Text className={classes.emptyStateTitle}>
-                    Start a new conversation
-                  </Text>
-                  <Text className={classes.emptyStateDescription}>
-                    {selectedApplicationId
-                      ? 'Type your message below to begin chatting'
-                      : 'Select a chat agent from the header to start'}
-                  </Text>
+          {/* Chat + Tracing Layout */}
+          <Box className={classes.chatTracingLayout}>
+            {/* Chat Section */}
+            <Box 
+              className={`${classes.chatSection} ${tracingSidebarVisible && traces.length > 0 ? classes.withTracingSidebar : ''}`}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
+              {/* Drop zone overlay */}
+              <Box className={`${classes.dropZoneOverlay} ${isDragOver ? classes.active : ''}`}>
+                <Box className={classes.dropZoneContent}>
+                  <IconUpload size={48} stroke={1.5} />
+                  <Text size="lg" fw={500}>Drop files here</Text>
+                  <Text size="sm" c="dimmed">Files will be attached to your message</Text>
                 </Box>
               </Box>
 
-              {/* Input - same structure as existing chat */}
-              <ChatInput
-                ref={chatInputRef}
-                onSend={handleSendMessage}
-                isDisabled={!selectedApplicationId}
-                isStreaming={isStreaming}
-                placeholder={
-                  selectedApplicationId
-                    ? 'Type a message to start...'
-                    : 'Select a chat agent to start'
-                }
+              {/* Header */}
+              <ChatHeader
+                conversation={currentConversation}
+                applications={applications}
+                selectedApplicationId={selectedApplicationId}
+                isNewChat={isNewChat}
+                isFavorite={currentConversation ? favoriteIds.has(currentConversation.id) : false}
+                tracingSidebarVisible={tracingSidebarVisible}
+                hasTraces={traces.length > 0}
+                onApplicationChange={handleApplicationChange}
+                onShare={handleShare}
+                onToggleFavorite={() => {
+                  if (currentConversation) {
+                    handleToggleFavorite(currentConversation.id);
+                  }
+                }}
+                onDelete={() => {
+                  if (currentConversation) {
+                    handleDeleteConversation(currentConversation.id);
+                  }
+                }}
+                onToggleTracingSidebar={handleToggleTracingSidebar}
               />
-            </>
-          ) : (
-            <>
-              <Box className={classes.contentArea}>
-                <ChatContent
-                  messages={messages}
-                  isLoading={isLoadingMessages}
-                  isStreaming={isStreaming}
-                  streamingContent={streamingContent}
-                  streamingMessageId={streamingMessageId}
-                />
-              </Box>
 
-              {/* Input */}
-              <ChatInput
-                ref={chatInputRef}
-                onSend={handleSendMessage}
-                isDisabled={!selectedApplicationId}
-                isStreaming={isStreaming}
-                placeholder={
-                  selectedApplicationId
-                    ? 'Type a message...'
-                    : 'Select a chat agent to start'
-                }
-              />
-            </>
-          )}
+              {/* Content */}
+              {isNewChat && messages.length === 0 ? (
+                <>
+                  <Box className={classes.contentArea}>
+                    <Box className={classes.emptyState}>
+                      <IconMessageCircle size={64} className={classes.emptyStateIcon} />
+                      <Text className={classes.emptyStateTitle}>
+                        Start a new conversation
+                      </Text>
+                      <Text className={classes.emptyStateDescription}>
+                        {selectedApplicationId
+                          ? 'Type your message below to begin chatting'
+                          : 'Select a chat agent from the header to start'}
+                      </Text>
+                    </Box>
+                  </Box>
+
+                  {/* Input - same structure as existing chat */}
+                  <ChatInput
+                    ref={chatInputRef}
+                    onSend={handleSendMessage}
+                    isDisabled={!selectedApplicationId}
+                    isStreaming={isStreaming}
+                    placeholder={
+                      selectedApplicationId
+                        ? 'Type a message to start...'
+                        : 'Select a chat agent to start'
+                    }
+                  />
+                </>
+              ) : (
+                <>
+                  <Box className={classes.contentArea}>
+                    <ChatContent
+                      messages={messages}
+                      isLoading={isLoadingMessages}
+                      isStreaming={isStreaming}
+                      streamingContent={streamingContent}
+                      streamingMessageId={streamingMessageId}
+                    />
+                  </Box>
+
+                  {/* Input */}
+                  <ChatInput
+                    ref={chatInputRef}
+                    onSend={handleSendMessage}
+                    isDisabled={!selectedApplicationId}
+                    isStreaming={isStreaming}
+                    placeholder={
+                      selectedApplicationId
+                        ? 'Type a message...'
+                        : 'Select a chat agent to start'
+                    }
+                  />
+                </>
+              )}
+            </Box>
+
+            {/* Tracing Sidebar */}
+            {tracingSidebarVisible && traces.length > 0 && (
+              <TracingProvider traces={traces}>
+                <Box className={classes.tracingSidebarWrapper}>
+                  <TracingSidebar onOpenFullscreen={handleOpenTracingFullscreen} />
+                </Box>
+              </TracingProvider>
+            )}
+          </Box>
         </Box>
       </Box>
 
@@ -765,6 +822,15 @@ export const ConversationsPage: FC = () => {
         conversations={conversations}
         applications={applications}
       />
+
+      {/* Tracing Dialog */}
+      {tracingDialogOpen && traces.length > 0 && (
+        <TracingVisualDialog
+          opened={tracingDialogOpen}
+          onClose={() => setTracingDialogOpen(false)}
+          traces={traces}
+        />
+      )}
     </MainLayout>
   );
 };

@@ -15,3 +15,4 @@ export { TracingSubHeader } from './TracingSubHeader';
 export { TracingCanvasView } from './TracingCanvasView';
 export { TracingHierarchyView } from './TracingHierarchyView';
 export { TracingDataSection } from './TracingDataSection';
+export { TracingSidebar } from './TracingSidebar';

@@ -47,6 +47,37 @@
   margin-left: 0;
 }
 
+/* Layout for chat + tracing sidebar */
+.chatTracingLayout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chatSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+  transition: width var(--transition-normal) var(--easing-ease-in-out);
+}
+
+.chatSection.withTracingSidebar {
+  /* Optional: Add any specific styles when tracing sidebar is visible */
+}
+
+.tracingSidebarWrapper {
+  width: 320px;
+  min-width: 320px;
+  border-left: 1px solid var(--border-default);
+  background-color: var(--bg-paper);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .contentArea {
   flex: 1;
   min-height: 0;

@@ -17,6 +17,7 @@ import {
   IconTrash,
   IconChevronDown,
   IconSparkles,
+  IconChartDots,
 } from '@tabler/icons-react';
 import { ConfirmDeleteDialog } from '../../../../components/common';
 import type { ApplicationResponse, ConversationResponse } from '../../../../api/types';
@@ -28,10 +29,13 @@ interface ChatHeaderProps {
   selectedApplicationId?: string;
   isNewChat: boolean;
   isFavorite?: boolean;
+  tracingSidebarVisible?: boolean;
+  hasTraces?: boolean;
   onApplicationChange: (applicationId: string) => void;
   onShare?: () => void;
   onToggleFavorite?: () => void;
   onDelete?: () => void;
+  onToggleTracingSidebar?: () => void;
 }
 
 export const ChatHeader: FC<ChatHeaderProps> = ({
@@ -40,10 +44,13 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
   selectedApplicationId,
   isNewChat,
   isFavorite = false,
+  tracingSidebarVisible = false,
+  hasTraces = false,
   onApplicationChange,
   onShare,
   onToggleFavorite,
   onDelete,
+  onToggleTracingSidebar,
 }) => {
   const selectedApp = applications.find(a => a.id === selectedApplicationId);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -112,6 +119,18 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
         <Group gap="xs" className={classes.rightSection}>
           {selectedApplicationId && (
             <>
+              <Tooltip label={tracingSidebarVisible ? 'Tracing ausblenden' : 'Tracing anzeigen'}>
+                <ActionIcon
+                  variant={tracingSidebarVisible ? 'filled' : 'subtle'}
+                  color={tracingSidebarVisible ? 'primary' : undefined}
+                  onClick={onToggleTracingSidebar}
+                  aria-label="Toggle tracing sidebar"
+                  disabled={isNewChat || !hasTraces}
+                >
+                  <IconChartDots size={18} />
+                </ActionIcon>
+              </Tooltip>
+
               <Tooltip label="Share conversation">
                 <ActionIcon
                   variant="subtle"

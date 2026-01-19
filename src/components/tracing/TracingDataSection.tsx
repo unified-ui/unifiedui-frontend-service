@@ -126,9 +126,9 @@ const DataPanel: FC<DataPanelProps> = ({ title, data }) => {
         <div className={classes.dataPanelHeader}>
           <Text size="sm" fw={600}>{title}</Text>
         </div>
-        <div className={classes.dataPanelContent}>
+        <ScrollArea className={classes.dataPanelContent} type="auto" offsetScrollbars>
           <Text size="xs" c="dimmed" fs="italic">Keine Daten</Text>
-        </div>
+        </ScrollArea>
       </div>
     );
   }
@@ -141,7 +141,7 @@ const DataPanel: FC<DataPanelProps> = ({ title, data }) => {
       <div className={classes.dataPanelHeader}>
         <Text size="sm" fw={600}>{title}</Text>
       </div>
-      <div className={classes.dataPanelContent}>
+      <ScrollArea className={classes.dataPanelContent} type="auto" offsetScrollbars>
         {/* Text (prominent) */}
         {text && (
           <div className={classes.textSection}>
@@ -176,7 +176,7 @@ const DataPanel: FC<DataPanelProps> = ({ title, data }) => {
         {!text && !args && !metadata && !extraData && !hasOtherKeys && (
           <Text size="xs" c="dimmed" fs="italic">Keine Daten</Text>
         )}
-      </div>
+      </ScrollArea>
     </div>
   );
 };

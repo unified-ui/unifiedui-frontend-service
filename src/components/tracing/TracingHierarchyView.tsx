@@ -6,14 +6,20 @@
  * - Type Badge + Name + Status Icon
  * - Expand/Collapse für Nodes mit Kindern
  * - Klick = Selektion → Canvas + DataSection update
+ * - variant: 'full' | 'compact' - Für Dialog vs Sidebar
+ * - showDataPanels: VS Code-style collapsible Panels (Logs, I/O, Metadata)
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState, useRef } from 'react';
 import type { FC } from 'react';
-import { Text, ScrollArea, Badge, UnstyledButton } from '@mantine/core';
+import { Text, ScrollArea, Badge, UnstyledButton, ActionIcon, Tooltip, Collapse, Code } from '@mantine/core';
 import {
   IconChevronDown,
   IconChevronRight,
+  IconMaximize,
+  IconNote,
+  IconFileText,
+  IconBraces,
   // Status Icons
   IconCheck,
   IconX,
@@ -22,7 +28,7 @@ import {
   IconMinus,
 } from '@tabler/icons-react';
 import { useTracing } from './TracingContext';
-import type { TraceNodeResponse, FullTraceResponse } from '../../api/types';
+import type { TraceNodeResponse, FullTraceResponse, TraceNodeDataIO } from '../../api/types';
 import classes from './TracingHierarchyView.module.css';
 
 // ============================================================================
@@ -79,6 +85,249 @@ const getStatusIcon = (status: string, size = 14) => {
     default:
       return <IconCheck size={size} style={{ color: 'var(--color-gray-400)' }} />;
   }
+};
+
+// ============================================================================
+// JSON VIEWER (for Data Panels)
+// ============================================================================
+
+interface JsonViewerProps {
+  data: unknown;
+  initialCollapsed?: boolean;
+}
+
+const JsonViewer: FC<JsonViewerProps> = ({ data, initialCollapsed = true }) => {
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
+
+  if (data === null || data === undefined) {
+    return <Text size="xs" c="dimmed" fs="italic">null</Text>;
+  }
+
+  if (typeof data !== 'object') {
+    return <Code block className={classes.codeBlock}>{String(data)}</Code>;
+  }
+
+  const jsonString = JSON.stringify(data, null, 2);
+  const lineCount = jsonString.split('\n').length;
+  const isLarge = lineCount > 5;
+
+  if (!isLarge) {
+    return <Code block className={classes.codeBlock}>{jsonString}</Code>;
+  }
+
+  return (
+    <div className={classes.jsonViewer}>
+      <UnstyledButton
+        className={classes.jsonToggle}
+        onClick={() => setCollapsed(!collapsed)}
+      >
+        {collapsed ? <IconChevronRight size={14} /> : <IconChevronDown size={14} />}
+        <Text size="xs" c="dimmed">{lineCount} lines</Text>
+      </UnstyledButton>
+      <Collapse in={!collapsed}>
+        <Code block className={classes.codeBlock}>{jsonString}</Code>
+      </Collapse>
+      {collapsed && (
+        <Code block className={classes.codeBlockPreview}>
+          {jsonString.split('\n').slice(0, 3).join('\n')}...
+        </Code>
+      )}
+    </div>
+  );
+};
+
+// ============================================================================
+// COLLAPSIBLE PANEL (VS Code Style)
+// ============================================================================
+
+interface CollapsiblePanelProps {
+  title: string;
+  icon: React.ReactNode;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+  badge?: number;
+}
+
+const CollapsiblePanel: FC<CollapsiblePanelProps> = ({
+  title,
+  icon,
+  defaultOpen = false,
+  children,
+  badge,
+}) => {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className={classes.collapsiblePanel}>
+      <UnstyledButton
+        className={classes.panelHeader}
+        onClick={() => setOpen(!open)}
+      >
+        <span className={classes.panelChevron}>
+          {open ? <IconChevronDown size={12} /> : <IconChevronRight size={12} />}
+        </span>
+        <span className={classes.panelIcon}>{icon}</span>
+        <Text size="xs" fw={600} className={classes.panelTitle}>{title}</Text>
+        {badge !== undefined && badge > 0 && (
+          <Badge size="xs" variant="light" className={classes.panelBadge}>{badge}</Badge>
+        )}
+      </UnstyledButton>
+      <Collapse in={open}>
+        <ScrollArea className={classes.panelContent} type="auto" offsetScrollbars>
+          {children}
+        </ScrollArea>
+      </Collapse>
+    </div>
+  );
+};
+
+// ============================================================================
+// DATA PANELS SECTION
+// ============================================================================
+
+interface DataPanelsSectionProps {
+  panelsHeight: number;
+  onResizeStart: (e: React.MouseEvent) => void;
+}
+
+const DataPanelsSection: FC<DataPanelsSectionProps> = ({ panelsHeight, onResizeStart }) => {
+  const { selectedTrace, selectedNode } = useTracing();
+  
+  const isRoot = selectedNode === null;
+  
+  // Logs
+  const logs = useMemo(() => {
+    if (isRoot) return selectedTrace?.logs;
+    return selectedNode?.logs;
+  }, [isRoot, selectedTrace, selectedNode]);
+  
+  // Input/Output
+  const inputData = selectedNode?.data?.input;
+  const outputData = selectedNode?.data?.output;
+  
+  // Metadata
+  const metadata = useMemo(() => {
+    if (isRoot) return selectedTrace?.referenceMetadata;
+    return selectedNode?.metadata;
+  }, [isRoot, selectedTrace, selectedNode]);
+
+  const renderDataContent = (data: TraceNodeDataIO | null | undefined, title: string) => {
+    if (!data) {
+      return <Text size="xs" c="dimmed" fs="italic">Keine {title}-Daten</Text>;
+    }
+    
+    const { text, arguments: args, extraData, metadata: dataMeta, ...rest } = data;
+    const hasContent = text || args || dataMeta || extraData || Object.keys(rest).length > 0;
+    
+    if (!hasContent) {
+      return <Text size="xs" c="dimmed" fs="italic">Keine {title}-Daten</Text>;
+    }
+    
+    return (
+      <div className={classes.dataContent}>
+        {text && (
+          <div className={classes.dataTextSection}>
+            <Text size="xs" fw={500} mb={4}>Text:</Text>
+            <Code block className={classes.codeBlock}>
+              {typeof text === 'string' ? text : JSON.stringify(text, null, 2)}
+            </Code>
+          </div>
+        )}
+        {args && Object.keys(args).length > 0 && (
+          <div className={classes.dataSubSection}>
+            <Text size="xs" fw={500} c="dimmed">Arguments:</Text>
+            <JsonViewer data={args} initialCollapsed={false} />
+          </div>
+        )}
+        {dataMeta && Object.keys(dataMeta).length > 0 && (
+          <div className={classes.dataSubSection}>
+            <Text size="xs" fw={500} c="dimmed">Metadata:</Text>
+            <JsonViewer data={dataMeta} initialCollapsed={true} />
+          </div>
+        )}
+        {extraData && Object.keys(extraData).length > 0 && (
+          <div className={classes.dataSubSection}>
+            <Text size="xs" fw={500} c="dimmed">Extra Data:</Text>
+            <JsonViewer data={extraData} initialCollapsed={true} />
+          </div>
+        )}
+        {Object.keys(rest).length > 0 && (
+          <div className={classes.dataSubSection}>
+            <Text size="xs" fw={500} c="dimmed">Other:</Text>
+            <JsonViewer data={rest} initialCollapsed={true} />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className={classes.dataPanelsSection} style={{ height: panelsHeight }}>
+      {/* Resize Handle */}
+      <div className={classes.panelsResizeHandle} onMouseDown={onResizeStart} />
+      
+      {/* Panels Container */}
+      <div className={classes.panelsContainer}>
+        {/* Logs Panel */}
+        <CollapsiblePanel
+          title="Logs"
+          icon={<IconNote size={14} />}
+          badge={logs?.length}
+          defaultOpen={false}
+        >
+          {(!logs || logs.length === 0) ? (
+            <Text size="xs" c="dimmed" fs="italic">Keine Logs</Text>
+          ) : (
+            <div className={classes.logsList}>
+              {logs.map((log, idx) => (
+                <div key={idx} className={classes.logEntry}>
+                  {typeof log === 'string' ? (
+                    <Text size="xs" className={classes.logText}>{log}</Text>
+                  ) : (
+                    <JsonViewer data={log} initialCollapsed={true} />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CollapsiblePanel>
+        
+        {/* Input/Output Panel (nur wenn Node ausgewählt) */}
+        {!isRoot && (
+          <CollapsiblePanel
+            title="Input / Output"
+            icon={<IconFileText size={14} />}
+            defaultOpen={true}
+          >
+            <div className={classes.ioContainer}>
+              <div className={classes.ioSection}>
+                <Text size="xs" fw={600} c="dimmed" mb="xs" tt="uppercase" style={{ letterSpacing: 1 }}>Input</Text>
+                {renderDataContent(inputData, 'Input')}
+              </div>
+              <div className={classes.ioDivider} />
+              <div className={classes.ioSection}>
+                <Text size="xs" fw={600} c="dimmed" mb="xs" tt="uppercase" style={{ letterSpacing: 1 }}>Output</Text>
+                {renderDataContent(outputData, 'Output')}
+              </div>
+            </div>
+          </CollapsiblePanel>
+        )}
+        
+        {/* Metadata Panel */}
+        <CollapsiblePanel
+          title="Metadata"
+          icon={<IconBraces size={14} />}
+          defaultOpen={false}
+        >
+          {metadata ? (
+            <JsonViewer data={metadata} initialCollapsed={false} />
+          ) : (
+            <Text size="xs" c="dimmed" fs="italic">Keine Metadata</Text>
+          )}
+        </CollapsiblePanel>
+      </div>
+    </div>
+  );
 };
 
 // ============================================================================
@@ -307,7 +556,23 @@ const TraceRootItem: FC<TraceRootItemProps> = ({
 // MAIN COMPONENT
 // ============================================================================
 
-export const TracingHierarchyView: FC = () => {
+interface TracingHierarchyViewProps {
+  /** Variant: 'full' for dialog, 'compact' for sidebar */
+  variant?: 'full' | 'compact';
+  /** Show header with title */
+  showHeader?: boolean;
+  /** Show VS Code-style data panels at bottom */
+  showDataPanels?: boolean;
+  /** Callback for fullscreen button */
+  onOpenFullscreen?: () => void;
+}
+
+export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
+  variant = 'full',
+  showHeader = true,
+  showDataPanels = false,
+  onOpenFullscreen,
+}) => {
   const {
     traces,
     selectedTrace,
@@ -318,6 +583,33 @@ export const TracingHierarchyView: FC = () => {
     toggleHierarchyCollapse,
   } = useTracing();
 
+  // Panels height state (for resizable panels)
+  const [panelsHeight, setPanelsHeight] = useState(200);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isResizing = useRef(false);
+
+  // Resize handler for panels
+  const handlePanelsResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizing.current = true;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!isResizing.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const newHeight = rect.bottom - moveEvent.clientY;
+      setPanelsHeight(Math.min(Math.max(newHeight, 100), rect.height - 100));
+    };
+
+    const handleMouseUp = () => {
+      isResizing.current = false;
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, []);
+
   // Wenn keine Traces, leeren State zeigen
   if (!traces || traces.length === 0) {
     return (
@@ -327,12 +619,38 @@ export const TracingHierarchyView: FC = () => {
     );
   }
 
+  const isCompact = variant === 'compact';
+
   return (
-    <div className={classes.container}>
-      <div className={classes.header}>
-        <Text size="sm" fw={600}>Hierarchie</Text>
-      </div>
-      <ScrollArea className={classes.scrollArea} type="auto">
+    <div 
+      ref={containerRef}
+      className={`${classes.container} ${isCompact ? classes.containerCompact : ''}`}
+    >
+      {/* Header */}
+      {showHeader && (
+        <div className={classes.header}>
+          <Text size="sm" fw={600}>Hierarchie</Text>
+          {onOpenFullscreen && (
+            <Tooltip label="Vollbild">
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                onClick={onOpenFullscreen}
+                className={classes.fullscreenButton}
+              >
+                <IconMaximize size={16} />
+              </ActionIcon>
+            </Tooltip>
+          )}
+        </div>
+      )}
+      
+      {/* Tree Area */}
+      <ScrollArea 
+        className={classes.scrollArea} 
+        type="auto"
+        style={showDataPanels ? { flex: 1, minHeight: 0 } : undefined}
+      >
         <div className={classes.treeContainer}>
           {traces.map((trace) => {
             // Root ist selektiert wenn selectedNode null ist und dieser Trace selektiert
@@ -358,6 +676,14 @@ export const TracingHierarchyView: FC = () => {
           })}
         </div>
       </ScrollArea>
+      
+      {/* Data Panels (VS Code Style) */}
+      {showDataPanels && (
+        <DataPanelsSection
+          panelsHeight={panelsHeight}
+          onResizeStart={handlePanelsResizeStart}
+        />
+      )}
     </div>
   );
 };
