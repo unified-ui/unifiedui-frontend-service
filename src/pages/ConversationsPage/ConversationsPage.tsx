@@ -202,25 +202,27 @@ export const ConversationsPage: FC = () => {
     loadConversation();
   }, [apiClient, selectedTenant, conversationId, navigate]);
 
+  // Refresh traces function - can be called manually
+  const refreshTraces = useCallback(async () => {
+    if (!apiClient || !selectedTenant || !conversationId) {
+      return;
+    }
+    try {
+      const tracesData = await apiClient.getConversationTraces(selectedTenant.id, conversationId);
+      setTraces(tracesData.traces || []);
+    } catch (error) {
+      console.error('Failed to refresh traces:', error);
+    }
+  }, [apiClient, selectedTenant, conversationId]);
+
   // Load traces when conversation changes
   useEffect(() => {
     if (!apiClient || !selectedTenant || !conversationId) {
       setTraces([]);
       return;
     }
-
-    const loadTraces = async () => {
-      try {
-        const tracesData = await apiClient.getConversationTraces(selectedTenant.id, conversationId);
-        setTraces(tracesData.traces || []);
-      } catch (error) {
-        console.error('Failed to load traces:', error);
-        setTraces([]);
-      }
-    };
-
-    loadTraces();
-  }, [apiClient, selectedTenant, conversationId]);
+    refreshTraces();
+  }, [apiClient, selectedTenant, conversationId, refreshTraces]);
 
   // Handle application change
   const handleApplicationChange = useCallback((applicationId: string) => {
@@ -568,6 +570,14 @@ export const ConversationsPage: FC = () => {
           setMessages(prev => prev.map(m => 
             m.id === completedMessage.id ? completedMessage : m
           ));
+          
+          // Always refresh traces after a message is complete
+          // This ensures traces are up-to-date when opening the tracing sidebar
+          // TODO: Remove delay after fixing backend race condition
+          // Delay needed because traces are saved asynchronously in backend (JobQueue)
+          setTimeout(() => {
+            refreshTraces();
+          }, 1500);
         },
         // Foundry token for Microsoft Foundry applications
         foundryToken
@@ -600,7 +610,7 @@ export const ConversationsPage: FC = () => {
         });
       }
     }
-  }, [apiClient, selectedTenant, selectedApplicationId, conversationId, applications, currentConversation, getFoundryToken]);
+  }, [apiClient, selectedTenant, selectedApplicationId, conversationId, applications, currentConversation, getFoundryToken, refreshTraces]);
 
   // Handle share
   const handleShare = useCallback(() => {
@@ -617,9 +627,37 @@ export const ConversationsPage: FC = () => {
     setTracingSidebarVisible(prev => !prev);
   }, []);
 
-  // Handle view trace button click on user messages
-  const handleViewTrace = useCallback((extMessageId: string) => {
-    if (extMessageId && traces.length > 0) {
+  // Helper: Find node by referenceId in traces (recursive)
+  const findNodeByReferenceId = useCallback((
+    nodes: FullTraceResponse['nodes'],
+    referenceId: string
+  ): boolean => {
+    for (const node of nodes) {
+      if (node.referenceId === referenceId) {
+        return true;
+      }
+      if (node.nodes && node.nodes.length > 0) {
+        if (findNodeByReferenceId(node.nodes, referenceId)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }, []);
+
+  // Handle view trace button click on assistant messages
+  const handleViewTrace = useCallback(async (extMessageId: string) => {
+    if (extMessageId) {
+      // Check if the extMessageId exists in current traces
+      const existsInTraces = traces.some(trace => 
+        findNodeByReferenceId(trace.nodes, extMessageId)
+      );
+      
+      // If not found, refresh traces (fallback for race condition)
+      if (!existsInTraces) {
+        await refreshTraces();
+      }
+      
       // Set the referenceId to highlight in trace
       setSelectedNodeReferenceId(extMessageId);
       // Open tracing sidebar if not already open
@@ -627,7 +665,7 @@ export const ConversationsPage: FC = () => {
         setTracingSidebarVisible(true);
       }
     }
-  }, [traces.length, tracingSidebarVisible]);
+  }, [tracingSidebarVisible, traces, findNodeByReferenceId, refreshTraces]);
 
   // Handle tracing fullscreen dialog open
   const handleOpenTracingFullscreen = useCallback(() => {

@@ -150,6 +150,24 @@ export const TracingProvider: FC<TracingProviderProps> = ({
   // Callback for centering on node (will be connected to canvas)
   const [, setCenterNodeId] = useState<string | null>(null);
 
+  // Effect: Sync selectedTrace when traces prop changes (e.g. after refresh)
+  // This is needed because useState only uses initialTrace on first mount
+  useEffect(() => {
+    if (traces.length > 0 && selectedTrace) {
+      // Find the updated version of the currently selected trace
+      const updatedTrace = traces.find((t) => t.id === selectedTrace.id);
+      if (updatedTrace) {
+        // Only update if the trace data actually changed (avoid infinite loops)
+        if (JSON.stringify(updatedTrace) !== JSON.stringify(selectedTrace)) {
+          setSelectedTrace(updatedTrace);
+        }
+      }
+    } else if (traces.length > 0 && !selectedTrace) {
+      // If no trace selected but traces available, select the first one
+      setSelectedTrace(traces[0]);
+    }
+  }, [traces, selectedTrace]);
+
   // Effect: Auto-select node by referenceId when initialNodeReferenceId changes
   useEffect(() => {
     if (initialNodeReferenceId && selectedTrace) {
