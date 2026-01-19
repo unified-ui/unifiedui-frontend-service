@@ -16,6 +16,8 @@ interface ChatContentProps {
   emptyStateMessage?: string;
   /** Called when user clicks trace button on a user message. Passes the extMessageId from the following assistant message. */
   onViewTrace?: (extMessageId: string) => void;
+  /** The extMessageId of the message to highlight (when selecting a node in trace hierarchy) */
+  highlightedExtMessageId?: string | null;
 }
 
 export const ChatContent: FC<ChatContentProps> = ({
@@ -26,6 +28,7 @@ export const ChatContent: FC<ChatContentProps> = ({
   streamingMessageId,
   emptyStateMessage = 'Start a conversation by typing a message below.',
   onViewTrace,
+  highlightedExtMessageId,
 }) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -67,15 +70,22 @@ export const ChatContent: FC<ChatContentProps> = ({
       scrollbarSize={8}
     >
       <Stack gap="lg" className={classes.messagesContainer}>
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            message={message}
-            isStreaming={isStreaming && message.id === streamingMessageId}
-            streamingContent={message.id === streamingMessageId ? streamingContent : undefined}
-            onViewTrace={onViewTrace}
-          />
-        ))}
+        {messages.map((message) => {
+          // Check if this message should be highlighted (assistant message with matching extMessageId)
+          const messageExtId = message.type !== 'user' ? message.metadata?.extMessageId : undefined;
+          const isHighlighted = !!(messageExtId && highlightedExtMessageId === messageExtId);
+          
+          return (
+            <MessageBubble
+              key={message.id}
+              message={message}
+              isStreaming={isStreaming && message.id === streamingMessageId}
+              streamingContent={message.id === streamingMessageId ? streamingContent : undefined}
+              onViewTrace={onViewTrace}
+              isHighlighted={isHighlighted}
+            />
+          );
+        })}
         
         {/* Streaming message that's not yet in messages array */}
         {isStreaming && streamingContent && !streamingMessageId && (
@@ -93,6 +103,7 @@ interface MessageBubbleProps {
   isStreaming?: boolean;
   streamingContent?: string;
   onViewTrace?: (extMessageId: string) => void;
+  isHighlighted?: boolean;
 }
 
 const MessageBubble: FC<MessageBubbleProps> = ({ 
@@ -100,6 +111,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
   isStreaming, 
   streamingContent, 
   onViewTrace,
+  isHighlighted,
 }) => {
   const isUser = message.type === 'user';
   const content = streamingContent || message.content;
@@ -149,7 +161,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
   }
 
   return (
-    <Box className={classes.messageWrapper}>
+    <Box className={`${classes.messageWrapper} ${isHighlighted ? classes.highlighted : ''}`}>
       <Box className={classes.assistantMessage}>
         <Avatar size="sm" radius="xl" className={classes.avatar} color="violet">
           <IconSparkles size={16} />

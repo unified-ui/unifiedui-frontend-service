@@ -34,6 +34,19 @@
 
 .messageWrapper {
   width: 100%;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xs);
+  margin: calc(-1 * var(--spacing-xs));
+  transition: background-color 0.2s ease;
+}
+
+/* Highlighted message (when selecting a node in trace hierarchy) */
+.messageWrapper.highlighted {
+  background-color: var(--color-primary-50);
+}
+
+[data-mantine-color-scheme='dark'] .messageWrapper.highlighted {
+  background-color: rgba(33, 150, 243, 0.1);
 }
 
 /* User message container - holds bubble and actions */

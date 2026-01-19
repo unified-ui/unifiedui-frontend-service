@@ -109,6 +109,8 @@ interface TracingProviderProps {
   initialTraceId?: string;
   /** Initial node to select by its referenceId (for message-to-trace mapping) */
   initialNodeReferenceId?: string;
+  /** Callback when selected node's referenceId changes (for trace-to-message highlighting) */
+  onNodeReferenceIdChange?: (referenceId: string | null) => void;
 }
 
 // ============================================================================
@@ -120,6 +122,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
   traces,
   initialTraceId,
   initialNodeReferenceId,
+  onNodeReferenceIdChange,
 }) => {
   // Find initial trace
   const initialTrace = useMemo(() => {
@@ -177,6 +180,14 @@ export const TracingProvider: FC<TracingProviderProps> = ({
       }
     }
   }, [initialNodeReferenceId, selectedTrace]);
+
+  // Effect: Notify parent when selected node's referenceId changes (for trace-to-message highlighting)
+  useEffect(() => {
+    if (onNodeReferenceIdChange) {
+      onNodeReferenceIdChange(selectedNode?.referenceId || null);
+    }
+  }, [selectedNode, onNodeReferenceIdChange]);
+
   // Actions
   const selectTrace = useCallback(
     (traceId: string | null) => {

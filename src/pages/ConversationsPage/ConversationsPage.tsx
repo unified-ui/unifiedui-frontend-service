@@ -86,8 +86,10 @@ export const ConversationsPage: FC = () => {
   const [tracingSidebarVisible, setTracingSidebarVisible] = useState(false);
   const [tracingDialogOpen, setTracingDialogOpen] = useState(false);
   const [traces, setTraces] = useState<FullTraceResponse[]>([]);
-  /** The extMessageId to highlight in the trace hierarchy (set via message double-click) */
+  /** The extMessageId to highlight in the trace hierarchy (set via message trace button click) */
   const [selectedNodeReferenceId, setSelectedNodeReferenceId] = useState<string | undefined>();
+  /** The extMessageId to highlight in the chat (set when selecting a node in trace hierarchy) */
+  const [highlightedMessageExtId, setHighlightedMessageExtId] = useState<string | null>(null);
 
   // Refs for abort controller
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -838,6 +840,7 @@ export const ConversationsPage: FC = () => {
                       streamingContent={streamingContent}
                       streamingMessageId={streamingMessageId}
                       onViewTrace={handleViewTrace}
+                      highlightedExtMessageId={highlightedMessageExtId}
                     />
                   </Box>
 
@@ -862,6 +865,7 @@ export const ConversationsPage: FC = () => {
               <TracingProvider 
                 traces={traces}
                 initialNodeReferenceId={selectedNodeReferenceId}
+                onNodeReferenceIdChange={setHighlightedMessageExtId}
               >
                 <Box className={classes.tracingSidebarWrapper}>
                   <TracingSidebar onOpenFullscreen={handleOpenTracingFullscreen} />
