@@ -105,7 +105,6 @@
 
 /* Action buttons below assistant message (left aligned) */
 .messageActionsLeft {
-  margin-left: calc(32px + var(--spacing-sm)); /* Avatar size + gap */
   margin-top: var(--spacing-xs);
   opacity: 0;
   transition: opacity 0.15s ease;

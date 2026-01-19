@@ -626,7 +626,14 @@ export const ConversationsPage: FC = () => {
 
   // Handle tracing sidebar toggle
   const handleToggleTracingSidebar = useCallback(() => {
-    setTracingSidebarVisible(prev => !prev);
+    setTracingSidebarVisible(prev => {
+      const newValue = !prev;
+      // Clear message highlight when closing sidebar
+      if (!newValue) {
+        setHighlightedMessageExtId(null);
+      }
+      return newValue;
+    });
   }, []);
 
   // Helper: Find node by referenceId in traces (recursive)
