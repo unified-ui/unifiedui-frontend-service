@@ -435,7 +435,7 @@ const H_ROW_GAP = 120;   // Abstand zwischen Zeilen (Y-Richtung) - muss > 80px (
 
 // Vertical Layout: Zeilen → X, Spalten → Y
 const V_ROW_GAP = 200;   // Abstand zwischen Rows (X-Richtung) - muss > 120px (NODE_WIDTH) sein
-const V_COL_GAP = 140;   // Abstand zwischen Spalten (Y-Richtung) - muss > 80px (NODE_HEIGHT) sein
+const V_COL_GAP = 280;   // Abstand zwischen Spalten (Y-Richtung) - muss > 80px (NODE_HEIGHT) sein
 
 // LayoutNode - Erweiterte Node-Struktur für Layout-Berechnung
 interface LayoutNode {
