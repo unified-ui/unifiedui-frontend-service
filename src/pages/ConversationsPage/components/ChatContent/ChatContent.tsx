@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from 'react';
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { ScrollArea, Box, Text, Avatar, Stack, Loader, Paper, Tooltip, ActionIcon, CopyButton, Group } from '@mantine/core';
 import { IconUser, IconSparkles, IconCopy, IconCheck, IconBinaryTree } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
@@ -32,8 +32,30 @@ export const ChatContent: FC<ChatContentProps> = ({
 }) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  // Refs for each message element (keyed by extMessageId)
+  const messageRefsMap = useRef<Map<string, HTMLDivElement>>(new Map());
+  // Track if we should flash the highlight (only on new highlight, not initial render)
+  const [flashingExtId, setFlashingExtId] = useState<string | null>(null);
+  const prevHighlightedRef = useRef<string | null>(null);
 
-
+  // Auto-scroll to highlighted message and trigger flash animation
+  useEffect(() => {
+    if (highlightedExtMessageId && highlightedExtMessageId !== prevHighlightedRef.current) {
+      const element = messageRefsMap.current.get(highlightedExtMessageId);
+      if (element) {
+        // Scroll to the message
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Trigger flash animation
+        setFlashingExtId(highlightedExtMessageId);
+        // Remove flash class after animation completes
+        const timer = setTimeout(() => {
+          setFlashingExtId(null);
+        }, 600); // Match animation duration
+        return () => clearTimeout(timer);
+      }
+    }
+    prevHighlightedRef.current = highlightedExtMessageId || null;
+  }, [highlightedExtMessageId]);
 
   // Auto-scroll to bottom when messages change or streaming
   useEffect(() => {
@@ -63,6 +85,15 @@ export const ChatContent: FC<ChatContentProps> = ({
     );
   }
 
+  // Callback to register message refs
+  const setMessageRef = useCallback((extMessageId: string, element: HTMLDivElement | null) => {
+    if (element) {
+      messageRefsMap.current.set(extMessageId, element);
+    } else {
+      messageRefsMap.current.delete(extMessageId);
+    }
+  }, []);
+
   return (
     <ScrollArea
       className={classes.scrollArea}
@@ -74,6 +105,7 @@ export const ChatContent: FC<ChatContentProps> = ({
           // Check if this message should be highlighted (assistant message with matching extMessageId)
           const messageExtId = message.type !== 'user' ? message.metadata?.extMessageId : undefined;
           const isHighlighted = !!(messageExtId && highlightedExtMessageId === messageExtId);
+          const isFlashing = !!(messageExtId && flashingExtId === messageExtId);
           
           return (
             <MessageBubble
@@ -83,6 +115,8 @@ export const ChatContent: FC<ChatContentProps> = ({
               streamingContent={message.id === streamingMessageId ? streamingContent : undefined}
               onViewTrace={onViewTrace}
               isHighlighted={isHighlighted}
+              isFlashing={isFlashing}
+              onRefSet={messageExtId ? (el) => setMessageRef(messageExtId, el) : undefined}
             />
           );
         })}
@@ -104,6 +138,8 @@ interface MessageBubbleProps {
   streamingContent?: string;
   onViewTrace?: (extMessageId: string) => void;
   isHighlighted?: boolean;
+  isFlashing?: boolean;
+  onRefSet?: (element: HTMLDivElement | null) => void;
 }
 
 const MessageBubble: FC<MessageBubbleProps> = ({ 
@@ -112,6 +148,8 @@ const MessageBubble: FC<MessageBubbleProps> = ({
   streamingContent, 
   onViewTrace,
   isHighlighted,
+  isFlashing,
+  onRefSet,
 }) => {
   const isUser = message.type === 'user';
   const content = streamingContent || message.content;
@@ -160,8 +198,15 @@ const MessageBubble: FC<MessageBubbleProps> = ({
     );
   }
 
+  // Build className for messageWrapper
+  const wrapperClassName = [
+    classes.messageWrapper,
+    isHighlighted ? classes.highlighted : '',
+    isFlashing ? classes.flash : '',
+  ].filter(Boolean).join(' ');
+
   return (
-    <Box className={`${classes.messageWrapper} ${isHighlighted ? classes.highlighted : ''}`}>
+    <Box ref={onRefSet} className={wrapperClassName}>
       <Box className={classes.assistantMessage}>
         <Avatar size="sm" radius="xl" className={classes.avatar} color="violet">
           <IconSparkles size={16} />

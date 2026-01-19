@@ -49,6 +49,33 @@
   background-color: rgba(33, 150, 243, 0.1);
 }
 
+/* Flash animation for newly highlighted message */
+@keyframes highlightFlash {
+  0% {
+    background-color: var(--color-primary-200);
+  }
+  100% {
+    background-color: var(--color-primary-50);
+  }
+}
+
+@keyframes highlightFlashDark {
+  0% {
+    background-color: rgba(33, 150, 243, 0.3);
+  }
+  100% {
+    background-color: rgba(33, 150, 243, 0.1);
+  }
+}
+
+.messageWrapper.flash {
+  animation: highlightFlash 0.6s ease-out forwards;
+}
+
+[data-mantine-color-scheme='dark'] .messageWrapper.flash {
+  animation: highlightFlashDark 0.6s ease-out forwards;
+}
+
 /* User message container - holds bubble and actions */
 .userMessageContainer {
   display: flex;
