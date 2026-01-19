@@ -8,6 +8,7 @@ import {
   useState,
   useCallback,
   useMemo,
+  useEffect,
   type FC,
   type ReactNode,
 } from 'react';
@@ -44,6 +45,12 @@ interface TracingContextState {
   centerOnNode: (nodeId: string) => void;
   resetCanvasView: () => void;
   toggleHierarchyVisible: () => void;
+  
+  // Message-to-Trace mapping
+  /** Find a trace node by extMessageId (matches TraceNode.referenceId) */
+  findNodeForMessage: (extMessageId: string) => TraceNodeResponse | null;
+  /** Select a node by extMessageId and return true if found */
+  selectNodeByExtMessageId: (extMessageId: string) => boolean;
 }
 
 // ============================================================================
@@ -73,6 +80,26 @@ const findNodeById = (
 };
 
 // ============================================================================
+// Helper: Find node by referenceId recursively (for message-to-trace mapping)
+// ============================================================================
+
+const findNodeByReferenceId = (
+  nodes: TraceNodeResponse[],
+  referenceId: string
+): TraceNodeResponse | null => {
+  for (const node of nodes) {
+    if (node.referenceId === referenceId) {
+      return node;
+    }
+    if (node.nodes && node.nodes.length > 0) {
+      const found = findNodeByReferenceId(node.nodes, referenceId);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
+// ============================================================================
 // Provider Props
 // ============================================================================
 
@@ -80,6 +107,8 @@ interface TracingProviderProps {
   children: ReactNode;
   traces: FullTraceResponse[];
   initialTraceId?: string;
+  /** Initial node to select by its referenceId (for message-to-trace mapping) */
+  initialNodeReferenceId?: string;
 }
 
 // ============================================================================
@@ -90,6 +119,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
   children,
   traces,
   initialTraceId,
+  initialNodeReferenceId,
 }) => {
   // Find initial trace
   const initialTrace = useMemo(() => {
@@ -120,6 +150,15 @@ export const TracingProvider: FC<TracingProviderProps> = ({
   // Callback for centering on node (will be connected to canvas)
   const [, setCenterNodeId] = useState<string | null>(null);
 
+  // Effect: Auto-select node by referenceId when initialNodeReferenceId changes
+  useEffect(() => {
+    if (initialNodeReferenceId && selectedTrace) {
+      const node = findNodeByReferenceId(selectedTrace.nodes, initialNodeReferenceId);
+      if (node) {
+        setSelectedNode(node);
+      }
+    }
+  }, [initialNodeReferenceId, selectedTrace]);
   // Actions
   const selectTrace = useCallback(
     (traceId: string | null) => {
@@ -201,6 +240,29 @@ export const TracingProvider: FC<TracingProviderProps> = ({
     });
   }, []);
 
+  // Find a trace node by extMessageId (matches TraceNode.referenceId)
+  const findNodeForMessage = useCallback(
+    (extMessageId: string): TraceNodeResponse | null => {
+      if (!selectedTrace) return null;
+      return findNodeByReferenceId(selectedTrace.nodes, extMessageId);
+    },
+    [selectedTrace]
+  );
+
+  // Select a node by extMessageId and return true if found
+  const selectNodeByExtMessageId = useCallback(
+    (extMessageId: string): boolean => {
+      if (!selectedTrace) return false;
+      const node = findNodeByReferenceId(selectedTrace.nodes, extMessageId);
+      if (node) {
+        setSelectedNode(node);
+        return true;
+      }
+      return false;
+    },
+    [selectedTrace]
+  );
+
   // Context value
   const value = useMemo<TracingContextState>(
     () => ({
@@ -219,6 +281,8 @@ export const TracingProvider: FC<TracingProviderProps> = ({
       centerOnNode,
       resetCanvasView,
       toggleHierarchyVisible,
+      findNodeForMessage,
+      selectNodeByExtMessageId,
     }),
     [
       traces,
@@ -236,6 +300,8 @@ export const TracingProvider: FC<TracingProviderProps> = ({
       centerOnNode,
       resetCanvasView,
       toggleHierarchyVisible,
+      findNodeForMessage,
+      selectNodeByExtMessageId,
     ]
   );
 

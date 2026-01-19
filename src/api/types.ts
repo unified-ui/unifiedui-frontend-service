@@ -162,6 +162,8 @@ export interface AssistantMetadata {
   tokensOutput?: number;
   latencyMs?: number;
   agentType?: string;
+  /** External message ID from the backend (e.g., Foundry message ID) for trace mapping */
+  extMessageId?: string;
   custom?: Record<string, unknown>;
 }
 

@@ -86,6 +86,8 @@ export const ConversationsPage: FC = () => {
   const [tracingSidebarVisible, setTracingSidebarVisible] = useState(false);
   const [tracingDialogOpen, setTracingDialogOpen] = useState(false);
   const [traces, setTraces] = useState<FullTraceResponse[]>([]);
+  /** The extMessageId to highlight in the trace hierarchy (set via message double-click) */
+  const [selectedNodeReferenceId, setSelectedNodeReferenceId] = useState<string | undefined>();
 
   // Refs for abort controller
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -607,6 +609,18 @@ export const ConversationsPage: FC = () => {
     setTracingSidebarVisible(prev => !prev);
   }, []);
 
+  // Handle view trace button click on user messages
+  const handleViewTrace = useCallback((extMessageId: string) => {
+    if (extMessageId && traces.length > 0) {
+      // Set the referenceId to highlight in trace
+      setSelectedNodeReferenceId(extMessageId);
+      // Open tracing sidebar if not already open
+      if (!tracingSidebarVisible) {
+        setTracingSidebarVisible(true);
+      }
+    }
+  }, [traces.length, tracingSidebarVisible]);
+
   // Handle tracing fullscreen dialog open
   const handleOpenTracingFullscreen = useCallback(() => {
     setTracingDialogOpen(true);
@@ -777,6 +791,7 @@ export const ConversationsPage: FC = () => {
                       isStreaming={isStreaming}
                       streamingContent={streamingContent}
                       streamingMessageId={streamingMessageId}
+                      onViewTrace={handleViewTrace}
                     />
                   </Box>
 
@@ -798,7 +813,10 @@ export const ConversationsPage: FC = () => {
 
             {/* Tracing Sidebar */}
             {tracingSidebarVisible && traces.length > 0 && (
-              <TracingProvider traces={traces}>
+              <TracingProvider 
+                traces={traces}
+                initialNodeReferenceId={selectedNodeReferenceId}
+              >
                 <Box className={classes.tracingSidebarWrapper}>
                   <TracingSidebar onOpenFullscreen={handleOpenTracingFullscreen} />
                 </Box>

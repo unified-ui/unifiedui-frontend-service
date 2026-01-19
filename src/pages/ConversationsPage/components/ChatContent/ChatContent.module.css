@@ -36,12 +36,43 @@
   width: 100%;
 }
 
+/* User message container - holds bubble and actions */
+.userMessageContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-xs);
+}
+
 /* User message - right aligned */
 .userMessage {
   display: flex;
   justify-content: flex-end;
   align-items: flex-start;
   gap: var(--spacing-sm);
+}
+
+/* Action buttons below user message */
+.messageActions {
+  margin-right: calc(32px + var(--spacing-sm)); /* Avatar size + gap */
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.userMessageContainer:hover .messageActions {
+  opacity: 1;
+}
+
+/* Action buttons below assistant message (left aligned) */
+.messageActionsLeft {
+  margin-left: calc(32px + var(--spacing-sm)); /* Avatar size + gap */
+  margin-top: var(--spacing-xs);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.assistantMessage:hover .messageActionsLeft {
+  opacity: 1;
 }
 
 .userBubble {

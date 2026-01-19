@@ -1,7 +1,7 @@
 import type { FC, ReactNode } from 'react';
-import { useEffect, useRef } from 'react';
-import { ScrollArea, Box, Text, Avatar, Stack, Loader, Paper } from '@mantine/core';
-import { IconUser, IconSparkles } from '@tabler/icons-react';
+import { useEffect, useRef, useCallback } from 'react';
+import { ScrollArea, Box, Text, Avatar, Stack, Loader, Paper, Tooltip, ActionIcon, CopyButton, Group } from '@mantine/core';
+import { IconUser, IconSparkles, IconCopy, IconCheck, IconBinaryTree } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { MessageResponse } from '../../../../api/types';
@@ -14,6 +14,8 @@ interface ChatContentProps {
   streamingContent?: string;
   streamingMessageId?: string;
   emptyStateMessage?: string;
+  /** Called when user clicks trace button on a user message. Passes the extMessageId from the following assistant message. */
+  onViewTrace?: (extMessageId: string) => void;
 }
 
 export const ChatContent: FC<ChatContentProps> = ({
@@ -23,9 +25,12 @@ export const ChatContent: FC<ChatContentProps> = ({
   streamingContent,
   streamingMessageId,
   emptyStateMessage = 'Start a conversation by typing a message below.',
+  onViewTrace,
 }) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+
 
   // Auto-scroll to bottom when messages change or streaming
   useEffect(() => {
@@ -68,6 +73,7 @@ export const ChatContent: FC<ChatContentProps> = ({
             message={message}
             isStreaming={isStreaming && message.id === streamingMessageId}
             streamingContent={message.id === streamingMessageId ? streamingContent : undefined}
+            onViewTrace={onViewTrace}
           />
         ))}
         
@@ -86,24 +92,57 @@ interface MessageBubbleProps {
   message: MessageResponse;
   isStreaming?: boolean;
   streamingContent?: string;
+  onViewTrace?: (extMessageId: string) => void;
 }
 
-const MessageBubble: FC<MessageBubbleProps> = ({ message, isStreaming, streamingContent }) => {
+const MessageBubble: FC<MessageBubbleProps> = ({ 
+  message, 
+  isStreaming, 
+  streamingContent, 
+  onViewTrace,
+}) => {
   const isUser = message.type === 'user';
   const content = streamingContent || message.content;
+  // For assistant messages, get extMessageId from metadata
+  const extMessageId = !isUser ? message.metadata?.extMessageId : undefined;
+
+  const handleViewTrace = useCallback(() => {
+    if (extMessageId && onViewTrace) {
+      onViewTrace(extMessageId);
+    }
+  }, [extMessageId, onViewTrace]);
 
   if (isUser) {
     return (
       <Box className={classes.messageWrapper}>
-        <Box className={classes.userMessage}>
-          <Paper className={classes.userBubble} shadow="xs">
-            <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
-              {content}
-            </Text>
-          </Paper>
-          <Avatar size="sm" radius="xl" className={classes.avatar} color="primary">
-            <IconUser size={16} />
-          </Avatar>
+        <Box className={classes.userMessageContainer}>
+          <Box className={classes.userMessage}>
+            <Paper className={classes.userBubble} shadow="xs">
+              <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
+                {content}
+              </Text>
+            </Paper>
+            <Avatar size="sm" radius="xl" className={classes.avatar} color="primary">
+              <IconUser size={16} />
+            </Avatar>
+          </Box>
+          {/* Copy button below user message */}
+          <Group gap="xs" className={classes.messageActions}>
+            <CopyButton value={content} timeout={2000}>
+              {({ copied, copy }) => (
+                <Tooltip label={copied ? 'Copied!' : 'Copy message'} withArrow position="bottom">
+                  <ActionIcon 
+                    size="xs" 
+                    variant="subtle" 
+                    color={copied ? 'teal' : 'gray'}
+                    onClick={copy}
+                  >
+                    {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+                  </ActionIcon>
+                </Tooltip>
+              )}
+            </CopyButton>
+          </Group>
         </Box>
       </Box>
     );
@@ -196,6 +235,37 @@ const MessageBubble: FC<MessageBubbleProps> = ({ message, isStreaming, streaming
               <span></span>
               <span></span>
             </Box>
+          )}
+          {/* Copy and Trace buttons below assistant message */}
+          {!isStreaming && (
+            <Group gap="xs" className={classes.messageActionsLeft}>
+              <CopyButton value={content} timeout={2000}>
+                {({ copied, copy }) => (
+                  <Tooltip label={copied ? 'Copied!' : 'Copy message'} withArrow position="bottom">
+                    <ActionIcon 
+                      size="xs" 
+                      variant="subtle" 
+                      color={copied ? 'teal' : 'gray'}
+                      onClick={copy}
+                    >
+                      {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+                    </ActionIcon>
+                  </Tooltip>
+                )}
+              </CopyButton>
+              {extMessageId && (
+                <Tooltip label="View trace" withArrow position="bottom">
+                  <ActionIcon 
+                    size="xs" 
+                    variant="subtle" 
+                    color="gray"
+                    onClick={handleViewTrace}
+                  >
+                    <IconBinaryTree size={14} />
+                  </ActionIcon>
+                </Tooltip>
+              )}
+            </Group>
           )}
         </Box>
       </Box>
