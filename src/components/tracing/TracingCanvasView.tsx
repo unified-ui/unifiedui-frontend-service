@@ -456,16 +456,16 @@ interface LayoutNode {
 // Farbpalette für SubNode-Ebenen (Depth 1-10+)
 const DEPTH_COLORS = [
   '#42a5f5', // Depth 0: Root-Chain (blau) - wird separat behandelt
-  '#66bb6a', // Depth 1: Grün
+  '#ff7043', // Depth 1: Orange (nicht grün, da grün für Success-Status verwendet wird)
   '#ab47bc', // Depth 2: Lila
-  '#ff7043', // Depth 3: Orange
-  '#26a69a', // Depth 4: Teal
-  '#ec407a', // Depth 5: Pink
-  '#7e57c2', // Depth 6: Deep Purple
-  '#5c6bc0', // Depth 7: Indigo
-  '#29b6f6', // Depth 8: Light Blue
-  '#9ccc65', // Depth 9: Light Green
-  '#ffca28', // Depth 10+: Amber
+  '#26a69a', // Depth 3: Teal
+  '#ec407a', // Depth 4: Pink
+  '#7e57c2', // Depth 5: Deep Purple
+  '#5c6bc0', // Depth 6: Indigo
+  '#29b6f6', // Depth 7: Light Blue
+  '#9ccc65', // Depth 8: Light Green
+  '#ffca28', // Depth 9: Amber
+  '#78909c', // Depth 10+: Blue Grey
 ];
 
 const getDepthColor = (depth: number): string => {
