@@ -21,6 +21,7 @@ export type LayoutDirection = 'horizontal' | 'vertical';
 
 // LocalStorage Keys
 const LOCALSTORAGE_KEY_HIERARCHY_VISIBLE = 'unified-ui-tracing-hierarchy-visible';
+const LOCALSTORAGE_KEY_LAYOUT_DIRECTION = 'unified-ui-tracing-layout-direction';
 
 interface TracingContextState {
   // Data
@@ -103,8 +104,10 @@ export const TracingProvider: FC<TracingProviderProps> = ({
     initialTrace
   );
   const [selectedNode, setSelectedNode] = useState<TraceNodeResponse | null>(null);
-  const [layoutDirection, setLayoutDirectionState] =
-    useState<LayoutDirection>('horizontal');
+  const [layoutDirection, setLayoutDirectionState] = useState<LayoutDirection>(() => {
+    const stored = localStorage.getItem(LOCALSTORAGE_KEY_LAYOUT_DIRECTION);
+    return (stored === 'horizontal' || stored === 'vertical') ? stored : 'horizontal';
+  });
   const [hierarchyCollapsed, setHierarchyCollapsed] = useState<Set<string>>(
     new Set()
   );
@@ -176,6 +179,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
 
   const setLayoutDirection = useCallback((dir: LayoutDirection) => {
     setLayoutDirectionState(dir);
+    localStorage.setItem(LOCALSTORAGE_KEY_LAYOUT_DIRECTION, dir);
   }, []);
 
   const centerOnNode = useCallback((nodeId: string) => {
