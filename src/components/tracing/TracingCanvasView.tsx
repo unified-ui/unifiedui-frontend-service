@@ -847,14 +847,14 @@ export const TracingCanvasView: FC = () => {
   const onInit = useCallback((instance: ReactFlowInstance) => {
     setReactFlowInstance(instance);
     setTimeout(() => {
-      instance.fitView({ padding: 0.1 });
+      instance.fitView({ padding: 0.25 });
     }, 100);
   }, []);
 
   // Handle "Adjust view" - Reset view AND trigger layout recalculation
   const handleAdjustView = useCallback(() => {
     if (reactFlowInstance) {
-      reactFlowInstance.fitView({ padding: 0.1 });
+      reactFlowInstance.fitView({ padding: 0.25 });
     }
     setLayoutVersion(v => v + 1); // Layout neu berechnen
     resetCanvasView();
@@ -930,7 +930,7 @@ export const TracingCanvasView: FC = () => {
         edgeTypes={edgeTypes}
         connectionLineType={ConnectionLineType.SmoothStep}
         fitView
-        fitViewOptions={{ padding: 0.1 }}
+        fitViewOptions={{ padding: 0.25 }}
         minZoom={0.1}
         maxZoom={2}
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}

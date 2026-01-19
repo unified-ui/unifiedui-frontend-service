@@ -101,7 +101,7 @@ export const TracingSubHeader: FC = () => {
             ID:
           </Text>
           <Text size="xs" fw={500} className={classes.traceId}>
-            {selectedTrace.id.slice(0, 8)}...
+            {selectedTrace.id}
           </Text>
         </Group>
 
