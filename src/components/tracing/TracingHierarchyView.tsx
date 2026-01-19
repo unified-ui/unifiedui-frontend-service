@@ -629,7 +629,7 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
       {/* Header */}
       {showHeader && (
         <div className={classes.header}>
-          <Text size="sm" fw={600}>Hierarchie</Text>
+          <Text size="sm" fw={600}>Tracing Hierarchie</Text>
           {onOpenFullscreen && (
             <Tooltip label="Vollbild">
               <ActionIcon

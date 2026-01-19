@@ -73,6 +73,7 @@ import type {
   UserFavoritesListResponse,
   // Agent Service Types
   GetMessagesResponse,
+  MessageResponse,
   SendMessageRequest,
   GetTracesResponse,
   BatchUpdateTracesRequest,
@@ -877,6 +878,7 @@ export class UnifiedUIAPIClient {
     onNewMessage?: () => void,
     onStreamEnd?: () => void,
     onError?: (code: string, message: string, details: string) => void,
+    onMessageComplete?: (message: MessageResponse) => void,
     foundryToken?: string
   ): AsyncGenerator<SSEEvent, void, unknown> {
     const token = await this.getAccessToken();
@@ -980,11 +982,19 @@ export class UnifiedUIAPIClient {
                       onStreamEnd();
                     }
                     break;
+                  case 'MESSAGE_COMPLETE':
+                    if (onMessageComplete && streamMsg.config?.message && typeof streamMsg.config.message === 'object') {
+                      onMessageComplete(streamMsg.config.message as MessageResponse);
+                    }
+                    break;
                   case 'ERROR':
                     if (onError && streamMsg.config) {
+                      const errorMessage = typeof streamMsg.config.message === 'string' 
+                        ? streamMsg.config.message 
+                        : 'An error occurred';
                       onError(
                         streamMsg.config.code || 'UNKNOWN_ERROR',
-                        streamMsg.config.message || 'An error occurred',
+                        errorMessage,
                         streamMsg.config.details || ''
                       );
                     }

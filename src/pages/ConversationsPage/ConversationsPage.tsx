@@ -561,6 +561,14 @@ export const ConversationsPage: FC = () => {
             color: 'red',
           });
         },
+        // onMessageComplete - Called when the backend sends the complete saved message with all metadata
+        (completedMessage: MessageResponse) => {
+          // Update the message in state with the complete data from the backend
+          // This includes extMessageId and other metadata populated during save
+          setMessages(prev => prev.map(m => 
+            m.id === completedMessage.id ? completedMessage : m
+          ));
+        },
         // Foundry token for Microsoft Foundry applications
         foundryToken
       );

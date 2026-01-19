@@ -375,6 +375,7 @@ export const SSEStreamMessageType = {
   TEXT_STREAM: 'TEXT_STREAM',
   STREAM_NEW_MESSAGE: 'STREAM_NEW_MESSAGE',
   STREAM_END: 'STREAM_END',
+  MESSAGE_COMPLETE: 'MESSAGE_COMPLETE',
   ERROR: 'ERROR',
 } as const;
 
@@ -387,7 +388,7 @@ export interface SSEStreamMessage {
     messageId?: string;
     conversationId?: string;
     code?: string;
-    message?: string;
+    message?: string | MessageResponse;
     details?: string;
   };
 }
