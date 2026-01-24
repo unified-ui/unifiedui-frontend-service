@@ -182,57 +182,98 @@
 }
 
 /* ============================================ */
-/* DATA PANELS SECTION                          */
+/* DATA PANELS CONTAINER (VS Code Style - NEW)  */
 /* ============================================ */
 
-.dataPanelsSection {
+.containerWithPanels {
+  /* Container braucht flex-direction: column für Panels am Bottom */
+}
+
+.dataPanelsContainer {
   display: flex;
   flex-direction: column;
-  min-height: 100px;
   border-top: 1px solid var(--border-default);
   background: var(--bg-app);
   flex-shrink: 0;
+  overflow: hidden;
 }
 
-.panelsResizeHandle {
+/* ============================================ */
+/* RESIZABLE PANEL (VS Code Style - NEW)        */
+/* ============================================ */
+
+.resizablePanel {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-default);
+  overflow: hidden;
+  /* Keine transition auf height - macht resize hakelig */
+}
+
+.resizablePanel:last-child {
+  border-bottom: none;
+}
+
+.panelCollapsed {
+  /* Collapsed panels have fixed header height only */
+}
+
+.panelExpanded {
+  /* Expanded panels show content */
+}
+
+/* Resize Handle - nur bei expanded panels */
+.panelResizeHandle {
   height: 4px;
   cursor: row-resize;
   background: transparent;
   transition: background-color var(--transition-fast);
   flex-shrink: 0;
+  position: relative;
 }
 
-.panelsResizeHandle:hover {
+.panelResizeHandle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  background: transparent;
+  border-radius: 2px;
+  transition: background-color var(--transition-fast);
+}
+
+.panelResizeHandle:hover {
+  background: var(--color-primary-100);
+}
+
+.panelResizeHandle:hover::after {
+  background: var(--color-primary-300);
+}
+
+.panelResizeHandle:active {
   background: var(--color-primary-200);
 }
 
-.panelsResizeHandle:active {
-  background: var(--color-primary-400);
+.panelResizeHandle:active::after {
+  background: var(--color-primary-500);
 }
 
-.panelsContainer {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-/* ============================================ */
-/* COLLAPSIBLE PANEL                            */
-/* ============================================ */
-
-.collapsiblePanel {
-  border-bottom: 1px solid var(--border-default);
-}
-
+/* Panel Header */
 .panelHeader {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
   padding: var(--spacing-xs) var(--spacing-sm);
+  height: 28px;
   width: 100%;
   cursor: pointer;
   background: var(--bg-paper);
   transition: background-color var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .panelHeader:hover {
@@ -243,35 +284,49 @@
   display: flex;
   align-items: center;
   color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 .panelIcon {
   display: flex;
   align-items: center;
   color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 .panelTitle {
   flex: 1;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-size: 11px;
 }
 
 .panelBadge {
   flex-shrink: 0;
 }
 
+.panelNoContent {
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+/* Panel ScrollArea */
+.panelScrollArea {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Panel Content */
 .panelContent {
-  max-height: 200px;
   padding: var(--spacing-sm);
   background: var(--bg-app);
 }
 
 /* ============================================ */
-/* LOGS LIST                                    */
+/* LOGS CONTAINER                               */
 /* ============================================ */
 
-.logsList {
+.logsContainer {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
@@ -290,24 +345,8 @@
 }
 
 /* ============================================ */
-/* INPUT/OUTPUT CONTAINER                       */
+/* DATA CONTENT                                 */
 /* ============================================ */
-
-.ioContainer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.ioSection {
-  display: flex;
-  flex-direction: column;
-}
-
-.ioDivider {
-  height: 1px;
-  background: var(--border-default);
-}
 
 .dataContent {
   display: flex;

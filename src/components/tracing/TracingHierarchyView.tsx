@@ -7,12 +7,18 @@
  * - Expand/Collapse für Nodes mit Kindern
  * - Klick = Selektion → Canvas + DataSection update
  * - variant: 'full' | 'compact' - Für Dialog vs Sidebar
- * - showDataPanels: VS Code-style collapsible Panels (Logs, I/O, Metadata)
+ * - showDataPanels: VS Code-style resizable Panels (Logs, Input, Output, Metadata)
+ * 
+ * Data Panels (VS Code Style):
+ * - Jedes Panel ist individuell expand/collapse
+ * - Jedes expandierte Panel hat eigenen Resize-Handle
+ * - Jedes Panel hat eigene ScrollArea
+ * - Collapsed Panels sind am unteren Rand angeheftet
  */
 
 import { useCallback, useMemo, useState, useRef } from 'react';
 import type { FC } from 'react';
-import { Text, ScrollArea, Badge, UnstyledButton, ActionIcon, Tooltip, Collapse, Code } from '@mantine/core';
+import { Text, ScrollArea, Badge, UnstyledButton, ActionIcon, Tooltip, Code, Collapse } from '@mantine/core';
 import {
   IconChevronDown,
   IconChevronRight,
@@ -20,6 +26,8 @@ import {
   IconNote,
   IconFileText,
   IconBraces,
+  IconArrowDown,
+  IconArrowUp,
   // Status Icons
   IconCheck,
   IconX,
@@ -30,6 +38,15 @@ import {
 import { useTracing } from './TracingContext';
 import type { TraceNodeResponse, FullTraceResponse, TraceNodeDataIO } from '../../api/types';
 import classes from './TracingHierarchyView.module.css';
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const PANEL_HEADER_HEIGHT = 28;
+const PANEL_MIN_HEIGHT = 80;
+const PANEL_DEFAULT_HEIGHT = 150;
+const TREE_MIN_HEIGHT = 100;
 
 // ============================================================================
 // HELPER: Get Type Badge Color
@@ -137,80 +154,165 @@ const JsonViewer: FC<JsonViewerProps> = ({ data, initialCollapsed = true }) => {
 };
 
 // ============================================================================
-// COLLAPSIBLE PANEL (VS Code Style)
+// RESIZABLE PANEL (VS Code Style - NEW IMPLEMENTATION)
 // ============================================================================
 
-interface CollapsiblePanelProps {
+interface ResizablePanelProps {
   title: string;
   icon: React.ReactNode;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
   badge?: number;
+  isExpanded: boolean;
+  height: number;
+  onToggle: () => void;
+  onHeightChange: (newHeight: number) => void;
+  children: React.ReactNode;
+  hasContent?: boolean;
 }
 
-const CollapsiblePanel: FC<CollapsiblePanelProps> = ({
+const ResizablePanel: FC<ResizablePanelProps> = ({
   title,
   icon,
-  defaultOpen = false,
-  children,
   badge,
+  isExpanded,
+  height,
+  onToggle,
+  onHeightChange,
+  children,
+  hasContent = true,
 }) => {
-  const [open, setOpen] = useState(defaultOpen);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isResizing = useRef(false);
+
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    isResizing.current = true;
+    
+    const startY = e.clientY;
+    const startHeight = height;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!isResizing.current) return;
+      
+      // Bewegung nach oben = Panel wird größer (deltaY negativ)
+      const deltaY = startY - moveEvent.clientY;
+      const newHeight = Math.max(PANEL_MIN_HEIGHT, startHeight + deltaY);
+      
+      // Direkte Höhenänderung ohne requestAnimationFrame für responsive resize
+      onHeightChange(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      isResizing.current = false;
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'row-resize';
+    document.body.style.userSelect = 'none';
+  }, [height, onHeightChange]);
+
+  const panelHeight = isExpanded ? height : PANEL_HEADER_HEIGHT;
 
   return (
-    <div className={classes.collapsiblePanel}>
+    <div 
+      ref={containerRef}
+      className={`${classes.resizablePanel} ${isExpanded ? classes.panelExpanded : classes.panelCollapsed}`}
+      style={{ height: panelHeight }}
+    >
+      {/* Resize Handle - nur wenn expanded */}
+      {isExpanded && (
+        <div 
+          className={classes.panelResizeHandle}
+          onMouseDown={handleResizeStart}
+        />
+      )}
+      
+      {/* Panel Header */}
       <UnstyledButton
         className={classes.panelHeader}
-        onClick={() => setOpen(!open)}
+        onClick={onToggle}
       >
         <span className={classes.panelChevron}>
-          {open ? <IconChevronDown size={12} /> : <IconChevronRight size={12} />}
+          {isExpanded ? <IconChevronDown size={12} /> : <IconChevronRight size={12} />}
         </span>
         <span className={classes.panelIcon}>{icon}</span>
         <Text size="xs" fw={600} className={classes.panelTitle}>{title}</Text>
         {badge !== undefined && badge > 0 && (
           <Badge size="xs" variant="light" className={classes.panelBadge}>{badge}</Badge>
         )}
+        {!hasContent && (
+          <Text size="xs" c="dimmed" className={classes.panelNoContent}>–</Text>
+        )}
       </UnstyledButton>
-      <Collapse in={open}>
-        <ScrollArea className={classes.panelContent} type="auto" offsetScrollbars>
-          {children}
+      
+      {/* Panel Content mit eigener ScrollArea */}
+      {isExpanded && (
+        <ScrollArea 
+          className={classes.panelScrollArea} 
+          type="auto" 
+          offsetScrollbars
+          style={{ height: height - PANEL_HEADER_HEIGHT }}
+        >
+          <div className={classes.panelContent}>
+            {children}
+          </div>
         </ScrollArea>
-      </Collapse>
+      )}
     </div>
   );
 };
 
 // ============================================================================
-// DATA PANELS SECTION
+// DATA PANELS CONTAINER (VS Code Style - NEW IMPLEMENTATION)
 // ============================================================================
 
-interface DataPanelsSectionProps {
-  panelsHeight: number;
-  onResizeStart: (e: React.MouseEvent) => void;
+type PanelId = 'logs' | 'input' | 'output' | 'metadata';
+
+interface DataPanelsContainerProps {
+  maxHeight?: number;
 }
 
-const DataPanelsSection: FC<DataPanelsSectionProps> = ({ panelsHeight, onResizeStart }) => {
+const DataPanelsContainer: FC<DataPanelsContainerProps> = ({ maxHeight = 600 }) => {
   const { selectedTrace, selectedNode } = useTracing();
   
+  // Gemeinsame aktive Höhe - wird bei Panel-Wechsel übernommen
+  const [activeHeight, setActiveHeight] = useState(PANEL_DEFAULT_HEIGHT);
+  
+  // Panel states - alle initial collapsed, teilen sich activeHeight
+  const [expandedPanel, setExpandedPanel] = useState<PanelId | null>(null);
+
   const isRoot = selectedNode === null;
   
-  // Logs
+  // Data extraction
   const logs = useMemo(() => {
     if (isRoot) return selectedTrace?.logs;
     return selectedNode?.logs;
   }, [isRoot, selectedTrace, selectedNode]);
   
-  // Input/Output
   const inputData = selectedNode?.data?.input;
   const outputData = selectedNode?.data?.output;
   
-  // Metadata
   const metadata = useMemo(() => {
     if (isRoot) return selectedTrace?.referenceMetadata;
     return selectedNode?.metadata;
   }, [isRoot, selectedTrace, selectedNode]);
 
+  // Toggle Panel - Accordion behavior: nur ein Panel gleichzeitig offen
+  const togglePanel = useCallback((panelId: PanelId) => {
+    setExpandedPanel(prev => prev === panelId ? null : panelId);
+  }, []);
+
+  // Change Panel Height - ändert die gemeinsame activeHeight
+  const changePanelHeight = useCallback((newHeight: number) => {
+    setActiveHeight(newHeight);
+  }, []);
+
+  // Render Data Content Helper
   const renderDataContent = (data: TraceNodeDataIO | null | undefined, title: string) => {
     if (!data) {
       return <Text size="xs" c="dimmed" fs="italic">Keine {title}-Daten</Text>;
@@ -261,71 +363,88 @@ const DataPanelsSection: FC<DataPanelsSectionProps> = ({ panelsHeight, onResizeS
     );
   };
 
+  // Check if data exists
+  const hasLogs = logs && Array.isArray(logs) && logs.length > 0;
+  const hasInput = inputData && Object.keys(inputData).length > 0;
+  const hasOutput = outputData && Object.keys(outputData).length > 0;
+  const hasMetadata = metadata && Object.keys(metadata).length > 0;
+
   return (
-    <div className={classes.dataPanelsSection} style={{ height: panelsHeight }}>
-      {/* Resize Handle */}
-      <div className={classes.panelsResizeHandle} onMouseDown={onResizeStart} />
-      
-      {/* Panels Container */}
-      <div className={classes.panelsContainer}>
-        {/* Logs Panel */}
-        <CollapsiblePanel
-          title="Logs"
-          icon={<IconNote size={14} />}
-          badge={logs?.length}
-          defaultOpen={false}
+    <div className={classes.dataPanelsContainer}>
+      {/* INPUT Panel - nur wenn Node ausgewählt (nicht Root) */}
+      {!isRoot && (
+        <ResizablePanel
+          title="INPUT"
+          icon={<IconArrowDown size={14} />}
+          isExpanded={expandedPanel === 'input'}
+          height={activeHeight}
+          onToggle={() => togglePanel('input')}
+          onHeightChange={changePanelHeight}
+          hasContent={hasInput}
         >
-          {(!logs || logs.length === 0) ? (
-            <Text size="xs" c="dimmed" fs="italic">Keine Logs</Text>
-          ) : (
-            <div className={classes.logsList}>
-              {logs.map((log, idx) => (
-                <div key={idx} className={classes.logEntry}>
-                  {typeof log === 'string' ? (
-                    <Text size="xs" className={classes.logText}>{log}</Text>
-                  ) : (
-                    <JsonViewer data={log} initialCollapsed={true} />
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </CollapsiblePanel>
-        
-        {/* Input/Output Panel (nur wenn Node ausgewählt) */}
-        {!isRoot && (
-          <CollapsiblePanel
-            title="Input / Output"
-            icon={<IconFileText size={14} />}
-            defaultOpen={true}
-          >
-            <div className={classes.ioContainer}>
-              <div className={classes.ioSection}>
-                <Text size="xs" fw={600} c="dimmed" mb="xs" tt="uppercase" style={{ letterSpacing: 1 }}>Input</Text>
-                {renderDataContent(inputData, 'Input')}
+          {renderDataContent(inputData, 'Input')}
+        </ResizablePanel>
+      )}
+
+      {/* OUTPUT Panel - nur wenn Node ausgewählt (nicht Root) */}
+      {!isRoot && (
+        <ResizablePanel
+          title="OUTPUT"
+          icon={<IconArrowUp size={14} />}
+          isExpanded={expandedPanel === 'output'}
+          height={activeHeight}
+          onToggle={() => togglePanel('output')}
+          onHeightChange={changePanelHeight}
+          hasContent={hasOutput}
+        >
+          {renderDataContent(outputData, 'Output')}
+        </ResizablePanel>
+      )}
+
+      {/* LOGS Panel */}
+      <ResizablePanel
+        title="LOGS"
+        icon={<IconNote size={14} />}
+        badge={Array.isArray(logs) ? logs.length : undefined}
+        isExpanded={expandedPanel === 'logs'}
+        height={activeHeight}
+        onToggle={() => togglePanel('logs')}
+        onHeightChange={changePanelHeight}
+        hasContent={hasLogs}
+      >
+        {hasLogs ? (
+          <div className={classes.logsContainer}>
+            {logs.map((log, index) => (
+              <div key={index} className={classes.logEntry}>
+                {typeof log === 'string' ? (
+                  <Text size="xs">{log}</Text>
+                ) : (
+                  <JsonViewer data={log} initialCollapsed={true} />
+                )}
               </div>
-              <div className={classes.ioDivider} />
-              <div className={classes.ioSection}>
-                <Text size="xs" fw={600} c="dimmed" mb="xs" tt="uppercase" style={{ letterSpacing: 1 }}>Output</Text>
-                {renderDataContent(outputData, 'Output')}
-              </div>
-            </div>
-          </CollapsiblePanel>
+            ))}
+          </div>
+        ) : (
+          <Text size="xs" c="dimmed" fs="italic">Keine Logs</Text>
         )}
-        
-        {/* Metadata Panel */}
-        <CollapsiblePanel
-          title="Metadata"
-          icon={<IconBraces size={14} />}
-          defaultOpen={false}
-        >
-          {metadata ? (
-            <JsonViewer data={metadata} initialCollapsed={false} />
-          ) : (
-            <Text size="xs" c="dimmed" fs="italic">Keine Metadata</Text>
-          )}
-        </CollapsiblePanel>
-      </div>
+      </ResizablePanel>
+
+      {/* METADATA Panel */}
+      <ResizablePanel
+        title="METADATA"
+        icon={<IconBraces size={14} />}
+        isExpanded={expandedPanel === 'metadata'}
+        height={activeHeight}
+        onToggle={() => togglePanel('metadata')}
+        onHeightChange={changePanelHeight}
+        hasContent={hasMetadata}
+      >
+        {hasMetadata ? (
+          <JsonViewer data={metadata} initialCollapsed={false} />
+        ) : (
+          <Text size="xs" c="dimmed" fs="italic">Keine Metadata</Text>
+        )}
+      </ResizablePanel>
     </div>
   );
 };
@@ -583,32 +702,7 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
     toggleHierarchyCollapse,
   } = useTracing();
 
-  // Panels height state (for resizable panels)
-  const [panelsHeight, setPanelsHeight] = useState(200);
   const containerRef = useRef<HTMLDivElement>(null);
-  const isResizing = useRef(false);
-
-  // Resize handler for panels
-  const handlePanelsResizeStart = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    isResizing.current = true;
-
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (!isResizing.current || !containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const newHeight = rect.bottom - moveEvent.clientY;
-      setPanelsHeight(Math.min(Math.max(newHeight, 100), rect.height - 100));
-    };
-
-    const handleMouseUp = () => {
-      isResizing.current = false;
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }, []);
 
   // Wenn keine Traces, leeren State zeigen
   if (!traces || traces.length === 0) {
@@ -624,7 +718,7 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
   return (
     <div 
       ref={containerRef}
-      className={`${classes.container} ${isCompact ? classes.containerCompact : ''}`}
+      className={`${classes.container} ${isCompact ? classes.containerCompact : ''} ${showDataPanels ? classes.containerWithPanels : ''}`}
     >
       {/* Header */}
       {showHeader && (
@@ -645,11 +739,11 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
         </div>
       )}
       
-      {/* Tree Area */}
+      {/* Tree Area - flexibles Wachstum */}
       <ScrollArea 
         className={classes.scrollArea} 
         type="auto"
-        style={showDataPanels ? { flex: 1, minHeight: 0 } : undefined}
+        style={showDataPanels ? { flex: 1, minHeight: TREE_MIN_HEIGHT } : undefined}
       >
         <div className={classes.treeContainer}>
           {traces.map((trace) => {
@@ -677,13 +771,8 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
         </div>
       </ScrollArea>
       
-      {/* Data Panels (VS Code Style) */}
-      {showDataPanels && (
-        <DataPanelsSection
-          panelsHeight={panelsHeight}
-          onResizeStart={handlePanelsResizeStart}
-        />
-      )}
+      {/* Data Panels (VS Code Style - NEW) */}
+      {showDataPanels && <DataPanelsContainer />}
     </div>
   );
 };
