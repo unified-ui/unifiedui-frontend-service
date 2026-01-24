@@ -38,6 +38,15 @@ export const ChatContent: FC<ChatContentProps> = ({
   const [flashingExtId, setFlashingExtId] = useState<string | null>(null);
   const prevHighlightedRef = useRef<string | null>(null);
 
+  // Callback to register message refs - MUST be defined before any early returns!
+  const setMessageRef = useCallback((extMessageId: string, element: HTMLDivElement | null) => {
+    if (element) {
+      messageRefsMap.current.set(extMessageId, element);
+    } else {
+      messageRefsMap.current.delete(extMessageId);
+    }
+  }, []);
+
   // Auto-scroll to highlighted message and trigger flash animation
   useEffect(() => {
     if (highlightedExtMessageId && highlightedExtMessageId !== prevHighlightedRef.current) {
@@ -62,6 +71,7 @@ export const ChatContent: FC<ChatContentProps> = ({
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingContent]);
 
+  // Early returns AFTER all hooks are defined
   if (isLoading) {
     return (
       <Box className={classes.loadingContainer}>
@@ -84,15 +94,6 @@ export const ChatContent: FC<ChatContentProps> = ({
       </Box>
     );
   }
-
-  // Callback to register message refs
-  const setMessageRef = useCallback((extMessageId: string, element: HTMLDivElement | null) => {
-    if (element) {
-      messageRefsMap.current.set(extMessageId, element);
-    } else {
-      messageRefsMap.current.delete(extMessageId);
-    }
-  }, []);
 
   return (
     <ScrollArea
