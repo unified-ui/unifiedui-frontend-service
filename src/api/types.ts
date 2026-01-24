@@ -13,10 +13,10 @@ export const TenantPermissionEnum = {
   CREDENTIALS_CREATOR: 'CREDENTIALS_CREATOR',
   CUSTOM_GROUP_CREATOR: 'CUSTOM_GROUP_CREATOR',
   CUSTOM_GROUPS_ADMIN: 'CUSTOM_GROUPS_ADMIN',
-  DEVELOPMENT_PLATFORMS_ADMIN: 'DEVELOPMENT_PLATFORMS_ADMIN',
-  DEVELOPMENT_PLATFORMS_CREATOR: 'DEVELOPMENT_PLATFORMS_CREATOR',
   CHAT_WIDGETS_ADMIN: 'CHAT_WIDGETS_ADMIN',
   CHAT_WIDGETS_CREATOR: 'CHAT_WIDGETS_CREATOR',
+  REACT_AGENT_ADMIN: 'REACT_AGENT_ADMIN',
+  REACT_AGENT_CREATOR: 'REACT_AGENT_CREATOR',
 } as const;
 
 export type TenantPermissionEnum = typeof TenantPermissionEnum[keyof typeof TenantPermissionEnum];
@@ -70,7 +70,6 @@ export const FavoriteResourceTypeEnum = {
   APPLICATION: 'applications',
   AUTONOMOUS_AGENT: 'autonomous-agents',
   CONVERSATION: 'conversations',
-  DEVELOPMENT_PLATFORM: 'development-platforms',
 } as const;
 
 export type FavoriteResourceTypeEnum = typeof FavoriteResourceTypeEnum[keyof typeof FavoriteResourceTypeEnum];
@@ -80,9 +79,19 @@ export type FavoriteResourceTypeEnum = typeof FavoriteResourceTypeEnum[keyof typ
 export const CredentialTypeEnum = {
   API_KEY: 'API_KEY',
   BASIC_AUTH: 'BASIC_AUTH',
+  OPENAPI_CONNECTION: 'OPENAPI_CONNECTION',
 } as const;
 
 export type CredentialTypeEnum = typeof CredentialTypeEnum[keyof typeof CredentialTypeEnum];
+
+// ========== Tool Type Enum ==========
+
+export const ToolTypeEnum = {
+  MCP_SERVER: 'MCP_SERVER',
+  OPENAPI_DEFINITION: 'OPENAPI_DEFINITION',
+} as const;
+
+export type ToolTypeEnum = typeof ToolTypeEnum[keyof typeof ToolTypeEnum];
 
 // ========== N8N Application Config Types ==========
 
@@ -663,7 +672,7 @@ export interface SetApplicationPermissionRequest {
 /**
  * Unified response for a principal with their roles on a resource.
  * Used by all resource types (application, autonomous_agent, chat_widget, 
- * conversation, credential, development_platform, custom_group).
+ * conversation, credential, custom_group).
  */
 export interface PrincipalWithRolesResponse {
   principal_id: string;
@@ -692,7 +701,6 @@ export type AutonomousAgentPrincipalsResponse = ResourcePrincipalsResponse;
 export type ChatWidgetPrincipalsResponse = ResourcePrincipalsResponse;
 export type ConversationPrincipalsResponse = ResourcePrincipalsResponse;
 export type CredentialPrincipalsResponse = ResourcePrincipalsResponse;
-export type DevelopmentPlatformPrincipalsResponse = ResourcePrincipalsResponse;
 export type CustomGroupPrincipalsResponse = ResourcePrincipalsResponse;
 
 // ========== Autonomous Agent Types ==========
@@ -822,48 +830,6 @@ export interface CredentialSecretResponse {
   secret_value: string;
 }
 
-// ========== Development Platform Types ==========
-
-export interface DevelopmentPlatformResponse {
-  id: string;
-  tenant_id: string;
-  name: string;
-  description?: string;
-  type?: string;
-  iframe_url: string;
-  config: Record<string, unknown>;
-  is_active: boolean;
-  tags: TagSummary[];
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-  updated_by?: string;
-}
-
-export interface CreateDevelopmentPlatformRequest {
-  name: string;
-  description?: string;
-  type?: string;
-  iframe_url: string;
-  config?: Record<string, unknown>;
-  is_active?: boolean;
-}
-
-export interface UpdateDevelopmentPlatformRequest {
-  name?: string;
-  description?: string;
-  type?: string;
-  iframe_url?: string;
-  config?: Record<string, unknown>;
-  is_active?: boolean;
-}
-
-export interface SetDevelopmentPlatformPermissionRequest {
-  principal_id: string;
-  principal_type: PrincipalTypeEnum;
-  role: PermissionActionEnum;
-}
-
 // ========== Chat Widget Types ==========
 
 export interface ChatWidgetResponse {
@@ -933,6 +899,48 @@ export interface SetPrincipalRoleRequest {
 }
 
 export interface DeletePrincipalRoleRequest {
+  principal_id: string;
+  principal_type: PrincipalTypeEnum;
+  role: PermissionActionEnum;
+}
+
+// ========== Tool Types ==========
+
+export interface ToolResponse {
+  id: string;
+  tenant_id: string;
+  name: string;
+  description?: string;
+  type: ToolTypeEnum;
+  config: Record<string, unknown>;
+  credential_id?: string;
+  is_active: boolean;
+  tags: TagSummary[];
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+export interface CreateToolRequest {
+  name: string;
+  description?: string;
+  type: ToolTypeEnum;
+  config?: Record<string, unknown>;
+  credential_id?: string;
+  is_active?: boolean;
+}
+
+export interface UpdateToolRequest {
+  name?: string;
+  description?: string;
+  type?: ToolTypeEnum;
+  config?: Record<string, unknown>;
+  credential_id?: string;
+  is_active?: boolean;
+}
+
+export interface SetToolPermissionRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
   role: PermissionActionEnum;

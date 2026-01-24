@@ -14,41 +14,39 @@ import {
   Badge,
   SegmentedControl,
   Divider,
-  Switch,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconAlertCircle, IconCode, IconInfoCircle, IconShieldLock } from '@tabler/icons-react';
+import { IconAlertCircle, IconTool, IconInfoCircle, IconShieldLock } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { useEntityPermissions } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
-import type { DevelopmentPlatformResponse, PrincipalTypeEnum } from '../../../api/types';
+import type { ToolResponse, PrincipalTypeEnum } from '../../../api/types';
 import { PermissionActionEnum } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
-import classes from './EditDevelopmentPlatformDialog.module.css';
+import classes from './EditToolDialog.module.css';
 
 export type EditDialogTab = 'details' | 'iam';
 
 interface FormValues {
   name: string;
   description: string;
-  iframe_url: string;
   tags: string[];
   is_active: boolean;
 }
 
-export interface EditDevelopmentPlatformDialogProps {
+export interface EditToolDialogProps {
   opened: boolean;
-  platformId: string | null;
-  initialData?: DevelopmentPlatformResponse | null;
+  toolId: string | null;
+  initialData?: ToolResponse | null;
   activeTab?: EditDialogTab;
   onClose: () => void;
   onSuccess?: () => void;
   onTabChange?: (tab: EditDialogTab) => void;
 }
 
-export const EditDevelopmentPlatformDialog: FC<EditDevelopmentPlatformDialogProps> = ({
+export const EditToolDialog: FC<EditToolDialogProps> = ({
   opened,
-  platformId,
+  toolId,
   initialData,
   activeTab = 'details',
   onClose,
@@ -56,7 +54,7 @@ export const EditDevelopmentPlatformDialog: FC<EditDevelopmentPlatformDialogProp
   onTabChange,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
-  const [platform, setPlatform] = useState<DevelopmentPlatformResponse | null>(null);
+  const [tool, setTool] = useState<ToolResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,15 +72,14 @@ export const EditDevelopmentPlatformDialog: FC<EditDevelopmentPlatformDialogProp
     handleDeletePrincipal,
     resetState: resetPrincipalsState,
   } = useEntityPermissions({
-    entityType: 'development-platform',
-    entityId: platformId,
+    entityType: 'tool',
+    entityId: toolId,
   });
 
   const form = useForm<FormValues>({
     initialValues: {
       name: '',
       description: '',
-      iframe_url: '',
       tags: [],
       is_active: true,
     },
@@ -92,26 +89,16 @@ export const EditDevelopmentPlatformDialog: FC<EditDevelopmentPlatformDialogProp
         if (value.length > 255) return 'Name must be 255 characters or less';
         return null;
       },
-      iframe_url: (value) => {
-        if (!value.trim()) return 'URL is required';
-        try {
-          new URL(value);
-          return null;
-        } catch {
-          return 'Please enter a valid URL';
-        }
-      },
     },
   });
 
   // Initialize form from data
   const initializeFromData = useCallback(
-    (data: DevelopmentPlatformResponse) => {
-      setPlatform(data);
+    (data: ToolResponse) => {
+      setTool(data);
       form.setValues({
         name: data.name,
         description: data.description || '',
-        iframe_url: data.iframe_url || '',
         tags: data.tags?.map((t) => t.name) || [],
         is_active: data.is_active,
       });
@@ -120,38 +107,38 @@ export const EditDevelopmentPlatformDialog: FC<EditDevelopmentPlatformDialogProp
     []
   );
 
-  // Fetch platform details
-  const fetchPlatform = useCallback(async () => {
-    if (!apiClient || !selectedTenant || !platformId) return;
+  // Fetch tool details
+  const fetchTool = useCallback(async () => {
+    if (!apiClient || !selectedTenant || !toolId) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const data = await apiClient.getDevelopmentPlatform(selectedTenant.id, platformId);
+      const data = await apiClient.getTool(selectedTenant.id, toolId);
       initializeFromData(data);
     } catch (err) {
-      console.error('Failed to fetch development platform:', err);
-      setError('Failed to load development platform details');
+      console.error('Failed to fetch tool:', err);
+      setError('Failed to load tool details');
     } finally {
       setIsLoading(false);
     }
-  }, [apiClient, selectedTenant, platformId, initializeFromData]);
+  }, [apiClient, selectedTenant, toolId, initializeFromData]);
 
   // Fetch data when dialog opens
   useEffect(() => {
-    if (opened && platformId) {
+    if (opened && toolId) {
       if (initialData) {
         initializeFromData(initialData);
       } else {
-        fetchPlatform();
+        fetchTool();
       }
       // Always fetch principals (they're not in the list data)
       fetchPrincipals();
     } else if (!opened) {
       resetPrincipalsState();
     }
-  }, [opened, platformId, initialData, initializeFromData, fetchPlatform, fetchPrincipals, resetPrincipalsState]);
+  }, [opened, toolId, initialData, initializeFromData, fetchTool, fetchPrincipals, resetPrincipalsState]);
 
   // Handle tab change
   const handleTabChange = (value: string) => {
@@ -161,32 +148,31 @@ export const EditDevelopmentPlatformDialog: FC<EditDevelopmentPlatformDialogProp
 
   // Handle form submit
   const handleSubmit = async (values: FormValues) => {
-    if (!apiClient || !selectedTenant || !platformId) return;
+    if (!apiClient || !selectedTenant || !toolId) return;
 
     setIsSaving(true);
     setError(null);
 
     try {
-      // Update platform
-      await apiClient.updateDevelopmentPlatform(selectedTenant.id, platformId, {
+      // Update tool
+      await apiClient.updateTool(selectedTenant.id, toolId, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
-        iframe_url: values.iframe_url.trim(),
         is_active: values.is_active,
       });
 
       // Update tags if changed
-      const currentTags = platform?.tags?.map((t) => t.name) || [];
+      const currentTags = tool?.tags?.map((t) => t.name) || [];
       const newTags = values.tags;
 
       if (JSON.stringify(currentTags.sort()) !== JSON.stringify(newTags.sort())) {
-        await apiClient.setDevelopmentPlatformTags(selectedTenant.id, platformId, newTags);
+        await apiClient.setToolTags(selectedTenant.id, toolId, newTags);
       }
 
       onSuccess?.();
       onClose();
     } catch (err) {
-      console.error('Failed to update development platform:', err);
+      console.error('Failed to update tool:', err);
       setError('Failed to save changes');
     } finally {
       setIsSaving(false);
@@ -222,8 +208,14 @@ export const EditDevelopmentPlatformDialog: FC<EditDevelopmentPlatformDialogProp
   const handleClose = () => {
     form.reset();
     setError(null);
-    setPlatform(null);
+    setTool(null);
     onClose();
+  };
+
+  // Format tool type for display
+  const formatToolType = (type?: string) => {
+    if (!type) return '';
+    return type.replace(/_/g, ' ');
   };
 
   return (
@@ -234,19 +226,19 @@ export const EditDevelopmentPlatformDialog: FC<EditDevelopmentPlatformDialogProp
         title={
           <Group gap="sm">
             <Box className={classes.titleIcon}>
-              <IconCode size={20} />
+              <IconTool size={20} />
             </Box>
             <Stack gap={2}>
               <Text fw={600} size="lg">
-                {platform?.name}
+                {tool?.name}
               </Text>
-              {platform && (
+              {tool && (
                 <Group gap="xs">
-                  <Badge size="xs" variant="light" color={platform.is_active ? 'green' : 'gray'}>
-                    {platform.is_active ? 'Active' : 'Inactive'}
+                  <Badge size="xs" variant="light" color={tool.is_active ? 'green' : 'gray'}>
+                    {tool.is_active ? 'Active' : 'Inactive'}
                   </Badge>
                   <Text size="xs" c="dimmed">
-                    Development Platform
+                    {formatToolType(tool.type)}
                   </Text>
                 </Group>
               )}
@@ -318,22 +310,13 @@ export const EditDevelopmentPlatformDialog: FC<EditDevelopmentPlatformDialogProp
                 {...form.getInputProps('name')}
               />
 
-              <TextInput
-                label="URL"
-                placeholder="https://example.com"
-                description="The URL that will be displayed in an iframe"
-                required
-                withAsterisk
-                {...form.getInputProps('iframe_url')}
-              />
-
-              <Switch
-                label="Active"
-                description="Enable or disable this development platform"
-                checked={form.values.is_active}
-                onChange={(e) => form.setFieldValue('is_active', e.currentTarget.checked)}
-                classNames={{ track: classes.switchTrack }}
-              />
+              {tool && (
+                <TextInput
+                  label="Type"
+                  value={formatToolType(tool.type)}
+                  disabled
+                />
+              )}
 
               <TagInput
                 label="Tags"
@@ -374,7 +357,7 @@ export const EditDevelopmentPlatformDialog: FC<EditDevelopmentPlatformDialogProp
               onRoleChange={handleRoleChangeWithTypes}
               onDeletePrincipal={handleDeletePrincipalWithTypes}
               onAddPrincipal={() => setIsAddPrincipalOpen(true)}
-              entityName="development platform"
+              entityName="tool"
             />
           </Box>
         )}
@@ -384,7 +367,7 @@ export const EditDevelopmentPlatformDialog: FC<EditDevelopmentPlatformDialogProp
         opened={isAddPrincipalOpen}
         onClose={() => setIsAddPrincipalOpen(false)}
         onSubmit={handleAddPrincipalsWithRole}
-        entityName="development platform"
+        entityName="tool"
         existingPrincipalIds={principals.map((p) => p.principalId)}
       />
     </>

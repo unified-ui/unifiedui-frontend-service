@@ -5,7 +5,7 @@ import { Box, Loader, Center, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconUpload, IconMessageCircle } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { useIdentity, useChatSidebar } from '../../contexts';
+import { useIdentity } from '../../contexts';
 import { ShareConversationDialog } from '../../components/dialogs/ShareConversationDialog';
 import { SearchConversationsDialog } from '../../components/dialogs/SearchConversationsDialog';
 import { TracingProvider, TracingSidebar, TracingVisualDialog } from '../../components/tracing';
@@ -59,7 +59,6 @@ export const ConversationsPage: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { apiClient, selectedTenant, user, getFoundryToken } = useIdentity();
-  const { onSidebarHoverEnter, onSidebarHoverLeave } = useChatSidebar();
 
   // State
   const [conversations, setConversations] = useState<ConversationResponse[]>([]);
@@ -739,8 +738,6 @@ export const ConversationsPage: FC = () => {
         {/* Fixed Chat Sidebar - attached to main layout sidebar */}
         <Box 
           className={`${classes.chatSidebarWrapper} ${sidebarCollapsed ? classes.collapsed : ''}`}
-          onMouseEnter={onSidebarHoverEnter}
-          onMouseLeave={onSidebarHoverLeave}
         >
           <ChatSidebar
             conversations={conversations}

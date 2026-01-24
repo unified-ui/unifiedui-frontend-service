@@ -44,16 +44,16 @@ import type {
   UpdateCredentialRequest,
   SetCredentialPermissionRequest,
   CredentialSecretResponse,
-  // Development Platform Types
-  DevelopmentPlatformResponse,
-  CreateDevelopmentPlatformRequest,
-  UpdateDevelopmentPlatformRequest,
-  SetDevelopmentPlatformPermissionRequest,
   // Chat Widget Types
   ChatWidgetResponse,
   CreateChatWidgetRequest,
   UpdateChatWidgetRequest,
   SetChatWidgetPermissionRequest,
+  // Tool Types
+  ToolResponse,
+  CreateToolRequest,
+  UpdateToolRequest,
+  SetToolPermissionRequest,
   // Custom Group Types
   CustomGroupResponse,
   CreateCustomGroupRequest,
@@ -488,58 +488,6 @@ export class UnifiedUIAPIClient {
     );
   }
 
-  // ========== Development Platform Endpoints ==========
-
-  async listDevelopmentPlatforms(
-    tenantId: string, 
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
-    options?: { noCache?: boolean }
-  ): Promise<DevelopmentPlatformResponse[] | QuickListItemResponse[]> {
-    const query = this.buildQueryString(params || {});
-    return this.request<DevelopmentPlatformResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/development-platforms${query}`, undefined, undefined, options);
-  }
-
-  async getDevelopmentPlatform(tenantId: string, platformId: string): Promise<DevelopmentPlatformResponse> {
-    return this.request<DevelopmentPlatformResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/development-platforms/${platformId}`);
-  }
-
-  async createDevelopmentPlatform(tenantId: string, data: CreateDevelopmentPlatformRequest): Promise<DevelopmentPlatformResponse> {
-    return this.request<DevelopmentPlatformResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/development-platforms`, data, 'Development platform created successfully');
-  }
-
-  async updateDevelopmentPlatform(tenantId: string, platformId: string, data: UpdateDevelopmentPlatformRequest): Promise<DevelopmentPlatformResponse> {
-    return this.request<DevelopmentPlatformResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/development-platforms/${platformId}`, data, 'Development platform updated successfully');
-  }
-
-  async deleteDevelopmentPlatform(tenantId: string, platformId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/development-platforms/${platformId}`, undefined, 'Development platform deleted successfully');
-  }
-
-  // ========== Development Platform Permissions ==========
-
-  async getDevelopmentPlatformPrincipals(tenantId: string, platformId: string): Promise<ResourcePrincipalsResponse> {
-    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/development-platforms/${platformId}/principals`);
-  }
-
-  async setDevelopmentPlatformPermission(tenantId: string, platformId: string, data: SetDevelopmentPlatformPermissionRequest): Promise<PrincipalWithRolesResponse> {
-    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/development-platforms/${platformId}/principals`, data, 'Permission added successfully');
-  }
-
-  async deleteDevelopmentPlatformPermission(
-    tenantId: string,
-    platformId: string,
-    principalId: string,
-    principalType: PrincipalTypeEnum,
-    role: PermissionActionEnum
-  ): Promise<void> {
-    return this.request<void>(
-      'DELETE',
-      `/api/v1/platform-service/tenants/${tenantId}/development-platforms/${platformId}/principals`,
-      { principal_id: principalId, principal_type: principalType, role },
-      'Permission removed successfully'
-    );
-  }
-
   // ========== Chat Widget Endpoints ==========
 
   async listChatWidgets(
@@ -590,6 +538,72 @@ export class UnifiedUIAPIClient {
       { principal_id: principalId, principal_type: principalType, role },
       'Permission removed successfully'
     );
+  }
+
+  // ========== Tool Endpoints ==========
+
+  async listTools(
+    tenantId: string,
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
+    options?: { noCache?: boolean }
+  ): Promise<ToolResponse[] | QuickListItemResponse[]> {
+    const query = this.buildQueryString(params || {});
+    return this.request<ToolResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/tools${query}`, undefined, undefined, options);
+  }
+
+  async getTool(tenantId: string, toolId: string): Promise<ToolResponse> {
+    return this.request<ToolResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}`);
+  }
+
+  async createTool(tenantId: string, data: CreateToolRequest): Promise<ToolResponse> {
+    return this.request<ToolResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/tools`, data, 'Tool created successfully');
+  }
+
+  async updateTool(tenantId: string, toolId: string, data: UpdateToolRequest): Promise<ToolResponse> {
+    return this.request<ToolResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}`, data, 'Tool updated successfully');
+  }
+
+  async deleteTool(tenantId: string, toolId: string): Promise<void> {
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}`, undefined, 'Tool deleted successfully');
+  }
+
+  // ========== Tool Permissions ==========
+
+  async getToolPrincipals(tenantId: string, toolId: string): Promise<ResourcePrincipalsResponse> {
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}/principals`);
+  }
+
+  async setToolPermission(tenantId: string, toolId: string, data: SetToolPermissionRequest): Promise<PrincipalWithRolesResponse> {
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}/principals`, data, 'Permission added successfully');
+  }
+
+  async deleteToolPermission(
+    tenantId: string,
+    toolId: string,
+    principalId: string,
+    principalType: PrincipalTypeEnum,
+    role: PermissionActionEnum
+  ): Promise<void> {
+    return this.request<void>(
+      'DELETE',
+      `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}/principals`,
+      { principal_id: principalId, principal_type: principalType, role },
+      'Permission removed successfully'
+    );
+  }
+
+  // ========== Tool Tags ==========
+
+  async listToolTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
+    return this.listResourceTypeTags(tenantId, 'tools', params);
+  }
+
+  async getToolTags(tenantId: string, toolId: string): Promise<ResourceTagsResponse> {
+    return this.getResourceTags(tenantId, 'tools', toolId);
+  }
+
+  async setToolTags(tenantId: string, toolId: string, tags: string[]): Promise<ResourceTagsResponse> {
+    return this.setResourceTags(tenantId, 'tools', toolId, { tags });
   }
 
   // ========== Custom Group Endpoints ==========
@@ -675,10 +689,6 @@ export class UnifiedUIAPIClient {
     return this.listResourceTypeTags(tenantId, 'chat-widgets', params);
   }
 
-  async listDevelopmentPlatformTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
-    return this.listResourceTypeTags(tenantId, 'development-platforms', params);
-  }
-
   // ========== Resource Tags ==========
 
   async getResourceTags(tenantId: string, resourceType: string, resourceId: string): Promise<ResourceTagsResponse> {
@@ -713,14 +723,6 @@ export class UnifiedUIAPIClient {
 
   async setCredentialTags(tenantId: string, credentialId: string, tags: string[]): Promise<ResourceTagsResponse> {
     return this.setResourceTags(tenantId, 'credentials', credentialId, { tags });
-  }
-
-  async getDevelopmentPlatformTags(tenantId: string, platformId: string): Promise<ResourceTagsResponse> {
-    return this.getResourceTags(tenantId, 'development-platforms', platformId);
-  }
-
-  async setDevelopmentPlatformTags(tenantId: string, platformId: string, tags: string[]): Promise<ResourceTagsResponse> {
-    return this.setResourceTags(tenantId, 'development-platforms', platformId, { tags });
   }
 
   async getChatWidgetTags(tenantId: string, widgetId: string): Promise<ResourceTagsResponse> {
@@ -761,10 +763,6 @@ export class UnifiedUIAPIClient {
 
   async listConversationFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
     return this.listUserFavorites(tenantId, userId, FavoriteResourceTypeEnum.CONVERSATION);
-  }
-
-  async listDevelopmentPlatformFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
-    return this.listUserFavorites(tenantId, userId, FavoriteResourceTypeEnum.DEVELOPMENT_PLATFORM);
   }
 
   async toggleFavorite(tenantId: string, userId: string, resourceType: FavoriteResourceTypeEnum, resourceId: string, isFavorite: boolean): Promise<void> {

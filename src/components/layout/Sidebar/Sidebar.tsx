@@ -5,20 +5,18 @@ import {
   IconRobot,
   IconMessages, IconMessageFilled,
   IconSparkles,
-  IconKey, IconKeyFilled,
-  IconCode,
   IconSettings, IconSettingsFilled,
-  IconBrandWechat
+  IconBrandWechat,
+  IconTool,
 } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useSidebarData, useChatSidebar, type EntityType } from '../../../contexts';
+import { useSidebarData, type EntityType } from '../../../contexts';
 import { SidebarDataList, type DataListItem } from './SidebarDataList';
+import { GlobalChatSidebar } from '../GlobalChatSidebar/GlobalChatSidebar';
 import {
   CreateApplicationDialog,
   CreateAutonomousAgentDialog,
-  CreateCredentialDialog,
   CreateChatWidgetDialog,
-  CreateDevelopmentPlatformDialog,
 } from '../../dialogs';
 import classes from './Sidebar.module.css';
 
@@ -36,12 +34,11 @@ const mainNavItemsTop: NavItem[] = [
   { icon: IconMessages, iconFilled: IconMessageFilled, label: 'Conversations', path: '/conversations' },
   { icon: IconSparkles, label: 'Chat Agents', path: '/applications', hasDataList: true, entityType: 'applications' },
   { icon: IconRobot, label: 'Autonomous\nAgents', path: '/autonomous-agents', hasDataList: true, entityType: 'autonomous-agents' },
-  { icon: IconKey, iconFilled: IconKeyFilled, label: 'Credentials', path: '/credentials', hasDataList: true, entityType: 'credentials' },
 ];
 
 const mainNavItemsBottom: NavItem[] = [
+  { icon: IconTool, label: 'ReACT-Agent\nDevelopment', path: '/tenant-settings?tab=tools' },
   { icon: IconBrandWechat, label: 'Chat\nWidgets', path: '/chat-widgets', hasDataList: true, entityType: 'chat-widgets' },
-  { icon: IconCode, label: 'Development\nPlatforms', path: '/development-platforms', hasDataList: true, entityType: 'development-platforms' },
 ];
 
 const bottomNavItems: NavItem[] = [
@@ -60,25 +57,18 @@ export const Sidebar: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Use ChatSidebar context for hover behavior
-  const { onNavItemHoverEnter: onChatSidebarHoverEnter, onNavItemHoverLeave: onChatSidebarHoverLeave } = useChatSidebar();
-  
   // Use global sidebar data context
   const {
     applications,
     autonomousAgents,
-    credentials,
     chatWidgets,
-    developmentPlatforms,
     loadingStates,
     errorStates,
     fetchEntityData,
     refreshEntityData,
     refreshApplications,
     refreshAutonomousAgents,
-    refreshCredentials,
     refreshChatWidgets,
-    refreshDevelopmentPlatforms,
   } = useSidebarData();
   
   // State for data list panel
@@ -88,16 +78,23 @@ export const Sidebar: FC = () => {
   const [isHoveringNavItem, setIsHoveringNavItem] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
+  // State for Conversations sidebar (same pattern as other data lists)
+  const [isConversationsSidebarVisible, setIsConversationsSidebarVisible] = useState(false);
+  const [isHoveringConversationsNav, setIsHoveringConversationsNav] = useState(false);
+  const [isHoveringConversationsSidebar, setIsHoveringConversationsSidebar] = useState(false);
+  
   // Timeout refs for hover delay
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Timeout refs for Conversations sidebar
+  const conversationsHoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const conversationsCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Dialog states
   const [isApplicationDialogOpen, setIsApplicationDialogOpen] = useState(false);
   const [isAutonomousAgentDialogOpen, setIsAutonomousAgentDialogOpen] = useState(false);
-  const [isCredentialDialogOpen, setIsCredentialDialogOpen] = useState(false);
   const [isChatWidgetDialogOpen, setIsChatWidgetDialogOpen] = useState(false);
-  const [isDevelopmentPlatformDialogOpen, setIsDevelopmentPlatformDialogOpen] = useState(false);
 
   // Entity configurations
   const entityConfigs: Record<EntityType, EntityConfig> = useMemo(() => ({
@@ -115,26 +112,12 @@ export const Sidebar: FC = () => {
       fetchData: () => fetchEntityData('autonomous-agents'),
       getLink: (id) => `/autonomous-agents/${id}`,
     },
-    credentials: {
-      title: 'Credentials',
-      icon: <IconKey size={24} />,
-      addButtonLabel: 'Add Credential',
-      fetchData: () => fetchEntityData('credentials'),
-      getLink: (id) => `/credentials/${id}`,
-    },
     'chat-widgets': {
       title: 'Chat Widgets',
       icon: <IconBrandWechat size={24} />,
       addButtonLabel: 'Add Chat Widget',
       fetchData: () => fetchEntityData('chat-widgets'),
       getLink: (id) => `/chat-widgets/${id}`,
-    },
-    'development-platforms': {
-      title: 'Development Platforms',
-      icon: <IconCode size={24} />,
-      addButtonLabel: 'Add Development Platform',
-      fetchData: () => fetchEntityData('development-platforms'),
-      getLink: (id) => `/development-platforms/${id}`,
     },
   }), [fetchEntityData]);
 
@@ -157,13 +140,6 @@ export const Sidebar: FC = () => {
           link: entityConfigs['autonomous-agents'].getLink(agent.id),
           icon: <IconRobot size={16} />,
         }));
-      case 'credentials':
-        return credentials.map(cred => ({
-          id: cred.id,
-          name: cred.name,
-          link: entityConfigs.credentials.getLink(cred.id),
-          icon: <IconKey size={16} />,
-        }));
       case 'chat-widgets':
         return chatWidgets.map(widget => ({
           id: widget.id,
@@ -171,28 +147,19 @@ export const Sidebar: FC = () => {
           link: entityConfigs['chat-widgets'].getLink(widget.id),
           icon: <IconBrandWechat size={16} />,
         }));
-      case 'development-platforms':
-        return developmentPlatforms.map(platform => ({
-          id: platform.id,
-          name: platform.name,
-          link: entityConfigs['development-platforms'].getLink(platform.id),
-          icon: <IconCode size={16} />,
-        }));
       default:
         return [];
     }
-  }, [activeEntity, applications, autonomousAgents, credentials, chatWidgets, developmentPlatforms, entityConfigs]);
+  }, [activeEntity, applications, autonomousAgents, chatWidgets, entityConfigs]);
 
   // Check if user is on the entity's list page (not detail page)
   const isOnEntityListPage = useCallback((entityType: EntityType) => {
     const entityPaths: Record<EntityType, string> = {
       applications: '/applications',
       'autonomous-agents': '/autonomous-agents',
-      credentials: '/credentials',
       'chat-widgets': '/chat-widgets',
-      'development-platforms': '/development-platforms',
     };
-    // Only return true if exactly on the list page, not on detail pages like /development-platforms/{id}
+    // Only return true if exactly on the list page, not on detail pages
     return location.pathname === entityPaths[entityType];
   }, [location.pathname]);
 
@@ -266,6 +233,73 @@ export const Sidebar: FC = () => {
     }, 200);
   }, [isHoveringNavItem]);
 
+  // ========== Conversations Sidebar Hover Handlers (same pattern as above) ==========
+  
+  // Check if on conversations page
+  const isOnConversationsPage = location.pathname.startsWith('/conversations');
+  
+  // Handle Conversations nav item hover enter
+  const handleConversationsNavHoverEnter = useCallback(() => {
+    // Don't show if already on conversations page
+    if (isOnConversationsPage) return;
+    
+    // Clear any pending close timeout
+    if (conversationsCloseTimeoutRef.current) {
+      clearTimeout(conversationsCloseTimeoutRef.current);
+      conversationsCloseTimeoutRef.current = null;
+    }
+    
+    // Set hover state immediately
+    setIsHoveringConversationsNav(true);
+    
+    // Small delay before showing sidebar
+    if (conversationsHoverTimeoutRef.current) {
+      clearTimeout(conversationsHoverTimeoutRef.current);
+    }
+    
+    conversationsHoverTimeoutRef.current = setTimeout(() => {
+      setIsConversationsSidebarVisible(true);
+    }, 150);
+  }, [isOnConversationsPage]);
+
+  // Handle Conversations nav item hover leave
+  const handleConversationsNavHoverLeave = useCallback(() => {
+    setIsHoveringConversationsNav(false);
+    
+    if (conversationsHoverTimeoutRef.current) {
+      clearTimeout(conversationsHoverTimeoutRef.current);
+      conversationsHoverTimeoutRef.current = null;
+    }
+    
+    // Delay closing to allow moving to sidebar
+    conversationsCloseTimeoutRef.current = setTimeout(() => {
+      if (!isHoveringConversationsSidebar) {
+        setIsConversationsSidebarVisible(false);
+      }
+    }, 200);
+  }, [isHoveringConversationsSidebar]);
+
+  // Handle Conversations sidebar hover enter
+  const handleConversationsSidebarHoverEnter = useCallback(() => {
+    setIsHoveringConversationsSidebar(true);
+    
+    if (conversationsCloseTimeoutRef.current) {
+      clearTimeout(conversationsCloseTimeoutRef.current);
+      conversationsCloseTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Handle Conversations sidebar hover leave
+  const handleConversationsSidebarHoverLeave = useCallback(() => {
+    setIsHoveringConversationsSidebar(false);
+    
+    conversationsCloseTimeoutRef.current = setTimeout(() => {
+      if (!isHoveringConversationsNav) {
+        setIsConversationsSidebarVisible(false);
+      }
+    }, 200);
+  }, [isHoveringConversationsNav]);
+
   // Handle close button click
   const handleCloseDataList = useCallback(() => {
     setActiveEntity(null);
@@ -289,14 +323,8 @@ export const Sidebar: FC = () => {
       case 'autonomous-agents':
         setIsAutonomousAgentDialogOpen(true);
         break;
-      case 'credentials':
-        setIsCredentialDialogOpen(true);
-        break;
       case 'chat-widgets':
         setIsChatWidgetDialogOpen(true);
-        break;
-      case 'development-platforms':
-        setIsDevelopmentPlatformDialogOpen(true);
         break;
     }
   }, [activeEntity]);
@@ -310,17 +338,9 @@ export const Sidebar: FC = () => {
     refreshAutonomousAgents();
   }, [refreshAutonomousAgents]);
 
-  const handleCredentialCreated = useCallback(() => {
-    refreshCredentials();
-  }, [refreshCredentials]);
-
   const handleChatWidgetCreated = useCallback(() => {
     refreshChatWidgets();
   }, [refreshChatWidgets]);
-
-  const handleDevelopmentPlatformCreated = useCallback(() => {
-    refreshDevelopmentPlatforms();
-  }, [refreshDevelopmentPlatforms]);
 
   // Handle refresh button click (bypasses cache)
   const handleRefresh = useCallback(async () => {
@@ -339,6 +359,8 @@ export const Sidebar: FC = () => {
     return () => {
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
       if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+      if (conversationsHoverTimeoutRef.current) clearTimeout(conversationsHoverTimeoutRef.current);
+      if (conversationsCloseTimeoutRef.current) clearTimeout(conversationsCloseTimeoutRef.current);
     };
   }, []);
 
@@ -355,18 +377,18 @@ export const Sidebar: FC = () => {
     const isConversationsItem = item.path === '/conversations';
 
     const handleMouseEnter = () => {
-      // Trigger chat sidebar hover for Conversations item
+      // Trigger conversations sidebar hover for Conversations item
       if (isConversationsItem) {
-        onChatSidebarHoverEnter();
+        handleConversationsNavHoverEnter();
       }
       // Trigger data list hover for items with data lists
       handleNavItemHoverEnter(item);
     };
 
     const handleMouseLeave = () => {
-      // Trigger chat sidebar hover leave for Conversations item
+      // Trigger conversations sidebar hover leave for Conversations item
       if (isConversationsItem) {
-        onChatSidebarHoverLeave();
+        handleConversationsNavHoverLeave();
       }
       handleNavItemHoverLeave();
     };
@@ -429,6 +451,13 @@ export const Sidebar: FC = () => {
         />
       )}
 
+      {/* Conversations Sidebar (same pattern as Data List Panel) */}
+      <GlobalChatSidebar
+        isVisible={isConversationsSidebarVisible}
+        onMouseEnter={handleConversationsSidebarHoverEnter}
+        onMouseLeave={handleConversationsSidebarHoverLeave}
+      />
+
       {/* Create Dialogs */}
       <CreateApplicationDialog
         opened={isApplicationDialogOpen}
@@ -440,20 +469,10 @@ export const Sidebar: FC = () => {
         onClose={() => setIsAutonomousAgentDialogOpen(false)}
         onSuccess={handleAutonomousAgentCreated}
       />
-      <CreateCredentialDialog
-        opened={isCredentialDialogOpen}
-        onClose={() => setIsCredentialDialogOpen(false)}
-        onSuccess={handleCredentialCreated}
-      />
       <CreateChatWidgetDialog
         opened={isChatWidgetDialogOpen}
         onClose={() => setIsChatWidgetDialogOpen(false)}
         onSuccess={handleChatWidgetCreated}
-      />
-      <CreateDevelopmentPlatformDialog
-        opened={isDevelopmentPlatformDialogOpen}
-        onClose={() => setIsDevelopmentPlatformDialogOpen(false)}
-        onSuccess={handleDevelopmentPlatformCreated}
       />
     </>
   );

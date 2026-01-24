@@ -45,9 +45,6 @@ export const TENANT_ROLE_OPTIONS: { value: TenantPermissionEnum; label: string; 
   // Autonomous Agents
   { value: 'AUTONOMOUS_AGENTS_ADMIN', label: 'Autonomous Agents Admin', description: 'Manage all autonomous agents', category: 'Autonomous Agents' },
   { value: 'AUTONOMOUS_AGENTS_CREATOR', label: 'Autonomous Agents Creator', description: 'Create new autonomous agents', category: 'Autonomous Agents' },
-  // Development Platforms
-  { value: 'DEVELOPMENT_PLATFORMS_ADMIN', label: 'Dev Platforms Admin', description: 'Manage all development platforms', category: 'Development Platforms' },
-  { value: 'DEVELOPMENT_PLATFORMS_CREATOR', label: 'Dev Platforms Creator', description: 'Create new development platforms', category: 'Development Platforms' },
   // Chat Widgets
   { value: 'CHAT_WIDGETS_ADMIN', label: 'Chat Widgets Admin', description: 'Manage all chat widgets', category: 'Chat Widgets' },
   { value: 'CHAT_WIDGETS_CREATOR', label: 'Chat Widgets Creator', description: 'Create new chat widgets', category: 'Chat Widgets' },
@@ -62,7 +59,6 @@ const ROLE_PRIORITY: Record<string, number> = {
   CONVERSATIONS_ADMIN: 50,
   CREDENTIALS_ADMIN: 50,
   CUSTOM_GROUPS_ADMIN: 50,
-  DEVELOPMENT_PLATFORMS_ADMIN: 50,
   CHAT_WIDGETS_ADMIN: 50,
   // Creators
   APPLICATIONS_CREATOR: 25,
@@ -70,7 +66,6 @@ const ROLE_PRIORITY: Record<string, number> = {
   CONVERSATIONS_CREATOR: 25,
   CREDENTIALS_CREATOR: 25,
   CUSTOM_GROUP_CREATOR: 25,
-  DEVELOPMENT_PLATFORMS_CREATOR: 25,
   CHAT_WIDGETS_CREATOR: 25,
   // Reader
   READER: 10,
@@ -527,12 +522,12 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
                     </Table.Td>
 
                     {/* Roles - displayed as badges like tags */}
-                    <Table.Td>
+                    <Table.Td onClick={(e) => e.stopPropagation()}>
                       <RoleBadges roles={principal.roles} />
                     </Table.Td>
 
                     {/* Actions */}
-                    <Table.Td>
+                    <Table.Td onClick={(e) => e.stopPropagation()}>
                       {onDeletePrincipal && !isCurrentUser && (
                         <Tooltip label="Remove access">
                           <ActionIcon

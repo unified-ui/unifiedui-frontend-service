@@ -4,47 +4,37 @@ import { useIdentity } from './IdentityContext';
 
 // ========== Types ==========
 
-export type EntityType = 'applications' | 'autonomous-agents' | 'credentials' | 'chat-widgets' | 'development-platforms';
+export type EntityType = 'applications' | 'autonomous-agents' | 'chat-widgets';
 
 interface SidebarDataState {
   applications: QuickListItemResponse[];
   autonomousAgents: QuickListItemResponse[];
-  credentials: QuickListItemResponse[];
   chatWidgets: QuickListItemResponse[];
-  developmentPlatforms: QuickListItemResponse[];
 }
 
 interface LoadingState {
   applications: boolean;
   'autonomous-agents': boolean;
-  credentials: boolean;
   'chat-widgets': boolean;
-  'development-platforms': boolean;
 }
 
 interface ErrorState {
   applications: string | null;
   'autonomous-agents': string | null;
-  credentials: string | null;
   'chat-widgets': string | null;
-  'development-platforms': string | null;
 }
 
 interface FetchedState {
   applications: boolean;
   'autonomous-agents': boolean;
-  credentials: boolean;
   'chat-widgets': boolean;
-  'development-platforms': boolean;
 }
 
 interface SidebarDataContextType {
   // Data
   applications: QuickListItemResponse[];
   autonomousAgents: QuickListItemResponse[];
-  credentials: QuickListItemResponse[];
   chatWidgets: QuickListItemResponse[];
-  developmentPlatforms: QuickListItemResponse[];
   
   // Loading & Error states
   loadingStates: LoadingState;
@@ -53,17 +43,13 @@ interface SidebarDataContextType {
   // Fetch functions (uses cache by default)
   fetchApplications: () => Promise<void>;
   fetchAutonomousAgents: () => Promise<void>;
-  fetchCredentials: () => Promise<void>;
   fetchChatWidgets: () => Promise<void>;
-  fetchDevelopmentPlatforms: () => Promise<void>;
   fetchEntityData: (entityType: EntityType) => Promise<void>;
   
   // Refresh functions (bypasses cache)
   refreshApplications: () => Promise<void>;
   refreshAutonomousAgents: () => Promise<void>;
-  refreshCredentials: () => Promise<void>;
   refreshChatWidgets: () => Promise<void>;
-  refreshDevelopmentPlatforms: () => Promise<void>;
   refreshEntityData: (entityType: EntityType) => Promise<void>;
   
   // Check if data has been fetched
@@ -90,36 +76,28 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
   const [data, setData] = useState<SidebarDataState>({
     applications: [],
     autonomousAgents: [],
-    credentials: [],
     chatWidgets: [],
-    developmentPlatforms: [],
   });
   
   // Loading states
   const [loadingStates, setLoadingStates] = useState<LoadingState>({
     applications: false,
     'autonomous-agents': false,
-    credentials: false,
     'chat-widgets': false,
-    'development-platforms': false,
   });
   
   // Error states
   const [errorStates, setErrorStates] = useState<ErrorState>({
     applications: null,
     'autonomous-agents': null,
-    credentials: null,
     'chat-widgets': null,
-    'development-platforms': null,
   });
   
   // Track if data has been fetched (to avoid refetching on every hover)
   const [fetchedStates, setFetchedStates] = useState<FetchedState>({
     applications: false,
     'autonomous-agents': false,
-    credentials: false,
     'chat-widgets': false,
-    'development-platforms': false,
   });
 
   // ========== Fetch Functions (with cache) ==========
@@ -183,36 +161,6 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
       setLoadingStates(prev => ({ ...prev, 'autonomous-agents': false }));
     }
   }, [apiClient, selectedTenant, fetchedStates['autonomous-agents'], data.autonomousAgents.length]);
-  
-  const fetchCredentials = useCallback(async (noCache = false) => {
-    if (!apiClient || !selectedTenant) return;
-    
-    // Skip if already fetched and not forcing refresh
-    if (!noCache && fetchedStates.credentials && data.credentials.length > 0) {
-      return;
-    }
-    
-    setLoadingStates(prev => ({ ...prev, credentials: true }));
-    setErrorStates(prev => ({ ...prev, credentials: null }));
-    
-    try {
-      const result = await apiClient.listCredentials(
-        selectedTenant.id, 
-        { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' },
-        noCache ? { noCache: true } : undefined
-      );
-      // Type guard: Ensure result is QuickListItemResponse[]
-      if (Array.isArray(result)) {
-        setData(prev => ({ ...prev, credentials: result as QuickListItemResponse[] }));
-        setFetchedStates(prev => ({ ...prev, credentials: true }));
-      }
-    } catch (error) {
-      setErrorStates(prev => ({ ...prev, credentials: 'Fehler beim Laden der Credentials' }));
-      console.error('Error fetching credentials:', error);
-    } finally {
-      setLoadingStates(prev => ({ ...prev, credentials: false }));
-    }
-  }, [apiClient, selectedTenant, fetchedStates.credentials, data.credentials.length]);
 
   const fetchChatWidgets = useCallback(async (noCache = false) => {
     if (!apiClient || !selectedTenant) return;
@@ -244,36 +192,6 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     }
   }, [apiClient, selectedTenant, fetchedStates['chat-widgets'], data.chatWidgets.length]);
 
-  const fetchDevelopmentPlatforms = useCallback(async (noCache = false) => {
-    if (!apiClient || !selectedTenant) return;
-    
-    // Skip if already fetched and not forcing refresh
-    if (!noCache && fetchedStates['development-platforms'] && data.developmentPlatforms.length > 0) {
-      return;
-    }
-    
-    setLoadingStates(prev => ({ ...prev, 'development-platforms': true }));
-    setErrorStates(prev => ({ ...prev, 'development-platforms': null }));
-    
-    try {
-      const result = await apiClient.listDevelopmentPlatforms(
-        selectedTenant.id, 
-        { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' },
-        noCache ? { noCache: true } : undefined
-      );
-      // Type guard: Ensure result is QuickListItemResponse[]
-      if (Array.isArray(result)) {
-        setData(prev => ({ ...prev, developmentPlatforms: result as QuickListItemResponse[] }));
-        setFetchedStates(prev => ({ ...prev, 'development-platforms': true }));
-      }
-    } catch (error) {
-      setErrorStates(prev => ({ ...prev, 'development-platforms': 'Fehler beim Laden der Development Platforms' }));
-      console.error('Error fetching development platforms:', error);
-    } finally {
-      setLoadingStates(prev => ({ ...prev, 'development-platforms': false }));
-    }
-  }, [apiClient, selectedTenant, fetchedStates['development-platforms'], data.developmentPlatforms.length]);
-
   // Generic fetch function
   const fetchEntityData = useCallback(async (entityType: EntityType) => {
     switch (entityType) {
@@ -283,17 +201,11 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
       case 'autonomous-agents':
         await fetchAutonomousAgents(false);
         break;
-      case 'credentials':
-        await fetchCredentials(false);
-        break;
       case 'chat-widgets':
         await fetchChatWidgets(false);
         break;
-      case 'development-platforms':
-        await fetchDevelopmentPlatforms(false);
-        break;
     }
-  }, [fetchApplications, fetchAutonomousAgents, fetchCredentials, fetchChatWidgets, fetchDevelopmentPlatforms]);
+  }, [fetchApplications, fetchAutonomousAgents, fetchChatWidgets]);
 
   // ========== Refresh Functions (bypass cache) ==========
   
@@ -304,18 +216,10 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
   const refreshAutonomousAgents = useCallback(async () => {
     await fetchAutonomousAgents(true);
   }, [fetchAutonomousAgents]);
-  
-  const refreshCredentials = useCallback(async () => {
-    await fetchCredentials(true);
-  }, [fetchCredentials]);
 
   const refreshChatWidgets = useCallback(async () => {
     await fetchChatWidgets(true);
   }, [fetchChatWidgets]);
-
-  const refreshDevelopmentPlatforms = useCallback(async () => {
-    await fetchDevelopmentPlatforms(true);
-  }, [fetchDevelopmentPlatforms]);
 
   // Generic refresh function
   const refreshEntityData = useCallback(async (entityType: EntityType) => {
@@ -326,17 +230,11 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
       case 'autonomous-agents':
         await refreshAutonomousAgents();
         break;
-      case 'credentials':
-        await refreshCredentials();
-        break;
       case 'chat-widgets':
         await refreshChatWidgets();
         break;
-      case 'development-platforms':
-        await refreshDevelopmentPlatforms();
-        break;
     }
-  }, [refreshApplications, refreshAutonomousAgents, refreshCredentials, refreshChatWidgets, refreshDevelopmentPlatforms]);
+  }, [refreshApplications, refreshAutonomousAgents, refreshChatWidgets]);
 
   // ========== Helper Functions ==========
   
@@ -348,23 +246,17 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     setData({
       applications: [],
       autonomousAgents: [],
-      credentials: [],
       chatWidgets: [],
-      developmentPlatforms: [],
     });
     setFetchedStates({
       applications: false,
       'autonomous-agents': false,
-      credentials: false,
       'chat-widgets': false,
-      'development-platforms': false,
     });
     setErrorStates({
       applications: null,
       'autonomous-agents': null,
-      credentials: null,
       'chat-widgets': null,
-      'development-platforms': null,
     });
   }, []);
 
@@ -374,9 +266,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     // Data
     applications: data.applications,
     autonomousAgents: data.autonomousAgents,
-    credentials: data.credentials,
     chatWidgets: data.chatWidgets,
-    developmentPlatforms: data.developmentPlatforms,
     
     // States
     loadingStates,
@@ -385,17 +275,13 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     // Fetch functions
     fetchApplications: () => fetchApplications(false),
     fetchAutonomousAgents: () => fetchAutonomousAgents(false),
-    fetchCredentials: () => fetchCredentials(false),
     fetchChatWidgets: () => fetchChatWidgets(false),
-    fetchDevelopmentPlatforms: () => fetchDevelopmentPlatforms(false),
     fetchEntityData,
     
     // Refresh functions
     refreshApplications,
     refreshAutonomousAgents,
-    refreshCredentials,
     refreshChatWidgets,
-    refreshDevelopmentPlatforms,
     refreshEntityData,
     
     // Helpers

@@ -37,6 +37,7 @@ interface EditCustomGroupDialogProps {
   onClose: () => void;
   customGroupId: string | null;
   initialTab?: 'members' | 'details';
+  onTabChange?: (tab: 'members' | 'details') => void;
   onSuccess?: () => void;
 }
 
@@ -66,7 +67,8 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
   opened,
   onClose,
   customGroupId,
-  initialTab = 'members',
+  initialTab = 'details',
+  onTabChange,
   onSuccess,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
@@ -322,23 +324,27 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
             <Box className={classes.tabContainer}>
               <SegmentedControl
                 value={activeTab}
-                onChange={(value) => setActiveTab(value as TabValue)}
+                onChange={(value) => {
+                  const tab = value as TabValue;
+                  setActiveTab(tab);
+                  onTabChange?.(tab);
+                }}
                 data={[
-                  {
-                    value: 'members',
-                    label: (
-                      <Group gap="xs" wrap="nowrap">
-                        <IconUsers size={16} />
-                        <span>Manage Members</span>
-                      </Group>
-                    ),
-                  },
                   {
                     value: 'details',
                     label: (
                       <Group gap="xs" wrap="nowrap">
                         <IconInfoCircle size={16} />
                         <span>Details</span>
+                      </Group>
+                    ),
+                  },
+                  {
+                    value: 'members',
+                    label: (
+                      <Group gap="xs" wrap="nowrap">
+                        <IconUsers size={16} />
+                        <span>Manage Members</span>
                       </Group>
                     ),
                   },

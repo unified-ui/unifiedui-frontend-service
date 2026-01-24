@@ -4,6 +4,7 @@ import {
   Modal,
   TextInput,
   Textarea,
+  PasswordInput,
   Button,
   Stack,
   Group,
@@ -21,7 +22,7 @@ import { useIdentity } from '../../../contexts';
 import { useEntityPermissions } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
 import type { CredentialResponse, PrincipalTypeEnum } from '../../../api/types';
-import { PermissionActionEnum } from '../../../api/types';
+import { PermissionActionEnum, CredentialTypeEnum } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
 import classes from './EditCredentialDialog.module.css';
 
@@ -32,6 +33,10 @@ interface FormValues {
   description: string;
   tags: string[];
   is_active: boolean;
+  // Optional credential value fields (only submitted if user enters a new value)
+  secret_value: string;
+  username: string;
+  password: string;
 }
 
 export interface EditCredentialDialogProps {
@@ -82,6 +87,9 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
       description: '',
       tags: [],
       is_active: true,
+      secret_value: '',
+      username: '',
+      password: '',
     },
     validate: {
       name: (value) => {
@@ -101,6 +109,9 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
         description: data.description || '',
         tags: data.tags?.map((t) => t.name) || [],
         is_active: data.is_active,
+        secret_value: '',
+        username: '',
+        password: '',
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -154,11 +165,27 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
     setError(null);
 
     try {
+      // Build secret_value if user entered new credentials
+      let secretValue: string | undefined;
+      if (credential?.type === CredentialTypeEnum.BASIC_AUTH) {
+        if (values.username.trim() || values.password.trim()) {
+          secretValue = JSON.stringify({
+            username: values.username.trim(),
+            password: values.password.trim(),
+          });
+        }
+      } else if (credential?.type === CredentialTypeEnum.API_KEY) {
+        if (values.secret_value.trim()) {
+          secretValue = values.secret_value.trim();
+        }
+      }
+
       // Update credential
       await apiClient.updateCredential(selectedTenant.id, credentialId, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
         is_active: values.is_active,
+        ...(secretValue && { secret_value: secretValue }),
       });
 
       // Update tags if changed
@@ -317,6 +344,33 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
                     disabled
                   />
                 </Group>
+              )}
+
+              {/* Credential value fields - type specific */}
+              {credential?.type === CredentialTypeEnum.API_KEY && (
+                <PasswordInput
+                  label="Neuer API Key"
+                  placeholder="Leer lassen um den aktuellen Wert beizubehalten"
+                  description="Nur ausfüllen, wenn Sie den API Key ändern möchten"
+                  {...form.getInputProps('secret_value')}
+                />
+              )}
+
+              {credential?.type === CredentialTypeEnum.BASIC_AUTH && (
+                <>
+                  <TextInput
+                    label="Neuer Username"
+                    placeholder="Leer lassen um den aktuellen Wert beizubehalten"
+                    description="Nur ausfüllen, wenn Sie den Username ändern möchten"
+                    {...form.getInputProps('username')}
+                  />
+                  <PasswordInput
+                    label="Neues Password"
+                    placeholder="Leer lassen um den aktuellen Wert beizubehalten"
+                    description="Nur ausfüllen, wenn Sie das Password ändern möchten"
+                    {...form.getInputProps('password')}
+                  />
+                </>
               )}
 
               <TagInput

@@ -14,8 +14,8 @@ export type EntityType =
   | 'autonomous-agent' 
   | 'credential' 
   | 'chat-widget' 
-  | 'development-platform'
-  | 'conversation';
+  | 'conversation'
+  | 'tool';
 
 interface UseEntityPermissionsOptions {
   entityType: EntityType;
@@ -113,14 +113,6 @@ export const useEntityPermissions = ({
           deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
             apiClient.deleteChatWidgetPermission(tenantId, entityId, principalId, principalType, role),
         };
-      case 'development-platform':
-        return {
-          getPrincipals: () => apiClient.getDevelopmentPlatformPrincipals(tenantId, entityId),
-          setPermission: (data: { principal_id: string; principal_type: PrincipalTypeEnum; role: PermissionActionEnum }) =>
-            apiClient.setDevelopmentPlatformPermission(tenantId, entityId, data),
-          deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
-            apiClient.deleteDevelopmentPlatformPermission(tenantId, entityId, principalId, principalType, role),
-        };
       case 'conversation':
         return {
           getPrincipals: () => apiClient.getConversationPrincipals(tenantId, entityId),
@@ -128,6 +120,14 @@ export const useEntityPermissions = ({
             apiClient.setConversationPermission(tenantId, entityId, data),
           deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
             apiClient.deleteConversationPermission(tenantId, entityId, principalId, principalType, role),
+        };
+      case 'tool':
+        return {
+          getPrincipals: () => apiClient.getToolPrincipals(tenantId, entityId),
+          setPermission: (data: { principal_id: string; principal_type: PrincipalTypeEnum; role: PermissionActionEnum }) =>
+            apiClient.setToolPermission(tenantId, entityId, data),
+          deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
+            apiClient.deleteToolPermission(tenantId, entityId, principalId, principalType, role),
         };
       default:
         return null;

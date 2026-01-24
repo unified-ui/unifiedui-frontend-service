@@ -33,6 +33,9 @@ import {
   IconSearch,
   IconDots,
   IconUserPlus,
+  IconKey,
+  IconShieldLock,
+  IconTool,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { PageContainer, ConfirmDeleteDialog, EditRolesDialog } from '../../components/common';
@@ -43,18 +46,25 @@ import type { SelectedPrincipal, RoleOption } from '../../components/common/AddP
 import {
   CreateCustomGroupDialog,
   EditCustomGroupDialog,
+  CreateCredentialDialog,
+  EditCredentialDialog,
+  CreateToolDialog,
+  EditToolDialog,
 } from '../../components/dialogs';
+import type { EditDialogTab } from '../../components/dialogs';
 import { useIdentity } from '../../contexts';
 import type {
   TenantPermissionEnum,
   PrincipalTypeEnum,
   CustomGroupResponse,
+  CredentialResponse,
+  ToolResponse,
 } from '../../api/types';
 import classes from './TenantSettingsPage.module.css';
 
-type TabValue = 'settings' | 'iam' | 'custom-groups' | 'billing-and-licence';
+type TabValue = 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'billing-and-licence';
 
-const TAB_VALUES: TabValue[] = ['settings', 'iam', 'custom-groups', 'billing-and-licence'];
+const TAB_VALUES: TabValue[] = ['settings', 'iam', 'custom-groups', 'tools', 'credentials', 'billing-and-licence'];
 const DEFAULT_TAB: TabValue = 'settings';
 
 const isValidTab = (value: string | null): value is TabValue => {
@@ -143,6 +153,52 @@ export const TenantSettingsPage: FC = () => {
   
   const CUSTOM_GROUPS_PAGE_SIZE = 50;
   const customGroupsLoadMoreRef = useRef<HTMLDivElement>(null);
+
+  // ===== Credentials State =====
+  const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
+  const [credentialsLoading, setCredentialsLoading] = useState(false);
+  const [credentialsLoadingMore, setCredentialsLoadingMore] = useState(false);
+  const [credentialsError, setCredentialsError] = useState<string | null>(null);
+  const [credentialsFetched, setCredentialsFetched] = useState(false);
+  const [credentialsHasMore, setCredentialsHasMore] = useState(true);
+  const [credentialsSkip, setCredentialsSkip] = useState(0);
+  const [createCredentialDialogOpen, setCreateCredentialDialogOpen] = useState(false);
+  const [editCredentialId, setEditCredentialId] = useState<string | null>(null);
+  const [editCredentialTab, setEditCredentialTab] = useState<EditDialogTab>('details');
+  const [credentialsSearch, setCredentialsSearch] = useState('');
+  const [debouncedCredentialsSearch] = useDebouncedValue(credentialsSearch, 400);
+  const [deleteCredentialDialog, setDeleteCredentialDialog] = useState<{
+    open: boolean;
+    id: string;
+    name: string;
+  }>({ open: false, id: '', name: '' });
+  const [isDeletingCredential, setIsDeletingCredential] = useState(false);
+  
+  const CREDENTIALS_PAGE_SIZE = 50;
+  const credentialsLoadMoreRef = useRef<HTMLDivElement>(null);
+
+  // ===== Tools State =====
+  const [tools, setTools] = useState<ToolResponse[]>([]);
+  const [toolsLoading, setToolsLoading] = useState(false);
+  const [toolsLoadingMore, setToolsLoadingMore] = useState(false);
+  const [toolsError, setToolsError] = useState<string | null>(null);
+  const [toolsFetched, setToolsFetched] = useState(false);
+  const [toolsHasMore, setToolsHasMore] = useState(true);
+  const [toolsSkip, setToolsSkip] = useState(0);
+  const [createToolDialogOpen, setCreateToolDialogOpen] = useState(false);
+  const [editToolId, setEditToolId] = useState<string | null>(null);
+  const [editToolTab, setEditToolTab] = useState<EditDialogTab>('details');
+  const [toolsSearch, setToolsSearch] = useState('');
+  const [debouncedToolsSearch] = useDebouncedValue(toolsSearch, 400);
+  const [deleteToolDialog, setDeleteToolDialog] = useState<{
+    open: boolean;
+    id: string;
+    name: string;
+  }>({ open: false, id: '', name: '' });
+  const [isDeletingTool, setIsDeletingTool] = useState(false);
+  
+  const TOOLS_PAGE_SIZE = 50;
+  const toolsLoadMoreRef = useRef<HTMLDivElement>(null);
 
   // ===== Load Tenant Details =====
   useEffect(() => {
@@ -306,6 +362,148 @@ export const TenantSettingsPage: FC = () => {
     return () => observer.disconnect();
   }, [customGroupsHasMore, customGroupsLoadingMore, handleLoadMoreCustomGroups]);
 
+  // ===== Fetch Credentials =====
+  const fetchCredentials = useCallback(async (reset = false) => {
+    if (!apiClient || !selectedTenant) return;
+
+    const isInitialFetch = reset || !credentialsFetched;
+    if (isInitialFetch) {
+      setCredentialsLoading(true);
+    } else {
+      setCredentialsLoadingMore(true);
+    }
+    setCredentialsError(null);
+
+    const skip = reset ? 0 : credentialsSkip;
+
+    try {
+      const result = await apiClient.listCredentials(selectedTenant.id, {
+        skip,
+        limit: CREDENTIALS_PAGE_SIZE,
+        name_filter: debouncedCredentialsSearch || undefined,
+        order_by: 'name',
+        order_direction: 'asc',
+      }) as CredentialResponse[];
+
+      if (reset) {
+        setCredentials(result);
+        setCredentialsSkip(CREDENTIALS_PAGE_SIZE);
+      } else {
+        // Append new credentials, avoiding duplicates
+        setCredentials((prev) => {
+          const existingIds = new Set(prev.map(c => c.id));
+          const uniqueNewCredentials = result.filter(c => !existingIds.has(c.id));
+          return [...prev, ...uniqueNewCredentials];
+        });
+        setCredentialsSkip((prev) => prev + CREDENTIALS_PAGE_SIZE);
+      }
+
+      setCredentialsHasMore(result.length === CREDENTIALS_PAGE_SIZE);
+      setCredentialsFetched(true);
+    } catch {
+      setCredentialsError('Failed to load credentials');
+    } finally {
+      setCredentialsLoading(false);
+      setCredentialsLoadingMore(false);
+    }
+  }, [apiClient, selectedTenant, credentialsFetched, credentialsSkip, debouncedCredentialsSearch]);
+
+  // Handler for loading more credentials (infinite scroll)
+  const handleLoadMoreCredentials = useCallback(() => {
+    if (!credentialsLoadingMore && credentialsHasMore) {
+      fetchCredentials(false);
+    }
+  }, [fetchCredentials, credentialsLoadingMore, credentialsHasMore]);
+
+  // Intersection observer for infinite scroll (credentials)
+  useEffect(() => {
+    if (!credentialsLoadMoreRef.current || !handleLoadMoreCredentials || !credentialsHasMore || credentialsLoadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && credentialsHasMore && !credentialsLoadingMore) {
+          handleLoadMoreCredentials();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(credentialsLoadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [credentialsHasMore, credentialsLoadingMore, handleLoadMoreCredentials]);
+
+  // ===== Fetch Tools =====
+  const fetchTools = useCallback(async (reset = false) => {
+    if (!apiClient || !selectedTenant) return;
+
+    const isInitialFetch = reset || !toolsFetched;
+    if (isInitialFetch) {
+      setToolsLoading(true);
+    } else {
+      setToolsLoadingMore(true);
+    }
+    setToolsError(null);
+
+    const skip = reset ? 0 : toolsSkip;
+
+    try {
+      const result = await apiClient.listTools(selectedTenant.id, {
+        skip,
+        limit: TOOLS_PAGE_SIZE,
+        name_filter: debouncedToolsSearch || undefined,
+        order_by: 'name',
+        order_direction: 'asc',
+      }) as ToolResponse[];
+
+      if (reset) {
+        setTools(result);
+        setToolsSkip(TOOLS_PAGE_SIZE);
+      } else {
+        // Append new tools, avoiding duplicates
+        setTools((prev) => {
+          const existingIds = new Set(prev.map(t => t.id));
+          const uniqueNewTools = result.filter(t => !existingIds.has(t.id));
+          return [...prev, ...uniqueNewTools];
+        });
+        setToolsSkip((prev) => prev + TOOLS_PAGE_SIZE);
+      }
+
+      setToolsHasMore(result.length === TOOLS_PAGE_SIZE);
+      setToolsFetched(true);
+    } catch {
+      setToolsError('Failed to load tools');
+    } finally {
+      setToolsLoading(false);
+      setToolsLoadingMore(false);
+    }
+  }, [apiClient, selectedTenant, toolsFetched, toolsSkip, debouncedToolsSearch]);
+
+  // Handler for loading more tools (infinite scroll)
+  const handleLoadMoreTools = useCallback(() => {
+    if (!toolsLoadingMore && toolsHasMore) {
+      fetchTools(false);
+    }
+  }, [fetchTools, toolsLoadingMore, toolsHasMore]);
+
+  // Intersection observer for infinite scroll (tools)
+  useEffect(() => {
+    if (!toolsLoadMoreRef.current || !handleLoadMoreTools || !toolsHasMore || toolsLoadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && toolsHasMore && !toolsLoadingMore) {
+          handleLoadMoreTools();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(toolsLoadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [toolsHasMore, toolsLoadingMore, handleLoadMoreTools]);
+
   // ===== Load data based on active tab =====
   useEffect(() => {
     if (activeTab === 'iam' && !principalsFetched) {
@@ -314,7 +512,13 @@ export const TenantSettingsPage: FC = () => {
     if (activeTab === 'custom-groups' && !customGroupsFetched) {
       fetchCustomGroups();
     }
-  }, [activeTab, principalsFetched, customGroupsFetched, fetchPrincipals, fetchCustomGroups]);
+    if (activeTab === 'tools' && !toolsFetched) {
+      fetchTools(true);
+    }
+    if (activeTab === 'credentials' && !credentialsFetched) {
+      fetchCredentials(true);
+    }
+  }, [activeTab, principalsFetched, customGroupsFetched, toolsFetched, credentialsFetched, fetchPrincipals, fetchCustomGroups, fetchTools, fetchCredentials]);
 
   // Re-fetch principals when search or filters change
   useEffect(() => {
@@ -329,6 +533,20 @@ export const TenantSettingsPage: FC = () => {
       fetchCustomGroups(true);
     }
   }, [debouncedCustomGroupsSearch]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-fetch credentials when search changes
+  useEffect(() => {
+    if (activeTab === 'credentials' && credentialsFetched) {
+      fetchCredentials(true);
+    }
+  }, [debouncedCredentialsSearch]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-fetch tools when search changes
+  useEffect(() => {
+    if (activeTab === 'tools' && toolsFetched) {
+      fetchTools(true);
+    }
+  }, [debouncedToolsSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ===== Tenant Settings Handlers =====
   const handleSaveTenant = tenantForm.onSubmit(async (values) => {
@@ -513,6 +731,66 @@ export const TenantSettingsPage: FC = () => {
     setEditGroupInitialTab('details');
   };
 
+  // ===== Credential Handlers =====
+  const handleDeleteCredential = async () => {
+    if (!apiClient || !selectedTenant || !deleteCredentialDialog.id) return;
+
+    setIsDeletingCredential(true);
+    try {
+      await apiClient.deleteCredential(selectedTenant.id, deleteCredentialDialog.id);
+      setDeleteCredentialDialog({ open: false, id: '', name: '' });
+      await fetchCredentials(true);
+    } catch {
+      // Error handled by API client
+    } finally {
+      setIsDeletingCredential(false);
+    }
+  };
+
+  const handleOpenEditCredential = (credentialId: string, tab: EditDialogTab = 'details') => {
+    setEditCredentialTab(tab);
+    setEditCredentialId(credentialId);
+  };
+
+  const handleCloseEditCredential = () => {
+    setEditCredentialId(null);
+    setEditCredentialTab('details');
+  };
+
+  const handleCredentialEditSuccess = () => {
+    fetchCredentials(true);
+  };
+
+  // ===== Tool Handlers =====
+  const handleDeleteTool = async () => {
+    if (!apiClient || !selectedTenant || !deleteToolDialog.id) return;
+
+    setIsDeletingTool(true);
+    try {
+      await apiClient.deleteTool(selectedTenant.id, deleteToolDialog.id);
+      setDeleteToolDialog({ open: false, id: '', name: '' });
+      await fetchTools(true);
+    } catch {
+      // Error handled by API client
+    } finally {
+      setIsDeletingTool(false);
+    }
+  };
+
+  const handleOpenEditTool = (toolId: string, tab: EditDialogTab = 'details') => {
+    setEditToolTab(tab);
+    setEditToolId(toolId);
+  };
+
+  const handleCloseEditTool = () => {
+    setEditToolId(null);
+    setEditToolTab('details');
+  };
+
+  const handleToolEditSuccess = () => {
+    fetchTools(true);
+  };
+
   // Get existing principal IDs for AddPrincipalDialog
   const existingPrincipalIds = useMemo(
     () => principals.map((p) => p.principalId),
@@ -562,6 +840,12 @@ export const TenantSettingsPage: FC = () => {
               </Tabs.Tab>
               <Tabs.Tab value="custom-groups" leftSection={<IconUsersGroup size={20} />}>
                 Custom Groups
+              </Tabs.Tab>
+              <Tabs.Tab value="tools" leftSection={<IconTool size={20} />}>
+                ReACT Agent Tools
+              </Tabs.Tab>
+              <Tabs.Tab value="credentials" leftSection={<IconKey size={20} />}>
+                Credentials
               </Tabs.Tab>
               <Tabs.Tab value="billing-and-licence" leftSection={<IconCreditCard size={20} />}>
                 Billing & Licence
@@ -806,6 +1090,326 @@ export const TenantSettingsPage: FC = () => {
               </Stack>
             </Tabs.Panel>
 
+            {/* Tools Tab */}
+            <Tabs.Panel value="tools">
+              <Stack gap="md">
+                <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+                  <Text size="sm">
+                    Manage tools for ReACT agents. Tools can be MCP servers or OpenAPI definitions 
+                    that agents use to interact with external services.
+                  </Text>
+                </Alert>
+
+                {/* Toolbar */}
+                <Group justify="space-between">
+                  <TextInput
+                    placeholder="Search tools..."
+                    leftSection={<IconSearch size={16} />}
+                    value={toolsSearch}
+                    onChange={(e) => setToolsSearch(e.currentTarget.value)}
+                    style={{ flex: 1, maxWidth: 350 }}
+                  />
+                  <Button
+                    leftSection={<IconTool size={16} />}
+                    onClick={() => setCreateToolDialogOpen(true)}
+                  >
+                    Create Tool
+                  </Button>
+                </Group>
+
+                {/* Table */}
+                <ScrollArea.Autosize className={classes.customGroupsTableScrollArea}>
+                    <Table striped highlightOnHover>
+                      <Table.Thead className={classes.customGroupsTableHeader}>
+                        <Table.Tr>
+                          <Table.Th>Name</Table.Th>
+                          <Table.Th>Type</Table.Th>
+                          <Table.Th>Description</Table.Th>
+                          <Table.Th style={{ width: 60 }}></Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {toolsLoading && !toolsFetched ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={4}>
+                              <Center py="xl">
+                                <Loader size="lg" />
+                              </Center>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : toolsError ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={4}>
+                              <Alert color="red">{toolsError}</Alert>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : tools.length === 0 ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={4}>
+                              <Center py="xl">
+                                <Text c="dimmed">
+                                  {toolsSearch
+                                    ? 'No tools match your search.'
+                                    : 'No tools yet. Create one to get started.'}
+                                </Text>
+                              </Center>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : (
+                          tools.map((tool) => (
+                            <Table.Tr
+                              key={tool.id}
+                              className={classes.customGroupRow}
+                              onClick={() => handleOpenEditTool(tool.id, 'details')}
+                            >
+                              <Table.Td>
+                                <Group gap="sm">
+                                  <div className={classes.groupIcon}>
+                                    <IconTool size={16} />
+                                  </div>
+                                  <Text fw={500}>{tool.name}</Text>
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Badge size="sm" variant="light" color="grape">
+                                  {tool.type === 'MCP_SERVER' ? 'MCP Server' : 'OpenAPI Definition'}
+                                </Badge>
+                              </Table.Td>
+                              <Table.Td>
+                                <Text size="sm" c="dimmed" lineClamp={1}>
+                                  {tool.description || '-'}
+                                </Text>
+                              </Table.Td>
+                              <Table.Td>
+                                <Group gap={0} justify="flex-end">
+                                  <Menu position="bottom-end" withinPortal shadow="md">
+                                    <Menu.Target>
+                                      <ActionIcon
+                                        variant="subtle"
+                                        color="gray"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <IconDots size={16} />
+                                      </ActionIcon>
+                                    </Menu.Target>
+                                    <Menu.Dropdown>
+                                      <Menu.Item
+                                        leftSection={<IconShieldLock size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenEditTool(tool.id, 'iam');
+                                        }}
+                                      >
+                                        Manage Access
+                                      </Menu.Item>
+                                      <Menu.Item
+                                        leftSection={<IconEdit size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenEditTool(tool.id, 'details');
+                                        }}
+                                      >
+                                        Edit Details
+                                      </Menu.Item>
+                                      <Menu.Divider />
+                                      <Menu.Item
+                                        color="red"
+                                        leftSection={<IconTrash size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setDeleteToolDialog({
+                                            open: true,
+                                            id: tool.id,
+                                            name: tool.name,
+                                          });
+                                        }}
+                                      >
+                                        Delete
+                                      </Menu.Item>
+                                    </Menu.Dropdown>
+                                  </Menu>
+                                </Group>
+                              </Table.Td>
+                            </Table.Tr>
+                          ))
+                        )}
+                      </Table.Tbody>
+                    </Table>
+                    
+                    {/* Infinite scroll trigger element */}
+                    {toolsHasMore && (
+                      <div ref={toolsLoadMoreRef} className={classes.loadMoreTrigger}>
+                        {toolsLoadingMore && (
+                          <Center py="sm">
+                            <Loader size="sm" />
+                          </Center>
+                        )}
+                      </div>
+                    )}
+                </ScrollArea.Autosize>
+              </Stack>
+            </Tabs.Panel>
+
+            {/* Credentials Tab */}
+            <Tabs.Panel value="credentials">
+              <Stack gap="md">
+                <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+                  <Text size="sm">
+                    Manage credentials for connecting to external services and APIs. 
+                    Click on a credential to view details or manage access permissions.
+                  </Text>
+                </Alert>
+
+                {/* Toolbar */}
+                <Group justify="space-between">
+                  <TextInput
+                    placeholder="Search credentials..."
+                    leftSection={<IconSearch size={16} />}
+                    value={credentialsSearch}
+                    onChange={(e) => setCredentialsSearch(e.currentTarget.value)}
+                    style={{ flex: 1, maxWidth: 350 }}
+                  />
+                  <Button
+                    leftSection={<IconKey size={16} />}
+                    onClick={() => setCreateCredentialDialogOpen(true)}
+                  >
+                    Create Credential
+                  </Button>
+                </Group>
+
+                {/* Table */}
+                <ScrollArea.Autosize className={classes.customGroupsTableScrollArea}>
+                    <Table striped highlightOnHover>
+                      <Table.Thead className={classes.customGroupsTableHeader}>
+                        <Table.Tr>
+                          <Table.Th>Name</Table.Th>
+                          <Table.Th>Type</Table.Th>
+                          <Table.Th>Description</Table.Th>
+                          <Table.Th style={{ width: 60 }}></Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {credentialsLoading && !credentialsFetched ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={4}>
+                              <Center py="xl">
+                                <Loader size="lg" />
+                              </Center>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : credentialsError ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={4}>
+                              <Alert color="red">{credentialsError}</Alert>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : credentials.length === 0 ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={4}>
+                              <Center py="xl">
+                                <Text c="dimmed">
+                                  {credentialsSearch
+                                    ? 'No credentials match your search.'
+                                    : 'No credentials yet. Create one to get started.'}
+                                </Text>
+                              </Center>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : (
+                          credentials.map((credential) => (
+                            <Table.Tr
+                              key={credential.id}
+                              className={classes.customGroupRow}
+                              onClick={() => handleOpenEditCredential(credential.id, 'details')}
+                            >
+                              <Table.Td>
+                                <Group gap="sm">
+                                  <div className={classes.groupIcon}>
+                                    <IconKey size={16} />
+                                  </div>
+                                  <Text fw={500}>{credential.name}</Text>
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Badge size="sm" variant="light" color="gray">
+                                  {credential.type}
+                                </Badge>
+                              </Table.Td>
+                              <Table.Td>
+                                <Text size="sm" c="dimmed" lineClamp={1}>
+                                  {credential.description || '-'}
+                                </Text>
+                              </Table.Td>
+                              <Table.Td>
+                                <Group gap={0} justify="flex-end">
+                                  <Menu position="bottom-end" withinPortal shadow="md">
+                                    <Menu.Target>
+                                      <ActionIcon
+                                        variant="subtle"
+                                        color="gray"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <IconDots size={16} />
+                                      </ActionIcon>
+                                    </Menu.Target>
+                                    <Menu.Dropdown>
+                                      <Menu.Item
+                                        leftSection={<IconShieldLock size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenEditCredential(credential.id, 'iam');
+                                        }}
+                                      >
+                                        Manage Access
+                                      </Menu.Item>
+                                      <Menu.Item
+                                        leftSection={<IconEdit size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenEditCredential(credential.id, 'details');
+                                        }}
+                                      >
+                                        Edit Details
+                                      </Menu.Item>
+                                      <Menu.Divider />
+                                      <Menu.Item
+                                        color="red"
+                                        leftSection={<IconTrash size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setDeleteCredentialDialog({
+                                            open: true,
+                                            id: credential.id,
+                                            name: credential.name,
+                                          });
+                                        }}
+                                      >
+                                        Delete
+                                      </Menu.Item>
+                                    </Menu.Dropdown>
+                                  </Menu>
+                                </Group>
+                              </Table.Td>
+                            </Table.Tr>
+                          ))
+                        )}
+                      </Table.Tbody>
+                    </Table>
+                    
+                    {/* Infinite scroll trigger element */}
+                    {credentialsHasMore && (
+                      <div ref={credentialsLoadMoreRef} className={classes.loadMoreTrigger}>
+                        {credentialsLoadingMore && (
+                          <Center py="sm">
+                            <Loader size="sm" />
+                          </Center>
+                        )}
+                      </div>
+                    )}
+                </ScrollArea.Autosize>
+              </Stack>
+            </Tabs.Panel>
+
             {/* Billing Tab */}
             <Tabs.Panel value="billing-and-licence">
               <Stack gap="lg">
@@ -902,6 +1506,7 @@ export const TenantSettingsPage: FC = () => {
         onClose={handleCloseEditGroup}
         customGroupId={editGroupId}
         initialTab={editGroupInitialTab}
+        onTabChange={setEditGroupInitialTab}
         onSuccess={() => fetchCustomGroups()}
       />
 
@@ -913,6 +1518,60 @@ export const TenantSettingsPage: FC = () => {
         itemName={deleteGroupDialog.name}
         itemType="Custom Group"
         isLoading={isDeletingGroup}
+      />
+
+      {/* Create Credential Dialog */}
+      <CreateCredentialDialog
+        opened={createCredentialDialogOpen}
+        onClose={() => setCreateCredentialDialogOpen(false)}
+        onSuccess={() => fetchCredentials(true)}
+      />
+
+      {/* Edit Credential Dialog */}
+      <EditCredentialDialog
+        opened={!!editCredentialId}
+        onClose={handleCloseEditCredential}
+        credentialId={editCredentialId}
+        activeTab={editCredentialTab}
+        onTabChange={setEditCredentialTab}
+        onSuccess={handleCredentialEditSuccess}
+      />
+
+      {/* Delete Credential Confirmation */}
+      <ConfirmDeleteDialog
+        opened={deleteCredentialDialog.open}
+        onClose={() => setDeleteCredentialDialog({ open: false, id: '', name: '' })}
+        onConfirm={handleDeleteCredential}
+        itemName={deleteCredentialDialog.name}
+        itemType="Credential"
+        isLoading={isDeletingCredential}
+      />
+
+      {/* Create Tool Dialog */}
+      <CreateToolDialog
+        opened={createToolDialogOpen}
+        onClose={() => setCreateToolDialogOpen(false)}
+        onSuccess={() => fetchTools(true)}
+      />
+
+      {/* Edit Tool Dialog */}
+      <EditToolDialog
+        opened={!!editToolId}
+        onClose={handleCloseEditTool}
+        toolId={editToolId}
+        activeTab={editToolTab}
+        onTabChange={setEditToolTab}
+        onSuccess={handleToolEditSuccess}
+      />
+
+      {/* Delete Tool Confirmation */}
+      <ConfirmDeleteDialog
+        opened={deleteToolDialog.open}
+        onClose={() => setDeleteToolDialog({ open: false, id: '', name: '' })}
+        onConfirm={handleDeleteTool}
+        itemName={deleteToolDialog.name}
+        itemType="Tool"
+        isLoading={isDeletingTool}
       />
     </MainLayout>
   );

@@ -24,7 +24,6 @@ import {
   IconChevronRight,
   IconMaximize,
   IconNote,
-  IconFileText,
   IconBraces,
   IconArrowDown,
   IconArrowUp,
@@ -277,7 +276,7 @@ interface DataPanelsContainerProps {
   maxHeight?: number;
 }
 
-const DataPanelsContainer: FC<DataPanelsContainerProps> = ({ maxHeight = 600 }) => {
+const DataPanelsContainer: FC<DataPanelsContainerProps> = ({ maxHeight: _maxHeight = 600 }) => {
   const { selectedTrace, selectedNode } = useTracing();
   
   // Gemeinsame aktive Höhe - wird bei Panel-Wechsel übernommen
@@ -380,7 +379,7 @@ const DataPanelsContainer: FC<DataPanelsContainerProps> = ({ maxHeight = 600 }) 
           height={activeHeight}
           onToggle={() => togglePanel('input')}
           onHeightChange={changePanelHeight}
-          hasContent={hasInput}
+          hasContent={hasInput ?? false}
         >
           {renderDataContent(inputData, 'Input')}
         </ResizablePanel>
@@ -395,7 +394,7 @@ const DataPanelsContainer: FC<DataPanelsContainerProps> = ({ maxHeight = 600 }) 
           height={activeHeight}
           onToggle={() => togglePanel('output')}
           onHeightChange={changePanelHeight}
-          hasContent={hasOutput}
+          hasContent={hasOutput ?? false}
         >
           {renderDataContent(outputData, 'Output')}
         </ResizablePanel>
