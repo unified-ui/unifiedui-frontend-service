@@ -111,8 +111,16 @@ export const ConversationsPage: FC = () => {
       try {
         // Load conversations, applications, and favorites in parallel
         const [convsData, appsData, favoritesData] = await Promise.all([
-          apiClient.listConversations(selectedTenant.id, { limit: 999 }),
-          apiClient.listApplications(selectedTenant.id, { limit: 999 }) as Promise<ApplicationResponse[]>,
+          apiClient.listConversations(selectedTenant.id, { 
+            limit: 100,
+            order_by: 'updated_at',
+            order_direction: 'desc',
+          }),
+          apiClient.listApplications(selectedTenant.id, { 
+            limit: 100,
+            order_by: 'name',
+            order_direction: 'asc',
+          }) as Promise<ApplicationResponse[]>,
           apiClient.listConversationFavorites(selectedTenant.id, user.id),
         ]);
 

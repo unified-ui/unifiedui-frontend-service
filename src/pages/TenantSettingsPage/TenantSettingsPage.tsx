@@ -580,7 +580,7 @@ export const TenantSettingsPage: FC = () => {
         name: values.name.trim(),
         description: values.description.trim() || undefined,
       });
-      await refreshIdentity();
+      await refreshIdentity(true);
       tenantForm.resetDirty();
     } catch {
       // Error handled by API client
@@ -595,7 +595,7 @@ export const TenantSettingsPage: FC = () => {
     setIsDeletingTenant(true);
     try {
       await apiClient.deleteTenant(selectedTenant.id);
-      await refreshIdentity();
+      await refreshIdentity(true);
       setDeleteDialogStep(0);
       // Navigation will happen automatically when tenant is gone
     } catch {

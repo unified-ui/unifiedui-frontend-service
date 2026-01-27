@@ -11,7 +11,7 @@ interface IdentityContextType {
   selectedTenant: TenantResponse | null;
   isLoading: boolean;
   apiClient: UnifiedUIAPIClient | null;
-  refreshIdentity: () => Promise<void>;
+  refreshIdentity: (noCache?: boolean) => Promise<void>;
   selectTenant: (tenantId: string) => void;
   getFoundryToken: () => Promise<string | null>;
 }
@@ -97,12 +97,12 @@ export const IdentityProvider: FC<IdentityProviderProps> = ({ children }) => {
     }
   }, [tenants]);
 
-  const refreshIdentity = async (): Promise<void> => {
+  const refreshIdentity = async (noCache?: boolean): Promise<void> => {
     if (!apiClient) return;
 
     setIsLoading(true);
     try {
-      let meResponse = await apiClient.getMe();
+      let meResponse = await apiClient.getMe({ noCache });
 
       // Extract user info from response
       const user: IdentityUser = {
@@ -128,7 +128,7 @@ export const IdentityProvider: FC<IdentityProviderProps> = ({ children }) => {
         });
 
         // Fetch /me again to get the newly created tenant
-        meResponse = await apiClient.getMe();
+        meResponse = await apiClient.getMe({ noCache });
         const updatedTenants = meResponse.tenants?.map(t => t.tenant) || [];
         setTenants(updatedTenants);
       } else {
@@ -145,16 +145,10 @@ export const IdentityProvider: FC<IdentityProviderProps> = ({ children }) => {
 
   const selectTenant = (tenantId: string): void => {
     const tenant = tenants.find(t => t.id === tenantId);
-    if (tenant) {
-      setSelectedTenant(tenant);
+    if (tenant && tenant.id !== selectedTenant?.id) {
       localStorage.setItem(SELECTED_TENANT_KEY, tenantId);
-      
-      notifications.show({
-        title: 'Tenant gewechselt',
-        message: `Sie haben zu "${tenant.name}" gewechselt`,
-        color: 'blue',
-        position: 'top-right',
-      });
+      // Reload the page to clear all context and fetch fresh data
+      window.location.reload();
     }
   };
 

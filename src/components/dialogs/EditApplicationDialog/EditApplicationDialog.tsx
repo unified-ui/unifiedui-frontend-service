@@ -22,6 +22,7 @@ import {
   Loader,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useDebouncedValue } from '@mantine/hooks';
 import {
   IconSparkles,
   IconInfoCircle,
@@ -130,6 +131,8 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
   const [credentialFieldTarget, setCredentialFieldTarget] = useState<'api_key' | 'chat_auth' | null>(null);
+  const [credentialSearch, setCredentialSearch] = useState('');
+  const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
   
   // Principals state
   const [principals, setPrincipals] = useState<PrincipalPermission[]>([]);
@@ -257,12 +260,17 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
   }, [initialTab]);
 
   // Load credentials when dialog opens
-  const loadCredentials = useCallback(async () => {
+  const loadCredentials = useCallback(async (searchTerm?: string) => {
     if (!apiClient || !selectedTenant) return;
     
     setIsLoadingCredentials(true);
     try {
-      const response = await apiClient.listCredentials(selectedTenant.id, { limit: 999 });
+      const response = await apiClient.listCredentials(selectedTenant.id, { 
+        limit: 100,
+        order_by: 'name',
+        order_direction: 'asc',
+        ...(searchTerm && { name: searchTerm }),
+      });
       // listCredentials returns an array directly, not an object with items property
       setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
     } catch (error) {
@@ -393,8 +401,17 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
     } else if (!opened) {
       // Reset hasPrincipalsFetched when dialog closes
       setHasPrincipalsFetched(false);
+      // Reset credential search when dialog closes
+      setCredentialSearch('');
     }
   }, [opened, applicationId, initialData, initializeFromData, fetchApplication, fetchPrincipals, loadCredentials]);
+
+  // Reload credentials when search term changes (debounced)
+  useEffect(() => {
+    if (opened && debouncedCredentialSearch !== undefined) {
+      loadCredentials(debouncedCredentialSearch || undefined);
+    }
+  }, [opened, debouncedCredentialSearch, loadCredentials]);
 
   // Handle tab change
   const handleTabChange = (value: string) => {
@@ -733,6 +750,9 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
                       data={apiKeyCredentials}
                       rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                       disabled={isLoadingCredentials}
+                      searchable
+                      onSearchChange={setCredentialSearch}
+                      nothingFoundMessage="No credentials found"
                       style={{ flex: 1 }}
                       {...form.getInputProps('n8n_api_api_key_credential_id')}
                     />
@@ -763,6 +783,9 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
                       rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                       disabled={isLoadingCredentials}
                       clearable
+                      searchable
+                      onSearchChange={setCredentialSearch}
+                      nothingFoundMessage="No credentials found"
                       style={{ flex: 1 }}
                       {...form.getInputProps('n8n_chat_auth_credential_id')}
                     />

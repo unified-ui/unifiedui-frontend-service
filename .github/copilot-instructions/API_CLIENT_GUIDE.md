@@ -114,7 +114,12 @@ const MyComponent = () => {
   // API aufrufen (WICHTIG: tenantId als erster Parameter!)
   const loadData = async () => {
     if (!selectedTenant) return;
-    const apps = await apiClient?.listApplications(selectedTenant.id, { limit: 999 });
+    // Empfohlen: limit: 100 mit Sortierung für bessere Performance
+    const apps = await apiClient?.listApplications(selectedTenant.id, { 
+      limit: 100,
+      order_by: 'name',
+      order_direction: 'asc',
+    });
     console.log(apps);
   };
   
@@ -171,52 +176,64 @@ const MyComponent = () => {
 ```
 
 ### API-Client Methoden (tenantId erforderlich)
+
+**Standard Query-Parameter für Listen:**
+- `limit`: Anzahl der Ergebnisse (empfohlen: 100, max: 999)
+- `order_by`: Sortierfeld (z.B. 'name', 'created_at', 'updated_at')
+- `order_direction`: 'asc' oder 'desc'
+- `name`: Filter nach Name (Server-Side Filtering)
+
 ```typescript
 // Applications
-apiClient.listApplications(tenantId, { limit: 999 })
+apiClient.listApplications(tenantId, { limit: 100, order_by: 'name', order_direction: 'asc' })
+apiClient.listApplications(tenantId, { limit: 100, name: 'searchTerm' })  // Mit Server-Side Filter
 apiClient.createApplication(tenantId, { name, description })
 apiClient.getApplication(tenantId, applicationId)
 apiClient.updateApplication(tenantId, applicationId, data)
 apiClient.deleteApplication(tenantId, applicationId)
 
 // Autonomous Agents
-apiClient.listAutonomousAgents(tenantId, { limit: 999 })
+apiClient.listAutonomousAgents(tenantId, { limit: 100, order_by: 'name', order_direction: 'asc' })
 apiClient.createAutonomousAgent(tenantId, { name, description })
 apiClient.getAutonomousAgent(tenantId, agentId)
 apiClient.updateAutonomousAgent(tenantId, agentId, data)
 apiClient.deleteAutonomousAgent(tenantId, agentId)
 
 // Credentials
-apiClient.listCredentials(tenantId, { limit: 999 })
+apiClient.listCredentials(tenantId, { limit: 100, order_by: 'name', order_direction: 'asc' })
+apiClient.listCredentials(tenantId, { limit: 100, name: 'API' })  // Filter nach Name
 apiClient.createCredential(tenantId, { name, credential_type, secret_value, description })
 apiClient.getCredential(tenantId, credentialId)
 apiClient.updateCredential(tenantId, credentialId, data)
 apiClient.deleteCredential(tenantId, credentialId)
 
 // Conversations
-apiClient.listConversations(tenantId, { limit: 999 })
+apiClient.listConversations(tenantId, { limit: 100, order_by: 'updated_at', order_direction: 'desc' })
 apiClient.createConversation(tenantId, data)
 apiClient.getConversation(tenantId, conversationId)
 
 // Custom Groups
-apiClient.listCustomGroups(tenantId, { limit: 999 })
+apiClient.listCustomGroups(tenantId, { limit: 100, order_by: 'name', order_direction: 'asc' })
 apiClient.createCustomGroup(tenantId, data)
 
 // Chat Widgets
-apiClient.listChatWidgets(tenantId, { limit: 999 })
-apiClient.listChatWidgets(tenantId, { limit: 999 }, { noCache: true })  // Mit noCache
+apiClient.listChatWidgets(tenantId, { limit: 100, order_by: 'name', order_direction: 'asc' })
+apiClient.listChatWidgets(tenantId, { limit: 100 }, { noCache: true })  // Mit noCache
 apiClient.createChatWidget(tenantId, { name, description, widget_type })  // widget_type: 'IFRAME' | 'FORM'
 apiClient.getChatWidget(tenantId, chatWidgetId)
 apiClient.updateChatWidget(tenantId, chatWidgetId, data)
 apiClient.deleteChatWidget(tenantId, chatWidgetId)
 
 // Development Platforms
-apiClient.listDevelopmentPlatforms(tenantId, { limit: 999 })
-apiClient.listDevelopmentPlatforms(tenantId, { limit: 999 }, { noCache: true })  // Mit noCache
+apiClient.listDevelopmentPlatforms(tenantId, { limit: 100, order_by: 'name', order_direction: 'asc' })
+apiClient.listDevelopmentPlatforms(tenantId, { limit: 100 }, { noCache: true })  // Mit noCache
 apiClient.createDevelopmentPlatform(tenantId, { name, description, iframe_url })
 apiClient.getDevelopmentPlatform(tenantId, developmentPlatformId)
 apiClient.updateDevelopmentPlatform(tenantId, developmentPlatformId, data)
 apiClient.deleteDevelopmentPlatform(tenantId, developmentPlatformId)
+
+// Sidebar Data Context (Ausnahme: limit: 999 mit view: 'quick-list')
+apiClient.listApplications(tenantId, { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' })
 ```
 
 ## Automatische Features

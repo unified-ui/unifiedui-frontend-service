@@ -197,8 +197,8 @@ export class UnifiedUIAPIClient {
 
   // ========== Identity Endpoints ==========
 
-  async getMe(): Promise<MeResponse> {
-    return this.request<MeResponse>('GET', '/api/v1/platform-service/identity/me');
+  async getMe(options?: { noCache?: boolean }): Promise<MeResponse> {
+    return this.request<MeResponse>('GET', '/api/v1/platform-service/identity/me', undefined, undefined, options);
   }
 
   async getUsers(params?: SearchParams): Promise<IdentityUsersResponse> {

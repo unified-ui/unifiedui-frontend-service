@@ -1,4 +1,4 @@
-import { type FC, useState, useEffect, useMemo } from 'react';
+import { type FC, useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Modal,
   TextInput,
@@ -15,6 +15,7 @@ import {
   Loader,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useDebouncedValue } from '@mantine/hooks';
 import { IconRobot, IconPlus, IconAlertCircle } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
 import {
@@ -61,6 +62,8 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
+  const [credentialSearch, setCredentialSearch] = useState('');
+  const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
 
   const form = useForm<FormValues>({
     initialValues: {
@@ -122,24 +125,42 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
     },
   });
 
+  // Load credentials
+  const loadCredentials = useCallback(async (searchTerm?: string) => {
+    if (!apiClient || !selectedTenant) return;
+
+    setIsLoadingCredentials(true);
+    try {
+      const response = await apiClient.listCredentials(selectedTenant.id, {
+        limit: 100,
+        order_by: 'name',
+        order_direction: 'asc',
+        ...(searchTerm && { name: searchTerm }),
+      });
+      setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
+    } catch (error) {
+      console.error('Failed to load credentials:', error);
+    } finally {
+      setIsLoadingCredentials(false);
+    }
+  }, [apiClient, selectedTenant]);
+
   // Load credentials when dialog opens
   useEffect(() => {
-    const loadCredentials = async () => {
-      if (!opened || !apiClient || !selectedTenant) return;
+    if (opened) {
+      loadCredentials();
+    } else {
+      // Reset search when dialog closes
+      setCredentialSearch('');
+    }
+  }, [opened, loadCredentials]);
 
-      setIsLoadingCredentials(true);
-      try {
-        const response = await apiClient.listCredentials(selectedTenant.id, { limit: 999 });
-        setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
-      } catch (error) {
-        console.error('Failed to load credentials:', error);
-      } finally {
-        setIsLoadingCredentials(false);
-      }
-    };
-
-    loadCredentials();
-  }, [opened, apiClient, selectedTenant]);
+  // Reload credentials when search term changes (debounced)
+  useEffect(() => {
+    if (opened && debouncedCredentialSearch !== undefined) {
+      loadCredentials(debouncedCredentialSearch || undefined);
+    }
+  }, [opened, debouncedCredentialSearch, loadCredentials]);
 
   // Filter credentials by type for API Key dropdown (only API_KEY type)
   const apiKeyCredentials = useMemo(() => {
@@ -206,18 +227,11 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
 
   const handleCredentialCreated = async (credential?: { id: string; name: string }) => {
     // Refresh credentials list
-    if (apiClient && selectedTenant) {
-      try {
-        const response = await apiClient.listCredentials(selectedTenant.id, { limit: 999 });
-        setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
+    await loadCredentials();
 
-        // Auto-select the newly created credential
-        if (credential) {
-          form.setFieldValue('n8n_api_api_key_credential_id', credential.id);
-        }
-      } catch (error) {
-        console.error('Failed to refresh credentials:', error);
-      }
+    // Auto-select the newly created credential
+    if (credential) {
+      form.setFieldValue('n8n_api_api_key_credential_id', credential.id);
     }
   };
 
@@ -291,6 +305,9 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
                     data={apiKeyCredentials}
                     rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                     disabled={isLoadingCredentials}
+                    searchable
+                    onSearchChange={setCredentialSearch}
+                    nothingFoundMessage="No credentials found"
                     style={{ flex: 1 }}
                     {...form.getInputProps('n8n_api_api_key_credential_id')}
                   />

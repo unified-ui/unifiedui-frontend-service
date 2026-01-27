@@ -915,6 +915,71 @@ const entityConfigs: Record<EntityType, EntityConfig> = {
 
 Alle Dialogs nutzen `@mantine/form` für Validierung und `useIdentity()` für API-Zugriff.
 
+### Server-Side Filtering Pattern für Dropdowns
+
+Alle Dialoge mit Credential-Dropdowns verwenden Server-Side Filtering:
+
+```typescript
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useDebouncedValue } from '@mantine/hooks';
+
+// State für Suche
+const [credentialSearch, setCredentialSearch] = useState('');
+const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
+
+// Load credentials mit useCallback
+const loadCredentials = useCallback(async (searchTerm?: string) => {
+  if (!apiClient || !selectedTenant) return;
+  
+  setIsLoadingCredentials(true);
+  try {
+    const response = await apiClient.listCredentials(selectedTenant.id, {
+      limit: 100,
+      order_by: 'name',
+      order_direction: 'asc',
+      ...(searchTerm && { name: searchTerm }),
+    });
+    setCredentials(Array.isArray(response) ? response : []);
+  } catch (error) {
+    console.error('Failed to load credentials:', error);
+  } finally {
+    setIsLoadingCredentials(false);
+  }
+}, [apiClient, selectedTenant]);
+
+// Initial load beim Dialog öffnen
+useEffect(() => {
+  if (opened) {
+    loadCredentials();
+  } else {
+    setCredentialSearch(''); // Reset beim Schließen
+  }
+}, [opened, loadCredentials]);
+
+// Reload bei Suchänderung (debounced)
+useEffect(() => {
+  if (opened && debouncedCredentialSearch !== undefined) {
+    loadCredentials(debouncedCredentialSearch || undefined);
+  }
+}, [opened, debouncedCredentialSearch, loadCredentials]);
+
+// Select mit searchable
+<Select
+  label="API Key Credential"
+  data={apiKeyCredentials}
+  searchable
+  onSearchChange={setCredentialSearch}
+  nothingFoundMessage="No credentials found"
+  {...form.getInputProps('credential_id')}
+/>
+```
+
+**Vorteile:**
+- Initial nur 100 Credentials laden (statt alle 999)
+- Server-Side Filtering bei Suche
+- 300ms Debouncing verhindert zu viele API-Calls
+- Reset beim Schließen des Dialogs
+
 ### CreateApplicationDialog
 ```typescript
 // Props
@@ -997,22 +1062,23 @@ const [opened, setOpened] = useState(false);
 ### API-Client Methoden
 ```typescript
 // Alle Entity-Methoden erfordern tenantId als ersten Parameter
-apiClient.listApplications(tenantId, { limit: 999 })
+// Empfohlen: limit: 100 mit Sortierung für bessere Performance
+apiClient.listApplications(tenantId, { limit: 100, order_by: 'name', order_direction: 'asc' })
 apiClient.createApplication(tenantId, { name, description })
 apiClient.getApplication(tenantId, applicationId)
 apiClient.updateApplication(tenantId, applicationId, data)
 apiClient.deleteApplication(tenantId, applicationId)
 
 // Mit noCache Option (sendet X-Use-Cache: false Header)
-apiClient.listApplications(tenantId, { limit: 999 }, { noCache: true })
-apiClient.listAutonomousAgents(tenantId, { limit: 999 }, { noCache: true })
-apiClient.listCredentials(tenantId, { limit: 999 }, { noCache: true })
+apiClient.listApplications(tenantId, { limit: 100 }, { noCache: true })
+apiClient.listAutonomousAgents(tenantId, { limit: 100 }, { noCache: true })
+apiClient.listCredentials(tenantId, { limit: 100 }, { noCache: true })
 
-// Gleiche Struktur für:
-// - Autonomous Agents
-// - Credentials
-// - Conversations
-// - Custom Groups
+// Mit Server-Side Filtering (name Parameter)
+apiClient.listCredentials(tenantId, { limit: 100, order_by: 'name', order_direction: 'asc', name: 'searchTerm' })
+
+// AUSNAHME: SidebarDataContext verwendet limit: 999 mit view: 'quick-list'
+apiClient.listApplications(tenantId, { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' })
 ```
 
 ### Verwendung mit selectedTenant
@@ -1022,6 +1088,10 @@ const { apiClient, selectedTenant } = useIdentity();
 const fetchData = async () => {
   if (!apiClient || !selectedTenant) return;
   
-  const apps = await apiClient.listApplications(selectedTenant.id, { limit: 999 });
+  const apps = await apiClient.listApplications(selectedTenant.id, { 
+    limit: 100,
+    order_by: 'name',
+    order_direction: 'asc',
+  });
 };
 ```

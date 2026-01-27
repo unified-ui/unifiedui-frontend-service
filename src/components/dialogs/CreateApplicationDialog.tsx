@@ -1,4 +1,4 @@
-import { type FC, useState, useEffect, useMemo } from 'react';
+import { type FC, useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Modal,
   TextInput,
@@ -17,6 +17,7 @@ import {
   Loader,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useDebouncedValue } from '@mantine/hooks';
 import { IconSparkles, IconPlus, IconAlertCircle } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
 import {
@@ -94,6 +95,10 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
   const [credentialFieldTarget, setCredentialFieldTarget] = useState<'api_key' | 'chat_auth' | null>(null);
+  
+  // Server-side filtering for credentials
+  const [credentialSearch, setCredentialSearch] = useState('');
+  const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
 
   const form = useForm<FormValues>({
     initialValues: {
@@ -207,25 +212,40 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
     },
   });
 
+  // Load credentials when dialog opens or search changes
+  const loadCredentials = useCallback(async (searchTerm?: string) => {
+    if (!apiClient || !selectedTenant) return;
+    
+    setIsLoadingCredentials(true);
+    try {
+      const response = await apiClient.listCredentials(selectedTenant.id, { 
+        limit: 100,
+        order_by: 'name',
+        order_direction: 'asc',
+        name: searchTerm || undefined,
+      });
+      // listCredentials returns an array directly, not an object with items property
+      setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
+    } catch (error) {
+      console.error('Failed to load credentials:', error);
+    } finally {
+      setIsLoadingCredentials(false);
+    }
+  }, [apiClient, selectedTenant]);
+
   // Load credentials when dialog opens
   useEffect(() => {
-    const loadCredentials = async () => {
-      if (!opened || !apiClient || !selectedTenant) return;
-      
-      setIsLoadingCredentials(true);
-      try {
-        const response = await apiClient.listCredentials(selectedTenant.id, { limit: 999 });
-        // listCredentials returns an array directly, not an object with items property
-        setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
-      } catch (error) {
-        console.error('Failed to load credentials:', error);
-      } finally {
-        setIsLoadingCredentials(false);
-      }
-    };
+    if (opened) {
+      loadCredentials();
+    }
+  }, [opened, loadCredentials]);
 
-    loadCredentials();
-  }, [opened, apiClient, selectedTenant]);
+  // Reload credentials when search changes (debounced)
+  useEffect(() => {
+    if (opened && debouncedCredentialSearch !== undefined) {
+      loadCredentials(debouncedCredentialSearch);
+    }
+  }, [opened, debouncedCredentialSearch, loadCredentials]);
 
   // Filter credentials by type for API Key dropdown (only API_KEY type)
   const apiKeyCredentials = useMemo(() => {
@@ -315,8 +335,7 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
     // Refresh credentials list
     if (apiClient && selectedTenant) {
       try {
-        const response = await apiClient.listCredentials(selectedTenant.id, { limit: 999 });
-        setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
+        await loadCredentials();
         
         // Auto-select the newly created credential
         if (credential && credentialFieldTarget) {
@@ -419,6 +438,9 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
                     data={apiKeyCredentials}
                     rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                     disabled={isLoadingCredentials}
+                    searchable
+                    onSearchChange={setCredentialSearch}
+                    nothingFoundMessage="No credentials found"
                     style={{ flex: 1 }}
                     {...form.getInputProps('n8n_api_api_key_credential_id')}
                   />
@@ -449,6 +471,9 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
                     rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                     disabled={isLoadingCredentials}
                     clearable
+                    searchable
+                    onSearchChange={setCredentialSearch}
+                    nothingFoundMessage="No credentials found"
                     style={{ flex: 1 }}
                     {...form.getInputProps('n8n_chat_auth_credential_id')}
                   />
