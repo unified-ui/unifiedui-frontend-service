@@ -164,7 +164,7 @@ export const ApplicationsPage: FC = () => {
       const data = await apiClient.listApplications(selectedTenant.id, { 
         limit: PAGE_SIZE,
         skip: currentOffset,
-        name_filter: searchFilter || undefined,
+        name: searchFilter || undefined,
         is_active: isActiveParam,
         tags: tagsParam,
         ...sortParams

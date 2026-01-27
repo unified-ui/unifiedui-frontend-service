@@ -980,10 +980,10 @@ export interface PaginationParams {
 }
 
 export interface FilterParams {
-  name_filter?: string;
+  name?: string;
   is_active?: number;
   tags?: string;
-  type_filter?: string;
+  type?: string;
 }
 
 export interface SearchParams {

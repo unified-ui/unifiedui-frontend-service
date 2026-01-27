@@ -19,7 +19,6 @@ import {
   ActionIcon,
   Menu,
   ScrollArea,
-  Select,
   MultiSelect,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
@@ -402,7 +401,7 @@ export const TenantSettingsPage: FC = () => {
       const result = await apiClient.listCredentials(selectedTenant.id, {
         skip,
         limit: CREDENTIALS_PAGE_SIZE,
-        name_filter: debouncedCredentialsSearch || undefined,
+        name: debouncedCredentialsSearch || undefined,
         order_by: 'name',
         order_direction: 'asc',
       }) as CredentialResponse[];
@@ -473,8 +472,8 @@ export const TenantSettingsPage: FC = () => {
       const result = await apiClient.listTools(selectedTenant.id, {
         skip,
         limit: TOOLS_PAGE_SIZE,
-        name_filter: debouncedToolsSearch || undefined,
-        type_filter: toolsTypeFilter.length > 0 ? toolsTypeFilter.join(',') : undefined,
+        name: debouncedToolsSearch || undefined,
+        type: toolsTypeFilter.length > 0 ? toolsTypeFilter.join(',') : undefined,
         order_by: 'name',
         order_direction: 'asc',
       }) as ToolResponse[];

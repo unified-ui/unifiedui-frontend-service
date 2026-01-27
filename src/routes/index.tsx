@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
+import { ChatSidebarProvider } from '../contexts';
 import { LoginPage } from '../pages/LoginPage';
 import { LoginTokenPage } from '../pages/LoginTokenPage';
 import { DashboardPage } from '../pages/DashboardPage';
@@ -16,7 +17,8 @@ import { NotFoundPage } from '../pages/NotFoundPage';
 export const AppRoutes = () => {
   return (
     <BrowserRouter>
-      <Routes>
+      <ChatSidebarProvider>
+        <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login/token" element={<LoginTokenPage />} />
@@ -39,6 +41,7 @@ export const AppRoutes = () => {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      </ChatSidebarProvider>
     </BrowserRouter>
   );
 };

@@ -171,7 +171,7 @@ export const ChatWidgetsPage: FC = () => {
       const data = await apiClient.listChatWidgets(selectedTenant.id, { 
         limit: PAGE_SIZE,
         skip: currentOffset,
-        name_filter: searchFilter || undefined,
+        name: searchFilter || undefined,
         is_active: isActiveParam,
         tags: tagsParam,
         ...sortParams

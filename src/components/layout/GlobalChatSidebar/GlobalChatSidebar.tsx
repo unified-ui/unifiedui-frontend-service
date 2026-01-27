@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Stack, Text, ScrollArea, Loader, Center, ActionIcon, Group } from '@mantine/core';
 import { IconMessages, IconPlus, IconChevronRight } from '@tabler/icons-react';
-import { useIdentity } from '../../../contexts';
+import { useIdentity, useChatSidebar } from '../../../contexts';
 import type { ConversationResponse, ApplicationResponse } from '../../../api/types';
 import classes from './GlobalChatSidebar.module.css';
 
@@ -30,20 +30,11 @@ const ConversationPreviewItem: FC<ConversationPreviewItemProps> = ({
   );
 };
 
-interface GlobalChatSidebarProps {
-  isVisible: boolean;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
-}
-
-export const GlobalChatSidebar: FC<GlobalChatSidebarProps> = ({
-  isVisible,
-  onMouseEnter,
-  onMouseLeave,
-}) => {
+export const GlobalChatSidebar: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
+  const { isVisible, onSidebarHoverEnter, onSidebarHoverLeave } = useChatSidebar();
   
   const [conversations, setConversations] = useState<ConversationResponse[]>([]);
   const [applications, setApplications] = useState<ApplicationResponse[]>([]);
@@ -98,8 +89,8 @@ export const GlobalChatSidebar: FC<GlobalChatSidebarProps> = ({
   return (
     <Box 
       className={classes.sidebar}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
+      onMouseEnter={onSidebarHoverEnter}
+      onMouseLeave={onSidebarHoverLeave}
     >
       {/* Header */}
       <Group className={classes.header} justify="space-between">
