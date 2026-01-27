@@ -19,12 +19,12 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
   opened,
   onClose,
   onConfirm,
-  title = 'Löschen bestätigen',
+  title = 'Confirm Delete',
   message,
   itemName,
-  itemType = 'Element',
+  itemType = 'item',
   isLoading = false,
-  confirmButtonText = 'Löschen',
+  confirmButtonText = 'Delete',
   reverseButtons = false,
 }) => {
   const handleConfirm = () => {
@@ -33,8 +33,8 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
 
   // Build display message
   const displayMessage = message || (itemName
-    ? <>Sind Sie sicher, dass Sie <Text span fw={600} c="var(--text-primary)">{itemName}</Text> löschen möchten?</>
-    : <>Sind Sie sicher, dass Sie dieses {itemType} löschen möchten?</>
+    ? <>Are you sure you want to delete <Text span fw={600} c="var(--text-primary)">{itemName}</Text>?</>
+    : <>Are you sure you want to delete this {itemType}?</>
   );
 
   return (
@@ -72,7 +72,7 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
           borderRadius: 'var(--radius-sm)',
           borderLeft: '3px solid var(--color-error-500)',
         }}>
-          Diese Aktion kann nicht rückgängig gemacht werden.
+          This action cannot be undone.
         </Text>
 
         <Group justify="flex-end" gap="sm" mt="sm">
@@ -90,7 +90,7 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
                 onClick={onClose}
                 disabled={isLoading}
               >
-                Abbrechen
+                Cancel
               </Button>
             </>
           ) : (
@@ -100,7 +100,7 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
                 onClick={onClose}
                 disabled={isLoading}
               >
-                Abbrechen
+                Cancel
               </Button>
               <Button 
                 color="red" 

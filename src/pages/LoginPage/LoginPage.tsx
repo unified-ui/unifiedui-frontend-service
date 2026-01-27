@@ -159,14 +159,14 @@ export const LoginPage = () => {
                 <Stack gap="md">
                   <div>
                     <Text size="lg" fw={500} c="green">
-                      ✓ Erfolgreich angemeldet
+                      ✓ Successfully logged in
                     </Text>
                     <Text size="sm" c="dimmed">
-                      Angemeldet als: {user?.mail || user?.display_name || account?.username || 'Unbekannt'}
+                      Logged in as: {user?.mail || user?.display_name || account?.username || 'Unknown'}
                     </Text>
                     {selectedTenant && (
                       <Text size="sm" c="dimmed">
-                        Aktueller Tenant: {selectedTenant.name}
+                        Current Tenant: {selectedTenant.name}
                       </Text>
                     )}
                   </div>
@@ -177,7 +177,7 @@ export const LoginPage = () => {
                     onClick={handleLogout}
                     loading={isLoading}
                   >
-                    Abmelden
+                    Sign out
                   </Button>
 
                   {tenants.length > 0 && (

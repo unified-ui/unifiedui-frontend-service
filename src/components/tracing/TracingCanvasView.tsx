@@ -503,15 +503,15 @@ const createColumnBasedLayout = (
   const targetPos = isHorizontal ? Position.Left : Position.Top;
 
   // ========================================================================
-  // SCHRITT 1: Flache Liste aller sichtbaren Nodes erstellen
+  // STEP 1: Create flat list of all visible nodes
   // ========================================================================
   const flatNodes: LayoutNode[] = [];
   const nodeMap = new Map<string, LayoutNode>();
   
-  // Set zur Überprüfung, ob ein Node sichtbar ist (nicht durch collapsed Parent versteckt)
+  // Set to check if a node is visible (not hidden by collapsed parent)
   const visibleNodeIds = new Set<string>();
   
-  // Rekursive Funktion zum Sammeln aller Nodes
+  // Recursive function to collect all nodes
   const collectNodes = (
     node: TraceNodeResponseLike,
     parentId: string | null,
@@ -663,13 +663,13 @@ const createColumnBasedLayout = (
   }
   
   // ========================================================================
-  // SCHRITT 6: ReactFlow Nodes erstellen
+  // STEP 6: Create ReactFlow Nodes
   // ========================================================================
   const nodes: Node[] = visibleNodes.map((layoutNode, _idx, allNodes) => {
     const { id, x, y, isRoot, hasChildren, isCollapsed, localIndex, originalNode } = layoutNode;
     const isSelected = selectedNodeId === id;
     
-    // Bestimme isFirst und isLast für Root-Nodes
+    // Determine isFirst and isLast for root nodes
     const rootNodes = allNodes.filter(n => n.isRoot);
     const isFirst = isRoot && localIndex === 0;
     const isLast = isRoot && localIndex === rootNodes.length - 1;
@@ -698,7 +698,7 @@ const createColumnBasedLayout = (
   });
   
   // ========================================================================
-  // SCHRITT 7: Edges erstellen
+  // STEP 7: Create Edges
   // ========================================================================
   const edges: Edge[] = [];
   const visibleNodeIdSet = new Set(visibleNodes.map(n => n.id));

@@ -140,6 +140,12 @@
   min-width: 0;
 }
 
+.itemSubtitle {
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 0;
+}
+
 /* Empty State */
 .emptyIcon {
   color: var(--text-disabled);

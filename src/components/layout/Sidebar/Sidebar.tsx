@@ -8,16 +8,17 @@ import {
   IconSettings, IconSettingsFilled,
   IconBrandWechat,
   IconTool,
+  IconGitBranch,
 } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useSidebarData, type EntityType } from '../../../contexts';
+import { useSidebarData, useIdentity, type EntityType } from '../../../contexts';
 import { SidebarDataList, type DataListItem } from './SidebarDataList';
-import { GlobalChatSidebar } from '../GlobalChatSidebar/GlobalChatSidebar';
 import {
   CreateApplicationDialog,
   CreateAutonomousAgentDialog,
   CreateChatWidgetDialog,
 } from '../../dialogs';
+import type { ConversationResponse, ApplicationResponse } from '../../../api/types';
 import classes from './Sidebar.module.css';
 
 interface NavItem {
@@ -34,6 +35,7 @@ const mainNavItemsTop: NavItem[] = [
   { icon: IconMessages, iconFilled: IconMessageFilled, label: 'Conversations', path: '/conversations' },
   { icon: IconSparkles, label: 'Chat Agents', path: '/applications', hasDataList: true, entityType: 'applications' },
   { icon: IconRobot, label: 'Autonomous\nAgents', path: '/autonomous-agents', hasDataList: true, entityType: 'autonomous-agents' },
+  { icon: IconGitBranch, label: 'Traces', path: '/traces' },
 ];
 
 const mainNavItemsBottom: NavItem[] = [
@@ -53,6 +55,9 @@ interface EntityConfig {
   getLink: (id: string) => string;
 }
 
+// LocalStorage key for sidebar expand state persistence
+const SIDEBAR_EXPAND_KEY = 'unified-ui-sidebar-expanded';
+
 export const Sidebar: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -71,17 +76,33 @@ export const Sidebar: FC = () => {
     refreshChatWidgets,
   } = useSidebarData();
   
+  // Get API client for loading conversations
+  const { apiClient, selectedTenant } = useIdentity();
+  
   // State for data list panel
   const [activeEntity, setActiveEntity] = useState<EntityType | null>(null);
-  const [isDataListExpanded, setIsDataListExpanded] = useState(false);
+  const [isDataListExpanded, setIsDataListExpanded] = useState(() => {
+    // Initialize from localStorage
+    try {
+      const stored = localStorage.getItem(SIDEBAR_EXPAND_KEY);
+      return stored === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [isHoveringDataList, setIsHoveringDataList] = useState(false);
   const [isHoveringNavItem, setIsHoveringNavItem] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // State for Conversations sidebar (same pattern as other data lists)
+  // State for Conversations sidebar (using SidebarDataList pattern)
   const [isConversationsSidebarVisible, setIsConversationsSidebarVisible] = useState(false);
   const [isHoveringConversationsNav, setIsHoveringConversationsNav] = useState(false);
   const [isHoveringConversationsSidebar, setIsHoveringConversationsSidebar] = useState(false);
+  const [conversations, setConversations] = useState<ConversationResponse[]>([]);
+  const [conversationApplications, setConversationApplications] = useState<ApplicationResponse[]>([]);
+  const [conversationsLoading, setConversationsLoading] = useState(false);
+  const [conversationsError, setConversationsError] = useState<string | null>(null);
+  const [conversationsRefreshing, setConversationsRefreshing] = useState(false);
   
   // Timeout refs for hover delay
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -206,7 +227,7 @@ export const Sidebar: FC = () => {
     closeTimeoutRef.current = setTimeout(() => {
       if (!isHoveringDataList) {
         setActiveEntity(null);
-        setIsDataListExpanded(false);
+        // Note: Do NOT reset isDataListExpanded here - it should persist
       }
     }, 200);
   }, [isHoveringDataList]);
@@ -228,7 +249,7 @@ export const Sidebar: FC = () => {
     closeTimeoutRef.current = setTimeout(() => {
       if (!isHoveringNavItem) {
         setActiveEntity(null);
-        setIsDataListExpanded(false);
+        // Note: Do NOT reset isDataListExpanded here - it should persist
       }
     }, 200);
   }, [isHoveringNavItem]);
@@ -300,16 +321,87 @@ export const Sidebar: FC = () => {
     }, 200);
   }, [isHoveringConversationsNav]);
 
+  // Handle close conversations sidebar
+  const handleCloseConversationsSidebar = useCallback(() => {
+    setIsConversationsSidebarVisible(false);
+    setIsHoveringConversationsSidebar(false);
+  }, []);
+
+  // Load conversations when sidebar becomes visible
+  const loadConversations = useCallback(async (useCache = true) => {
+    if (!apiClient || !selectedTenant) return;
+    
+    if (!useCache) {
+      setConversationsRefreshing(true);
+    } else {
+      setConversationsLoading(true);
+    }
+    setConversationsError(null);
+    
+    try {
+      const [convsList, appsList] = await Promise.all([
+        apiClient.listConversations(selectedTenant.id),
+        apiClient.listApplications(selectedTenant.id, undefined, { noCache: !useCache }) as Promise<ApplicationResponse[]>,
+      ]);
+      setConversations(convsList);
+      setConversationApplications(appsList);
+    } catch (error) {
+      console.error('Failed to load conversations:', error);
+      setConversationsError('Failed to load conversations');
+    } finally {
+      setConversationsLoading(false);
+      setConversationsRefreshing(false);
+    }
+  }, [apiClient, selectedTenant]);
+
+  // Load conversations when sidebar becomes visible
+  useEffect(() => {
+    if (isConversationsSidebarVisible && !isOnConversationsPage) {
+      loadConversations(true);
+    }
+  }, [isConversationsSidebarVisible, isOnConversationsPage, loadConversations]);
+
+  // Handle refresh conversations
+  const handleRefreshConversations = useCallback(async () => {
+    await loadConversations(false);
+  }, [loadConversations]);
+
+  // Get application name by ID for conversations
+  const getApplicationName = useCallback((applicationId: string): string => {
+    const app = conversationApplications.find(a => a.id === applicationId);
+    return app?.name || 'Unknown Application';
+  }, [conversationApplications]);
+
+  // Conversation items for SidebarDataList
+  const conversationItems: DataListItem[] = useMemo(() => {
+    return conversations.map(conv => ({
+      id: conv.id,
+      name: conv.name,
+      subtitle: getApplicationName(conv.application_id),
+      link: `/conversations/${conv.id}`,
+      icon: <IconMessages size={16} />,
+    }));
+  }, [conversations, getApplicationName]);
+
   // Handle close button click
   const handleCloseDataList = useCallback(() => {
     setActiveEntity(null);
-    setIsDataListExpanded(false);
+    // Note: Do NOT reset isDataListExpanded - the expanded state should persist across opens/closes
     setIsHoveringDataList(false);
   }, []);
 
   // Handle toggle expand
   const handleToggleExpand = useCallback(() => {
-    setIsDataListExpanded(prev => !prev);
+    setIsDataListExpanded(prev => {
+      const newValue = !prev;
+      // Persist to localStorage
+      try {
+        localStorage.setItem(SIDEBAR_EXPAND_KEY, String(newValue));
+      } catch {
+        // Ignore localStorage errors (e.g., private browsing mode)
+      }
+      return newValue;
+    });
   }, []);
 
   // Handle add button click for each entity type
@@ -451,12 +543,25 @@ export const Sidebar: FC = () => {
         />
       )}
 
-      {/* Conversations Sidebar (same pattern as Data List Panel) */}
-      <GlobalChatSidebar
-        isVisible={isConversationsSidebarVisible}
-        onMouseEnter={handleConversationsSidebarHoverEnter}
-        onMouseLeave={handleConversationsSidebarHoverLeave}
-      />
+      {/* Conversations Sidebar (using SidebarDataList pattern) */}
+      {isConversationsSidebarVisible && !isOnConversationsPage && (
+        <SidebarDataList
+          title="Conversations"
+          icon={<IconMessages size={24} />}
+          items={conversationItems}
+          isLoading={conversationsLoading}
+          error={conversationsError}
+          onClose={handleCloseConversationsSidebar}
+          isExpanded={isDataListExpanded}
+          onToggleExpand={handleToggleExpand}
+          onMouseEnter={handleConversationsSidebarHoverEnter}
+          onMouseLeave={handleConversationsSidebarHoverLeave}
+          addButtonLabel="New Conversation"
+          onAdd={() => navigate('/conversations')}
+          onRefresh={handleRefreshConversations}
+          isRefreshing={conversationsRefreshing}
+        />
+      )}
 
       {/* Create Dialogs */}
       <CreateApplicationDialog

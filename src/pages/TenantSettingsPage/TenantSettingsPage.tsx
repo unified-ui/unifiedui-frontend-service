@@ -19,6 +19,7 @@ import {
   ActionIcon,
   Menu,
   ScrollArea,
+  Select,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -60,6 +61,7 @@ import type {
   CredentialResponse,
   ToolResponse,
 } from '../../api/types';
+import { ToolTypeEnum } from '../../api/types';
 import classes from './TenantSettingsPage.module.css';
 
 type TabValue = 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'billing-and-licence';
@@ -190,6 +192,7 @@ export const TenantSettingsPage: FC = () => {
   const [editToolTab, setEditToolTab] = useState<EditDialogTab>('details');
   const [toolsSearch, setToolsSearch] = useState('');
   const [debouncedToolsSearch] = useDebouncedValue(toolsSearch, 400);
+  const [toolsTypeFilter, setToolsTypeFilter] = useState<string | null>(null);
   const [deleteToolDialog, setDeleteToolDialog] = useState<{
     open: boolean;
     id: string;
@@ -199,6 +202,24 @@ export const TenantSettingsPage: FC = () => {
   
   const TOOLS_PAGE_SIZE = 50;
   const toolsLoadMoreRef = useRef<HTMLDivElement>(null);
+  
+  // Tool type options for filter
+  const TOOL_TYPE_OPTIONS = [
+    { value: ToolTypeEnum.MCP_SERVER, label: 'MCP Server' },
+    { value: ToolTypeEnum.OPENAPI_DEFINITION, label: 'OpenAPI Definition' },
+  ];
+  
+  // Get badge color for tool type
+  const getToolTypeBadgeColor = (type: string): string => {
+    switch (type) {
+      case ToolTypeEnum.MCP_SERVER:
+        return 'blue';
+      case ToolTypeEnum.OPENAPI_DEFINITION:
+        return 'orange';
+      default:
+        return 'gray';
+    }
+  };
 
   // ===== Load Tenant Details =====
   useEffect(() => {
@@ -452,6 +473,7 @@ export const TenantSettingsPage: FC = () => {
         skip,
         limit: TOOLS_PAGE_SIZE,
         name_filter: debouncedToolsSearch || undefined,
+        type_filter: toolsTypeFilter || undefined,
         order_by: 'name',
         order_direction: 'asc',
       }) as ToolResponse[];
@@ -477,7 +499,7 @@ export const TenantSettingsPage: FC = () => {
       setToolsLoading(false);
       setToolsLoadingMore(false);
     }
-  }, [apiClient, selectedTenant, toolsFetched, toolsSkip, debouncedToolsSearch]);
+  }, [apiClient, selectedTenant, toolsFetched, toolsSkip, debouncedToolsSearch, toolsTypeFilter]);
 
   // Handler for loading more tools (infinite scroll)
   const handleLoadMoreTools = useCallback(() => {
@@ -541,12 +563,12 @@ export const TenantSettingsPage: FC = () => {
     }
   }, [debouncedCredentialsSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-fetch tools when search changes
+  // Re-fetch tools when search or type filter changes
   useEffect(() => {
     if (activeTab === 'tools' && toolsFetched) {
       fetchTools(true);
     }
-  }, [debouncedToolsSearch]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [debouncedToolsSearch, toolsTypeFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ===== Tenant Settings Handlers =====
   const handleSaveTenant = tenantForm.onSubmit(async (values) => {
@@ -1102,13 +1124,23 @@ export const TenantSettingsPage: FC = () => {
 
                 {/* Toolbar */}
                 <Group justify="space-between">
-                  <TextInput
-                    placeholder="Search tools..."
-                    leftSection={<IconSearch size={16} />}
-                    value={toolsSearch}
-                    onChange={(e) => setToolsSearch(e.currentTarget.value)}
-                    style={{ flex: 1, maxWidth: 350 }}
-                  />
+                  <Group gap="sm" style={{ flex: 1, maxWidth: 500 }}>
+                    <TextInput
+                      placeholder="Search tools..."
+                      leftSection={<IconSearch size={16} />}
+                      value={toolsSearch}
+                      onChange={(e) => setToolsSearch(e.currentTarget.value)}
+                      style={{ flex: 1 }}
+                    />
+                    <Select
+                      placeholder="All Types"
+                      data={TOOL_TYPE_OPTIONS}
+                      value={toolsTypeFilter}
+                      onChange={setToolsTypeFilter}
+                      clearable
+                      style={{ width: 180 }}
+                    />
+                  </Group>
                   <Button
                     leftSection={<IconTool size={16} />}
                     onClick={() => setCreateToolDialogOpen(true)}
@@ -1171,7 +1203,7 @@ export const TenantSettingsPage: FC = () => {
                                 </Group>
                               </Table.Td>
                               <Table.Td>
-                                <Badge size="sm" variant="light" color="grape">
+                                <Badge size="sm" variant="light" color={getToolTypeBadgeColor(tool.type)}>
                                   {tool.type === 'MCP_SERVER' ? 'MCP Server' : 'OpenAPI Definition'}
                                 </Badge>
                               </Table.Td>
@@ -1465,7 +1497,7 @@ export const TenantSettingsPage: FC = () => {
         title="Final Confirmation (Step 2 of 2)"
         message="This action is IRREVERSIBLE. All tenant data will be permanently deleted. Are you absolutely sure?"
         isLoading={isDeletingTenant}
-        confirmButtonText="WIRKLICH LÖSCHEN"
+        confirmButtonText="REALLY DELETE"
         reverseButtons
       />
 

@@ -163,34 +163,34 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
     validate: {
       name: (value) => {
         if (!value || value.trim().length === 0) {
-          return 'Name ist erforderlich';
+          return 'Name is required';
         }
         if (value.length > 255) {
-          return 'Name darf maximal 255 Zeichen lang sein';
+          return 'Name cannot exceed 255 characters';
         }
         return null;
       },
       type: (value) => {
         if (!value) {
-          return 'Typ ist erforderlich';
+          return 'Type is required';
         }
         return null;
       },
       description: (value) => {
         if (value && value.length > 2000) {
-          return 'Beschreibung darf maximal 2000 Zeichen lang sein';
+          return 'Description cannot exceed 2000 characters';
         }
         return null;
       },
       n8n_chat_url: (value, values) => {
         if (values.type === ApplicationTypeEnum.N8N) {
           if (!value || value.trim().length === 0) {
-            return 'Chat URL ist erforderlich';
+            return 'Chat URL is required';
           }
           try {
             new URL(value);
           } catch {
-            return 'Ungültige URL';
+            return 'Invalid URL';
           }
         }
         return null;
@@ -198,15 +198,15 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       n8n_workflow_endpoint: (value, values) => {
         if (values.type === ApplicationTypeEnum.N8N) {
           if (!value || value.trim().length === 0) {
-            return 'Workflow Endpoint ist erforderlich';
+            return 'Workflow Endpoint is required';
           }
           try {
             const url = new URL(value);
             if (!url.pathname.includes('/workflow/')) {
-              return 'URL muss "/workflow/" enthalten';
+              return 'URL must contain "/workflow/"';
             }
           } catch {
-            return 'Ungültige URL';
+            return 'Invalid URL';
           }
         }
         return null;
@@ -214,7 +214,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       n8n_api_api_key_credential_id: (value, values) => {
         if (values.type === ApplicationTypeEnum.N8N) {
           if (!value || value.trim().length === 0) {
-            return 'API Key Credential ist erforderlich';
+            return 'API Key Credential is required';
           }
         }
         return null;
@@ -222,7 +222,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       n8n_chat_history_count: (value, values) => {
         if (values.type === ApplicationTypeEnum.N8N && values.n8n_use_unified_chat_history) {
           if (value < 1 || value > 100) {
-            return 'Chat History Count muss zwischen 1 und 100 liegen';
+            return 'Chat History Count must be between 1 and 100';
           }
         }
         return null;
@@ -230,12 +230,12 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       foundry_project_endpoint: (value, values) => {
         if (values.type === ApplicationTypeEnum.MICROSOFT_FOUNDRY) {
           if (!value || value.trim().length === 0) {
-            return 'Project Endpoint ist erforderlich';
+            return 'Project Endpoint is required';
           }
           try {
             new URL(value);
           } catch {
-            return 'Ungültige URL';
+            return 'Invalid URL';
           }
         }
         return null;
@@ -243,7 +243,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       foundry_agent_name: (value, values) => {
         if (values.type === ApplicationTypeEnum.MICROSOFT_FOUNDRY) {
           if (!value || value.trim().length === 0) {
-            return 'Agent Name ist erforderlich';
+            return 'Agent Name is required';
           }
         }
         return null;
@@ -687,7 +687,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
               {/* N8N Configuration Section */}
               {form.values.type === ApplicationTypeEnum.N8N && (
                 <>
-                  <Divider label="N8N Konfiguration" labelPosition="center" />
+                  <Divider label="N8N Configuration" labelPosition="center" />
 
                   <Group grow>
                     <Select
@@ -717,7 +717,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
                   <TextInput
                     label="Workflow Endpoint"
                     placeholder="https://your-n8n-instance.com/workflow/abc123"
-                    description="Die URL zum N8N Workflow (z.B. https://n8n.example.com/workflow/abc123)"
+                    description="The URL to the N8N workflow (e.g. https://n8n.example.com/workflow/abc123)"
                     required
                     withAsterisk
                     {...form.getInputProps('n8n_workflow_endpoint')}
@@ -727,7 +727,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
                   <Group gap="xs" align="flex-end">
                     <Select
                       label="API Key Credential"
-                      placeholder={isLoadingCredentials ? 'Laden...' : 'Wählen Sie ein Credential'}
+                      placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
                       required
                       withAsterisk
                       data={apiKeyCredentials}
@@ -736,7 +736,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
                       style={{ flex: 1 }}
                       {...form.getInputProps('n8n_api_api_key_credential_id')}
                     />
-                    <Tooltip label="Neues API Key Credential erstellen">
+                    <Tooltip label="Create new API Key Credential">
                       <ActionIcon
                         variant="light"
                         color="blue"
@@ -750,7 +750,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
 
                   {apiKeyCredentials.length === 0 && !isLoadingCredentials && (
                     <Alert icon={<IconAlertCircle size={16} />} color="yellow" variant="light">
-                      Keine API Key Credentials vorhanden. Erstellen Sie zuerst ein Credential.
+                      No API Key Credentials available. Please create a credential first.
                     </Alert>
                   )}
 
@@ -758,7 +758,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
                   <Group gap="xs" align="flex-end">
                     <Select
                       label="Chat Auth Credential (Optional)"
-                      placeholder={isLoadingCredentials ? 'Laden...' : 'Wählen Sie ein Credential (optional)'}
+                      placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential (optional)'}
                       data={chatAuthCredentials}
                       rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                       disabled={isLoadingCredentials}
@@ -766,7 +766,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
                       style={{ flex: 1 }}
                       {...form.getInputProps('n8n_chat_auth_credential_id')}
                     />
-                    <Tooltip label="Neues Basic Auth Credential erstellen">
+                    <Tooltip label="Create new Basic Auth Credential">
                       <ActionIcon
                         variant="light"
                         color="blue"
@@ -781,15 +781,15 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
                   <Divider label="Chat History" labelPosition="center" />
 
                   <Switch
-                    label="Unified Chat History verwenden"
-                    description="Wenn aktiviert, wird der Chat-Verlauf im Agent Service verwaltet"
+                    label="Use Unified Chat History"
+                    description="When enabled, chat history is managed in the Agent Service"
                     {...form.getInputProps('n8n_use_unified_chat_history', { type: 'checkbox' })}
                   />
 
                   {form.values.n8n_use_unified_chat_history && (
                     <NumberInput
                       label="Chat History Count"
-                      description="Anzahl der Nachrichten im Chat-Verlauf (1-100)"
+                      description="Number of messages in chat history (1-100)"
                       min={1}
                       max={100}
                       {...form.getInputProps('n8n_chat_history_count')}
@@ -801,7 +801,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
               {/* Microsoft Foundry Configuration Section */}
               {form.values.type === ApplicationTypeEnum.MICROSOFT_FOUNDRY && (
                 <>
-                  <Divider label="Microsoft Foundry Konfiguration" labelPosition="center" />
+                  <Divider label="Microsoft Foundry Configuration" labelPosition="center" />
 
                   <Group grow>
                     <Select

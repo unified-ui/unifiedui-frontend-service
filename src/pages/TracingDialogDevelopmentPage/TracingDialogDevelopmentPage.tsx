@@ -150,19 +150,19 @@ export const TracingDialogDevelopmentPage: FC = () => {
               </Group>
 
               <Text size="sm" c="dimmed">
-                Tenant: {selectedTenant?.name || 'Nicht ausgewählt'}
+                Tenant: {selectedTenant?.name || 'Not selected'}
               </Text>
             </Group>
 
             <Text size="sm" c="dimmed" mb="lg">
-              Geben Sie eine Conversation ID oder Autonomous Agent ID ein, um die Tracing-Visualisierung als Dialog zu öffnen.
+              Enter a Conversation ID or Autonomous Agent ID to open the Tracing visualization as a dialog.
             </Text>
 
             {/* Conversation ID Input */}
             <Stack gap="md">
               <Group gap="sm">
                 <TextInput
-                  placeholder="Conversation ID eingeben"
+                  placeholder="Enter Conversation ID"
                   value={conversationIdInput}
                   onChange={(e) => setConversationIdInput(e.target.value)}
                   style={{ flex: 1 }}
@@ -173,14 +173,14 @@ export const TracingDialogDevelopmentPage: FC = () => {
                   onClick={handleConversationSearch}
                   disabled={!conversationIdInput.trim()}
                 >
-                  Conversation Traces öffnen
+                  Open Conversation Traces
                 </Button>
               </Group>
 
               {/* Autonomous Agent ID Input */}
               <Group gap="sm">
                 <TextInput
-                  placeholder="Autonomous Agent ID eingeben"
+                  placeholder="Enter Autonomous Agent ID"
                   value={autonomousAgentIdInput}
                   onChange={(e) => setAutonomousAgentIdInput(e.target.value)}
                   style={{ flex: 1 }}
@@ -191,7 +191,7 @@ export const TracingDialogDevelopmentPage: FC = () => {
                   onClick={handleAgentSearch}
                   disabled={!autonomousAgentIdInput.trim()}
                 >
-                  Agent Traces öffnen
+                  Open Agent Traces
                 </Button>
               </Group>
             </Stack>
@@ -201,7 +201,7 @@ export const TracingDialogDevelopmentPage: FC = () => {
           {hasQueryParams && (
             <Alert color="blue" variant="light">
               <Group gap="xs">
-                <Text size="sm" fw={500}>Aktive Query Parameter:</Text>
+                <Text size="sm" fw={500}>Active Query Parameters:</Text>
                 <Code>
                   {conversationId 
                     ? `conversationId=${conversationId}`

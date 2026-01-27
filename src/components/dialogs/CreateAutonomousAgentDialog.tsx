@@ -76,37 +76,37 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
     validate: {
       name: (value) => {
         if (!value || value.trim().length === 0) {
-          return 'Name ist erforderlich';
+          return 'Name is required';
         }
         if (value.length > 255) {
-          return 'Name darf maximal 255 Zeichen lang sein';
+          return 'Name cannot exceed 255 characters';
         }
         return null;
       },
       type: (value) => {
         if (!value) {
-          return 'Typ ist erforderlich';
+          return 'Type is required';
         }
         return null;
       },
       description: (value) => {
         if (value && value.length > 2000) {
-          return 'Beschreibung darf maximal 2000 Zeichen lang sein';
+          return 'Description cannot exceed 2000 characters';
         }
         return null;
       },
       n8n_workflow_endpoint: (value, values) => {
         if (values.type === AutonomousAgentTypeEnum.N8N) {
           if (!value || value.trim().length === 0) {
-            return 'Workflow Endpoint ist erforderlich';
+            return 'Workflow Endpoint is required';
           }
           try {
             const url = new URL(value);
             if (!url.pathname.includes('/workflow/')) {
-              return 'URL muss /workflow/ im Pfad enthalten';
+              return 'URL must contain /workflow/ in the path';
             }
           } catch {
-            return 'Ungültige URL';
+            return 'Invalid URL';
           }
         }
         return null;
@@ -114,7 +114,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
       n8n_api_api_key_credential_id: (value, values) => {
         if (values.type === AutonomousAgentTypeEnum.N8N) {
           if (!value || value.trim().length === 0) {
-            return 'API Key Credential ist erforderlich';
+            return 'API Key Credential is required';
           }
         }
         return null;
@@ -231,7 +231,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
         title={
           <Group gap="sm">
             <IconRobot size={24} />
-            <Text fw={600} size="lg">Autonomous Agent erstellen</Text>
+            <Text fw={600} size="lg">Create Autonomous Agent</Text>
           </Group>
         }
         size="md"
@@ -241,7 +241,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
           <Stack gap="md">
             <TextInput
               label="Name"
-              placeholder="Geben Sie einen Namen ein"
+              placeholder="Enter a name"
               required
               withAsterisk
               maxLength={255}
@@ -250,8 +250,8 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
             />
 
             <Select
-              label="Typ"
-              placeholder="Wählen Sie einen Typ"
+              label="Type"
+              placeholder="Select a type"
               required
               withAsterisk
               data={AUTONOMOUS_AGENT_TYPES}
@@ -261,11 +261,11 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
             {/* N8N Configuration Section */}
             {isN8N && (
               <>
-                <Divider label="n8n Konfiguration" labelPosition="center" />
+                <Divider label="n8n Configuration" labelPosition="center" />
 
                 <Select
                   label="API Version"
-                  placeholder="Wählen Sie eine Version"
+                  placeholder="Select a version"
                   required
                   withAsterisk
                   data={API_VERSIONS}
@@ -275,7 +275,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
                 <TextInput
                   label="Workflow Endpoint"
                   placeholder="https://your-n8n.com/workflow/{id}"
-                  description="URL muss /workflow/ im Pfad enthalten"
+                  description="URL must contain /workflow/ in the path"
                   required
                   withAsterisk
                   {...form.getInputProps('n8n_workflow_endpoint')}
@@ -285,7 +285,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
                 <Group gap="xs" align="flex-end">
                   <Select
                     label="API Key Credential"
-                    placeholder={isLoadingCredentials ? 'Laden...' : 'Wählen Sie ein Credential'}
+                    placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
                     required
                     withAsterisk
                     data={apiKeyCredentials}
@@ -294,7 +294,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
                     style={{ flex: 1 }}
                     {...form.getInputProps('n8n_api_api_key_credential_id')}
                   />
-                  <Tooltip label="Neues API Key Credential erstellen">
+                  <Tooltip label="Create new API Key Credential">
                     <ActionIcon
                       variant="light"
                       color="blue"
@@ -308,7 +308,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
 
                 {apiKeyCredentials.length === 0 && !isLoadingCredentials && (
                   <Alert icon={<IconAlertCircle size={16} />} color="yellow" variant="light">
-                    Keine API Key Credentials vorhanden. Erstellen Sie zuerst ein Credential.
+                    No API Key Credentials available. Please create a credential first.
                   </Alert>
                 )}
               </>
@@ -316,14 +316,14 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
 
             <TagInput
               label="Tags"
-              placeholder="Tag eingeben und mit Space bestätigen..."
+              placeholder="Enter tag and press Space to confirm..."
               value={form.values.tags}
               onChange={(tags) => form.setFieldValue('tags', tags)}
             />
 
             <Textarea
-              label="Beschreibung"
-              placeholder="Optionale Beschreibung"
+              label="Description"
+              placeholder="Optional description"
               maxLength={2000}
               minRows={3}
               maxRows={6}
@@ -333,10 +333,10 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
 
             <Group justify="flex-end" mt="md">
               <Button variant="default" onClick={handleClose} disabled={isSubmitting}>
-                Abbrechen
+                Cancel
               </Button>
               <Button type="submit" loading={isSubmitting}>
-                Erstellen
+                Create
               </Button>
             </Group>
           </Stack>

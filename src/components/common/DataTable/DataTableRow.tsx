@@ -11,6 +11,7 @@ import {
   Stack,
   Paper,
   Box,
+  Tooltip,
 } from '@mantine/core';
 import {
   IconDots,
@@ -23,6 +24,10 @@ import {
   IconTrash,
 } from '@tabler/icons-react';
 import classes from './DataTable.module.css';
+
+// Tooltip thresholds - show tooltip when text exceeds these character counts
+const TOOLTIP_THRESHOLD_NAME = 25;
+const TOOLTIP_THRESHOLD_DESC = 50;
 
 export interface DataTableItem {
   id: string;
@@ -94,13 +99,29 @@ export const DataTableRow: FC<DataTableRowProps> = ({
         <Group gap="md" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
           {icon && <Box className={classes.rowIcon}>{icon}</Box>}
           <Stack gap={2} style={{ minWidth: 0, flex: 1 }}>
-            <Text fw={600} size="md" truncate className={classes.itemName}>
-              {item.name}
-            </Text>
-            {item.description && (
-              <Text size="sm" c="dimmed" truncate className={classes.itemDescription}>
-                {item.description}
+            <Tooltip 
+              label={item.name} 
+              disabled={!item.name || item.name.length <= TOOLTIP_THRESHOLD_NAME}
+              multiline
+              maw={300}
+              position="top-start"
+            >
+              <Text fw={600} size="md" truncate className={classes.itemName}>
+                {item.name}
               </Text>
+            </Tooltip>
+            {item.description && (
+              <Tooltip 
+                label={item.description} 
+                disabled={!item.description || item.description.length <= TOOLTIP_THRESHOLD_DESC}
+                multiline
+                maw={400}
+                position="top-start"
+              >
+                <Text size="sm" c="dimmed" truncate className={classes.itemDescription}>
+                  {item.description}
+                </Text>
+              </Tooltip>
             )}
           </Stack>
         </Group>
@@ -157,13 +178,14 @@ export const DataTableRow: FC<DataTableRowProps> = ({
 
         {/* Status Toggle */}
         {showStatus && item.isActive !== undefined && (
-          <Switch
-            checked={item.isActive}
-            onChange={(e) => onStatusChange?.(item.id, e.currentTarget.checked)}
-            onClick={(e) => e.stopPropagation()}
-            size="sm"
-            className={classes.statusSwitch}
-          />
+          <div onClick={(e) => e.stopPropagation()}>
+            <Switch
+              checked={item.isActive}
+              onChange={(e) => onStatusChange?.(item.id, e.currentTarget.checked)}
+              size="sm"
+              className={classes.statusSwitch}
+            />
+          </div>
         )}
 
         {/* Actions Menu */}
@@ -174,35 +196,50 @@ export const DataTableRow: FC<DataTableRowProps> = ({
             </ActionIcon>
           </Menu.Target>
 
-          <Menu.Dropdown>
+          <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
             <Menu.Item
               leftSection={<IconExternalLink size={14} />}
-              onClick={() => onOpen?.(item.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpen?.(item.id);
+              }}
             >
               Open
             </Menu.Item>
             <Menu.Item
               leftSection={<IconEdit size={14} />}
-              onClick={() => onEdit?.(item.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.(item.id);
+              }}
             >
               Edit
             </Menu.Item>
             <Menu.Item
               leftSection={<IconUserCog size={14} />}
-              onClick={() => onManageAccess?.(item.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onManageAccess?.(item.id);
+              }}
             >
               Manage access
             </Menu.Item>
             <Menu.Item
               leftSection={<IconCopy size={14} />}
-              onClick={() => onDuplicate?.(item.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDuplicate?.(item.id);
+              }}
             >
               Duplicate
             </Menu.Item>
             <Menu.Divider />
             <Menu.Item
               leftSection={item.isPinned ? <IconPinned size={14} /> : <IconPin size={14} />}
-              onClick={() => onPin?.(item.id, !item.isPinned)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onPin?.(item.id, !item.isPinned);
+              }}
             >
               {item.isPinned ? 'Unpin' : 'Pin'}
             </Menu.Item>
@@ -210,7 +247,10 @@ export const DataTableRow: FC<DataTableRowProps> = ({
             <Menu.Item
               leftSection={<IconTrash size={14} />}
               color="red"
-              onClick={() => onDelete?.(item.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.(item.id);
+              }}
             >
               Delete
             </Menu.Item>

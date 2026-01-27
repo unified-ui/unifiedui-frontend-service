@@ -51,22 +51,22 @@ export const CreateToolDialog: FC<CreateToolDialogProps> = ({
     validate: {
       name: (value) => {
         if (!value || value.trim().length === 0) {
-          return 'Name ist erforderlich';
+          return 'Name is required';
         }
         if (value.length > 255) {
-          return 'Name darf maximal 255 Zeichen lang sein';
+          return 'Name cannot exceed 255 characters';
         }
         return null;
       },
       description: (value) => {
         if (value && value.length > 2000) {
-          return 'Beschreibung darf maximal 2000 Zeichen lang sein';
+          return 'Description cannot exceed 2000 characters';
         }
         return null;
       },
       type: (value) => {
         if (!value || value.trim().length === 0) {
-          return 'Typ ist erforderlich';
+          return 'Type is required';
         }
         return null;
       },
@@ -113,10 +113,11 @@ export const CreateToolDialog: FC<CreateToolDialogProps> = ({
       title={
         <Group gap="xs">
           <IconTool size={20} />
-          <Text fw={600}>Neues Tool erstellen</Text>
+          <Text fw={600}>Create New Tool</Text>
         </Group>
       }
       size="md"
+      centered
       closeOnClickOutside={!isSubmitting}
       closeOnEscape={!isSubmitting}
     >
@@ -131,8 +132,8 @@ export const CreateToolDialog: FC<CreateToolDialogProps> = ({
           />
 
           <Select
-            label="Typ"
-            placeholder="Tool Typ auswählen"
+            label="Type"
+            placeholder="Select tool type"
             required
             data={TOOL_TYPES}
             {...form.getInputProps('type')}
@@ -140,8 +141,8 @@ export const CreateToolDialog: FC<CreateToolDialogProps> = ({
           />
 
           <Textarea
-            label="Beschreibung"
-            placeholder="Optionale Beschreibung"
+            label="Description"
+            placeholder="Optional description"
             minRows={3}
             {...form.getInputProps('description')}
             disabled={isSubmitting}
@@ -149,7 +150,7 @@ export const CreateToolDialog: FC<CreateToolDialogProps> = ({
 
           <TagInput
             label="Tags"
-            placeholder="Tag hinzufügen..."
+            placeholder="Add tag..."
             value={form.values.tags}
             onChange={(tags) => form.setFieldValue('tags', tags)}
             disabled={isSubmitting}
@@ -157,10 +158,10 @@ export const CreateToolDialog: FC<CreateToolDialogProps> = ({
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={handleClose} disabled={isSubmitting}>
-              Abbrechen
+              Cancel
             </Button>
             <Button type="submit" loading={isSubmitting}>
-              Erstellen
+              Create
             </Button>
           </Group>
         </Stack>

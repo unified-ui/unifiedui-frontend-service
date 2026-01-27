@@ -44,7 +44,7 @@ export const LoginTokenPage = () => {
       setFoundryToken(accessToken);
     } catch (error) {
       console.error('Failed to fetch Foundry token:', error);
-      setFoundryError('Consent erforderlich. Bitte erlaube Popups oder versuche es erneut.');
+      setFoundryError('Consent required. Please allow popups or try again.');
     } finally {
       setIsFoundryLoading(false);
     }

@@ -983,6 +983,7 @@ export interface FilterParams {
   name_filter?: string;
   is_active?: number;
   tags?: string;
+  type_filter?: string;
 }
 
 export interface SearchParams {

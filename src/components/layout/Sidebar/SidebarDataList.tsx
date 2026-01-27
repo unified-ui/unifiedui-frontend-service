@@ -27,6 +27,8 @@ import classes from './SidebarDataList.module.css';
 export interface DataListItem {
   id: string;
   name: string;
+  /** Optional subtitle displayed below the name */
+  subtitle?: string;
   link: string;
   icon?: React.ReactNode;
 }
@@ -198,7 +200,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
             variant="subtle"
             color="gray"
             onClick={onToggleExpand}
-            title={isExpanded ? 'Verkleinern' : 'Erweitern'}
+            title={isExpanded ? 'Collapse' : 'Expand'}
           >
             {isExpanded ? <IconSquareArrowLeft size={18} /> : <IconSquareArrowRight size={18} />}
           </ActionIcon>
@@ -206,7 +208,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
             variant="subtle"
             color="gray"
             onClick={onClose}
-            title="Schließen"
+            title="Close"
           >
             <IconX size={18} />
           </ActionIcon>
@@ -244,7 +246,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
               color="gray"
               onClick={onRefresh}
               loading={isRefreshing}
-              title="Daten neu laden"
+              title="Refresh data"
             >
               <IconRefresh size={18} />
             </ActionIcon>
@@ -259,7 +261,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
             <Stack align="center" gap="sm">
               <Loader size="md" />
               <Text size="sm" c="dimmed">
-                Lade Daten...
+                Loading...
               </Text>
             </Stack>
           </Center>
@@ -281,8 +283,8 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
               <IconInbox size={48} stroke={1} className={classes.emptyIcon} />
               <Text size="sm" c="dimmed" ta="center">
                 {searchQuery
-                  ? 'Keine Einträge gefunden'
-                  : 'Keine Einträge vorhanden'}
+                  ? 'No entries found'
+                  : 'No entries available'}
               </Text>
             </Stack>
           </Center>
@@ -304,9 +306,16 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
                     {item.icon && (
                       <span className={classes.itemIcon}>{item.icon}</span>
                     )}
-                    <Text size="sm" truncate className={classes.itemName}>
-                      {item.name}
-                    </Text>
+                    <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
+                      <Text size="sm" truncate className={classes.itemName}>
+                        {item.name}
+                      </Text>
+                      {item.subtitle && (
+                        <Text size="xs" c="dimmed" truncate className={classes.itemSubtitle}>
+                          {item.subtitle}
+                        </Text>
+                      )}
+                    </Stack>
                   </Group>
                 </Box>
               ))}

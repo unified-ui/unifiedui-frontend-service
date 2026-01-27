@@ -39,16 +39,16 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
     validate: {
       name: (value) => {
         if (!value || value.trim().length === 0) {
-          return 'Name ist erforderlich';
+          return 'Name is required';
         }
         if (value.length > 255) {
-          return 'Name darf maximal 255 Zeichen lang sein';
+          return 'Name cannot exceed 255 characters';
         }
         return null;
       },
       description: (value) => {
         if (value && value.length > 2000) {
-          return 'Beschreibung darf maximal 2000 Zeichen lang sein';
+          return 'Description cannot exceed 2000 characters';
         }
         return null;
       },
@@ -88,7 +88,7 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
       title={
         <Group gap="sm">
           <IconBuilding size={24} />
-          <Text fw={600} size="lg">Tenant erstellen</Text>
+          <Text fw={600} size="lg">Create Tenant</Text>
         </Group>
       }
       size="md"
@@ -98,7 +98,7 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
         <Stack gap="md">
           <TextInput
             label="Name"
-            placeholder="Geben Sie einen Namen ein"
+            placeholder="Enter a name"
             required
             withAsterisk
             maxLength={255}
@@ -107,8 +107,8 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
           />
 
           <Textarea
-            label="Beschreibung"
-            placeholder="Optionale Beschreibung"
+            label="Description"
+            placeholder="Optional description"
             maxLength={2000}
             minRows={3}
             maxRows={6}
@@ -118,10 +118,10 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={handleClose} disabled={isSubmitting}>
-              Abbrechen
+              Cancel
             </Button>
             <Button type="submit" loading={isSubmitting}>
-              Erstellen
+              Create
             </Button>
           </Group>
         </Stack>

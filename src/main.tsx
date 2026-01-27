@@ -18,17 +18,17 @@ import '@mantine/notifications/styles.css';
 import './styles/variables.css';
 import './index.css';
 
-// MSAL-Instanz erstellen
+// Create MSAL instance
 const msalInstance = new PublicClientApplication(msalConfig);
 
-// Redirect-Handling nach Login
+// Handle redirect after login
 msalInstance.initialize().then(() => {
   msalInstance.handleRedirectPromise().then((response) => {
     if (response) {
-      console.log('Login erfolgreich:', response);
+      console.log('Login successful:', response);
     }
   }).catch((error) => {
-    console.error('Redirect-Fehler:', error);
+    console.error('Redirect error:', error);
   });
 });
 

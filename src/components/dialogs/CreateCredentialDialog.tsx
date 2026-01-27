@@ -60,29 +60,29 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
     validate: {
       name: (value) => {
         if (!value || value.trim().length === 0) {
-          return 'Name ist erforderlich';
+          return 'Name is required';
         }
         if (value.length > 255) {
-          return 'Name darf maximal 255 Zeichen lang sein';
+          return 'Name cannot exceed 255 characters';
         }
         return null;
       },
       description: (value) => {
         if (value && value.length > 2000) {
-          return 'Beschreibung darf maximal 2000 Zeichen lang sein';
+          return 'Description cannot exceed 2000 characters';
         }
         return null;
       },
       credential_type: (value) => {
         if (!value || value.trim().length === 0) {
-          return 'Typ ist erforderlich';
+          return 'Type is required';
         }
         return null;
       },
       secret_value: (value, values) => {
         if (values.credential_type === CredentialTypeEnum.API_KEY) {
           if (!value || value.trim().length === 0) {
-            return 'API Key ist erforderlich';
+            return 'API Key is required';
           }
         }
         return null;
@@ -90,7 +90,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
       username: (value, values) => {
         if (values.credential_type === CredentialTypeEnum.BASIC_AUTH) {
           if (!value || value.trim().length === 0) {
-            return 'Username ist erforderlich';
+            return 'Username is required';
           }
         }
         return null;
@@ -98,7 +98,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
       password: (value, values) => {
         if (values.credential_type === CredentialTypeEnum.BASIC_AUTH) {
           if (!value || value.trim().length === 0) {
-            return 'Password ist erforderlich';
+            return 'Password is required';
           }
         }
         return null;
@@ -167,7 +167,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
       title={
         <Group gap="sm">
           <IconKey size={24} />
-          <Text fw={600} size="lg">Credential erstellen</Text>
+          <Text fw={600} size="lg">Create Credential</Text>
         </Group>
       }
       size="md"
@@ -177,7 +177,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
         <Stack gap="md">
           <TextInput
             label="Name"
-            placeholder="Geben Sie einen Namen ein"
+            placeholder="Enter a name"
             required
             withAsterisk
             maxLength={255}
@@ -186,8 +186,8 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
           />
 
           <Select
-            label="Typ"
-            placeholder="Wählen Sie einen Typ"
+            label="Type"
+            placeholder="Select a type"
             required
             withAsterisk
             data={CREDENTIAL_TYPES}
@@ -198,7 +198,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
           {credentialType === CredentialTypeEnum.API_KEY && (
             <PasswordInput
               label="API Key"
-              placeholder="Geben Sie den API Key ein"
+              placeholder="Enter the API Key"
               required
               withAsterisk
               {...form.getInputProps('secret_value')}
@@ -210,14 +210,14 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
             <>
               <TextInput
                 label="Username"
-                placeholder="Geben Sie den Benutzernamen ein"
+                placeholder="Enter the username"
                 required
                 withAsterisk
                 {...form.getInputProps('username')}
               />
               <PasswordInput
                 label="Password"
-                placeholder="Geben Sie das Passwort ein"
+                placeholder="Enter the password"
                 required
                 withAsterisk
                 {...form.getInputProps('password')}
@@ -227,14 +227,14 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
 
           <TagInput
             label="Tags"
-            placeholder="Tag eingeben und mit Space bestätigen..."
+            placeholder="Enter tag and press Space to confirm..."
             value={form.values.tags}
             onChange={(tags) => form.setFieldValue('tags', tags)}
           />
 
           <Textarea
-            label="Beschreibung"
-            placeholder="Optionale Beschreibung"
+            label="Description"
+            placeholder="Optional description"
             maxLength={2000}
             minRows={3}
             maxRows={6}
@@ -244,10 +244,10 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={handleClose} disabled={isSubmitting}>
-              Abbrechen
+              Cancel
             </Button>
             <Button type="submit" loading={isSubmitting}>
-              Erstellen
+              Create
             </Button>
           </Group>
         </Stack>

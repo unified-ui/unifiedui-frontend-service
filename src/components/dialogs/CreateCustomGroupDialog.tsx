@@ -71,6 +71,7 @@ export const CreateCustomGroupDialog: FC<CreateCustomGroupDialogProps> = ({
       onClose={handleClose}
       title="Create Custom Group"
       size="md"
+      centered
     >
       <form onSubmit={handleSubmit}>
         <Stack gap="md">

@@ -154,15 +154,24 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
     }
   }, [apiClient, selectedTenant, customGroupId]);
 
+  // Update activeTab when initialTab changes (separate from data loading)
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
   // Load data when dialog opens
   useEffect(() => {
     if (opened && customGroupId) {
-      setActiveTab(initialTab);
+      // Fetch custom group details
       fetchCustomGroup();
+      // Reset principals state so they can be fetched fresh
       setPrincipalsFetched(false);
       setPrincipals([]);
+    } else if (!opened) {
+      // Reset state when dialog closes
+      setPrincipalsFetched(false);
     }
-  }, [opened, customGroupId, initialTab, fetchCustomGroup]);
+  }, [opened, customGroupId, fetchCustomGroup]);
 
   // Fetch principals when switching to members tab
   useEffect(() => {

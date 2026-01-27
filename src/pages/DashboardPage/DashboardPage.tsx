@@ -95,25 +95,25 @@ export const DashboardPage: FC = () => {
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>
                   <Stack gap="xs">
-                    <Text size="sm" fw={500}>Beschreibung:</Text>
+                    <Text size="sm" fw={500}>Description:</Text>
                     <Text size="sm" c="dimmed">
-                      {selectedTenant.description || 'Keine Beschreibung verfügbar'}
+                      {selectedTenant.description || 'No description available'}
                     </Text>
                   </Stack>
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>
                   <Stack gap="xs">
-                    <Text size="sm" fw={500}>Erstellt am:</Text>
+                    <Text size="sm" fw={500}>Created at:</Text>
                     <Text size="sm" c="dimmed">
-                      {new Date(selectedTenant.created_at).toLocaleString('de-DE')}
+                      {new Date(selectedTenant.created_at).toLocaleString('en-US')}
                     </Text>
                   </Stack>
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>
                   <Stack gap="xs">
-                    <Text size="sm" fw={500}>Zuletzt aktualisiert:</Text>
+                    <Text size="sm" fw={500}>Last updated:</Text>
                     <Text size="sm" c="dimmed">
-                      {new Date(selectedTenant.updated_at).toLocaleString('de-DE')}
+                      {new Date(selectedTenant.updated_at).toLocaleString('en-US')}
                     </Text>
                   </Stack>
                 </Grid.Col>
@@ -124,18 +124,18 @@ export const DashboardPage: FC = () => {
 
         <Paper shadow="sm" p="lg" radius="md" withBorder>
           <Stack gap="md">
-            <Title order={3}>Nächste Schritte</Title>
+            <Title order={3}>Next Steps</Title>
             <Text size="sm" c="dimmed">
-              • Erstellen Sie Applications, um AI-Agenten zu verwalten
+              • Create Applications to manage AI agents
             </Text>
             <Text size="sm" c="dimmed">
-              • Konfigurieren Sie Credentials für sichere API-Zugriffe
+              • Configure Credentials for secure API access
             </Text>
             <Text size="sm" c="dimmed">
-              • Starten Sie Conversations mit Ihren AI-Agenten
+              • Start Conversations with your AI agents
             </Text>
             <Text size="sm" c="dimmed">
-              • Richten Sie Autonomous Agents für Background-Tasks ein
+              • Set up Autonomous Agents for background tasks
             </Text>
           </Stack>
         </Paper>

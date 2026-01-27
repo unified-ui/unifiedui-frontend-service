@@ -9,6 +9,7 @@ import { ConversationsPage } from '../pages/ConversationsPage';
 import { AutonomousAgentsPage } from '../pages/AutonomousAgentsPage';
 import { ChatWidgetsPage } from '../pages/ChatWidgetsPage';
 import { WidgetDesignerPage } from '../pages/WidgetDesignerPage';
+import { TracesPage } from '../pages/TracesPage';
 import { TracingDialogDevelopmentPage } from '../pages/TracingDialogDevelopmentPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 
@@ -27,6 +28,7 @@ export const AppRoutes = () => {
         <Route path="/conversations" element={<ProtectedRoute><ConversationsPage /></ProtectedRoute>} />
         <Route path="/conversations/:conversationId" element={<ProtectedRoute><ConversationsPage /></ProtectedRoute>} />
         <Route path="/autonomous-agents" element={<ProtectedRoute><AutonomousAgentsPage /></ProtectedRoute>} />
+        <Route path="/traces" element={<ProtectedRoute><TracesPage /></ProtectedRoute>} />
         <Route path="/chat-widgets" element={<ProtectedRoute><ChatWidgetsPage /></ProtectedRoute>} />
         <Route path="/widget-designer" element={<ProtectedRoute><WidgetDesignerPage /></ProtectedRoute>} />
         
