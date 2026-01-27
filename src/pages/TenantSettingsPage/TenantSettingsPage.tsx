@@ -20,6 +20,7 @@ import {
   Menu,
   ScrollArea,
   Select,
+  MultiSelect,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -192,7 +193,7 @@ export const TenantSettingsPage: FC = () => {
   const [editToolTab, setEditToolTab] = useState<EditDialogTab>('details');
   const [toolsSearch, setToolsSearch] = useState('');
   const [debouncedToolsSearch] = useDebouncedValue(toolsSearch, 400);
-  const [toolsTypeFilter, setToolsTypeFilter] = useState<string | null>(null);
+  const [toolsTypeFilter, setToolsTypeFilter] = useState<string[]>([]);
   const [deleteToolDialog, setDeleteToolDialog] = useState<{
     open: boolean;
     id: string;
@@ -473,7 +474,7 @@ export const TenantSettingsPage: FC = () => {
         skip,
         limit: TOOLS_PAGE_SIZE,
         name_filter: debouncedToolsSearch || undefined,
-        type_filter: toolsTypeFilter || undefined,
+        type_filter: toolsTypeFilter.length > 0 ? toolsTypeFilter.join(',') : undefined,
         order_by: 'name',
         order_direction: 'asc',
       }) as ToolResponse[];
@@ -1132,13 +1133,13 @@ export const TenantSettingsPage: FC = () => {
                       onChange={(e) => setToolsSearch(e.currentTarget.value)}
                       style={{ flex: 1 }}
                     />
-                    <Select
+                    <MultiSelect
                       placeholder="All Types"
                       data={TOOL_TYPE_OPTIONS}
                       value={toolsTypeFilter}
                       onChange={setToolsTypeFilter}
                       clearable
-                      style={{ width: 180 }}
+                      style={{ width: 220 }}
                     />
                   </Group>
                   <Button
