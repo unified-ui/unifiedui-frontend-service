@@ -13,6 +13,7 @@ import {
   Tooltip,
   Alert,
   Loader,
+  Switch,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -46,6 +47,7 @@ interface FormValues {
   type: string;
   description: string;
   tags: string[];
+  allow_api_keys: boolean;
   // N8N Config
   n8n_api_version: string;
   n8n_workflow_endpoint: string;
@@ -71,6 +73,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
       type: '',
       description: '',
       tags: [],
+      allow_api_keys: false,
       // N8N Config defaults
       n8n_api_version: 'v1',
       n8n_workflow_endpoint: '',
@@ -191,6 +194,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
         type: values.type as AutonomousAgentTypeEnum,
         description: values.description?.trim() || undefined,
         config: (config ?? {}) as Record<string, unknown>,
+        allow_api_keys: values.allow_api_keys,
       });
 
       // If tags were added, save them to the agent
@@ -336,6 +340,13 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
               placeholder="Enter tag and press Space to confirm..."
               value={form.values.tags}
               onChange={(tags) => form.setFieldValue('tags', tags)}
+            />
+
+            <Switch
+              label="Allow API Keys"
+              description="When enabled, this agent can be accessed using API key authentication"
+              checked={form.values.allow_api_keys}
+              onChange={(e) => form.setFieldValue('allow_api_keys', e.currentTarget.checked)}
             />
 
             <Textarea

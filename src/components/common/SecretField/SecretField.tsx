@@ -21,6 +21,10 @@ interface SecretFieldProps {
   hiddenPlaceholder?: string;
   /** Number of dots to show when hidden */
   hiddenLength?: number;
+  /** Whether the field is disabled (hides all actions) */
+  disabled?: boolean;
+  /** Tooltip shown when field is disabled */
+  disabledTooltip?: string;
 }
 
 export const SecretField: FC<SecretFieldProps> = ({
@@ -32,6 +36,8 @@ export const SecretField: FC<SecretFieldProps> = ({
   isRotating = false,
   hiddenPlaceholder,
   hiddenLength = 32,
+  disabled = false,
+  disabledTooltip,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -70,6 +76,13 @@ export const SecretField: FC<SecretFieldProps> = ({
           )}
         </Box>
 
+        {disabled ? (
+          <Tooltip label={disabledTooltip || 'Disabled'} position="top">
+            <Text size="xs" c="dimmed" style={{ cursor: 'not-allowed' }}>
+              Not available
+            </Text>
+          </Tooltip>
+        ) : (
         <Group gap={4} wrap="nowrap" className={classes.actions}>
           <Tooltip label={isVisible ? 'Hide' : 'Reveal'} position="top">
             <ActionIcon
@@ -115,6 +128,7 @@ export const SecretField: FC<SecretFieldProps> = ({
             </Tooltip>
           )}
         </Group>
+        )}
       </Group>
     </div>
   );

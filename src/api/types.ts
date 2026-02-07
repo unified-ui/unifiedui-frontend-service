@@ -724,6 +724,7 @@ export interface AutonomousAgentResponse {
   type: AutonomousAgentTypeEnum;
   config: Record<string, unknown>;
   is_active: boolean;
+  allow_api_keys: boolean;
   last_full_import?: string;
   tags: TagSummary[];
   created_at: string;
@@ -738,6 +739,7 @@ export interface CreateAutonomousAgentRequest {
   type: AutonomousAgentTypeEnum;
   config: Record<string, unknown>;
   is_active?: boolean;
+  allow_api_keys?: boolean;
 }
 
 export interface UpdateAutonomousAgentRequest {
@@ -745,6 +747,7 @@ export interface UpdateAutonomousAgentRequest {
   description?: string;
   config?: Record<string, unknown>;
   is_active?: boolean;
+  allow_api_keys?: boolean;
 }
 
 export interface SetAutonomousAgentPermissionRequest {

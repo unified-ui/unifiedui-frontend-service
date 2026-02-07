@@ -574,6 +574,8 @@ export const AutonomousAgentDetailsPage: FC = () => {
                       onReveal={() => revealKey(1)}
                       onRotate={() => setConfirmRotateKey(1)}
                       isRotating={rotatingKey === 1}
+                      disabled={!agent.allow_api_keys}
+                      disabledTooltip="API key authentication is not allowed for this agent"
                     />
 
                     <SecretField
@@ -583,6 +585,8 @@ export const AutonomousAgentDetailsPage: FC = () => {
                       onReveal={() => revealKey(2)}
                       onRotate={() => setConfirmRotateKey(2)}
                       isRotating={rotatingKey === 2}
+                      disabled={!agent.allow_api_keys}
+                      disabledTooltip="API key authentication is not allowed for this agent"
                     />
                   </Stack>
                 </div>
@@ -670,6 +674,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
           tenantId={selectedTenant.id}
           agentId={agentId}
           defaultTab={integrationDialogTab}
+          allowApiKeys={agent?.allow_api_keys}
         />
       )}
 

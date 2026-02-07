@@ -43,6 +43,7 @@ interface FormValues {
   description: string;
   tags: string[];
   is_active: boolean;
+  allow_api_keys: boolean;
   // N8N Config
   n8n_api_version: string;
   n8n_workflow_endpoint: string;
@@ -102,6 +103,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
       description: '',
       tags: [],
       is_active: true,
+      allow_api_keys: false,
       n8n_api_version: 'v1',
       n8n_workflow_endpoint: '',
       n8n_api_api_key_credential_id: '',
@@ -196,6 +198,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         description: data.description || '',
         tags: data.tags?.map((t) => t.name) || [],
         is_active: data.is_active,
+        allow_api_keys: data.allow_api_keys,
         n8n_api_version: (config.api_version as string) || 'v1',
         n8n_workflow_endpoint: (config.workflow_endpoint as string) || '',
         n8n_api_api_key_credential_id: (config.api_api_key_credential_id as string) || '',
@@ -267,6 +270,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
         is_active: values.is_active,
+        allow_api_keys: values.allow_api_keys,
         config,
       });
 
@@ -441,6 +445,13 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
                   description="Enable or disable this autonomous agent"
                   checked={form.values.is_active}
                   onChange={(e) => form.setFieldValue('is_active', e.currentTarget.checked)}
+                  classNames={{ track: classes.switchTrack }}
+                />
+                <Switch
+                  label="Allow API Keys"
+                  description="When enabled, this agent can be accessed using API key authentication"
+                  checked={form.values.allow_api_keys}
+                  onChange={(e) => form.setFieldValue('allow_api_keys', e.currentTarget.checked)}
                   classNames={{ track: classes.switchTrack }}
                 />
               </Group>

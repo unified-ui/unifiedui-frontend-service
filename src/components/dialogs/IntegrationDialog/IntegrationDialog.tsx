@@ -11,8 +11,9 @@ import {
   Tooltip,
   Group,
   Box,
+  Alert,
 } from '@mantine/core';
-import { IconCopy, IconCheck, IconPlug } from '@tabler/icons-react';
+import { IconCopy, IconCheck, IconPlug, IconAlertCircle } from '@tabler/icons-react';
 import classes from './IntegrationDialog.module.css';
 
 export interface IntegrationDialogProps {
@@ -21,6 +22,7 @@ export interface IntegrationDialogProps {
   tenantId: string;
   agentId: string;
   defaultTab?: 'post' | 'put';
+  allowApiKeys?: boolean;
 }
 
 function buildPostSampleJson(agentId: string): string {
@@ -121,32 +123,72 @@ const EndpointField: FC<{ value: string }> = ({ value }) => (
   />
 );
 
-const AuthHeaderHint: FC = () => (
-  <Group gap={4} align="center">
-    <Text size="sm" c="dimmed">
-      Add header
-    </Text>
-    <CopyButton value={AUTH_HEADER_KEY} timeout={2000}>
-      {({ copied, copy }) => (
-        <Tooltip label={copied ? 'Copied!' : 'Copy header name'}>
-          <Text
-            size="sm"
-            ff="monospace"
-            fw={500}
-            className={classes.copyableHeaderKey}
-            onClick={copy}
-            style={{ cursor: 'pointer' }}
-          >
-            {AUTH_HEADER_KEY}
-            <IconCopy size={12} style={{ marginLeft: 4, verticalAlign: 'middle', opacity: 0.5 }} />
-          </Text>
-        </Tooltip>
-      )}
-    </CopyButton>
-    <Text size="sm" c="dimmed">
-      with your primary or secondary key.
-    </Text>
-  </Group>
+const BEARER_HEADER_KEY = 'Authorization';
+const BEARER_HEADER_VALUE = 'Bearer <your-access-token>';
+
+const AuthHeaderHint: FC<{ allowApiKeys?: boolean }> = ({ allowApiKeys = true }) => (
+  <Stack gap="xs">
+    <Group gap={4} align="center">
+      <Text size="sm" c="dimmed">
+        Add header
+      </Text>
+      <CopyButton value={BEARER_HEADER_KEY} timeout={2000}>
+        {({ copied, copy }) => (
+          <Tooltip label={copied ? 'Copied!' : 'Copy header name'}>
+            <Text
+              size="sm"
+              ff="monospace"
+              fw={500}
+              className={classes.copyableHeaderKey}
+              onClick={copy}
+              style={{ cursor: 'pointer' }}
+            >
+              {BEARER_HEADER_KEY}
+              <IconCopy size={12} style={{ marginLeft: 4, verticalAlign: 'middle', opacity: 0.5 }} />
+            </Text>
+          </Tooltip>
+        )}
+      </CopyButton>
+      <Text size="sm" c="dimmed">
+        with value
+      </Text>
+      <Text size="sm" ff="monospace" fw={500} c="dimmed">
+        {BEARER_HEADER_VALUE}
+      </Text>
+    </Group>
+
+    {allowApiKeys ? (
+      <Group gap={4} align="center">
+        <Text size="sm" c="dimmed">
+          Or add header
+        </Text>
+        <CopyButton value={AUTH_HEADER_KEY} timeout={2000}>
+          {({ copied, copy }) => (
+            <Tooltip label={copied ? 'Copied!' : 'Copy header name'}>
+              <Text
+                size="sm"
+                ff="monospace"
+                fw={500}
+                className={classes.copyableHeaderKey}
+                onClick={copy}
+                style={{ cursor: 'pointer' }}
+              >
+                {AUTH_HEADER_KEY}
+                <IconCopy size={12} style={{ marginLeft: 4, verticalAlign: 'middle', opacity: 0.5 }} />
+              </Text>
+            </Tooltip>
+          )}
+        </CopyButton>
+        <Text size="sm" c="dimmed">
+          with your primary or secondary key.
+        </Text>
+      </Group>
+    ) : (
+      <Alert icon={<IconAlertCircle size={16} />} color="yellow" variant="light" py="xs">
+        API key authentication is disabled for this agent. Use a Bearer token via a service principal.
+      </Alert>
+    )}
+  </Stack>
 );
 
 export const IntegrationDialog: FC<IntegrationDialogProps> = ({
@@ -155,6 +197,7 @@ export const IntegrationDialog: FC<IntegrationDialogProps> = ({
   tenantId,
   agentId,
   defaultTab = 'post',
+  allowApiKeys = true,
 }) => {
   const baseUrl = "{YOUR-AGENT-SERVICE-HOST}";
   const postEndpoint = `${baseUrl}/api/v1/agent-service/tenants/${tenantId}/traces`;
@@ -201,7 +244,7 @@ export const IntegrationDialog: FC<IntegrationDialogProps> = ({
                 and optimizes trace data.
               </Text>
               <EndpointField value={postEndpoint} />
-              <AuthHeaderHint />
+              <AuthHeaderHint allowApiKeys={allowApiKeys} />
               <div>
                 <Text size="xs" c="dimmed" tt="uppercase" fw={500} style={{ letterSpacing: '0.5px', fontSize: 11, marginBottom: 'var(--spacing-xs)' }}>Sample Payload</Text>
                 <CodeBlock code={postJson} />
@@ -220,7 +263,7 @@ export const IntegrationDialog: FC<IntegrationDialogProps> = ({
                 ID and type to the endpoint (see sample below).
               </Text>
               <EndpointField value={putEndpoint} />
-              <AuthHeaderHint />
+              <AuthHeaderHint allowApiKeys={allowApiKeys} />
               <div>
                 <Text size="xs" c="dimmed" tt="uppercase" fw={500} style={{ letterSpacing: '0.5px', fontSize: 11, marginBottom: 'var(--spacing-xs)' }}>Sample Payload</Text>
                 <CodeBlock code={putJson} />
