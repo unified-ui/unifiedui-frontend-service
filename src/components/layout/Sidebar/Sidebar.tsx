@@ -35,7 +35,6 @@ const mainNavItemsTop: NavItem[] = [
   { icon: IconMessages, iconFilled: IconMessageFilled, label: 'Conversations', path: '/conversations' },
   { icon: IconSparkles, label: 'Chat Agents', path: '/applications', hasDataList: true, entityType: 'applications' },
   { icon: IconRobot, label: 'Autonomous\nAgents', path: '/autonomous-agents', hasDataList: true, entityType: 'autonomous-agents' },
-  { icon: IconGitBranch, label: 'Traces', path: '/traces' },
 ];
 
 const mainNavItemsBottom: NavItem[] = [
