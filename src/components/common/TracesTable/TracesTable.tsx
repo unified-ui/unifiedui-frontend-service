@@ -1,20 +1,27 @@
 import type { FC } from 'react';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import {
   Table,
   Group,
   Text,
   Select,
-  Badge,
   Loader,
   Center,
   Stack,
-  Box,
   ScrollArea,
   ActionIcon,
   Tooltip,
+  Menu,
 } from '@mantine/core';
-import { IconSortAscending, IconSortDescending, IconMoodEmpty } from '@tabler/icons-react';
+import {
+  IconSortAscending,
+  IconSortDescending,
+  IconMoodEmpty,
+  IconRefresh,
+  IconDots,
+  IconTrash,
+  IconDownload,
+} from '@tabler/icons-react';
 import type { FullTraceResponse } from '../../../api/types';
 import classes from './TracesTable.module.css';
 
@@ -33,27 +40,20 @@ export interface TracesSortState {
 }
 
 export interface TracesTableProps {
-  /** Trace items to display */
   traces: FullTraceResponse[];
-  /** Loading state for initial load */
   isLoading: boolean;
-  /** Loading state for loading more items (infinite scroll) */
   isLoadingMore: boolean;
-  /** Whether more items are available for loading */
   hasMore: boolean;
-  /** Called when the user scrolls to the bottom */
   onLoadMore: () => void;
-  /** Called when a row is clicked */
   onRowClick?: (trace: FullTraceResponse) => void;
-  /** Current sort state */
   sort: TracesSortState;
-  /** Called when sort changes */
   onSortChange: (sort: TracesSortState) => void;
-  /** Current date filter preset */
   datePreset: TraceDatePreset;
-  /** Called when date filter changes */
   onDatePresetChange: (preset: TraceDatePreset) => void;
-  /** Empty message */
+  onRefresh?: () => void;
+  onReImport?: (trace: FullTraceResponse) => void;
+  onDelete?: (trace: FullTraceResponse) => void;
+  showReImport?: boolean;
   emptyMessage?: string;
 }
 
@@ -94,24 +94,6 @@ function formatRelativeTime(dateStr: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function getTraceStatusFromNodes(trace: FullTraceResponse): { label: string; color: string } {
-  const nodes = trace.nodes;
-  if (!nodes || nodes.length === 0) {
-    return { label: 'Empty', color: 'gray' };
-  }
-
-  const hasRunning = nodes.some((n) => n.status === 'running');
-  const hasFailed = nodes.some((n) => n.status === 'failed');
-  const hasPending = nodes.some((n) => n.status === 'pending');
-  const allCompleted = nodes.every((n) => n.status === 'completed');
-
-  if (hasFailed) return { label: 'Failed', color: 'red' };
-  if (hasRunning) return { label: 'Running', color: 'blue' };
-  if (hasPending) return { label: 'Pending', color: 'yellow' };
-  if (allCompleted) return { label: 'Completed', color: 'green' };
-  return { label: 'Mixed', color: 'gray' };
-}
-
 // ============================================================================
 // Component
 // ============================================================================
@@ -127,18 +109,20 @@ export const TracesTable: FC<TracesTableProps> = ({
   onSortChange,
   datePreset,
   onDatePresetChange,
+  onRefresh,
+  onReImport,
+  onDelete,
+  showReImport = false,
   emptyMessage = 'No traces found',
 }) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const isLoadingRef = useRef(false);
 
-  // Track loading state for race condition prevention
   useEffect(() => {
     isLoadingRef.current = isLoadingMore;
   }, [isLoadingMore]);
 
-  // Infinite scroll via IntersectionObserver
   useEffect(() => {
     const sentinel = sentinelRef.current;
     const scrollArea = scrollAreaRef.current;
@@ -184,41 +168,53 @@ export const TracesTable: FC<TracesTableProps> = ({
     [onDatePresetChange]
   );
 
+  const hasActions = !!onDelete || (!!onReImport && showReImport);
+
   return (
     <div className={classes.container}>
       {/* Toolbar */}
-      <Group gap="sm" className={classes.toolbar}>
-        <Select
-          size="xs"
-          data={DATE_PRESETS}
-          value={datePreset}
-          onChange={handleDatePresetChange}
-          className={classes.dateFilter}
-          comboboxProps={{ withinPortal: true }}
-        />
-        <Group gap={4}>
+      <Group gap="sm" className={classes.toolbar} justify="space-between">
+        <Group gap="sm">
           <Select
             size="xs"
-            data={SORT_FIELDS}
-            value={sort.field}
-            onChange={handleSortFieldChange}
-            className={classes.sortSelect}
+            data={DATE_PRESETS}
+            value={datePreset}
+            onChange={handleDatePresetChange}
+            className={classes.dateFilter}
             comboboxProps={{ withinPortal: true }}
           />
-          <Tooltip label={sort.order === 'asc' ? 'Ascending' : 'Descending'}>
-            <ActionIcon variant="subtle" size="sm" color="gray" onClick={toggleSortOrder}>
-              {sort.order === 'asc' ? (
-                <IconSortAscending size={16} />
-              ) : (
-                <IconSortDescending size={16} />
-              )}
+          <Group gap={4}>
+            <Select
+              size="xs"
+              data={SORT_FIELDS}
+              value={sort.field}
+              onChange={handleSortFieldChange}
+              className={classes.sortSelect}
+              comboboxProps={{ withinPortal: true }}
+            />
+            <Tooltip label={sort.order === 'asc' ? 'Ascending' : 'Descending'}>
+              <ActionIcon variant="subtle" size="sm" color="gray" onClick={toggleSortOrder}>
+                {sort.order === 'asc' ? (
+                  <IconSortAscending size={16} />
+                ) : (
+                  <IconSortDescending size={16} />
+                )}
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        </Group>
+
+        {onRefresh && (
+          <Tooltip label="Refresh">
+            <ActionIcon variant="subtle" color="gray" size="sm" onClick={onRefresh}>
+              <IconRefresh size={16} />
             </ActionIcon>
           </Tooltip>
-        </Group>
+        )}
       </Group>
 
       {/* Table */}
-      <ScrollArea ref={scrollAreaRef} className={classes.scrollArea}>
+      <ScrollArea ref={scrollAreaRef} className={classes.scrollArea} offsetScrollbars>
         {isLoading ? (
           <Center py="xl">
             <Loader size="md" />
@@ -231,64 +227,89 @@ export const TracesTable: FC<TracesTableProps> = ({
             </Stack>
           </Center>
         ) : (
-          <Table highlightOnHover className={classes.table}>
-            <Table.Thead className={classes.thead}>
-              <Table.Tr>
-                <Table.Th>Reference ID</Table.Th>
-                <Table.Th>Reference Name</Table.Th>
-                <Table.Th className={classes.hideMobile}>Status</Table.Th>
-                <Table.Th className={classes.hideMobile}>Created</Table.Th>
-                <Table.Th className={classes.hideTablet}>Updated</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {traces.map((trace) => {
-                const status = getTraceStatusFromNodes(trace);
-                return (
+          <div className={classes.tableWrapper}>
+            <Table striped highlightOnHover className={classes.table}>
+              <Table.Thead className={classes.thead}>
+                <Table.Tr>
+                  <Table.Th className={classes.colRefId}>Reference ID</Table.Th>
+                  <Table.Th className={classes.colRefName}>Reference Name</Table.Th>
+                  <Table.Th className={classes.colCreated}>Created</Table.Th>
+                  <Table.Th className={classes.colUpdated}>Updated</Table.Th>
+                  {hasActions && <Table.Th className={classes.colActions} />}
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {traces.map((trace) => (
                   <Table.Tr
                     key={trace.id}
                     className={classes.row}
                     onClick={() => onRowClick?.(trace)}
                     style={{ cursor: onRowClick ? 'pointer' : 'default' }}
                   >
-                    <Table.Td>
-                      <Text size="sm" ff="monospace" truncate className={classes.refId}>
+                    <Table.Td className={classes.colRefId}>
+                      <Text size="sm" ff="monospace" truncate>
                         {trace.referenceId || '—'}
                       </Text>
                     </Table.Td>
-                    <Table.Td>
+                    <Table.Td className={classes.colRefName}>
                       <Text size="sm" truncate>
                         {trace.referenceName || '—'}
                       </Text>
                     </Table.Td>
-                    <Table.Td className={classes.hideMobile}>
-                      <Badge
-                        variant="light"
-                        color={status.color}
-                        size="sm"
-                      >
-                        {status.label}
-                      </Badge>
-                    </Table.Td>
-                    <Table.Td className={classes.hideMobile}>
+                    <Table.Td className={classes.colCreated}>
                       <Tooltip label={new Date(trace.createdAt).toLocaleString()}>
-                        <Text size="sm" c="dimmed">
+                        <Text size="sm" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
                           {formatRelativeTime(trace.createdAt)}
                         </Text>
                       </Tooltip>
                     </Table.Td>
-                    <Table.Td className={classes.hideTablet}>
+                    <Table.Td className={classes.colUpdated}>
                       <Tooltip label={new Date(trace.updatedAt).toLocaleString()}>
-                        <Text size="sm" c="dimmed">
+                        <Text size="sm" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
                           {formatRelativeTime(trace.updatedAt)}
                         </Text>
                       </Tooltip>
                     </Table.Td>
+                    {hasActions && (
+                      <Table.Td className={classes.colActions}>
+                        <Menu shadow="md" width={180} position="bottom-end" withinPortal>
+                          <Menu.Target>
+                            <ActionIcon
+                              variant="subtle"
+                              color="gray"
+                              size="sm"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <IconDots size={16} />
+                            </ActionIcon>
+                          </Menu.Target>
+                          <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
+                            {onReImport && showReImport && (
+                              <Menu.Item
+                                leftSection={<IconDownload size={14} />}
+                                onClick={() => onReImport(trace)}
+                              >
+                                Re-import
+                              </Menu.Item>
+                            )}
+                            {onDelete && (
+                              <Menu.Item
+                                leftSection={<IconTrash size={14} />}
+                                color="red"
+                                onClick={() => onDelete(trace)}
+                              >
+                                Delete
+                              </Menu.Item>
+                            )}
+                          </Menu.Dropdown>
+                        </Menu>
+                      </Table.Td>
+                    )}
                   </Table.Tr>
-                );
-              })}
-            </Table.Tbody>
-          </Table>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </div>
         )}
 
         {/* Infinite scroll sentinel */}

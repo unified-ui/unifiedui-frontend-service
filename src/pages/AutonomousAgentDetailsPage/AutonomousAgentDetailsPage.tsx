@@ -15,7 +15,6 @@ import {
   Tabs,
   CopyButton,
   Box,
-  Skeleton,
   TextInput,
 } from '@mantine/core';
 import {
@@ -26,7 +25,6 @@ import {
   IconAlertCircle,
   IconListDetails,
   IconInfoCircle,
-  IconRefresh,
   IconBraces,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
@@ -116,8 +114,13 @@ export const AutonomousAgentDetailsPage: FC = () => {
   const [tracesLoadingMore, setTracesLoadingMore] = useState(false);
   const [tracesHasMore, setTracesHasMore] = useState(true);
   const tracesOffsetRef = useRef(0);
+  const isFetchingTracesRef = useRef(false);
   const [traceSort, setTraceSort] = useState<TracesSortState>({ field: 'created_at', order: 'desc' });
   const [traceDatePreset, setTraceDatePreset] = useState<TraceDatePreset>('all');
+
+  // ---- Delete trace ----
+  const [traceToDelete, setTraceToDelete] = useState<FullTraceResponse | null>(null);
+  const [deleteTraceLoading, setDeleteTraceLoading] = useState(false);
 
   // ---- Tracing Dialog ----
   const traceIdParam = searchParams.get('traceId');
@@ -156,6 +159,8 @@ export const AutonomousAgentDetailsPage: FC = () => {
   const fetchTraces = useCallback(
     async (reset = false) => {
       if (!apiClient || !selectedTenant || !agentId) return;
+      if (isFetchingTracesRef.current) return;
+      isFetchingTracesRef.current = true;
 
       if (reset) {
         setTracesLoading(true);
@@ -192,6 +197,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
       } finally {
         setTracesLoading(false);
         setTracesLoadingMore(false);
+        isFetchingTracesRef.current = false;
       }
     },
     [apiClient, selectedTenant, agentId, traceSort, traceDatePreset]
@@ -207,6 +213,38 @@ export const AutonomousAgentDetailsPage: FC = () => {
       fetchTraces(false);
     }
   }, [fetchTraces, tracesLoadingMore, tracesHasMore]);
+
+  const handleRefreshTraces = useCallback(() => {
+    fetchTraces(true);
+  }, [fetchTraces]);
+
+  const handleReImportTrace = useCallback(
+    async (trace: FullTraceResponse) => {
+      if (!apiClient || !selectedTenant || !agentId) return;
+      try {
+        const keyResponse = await apiClient.getAutonomousAgentKey(selectedTenant.id, agentId, 1);
+        await apiClient.refreshAutonomousAgentTraceImport(selectedTenant.id, agentId, trace.id, keyResponse.key);
+        fetchTraces(true);
+      } catch {
+        // Error handled by API client onError
+      }
+    },
+    [apiClient, selectedTenant, agentId, fetchTraces]
+  );
+
+  const handleDeleteTrace = useCallback(async () => {
+    if (!apiClient || !selectedTenant || !traceToDelete) return;
+    setDeleteTraceLoading(true);
+    try {
+      await apiClient.deleteTrace(selectedTenant.id, traceToDelete.id);
+      setTraceToDelete(null);
+      fetchTraces(true);
+    } catch {
+      // Error handled by API client onError
+    } finally {
+      setDeleteTraceLoading(false);
+    }
+  }, [apiClient, selectedTenant, traceToDelete, fetchTraces]);
 
   // ---- Open trace dialog ----
   const handleTraceRowClick = useCallback(
@@ -257,21 +295,6 @@ export const AutonomousAgentDetailsPage: FC = () => {
     // Only run when traceIdParam changes on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [traceIdParam]);
-
-  // ---- Refresh import ----
-  const handleRefreshImport = useCallback(async () => {
-    if (!apiClient || !selectedTenant || !agentId || !selectedTrace) return;
-    try {
-      const refreshed = await apiClient.refreshAutonomousAgentTraceImport(
-        selectedTenant.id,
-        agentId,
-        selectedTrace.id
-      );
-      setSelectedTrace(refreshed);
-    } catch {
-      // Error handled by API client onError
-    }
-  }, [apiClient, selectedTenant, agentId, selectedTrace]);
 
   // ---- Keys ----
   const revealKey = useCallback(
@@ -463,6 +486,10 @@ export const AutonomousAgentDetailsPage: FC = () => {
                   onSortChange={setTraceSort}
                   datePreset={traceDatePreset}
                   onDatePresetChange={setTraceDatePreset}
+                  onRefresh={handleRefreshTraces}
+                  onReImport={handleReImportTrace}
+                  onDelete={setTraceToDelete}
+                  showReImport={agent.type === 'N8N'}
                 />
                 </div>
               </div>
@@ -649,6 +676,17 @@ export const AutonomousAgentDetailsPage: FC = () => {
           defaultTab={integrationDialogTab}
         />
       )}
+
+      {/* Confirm Delete Trace Dialog */}
+      <ConfirmDeleteDialog
+        opened={traceToDelete !== null}
+        onClose={() => setTraceToDelete(null)}
+        onConfirm={handleDeleteTrace}
+        title="Delete Trace"
+        message={`Are you sure you want to delete trace "${traceToDelete?.referenceName || traceToDelete?.referenceId || traceToDelete?.id}"? This action cannot be undone.`}
+        confirmButtonText="Delete"
+        isLoading={deleteTraceLoading}
+      />
     </MainLayout>
   );
 };

@@ -804,12 +804,14 @@ export class UnifiedUIAPIClient {
     method: string,
     path: string,
     body?: unknown,
-    successMessage?: string
+    successMessage?: string,
+    additionalHeaders?: Record<string, string>
   ): Promise<T> {
     try {
       const token = await this.getAccessToken();
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        ...additionalHeaders,
       };
 
       if (token) {
@@ -1099,11 +1101,22 @@ export class UnifiedUIAPIClient {
   async refreshAutonomousAgentTraceImport(
     tenantId: string,
     agentId: string,
-    traceId: string
+    traceId: string,
+    apiKey: string
   ): Promise<FullTraceResponse> {
     return this.agentServiceRequest<FullTraceResponse>(
       'PUT',
-      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces/${traceId}/import/refresh`
+      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces/${traceId}/import/refresh`,
+      undefined,
+      undefined,
+      { 'X-Unified-UI-Autonomous-Agent-API-Key': apiKey }
+    );
+  }
+
+  async deleteTrace(tenantId: string, traceId: string): Promise<void> {
+    return this.agentServiceRequest<void>(
+      'DELETE',
+      `/api/v1/agent-service/tenants/${tenantId}/traces/${traceId}`
     );
   }
 }

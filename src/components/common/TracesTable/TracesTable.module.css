@@ -23,6 +23,11 @@
   min-height: 0;
 }
 
+.tableWrapper {
+  min-width: 100%;
+  overflow-x: auto;
+}
+
 .table {
   border-collapse: separate;
   border-spacing: 0;
@@ -52,20 +57,23 @@
   background-color: var(--bg-hover);
 }
 
-.refId {
-  max-width: 200px;
+.colRefId {
+  min-width: 200px;
+  max-width: 260px;
 }
 
-/* Responsive: hide on mobile */
-@media (max-width: 768px) {
-  .hideMobile {
-    display: none;
-  }
+.colRefName {
+  min-width: 200px;
 }
 
-/* Responsive: hide on tablet */
-@media (max-width: 992px) {
-  .hideTablet {
-    display: none;
-  }
+.colCreated {
+  min-width: 120px;
+}
+
+.colUpdated {
+  min-width: 120px;
+}
+
+.colActions {
+  width: 48px;
 }

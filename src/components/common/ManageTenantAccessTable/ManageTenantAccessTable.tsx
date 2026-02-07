@@ -412,14 +412,15 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
 
       {/* Scrollable Table Container */}
       <ScrollArea.Autosize className={classes.tableScrollArea}>
+        <div className={classes.tableWrapper}>
         <Table striped highlightOnHover>
           <Table.Thead className={classes.tableHeader}>
             <Table.Tr>
-              <Table.Th style={{ width: '280px' }}>Principal</Table.Th>
-              <Table.Th style={{ width: '120px' }}>Type</Table.Th>
-              <Table.Th style={{ width: '100px' }}>Status</Table.Th>
-              <Table.Th>Roles</Table.Th>
-              <Table.Th style={{ width: '60px' }}></Table.Th>
+              <Table.Th className={classes.colPrincipal}>Principal</Table.Th>
+              <Table.Th className={classes.colType}>Type</Table.Th>
+              <Table.Th className={classes.colStatus}>Status</Table.Th>
+              <Table.Th className={classes.colRoles}>Roles</Table.Th>
+              <Table.Th className={classes.colActions}></Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -545,6 +546,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
               })}
           </Table.Tbody>
         </Table>
+        </div>
         
         {/* Infinite scroll trigger element */}
         {hasMore && (

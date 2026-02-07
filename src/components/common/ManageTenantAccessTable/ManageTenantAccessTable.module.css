@@ -42,6 +42,31 @@
   background-color: var(--bg-app);
 }
 
+.tableWrapper {
+  min-width: 100%;
+  overflow-x: auto;
+}
+
+.colPrincipal {
+  min-width: 280px;
+}
+
+.colType {
+  min-width: 120px;
+}
+
+.colStatus {
+  min-width: 100px;
+}
+
+.colRoles {
+  min-width: 200px;
+}
+
+.colActions {
+  width: 60px;
+}
+
 .loadMoreTrigger {
   min-height: 40px;
 }

@@ -987,12 +987,13 @@ export const TenantSettingsPage: FC = () => {
 
                 {/* Table */}
                 <ScrollArea.Autosize className={classes.customGroupsTableScrollArea}>
+                  <div className={classes.tableWrapper}>
                     <Table striped highlightOnHover>
                       <Table.Thead className={classes.customGroupsTableHeader}>
                         <Table.Tr>
-                          <Table.Th>Name</Table.Th>
-                          <Table.Th>Description</Table.Th>
-                          <Table.Th style={{ width: 60 }}></Table.Th>
+                          <Table.Th className={classes.colName}>Name</Table.Th>
+                          <Table.Th className={classes.colDescription}>Description</Table.Th>
+                          <Table.Th className={classes.colActions}></Table.Th>
                         </Table.Tr>
                       </Table.Thead>
                       <Table.Tbody>
@@ -1097,6 +1098,7 @@ export const TenantSettingsPage: FC = () => {
                         )}
                       </Table.Tbody>
                     </Table>
+                  </div>
                     
                     {/* Infinite scroll trigger element */}
                     {customGroupsHasMore && (
@@ -1151,13 +1153,14 @@ export const TenantSettingsPage: FC = () => {
 
                 {/* Table */}
                 <ScrollArea.Autosize className={classes.customGroupsTableScrollArea}>
+                  <div className={classes.tableWrapper}>
                     <Table striped highlightOnHover>
                       <Table.Thead className={classes.customGroupsTableHeader}>
                         <Table.Tr>
-                          <Table.Th>Name</Table.Th>
-                          <Table.Th>Type</Table.Th>
-                          <Table.Th>Description</Table.Th>
-                          <Table.Th style={{ width: 60 }}></Table.Th>
+                          <Table.Th className={classes.colName}>Name</Table.Th>
+                          <Table.Th className={classes.colType}>Type</Table.Th>
+                          <Table.Th className={classes.colDescription}>Description</Table.Th>
+                          <Table.Th className={classes.colActions}></Table.Th>
                         </Table.Tr>
                       </Table.Thead>
                       <Table.Tbody>
@@ -1267,6 +1270,7 @@ export const TenantSettingsPage: FC = () => {
                         )}
                       </Table.Tbody>
                     </Table>
+                  </div>
                     
                     {/* Infinite scroll trigger element */}
                     {toolsHasMore && (
@@ -1311,13 +1315,14 @@ export const TenantSettingsPage: FC = () => {
 
                 {/* Table */}
                 <ScrollArea.Autosize className={classes.customGroupsTableScrollArea}>
+                  <div className={classes.tableWrapper}>
                     <Table striped highlightOnHover>
                       <Table.Thead className={classes.customGroupsTableHeader}>
                         <Table.Tr>
-                          <Table.Th>Name</Table.Th>
-                          <Table.Th>Type</Table.Th>
-                          <Table.Th>Description</Table.Th>
-                          <Table.Th style={{ width: 60 }}></Table.Th>
+                          <Table.Th className={classes.colName}>Name</Table.Th>
+                          <Table.Th className={classes.colType}>Type</Table.Th>
+                          <Table.Th className={classes.colDescription}>Description</Table.Th>
+                          <Table.Th className={classes.colActions}></Table.Th>
                         </Table.Tr>
                       </Table.Thead>
                       <Table.Tbody>
@@ -1427,6 +1432,7 @@ export const TenantSettingsPage: FC = () => {
                         )}
                       </Table.Tbody>
                     </Table>
+                  </div>
                     
                     {/* Infinite scroll trigger element */}
                     {credentialsHasMore && (
