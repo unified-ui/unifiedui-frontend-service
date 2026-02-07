@@ -29,10 +29,17 @@
   color: var(--color-gray-400);
 }
 
+.tableScrollWrapper {
+  margin-right: calc(-1 * var(--spacing-md));
+  overflow: hidden;
+}
+
 .tableScrollArea {
   /* Dynamic height: fills remaining viewport space with bottom padding */
   max-height: calc(100vh - 380px);
   min-height: 200px;
+  overflow: auto;
+  padding-right: var(--spacing-md);
 }
 
 .tableHeader {
@@ -44,7 +51,6 @@
 
 .tableWrapper {
   min-width: 100%;
-  overflow-x: auto;
 }
 
 .colPrincipal {

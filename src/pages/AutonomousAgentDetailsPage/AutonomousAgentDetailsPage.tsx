@@ -473,8 +473,6 @@ export const AutonomousAgentDetailsPage: FC = () => {
             </Tabs.List>
 
             <Tabs.Panel value="traces" className={classes.tabPanel}>
-              <div className={classes.tabPanelScrollWrapper}>
-                <div className={classes.tabPanelScrollArea}>
                 <TracesTable
                   traces={traces}
                   isLoading={tracesLoading}
@@ -491,8 +489,6 @@ export const AutonomousAgentDetailsPage: FC = () => {
                   onDelete={setTraceToDelete}
                   showReImport={agent.type === 'N8N'}
                 />
-                </div>
-              </div>
             </Tabs.Panel>
 
             <Tabs.Panel value="details" className={classes.tabPanel}>

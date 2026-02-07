@@ -18,7 +18,6 @@ import {
   Table,
   ActionIcon,
   Menu,
-  ScrollArea,
   MultiSelect,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
@@ -986,10 +985,11 @@ export const TenantSettingsPage: FC = () => {
                 </Group>
 
                 {/* Table */}
-                <ScrollArea.Autosize className={classes.customGroupsTableScrollArea}>
+                <div className={classes.tableScrollWrapper}>
+                  <div className={classes.tableScrollArea}>
                   <div className={classes.tableWrapper}>
                     <Table striped highlightOnHover>
-                      <Table.Thead className={classes.customGroupsTableHeader}>
+                      <Table.Thead className={classes.tableHeader}>
                         <Table.Tr>
                           <Table.Th className={classes.colName}>Name</Table.Th>
                           <Table.Th className={classes.colDescription}>Description</Table.Th>
@@ -1110,7 +1110,8 @@ export const TenantSettingsPage: FC = () => {
                         )}
                       </div>
                     )}
-                </ScrollArea.Autosize>
+                  </div>
+                </div>
               </Stack>
             </Tabs.Panel>
 
@@ -1152,10 +1153,11 @@ export const TenantSettingsPage: FC = () => {
                 </Group>
 
                 {/* Table */}
-                <ScrollArea.Autosize className={classes.customGroupsTableScrollArea}>
+                <div className={classes.tableScrollWrapper}>
+                  <div className={classes.tableScrollArea}>
                   <div className={classes.tableWrapper}>
                     <Table striped highlightOnHover>
-                      <Table.Thead className={classes.customGroupsTableHeader}>
+                      <Table.Thead className={classes.tableHeader}>
                         <Table.Tr>
                           <Table.Th className={classes.colName}>Name</Table.Th>
                           <Table.Th className={classes.colType}>Type</Table.Th>
@@ -1282,7 +1284,8 @@ export const TenantSettingsPage: FC = () => {
                         )}
                       </div>
                     )}
-                </ScrollArea.Autosize>
+                  </div>
+                </div>
               </Stack>
             </Tabs.Panel>
 
@@ -1314,10 +1317,11 @@ export const TenantSettingsPage: FC = () => {
                 </Group>
 
                 {/* Table */}
-                <ScrollArea.Autosize className={classes.customGroupsTableScrollArea}>
+                <div className={classes.tableScrollWrapper}>
+                  <div className={classes.tableScrollArea}>
                   <div className={classes.tableWrapper}>
                     <Table striped highlightOnHover>
-                      <Table.Thead className={classes.customGroupsTableHeader}>
+                      <Table.Thead className={classes.tableHeader}>
                         <Table.Tr>
                           <Table.Th className={classes.colName}>Name</Table.Th>
                           <Table.Th className={classes.colType}>Type</Table.Th>
@@ -1444,7 +1448,8 @@ export const TenantSettingsPage: FC = () => {
                         )}
                       </div>
                     )}
-                </ScrollArea.Autosize>
+                  </div>
+                </div>
               </Stack>
             </Tabs.Panel>
 

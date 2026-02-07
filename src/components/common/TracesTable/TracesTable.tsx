@@ -8,7 +8,6 @@ import {
   Loader,
   Center,
   Stack,
-  ScrollArea,
   ActionIcon,
   Tooltip,
   Menu,
@@ -21,6 +20,7 @@ import {
   IconDots,
   IconTrash,
   IconDownload,
+  IconGitBranch,
 } from '@tabler/icons-react';
 import type { FullTraceResponse } from '../../../api/types';
 import classes from './TracesTable.module.css';
@@ -115,7 +115,6 @@ export const TracesTable: FC<TracesTableProps> = ({
   showReImport = false,
   emptyMessage = 'No traces found',
 }) => {
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const isLoadingRef = useRef(false);
 
@@ -125,8 +124,7 @@ export const TracesTable: FC<TracesTableProps> = ({
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    const scrollArea = scrollAreaRef.current;
-    if (!sentinel || !scrollArea) return;
+    if (!sentinel) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -136,7 +134,7 @@ export const TracesTable: FC<TracesTableProps> = ({
         }
       },
       {
-        root: scrollArea.querySelector('[data-radix-scroll-area-viewport]') || scrollArea,
+        root: null,
         rootMargin: '100px',
         threshold: 0,
       }
@@ -214,7 +212,8 @@ export const TracesTable: FC<TracesTableProps> = ({
       </Group>
 
       {/* Table */}
-      <ScrollArea ref={scrollAreaRef} className={classes.scrollArea} offsetScrollbars>
+      <div className={classes.scrollWrapper}>
+        <div className={classes.scrollArea}>
         {isLoading ? (
           <Center py="xl">
             <Loader size="md" />
@@ -247,9 +246,14 @@ export const TracesTable: FC<TracesTableProps> = ({
                     style={{ cursor: onRowClick ? 'pointer' : 'default' }}
                   >
                     <Table.Td className={classes.colRefId}>
-                      <Text size="sm" ff="monospace" truncate>
-                        {trace.referenceId || '—'}
-                      </Text>
+                      <Group gap="sm" wrap="nowrap">
+                        <div className={classes.traceIcon}>
+                          <IconGitBranch size={16} />
+                        </div>
+                        <Text size="sm" ff="monospace" truncate>
+                          {trace.referenceId || '—'}
+                        </Text>
+                      </Group>
                     </Table.Td>
                     <Table.Td className={classes.colRefName}>
                       <Text size="sm" truncate>
@@ -320,7 +324,8 @@ export const TracesTable: FC<TracesTableProps> = ({
             <Loader size="sm" />
           </Center>
         )}
-      </ScrollArea>
+        </div>
+      </div>
     </div>
   );
 };

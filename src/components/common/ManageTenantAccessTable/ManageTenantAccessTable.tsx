@@ -12,7 +12,6 @@ import {
   Loader,
   Stack,
   Center,
-  ScrollArea,
   Tooltip,
   ActionIcon,
   Popover,
@@ -411,7 +410,8 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
       </Group>
 
       {/* Scrollable Table Container */}
-      <ScrollArea.Autosize className={classes.tableScrollArea}>
+      <div className={classes.tableScrollWrapper}>
+        <div className={classes.tableScrollArea}>
         <div className={classes.tableWrapper}>
         <Table striped highlightOnHover>
           <Table.Thead className={classes.tableHeader}>
@@ -558,7 +558,8 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
             )}
           </div>
         )}
-      </ScrollArea.Autosize>
+      </div>
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDeleteDialog
