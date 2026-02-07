@@ -139,35 +139,35 @@ export const IntegrationDialog: FC<IntegrationDialogProps> = ({
       onClose={onClose}
       title="Autonomous Agent integrieren"
       size="lg"
-      styles={{
-        content: { display: 'flex', flexDirection: 'column', maxHeight: 'calc(100vh - 120px)' },
-        body: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' },
-      }}
     >
-      <Tabs defaultValue={defaultTab} className={classes.tabs}>
+      <Tabs defaultValue={defaultTab}>
         <Tabs.List className={classes.tabsList}>
           <Tabs.Tab value="post" className={classes.tab}>
             POST Payload
           </Tabs.Tab>
           <Tabs.Tab value="put" className={classes.tab}>
-            Import Traces
+            PUT Import
           </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="post" className={classes.tabPanel}>
-          <Stack gap="md">
-            <Text className={classes.sampleTitle}>Sample Payload</Text>
-            <EndpointField value={postEndpoint} />
-            <CodeBlock code={postJson} />
-          </Stack>
+          <div className={classes.tabPanelScrollArea}>
+            <Stack gap="md">
+              <Text className={classes.sampleTitle}>Sample Payload</Text>
+              <EndpointField value={postEndpoint} />
+              <CodeBlock code={postJson} />
+            </Stack>
+          </div>
         </Tabs.Panel>
 
         <Tabs.Panel value="put" className={classes.tabPanel}>
-          <Stack gap="md">
-            <Text className={classes.sampleTitle}>Sample Payload</Text>
-            <EndpointField value={putEndpoint} />
-            <CodeBlock code={putJson} />
-          </Stack>
+          <div className={classes.tabPanelScrollArea}>
+            <Stack gap="md">
+              <Text className={classes.sampleTitle}>Sample Payload</Text>
+              <EndpointField value={putEndpoint} />
+              <CodeBlock code={putJson} />
+            </Stack>
+          </div>
         </Tabs.Panel>
       </Tabs>
     </Modal>

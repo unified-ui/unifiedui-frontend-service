@@ -37,10 +37,16 @@
   padding-top: var(--spacing-xl);
 }
 
+.tabPanelScrollWrapper {
+  margin-right: calc(-1 * var(--spacing-md));
+  overflow: hidden;
+}
+
 .tabPanelScrollArea {
   max-height: calc(100vh - 400px);
   min-height: 200px;
   overflow-y: auto;
+  padding-right: var(--spacing-md);
 }
 
 /* Details Tab */

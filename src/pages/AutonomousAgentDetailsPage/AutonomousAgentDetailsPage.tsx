@@ -448,7 +448,8 @@ export const AutonomousAgentDetailsPage: FC = () => {
             </Tabs.List>
 
             <Tabs.Panel value="traces" className={classes.tabPanel}>
-              <div className={classes.tabPanelScrollArea}>
+              <div className={classes.tabPanelScrollWrapper}>
+                <div className={classes.tabPanelScrollArea}>
                 <TracesTable
                   traces={traces}
                   isLoading={tracesLoading}
@@ -461,11 +462,13 @@ export const AutonomousAgentDetailsPage: FC = () => {
                   datePreset={traceDatePreset}
                   onDatePresetChange={setTraceDatePreset}
                 />
+                </div>
               </div>
             </Tabs.Panel>
 
             <Tabs.Panel value="details" className={classes.tabPanel}>
-              <div className={classes.tabPanelScrollArea}>
+              <div className={classes.tabPanelScrollWrapper}>
+                <div className={classes.tabPanelScrollArea}>
                 <Stack gap="lg" className={classes.detailsSection}>
                 {/* Endpoint & Keys Section */}
                 <div className={classes.sectionCard}>
@@ -586,6 +589,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                   </div>
                 )}
               </Stack>
+              </div>
               </div>
             </Tabs.Panel>
           </Tabs>
