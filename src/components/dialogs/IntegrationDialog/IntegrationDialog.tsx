@@ -9,18 +9,17 @@ import {
   CopyButton,
   ActionIcon,
   Tooltip,
+  Group,
+  Box,
 } from '@mantine/core';
-import { IconCopy, IconCheck } from '@tabler/icons-react';
+import { IconCopy, IconCheck, IconPlug } from '@tabler/icons-react';
 import classes from './IntegrationDialog.module.css';
 
 export interface IntegrationDialogProps {
   opened: boolean;
   onClose: () => void;
-  /** Tenant ID for constructing URLs */
   tenantId: string;
-  /** Autonomous agent ID for sample payloads */
   agentId: string;
-  /** Which tab to show by default */
   defaultTab?: 'post' | 'put';
 }
 
@@ -80,24 +79,27 @@ function buildPutSampleJson(agentId: string): string {
 
 const CodeBlock: FC<{ code: string }> = ({ code }) => (
   <div className={classes.codeBlock}>
-    <CopyButton value={code} timeout={2000}>
-      {({ copied, copy }) => (
-        <Tooltip label={copied ? 'Copied!' : 'Copy JSON'}>
-          <ActionIcon
-            variant="subtle"
-            color={copied ? 'teal' : 'gray'}
-            size="sm"
-            onClick={copy}
-            className={classes.copyCodeButton}
-          >
-            {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
-          </ActionIcon>
-        </Tooltip>
-      )}
-    </CopyButton>
+    <div className={classes.copyCodeButtonWrapper}>
+      <CopyButton value={code} timeout={2000}>
+        {({ copied, copy }) => (
+          <Tooltip label={copied ? 'Copied!' : 'Copy JSON'}>
+            <ActionIcon
+              variant="subtle"
+              color={copied ? 'teal' : 'gray'}
+              size="sm"
+              onClick={copy}
+            >
+              {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+            </ActionIcon>
+          </Tooltip>
+        )}
+      </CopyButton>
+    </div>
     <div className={classes.codeContent}>{code}</div>
   </div>
 );
+
+const AUTH_HEADER_KEY = 'X-Unified-UI-Autonomous-Agent-API-Key';
 
 const EndpointField: FC<{ value: string }> = ({ value }) => (
   <TextInput
@@ -119,6 +121,34 @@ const EndpointField: FC<{ value: string }> = ({ value }) => (
   />
 );
 
+const AuthHeaderHint: FC = () => (
+  <Group gap={4} align="center">
+    <Text size="sm" c="dimmed">
+      Add header
+    </Text>
+    <CopyButton value={AUTH_HEADER_KEY} timeout={2000}>
+      {({ copied, copy }) => (
+        <Tooltip label={copied ? 'Copied!' : 'Copy header name'}>
+          <Text
+            size="sm"
+            ff="monospace"
+            fw={500}
+            className={classes.copyableHeaderKey}
+            onClick={copy}
+            style={{ cursor: 'pointer' }}
+          >
+            {AUTH_HEADER_KEY}
+            <IconCopy size={12} style={{ marginLeft: 4, verticalAlign: 'middle', opacity: 0.5 }} />
+          </Text>
+        </Tooltip>
+      )}
+    </CopyButton>
+    <Text size="sm" c="dimmed">
+      with your primary or secondary key.
+    </Text>
+  </Group>
+);
+
 export const IntegrationDialog: FC<IntegrationDialogProps> = ({
   opened,
   onClose,
@@ -126,7 +156,7 @@ export const IntegrationDialog: FC<IntegrationDialogProps> = ({
   agentId,
   defaultTab = 'post',
 }) => {
-  const baseUrl = window.location.origin;
+  const baseUrl = "{YOUR-AGENT-SERVICE-HOST}";
   const postEndpoint = `${baseUrl}/api/v1/agent-service/tenants/${tenantId}/traces`;
   const putEndpoint = `${baseUrl}/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces/import`;
 
@@ -137,8 +167,18 @@ export const IntegrationDialog: FC<IntegrationDialogProps> = ({
     <Modal
       opened={opened}
       onClose={onClose}
-      title="Autonomous Agent integrieren"
-      size="lg"
+      title={
+        <Group gap="sm">
+          <Box className={classes.titleIcon}>
+            <IconPlug size={20} />
+          </Box>
+          <Text fw={600} size="lg">
+            Integrate Autonomous Agent
+          </Text>
+        </Group>
+      }
+      size="xl"
+      centered
     >
       <Tabs defaultValue={defaultTab}>
         <Tabs.List className={classes.tabsList}>
@@ -152,20 +192,39 @@ export const IntegrationDialog: FC<IntegrationDialogProps> = ({
 
         <Tabs.Panel value="post" className={classes.tabPanel}>
           <div className={classes.tabPanelScrollArea}>
-            <Stack gap="md">
-              <Text className={classes.sampleTitle}>Sample Payload</Text>
+            <Stack gap="lg">
+              <Text size="sm" c="dimmed">
+                Use the POST endpoint to send custom traces to Unified UI. The payload must conform to the
+                trace schema. Use this method when native import is not available for your agent platform
+                (e.g. custom agents built with LangChain, LangGraph, various workflow automation platforms, etc.).
+                Whenever possible, prefer using the PUT Import method instead, as it automatically normalizes
+                and optimizes trace data.
+              </Text>
               <EndpointField value={postEndpoint} />
-              <CodeBlock code={postJson} />
+              <AuthHeaderHint />
+              <div>
+                <Text size="xs" c="dimmed" tt="uppercase" fw={500} style={{ letterSpacing: '0.5px', fontSize: 11, marginBottom: 'var(--spacing-xs)' }}>Sample Payload</Text>
+                <CodeBlock code={postJson} />
+              </div>
             </Stack>
           </div>
         </Tabs.Panel>
 
         <Tabs.Panel value="put" className={classes.tabPanel}>
           <div className={classes.tabPanelScrollArea}>
-            <Stack gap="md">
-              <Text className={classes.sampleTitle}>Sample Payload</Text>
+            <Stack gap="lg">
+              <Text size="sm" c="dimmed">
+                Use the PUT endpoint to import traces from supported platforms by providing the external
+                execution ID and platform type. Unified UI will fetch the trace data directly from the
+                platform and transform it into an optimized, normalized structure. Simply send the execution
+                ID and type to the endpoint (see sample below).
+              </Text>
               <EndpointField value={putEndpoint} />
-              <CodeBlock code={putJson} />
+              <AuthHeaderHint />
+              <div>
+                <Text size="xs" c="dimmed" tt="uppercase" fw={500} style={{ letterSpacing: '0.5px', fontSize: 11, marginBottom: 'var(--spacing-xs)' }}>Sample Payload</Text>
+                <CodeBlock code={putJson} />
+              </div>
             </Stack>
           </div>
         </Tabs.Panel>

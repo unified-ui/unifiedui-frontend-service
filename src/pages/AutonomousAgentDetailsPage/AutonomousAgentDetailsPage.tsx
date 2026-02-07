@@ -34,6 +34,7 @@ import { PageContainer, SecretField, TracesTable, ConfirmDeleteDialog, DelayedTo
 import type { TracesSortState, TraceDatePreset } from '../../components/common';
 import { TracingVisualDialog } from '../../components/tracing';
 import { EditAutonomousAgentDialog } from '../../components/dialogs/EditAutonomousAgentDialog';
+import type { EditDialogTab } from '../../components/dialogs/EditAutonomousAgentDialog';
 import { IntegrationDialog } from '../../components/dialogs/IntegrationDialog';
 import { useIdentity } from '../../contexts';
 import { useSidebarData } from '../../contexts/SidebarDataContext';
@@ -103,6 +104,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
 
   // ---- Edit Dialog ----
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editDialogTab, setEditDialogTab] = useState<EditDialogTab>('details');
 
   // ---- Integration Dialog ----
   const [integrationDialogOpen, setIntegrationDialogOpen] = useState(false);
@@ -319,13 +321,13 @@ export const AutonomousAgentDetailsPage: FC = () => {
   // ---- Computed ----
   const postEndpointUrl = useMemo(() => {
     if (!selectedTenant) return '';
-    const host = window.location.origin;
+    const host = "{YOUR-AGENT-SERVICE-HOST}";
     return `${host}/api/v1/agent-service/tenants/${selectedTenant.id}/traces`;
   }, [selectedTenant]);
 
   const putEndpointUrl = useMemo(() => {
     if (!selectedTenant || !agentId) return '';
-    const host = window.location.origin;
+    const host = "{YOUR-AGENT-SERVICE-HOST}";
     return `${host}/api/v1/agent-service/tenants/${selectedTenant.id}/autonomous-agents/${agentId}/traces/import`;
   }, [selectedTenant, agentId]);
 
@@ -472,8 +474,8 @@ export const AutonomousAgentDetailsPage: FC = () => {
                 <Stack gap="lg" className={classes.detailsSection}>
                 {/* Endpoint & Keys Section */}
                 <div className={classes.sectionCard}>
-                  <Text className={classes.sectionTitle}>Endpoint & Keys</Text>
-                  <Stack gap="md">
+                  <Text className={classes.sectionTitle} fw="bold" mb="md">Endpoint & Keys</Text>
+                  <Stack gap="lg">
                     <TextInput
                       label="POST Endpoint"
                       value={postEndpointUrl}
@@ -565,8 +567,8 @@ export const AutonomousAgentDetailsPage: FC = () => {
                 {/* N8N Config Section */}
                 {n8nConfig && (
                   <div className={classes.sectionCard}>
-                    <Text className={classes.sectionTitle}>N8N Configuration</Text>
-                    <Stack gap="md">
+                    <Text className={classes.sectionTitle} fw="bold" mb="md">N8N Configuration</Text>
+                    <Stack gap="lg">
                       <TextInput
                         label="Workflow Endpoint"
                         value={n8nConfig.workflow_endpoint || '—'}
@@ -620,8 +622,10 @@ export const AutonomousAgentDetailsPage: FC = () => {
         opened={editDialogOpen}
         autonomousAgentId={agentId || null}
         initialData={agent}
-        onClose={() => setEditDialogOpen(false)}
+        activeTab={editDialogTab}
+        onClose={() => { setEditDialogOpen(false); setEditDialogTab('details'); }}
         onSuccess={handleEditSuccess}
+        onTabChange={setEditDialogTab}
       />
 
       {/* Confirm Rotate Key Dialog */}
