@@ -81,7 +81,9 @@ import type {
   SSEEvent,
   SSEStreamMessage,
   // Full Trace Types (hierarchical)
+  FullTraceResponse,
   FullTracesListResponse,
+  TracesListParams,
   // Misc Types
   HealthCheckResponse,
   PrincipalTypeEnum,
@@ -1064,16 +1066,44 @@ export class UnifiedUIAPIClient {
   }
 
   /**
-   * Get traces for an autonomous agent.
-   * Returns hierarchical traces with nodes.
+   * Get traces for an autonomous agent with pagination and filtering.
    */
   async getAutonomousAgentTraces(
     tenantId: string,
-    agentId: string
+    agentId: string,
+    params?: TracesListParams
   ): Promise<FullTracesListResponse> {
+    const query = params ? this.buildQueryString(params) : '';
     return this.agentServiceRequest<FullTracesListResponse>(
       'GET',
-      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces`
+      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces${query}`
+    );
+  }
+
+  /**
+   * Get a single trace by ID (full data with nodes/logs).
+   */
+  async getTrace(
+    tenantId: string,
+    traceId: string
+  ): Promise<FullTraceResponse> {
+    return this.agentServiceRequest<FullTraceResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/traces/${traceId}`
+    );
+  }
+
+  /**
+   * Refresh/re-import trace for an autonomous agent.
+   */
+  async refreshAutonomousAgentTraceImport(
+    tenantId: string,
+    agentId: string,
+    traceId: string
+  ): Promise<FullTraceResponse> {
+    return this.agentServiceRequest<FullTraceResponse>(
+      'PUT',
+      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces/${traceId}/import/refresh`
     );
   }
 }

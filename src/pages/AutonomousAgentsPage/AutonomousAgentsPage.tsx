@@ -356,6 +356,7 @@ export const AutonomousAgentsPage: FC = () => {
           onFilterChange={handleFilterChange}
           onTagSearch={handleTagSearch}
           onStatusChange={handleStatusChange}
+          onRowClick={handleOpen}
           onOpen={handleOpen}
           onEdit={handleEdit}
           onShare={handleShare}

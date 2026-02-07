@@ -319,6 +319,17 @@ export interface FullTracesListResponse {
   total: number;
 }
 
+/** Query parameters for listing traces */
+export interface TracesListParams {
+  skip?: number;
+  limit?: number;
+  order?: 'asc' | 'desc';
+  order_by?: 'created_at' | 'updated_at';
+  created_after?: string;
+  created_before?: string;
+  expand?: boolean;
+}
+
 // ========== Legacy Trace Types (for message-level traces) ==========
 export interface TraceMetadata {
   model?: string;

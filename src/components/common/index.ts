@@ -15,3 +15,8 @@ export type { SelectedPrincipal, RoleOption } from './AddPrincipalDialog';
 export { EditRolesDialog } from './EditRolesDialog';
 export { EntityDetailsForm } from './EntityDetailsForm';
 export type { FieldConfig } from './EntityDetailsForm';
+export { SecretField } from './SecretField';
+export { DelayedTooltip } from './DelayedTooltip';
+export type { DelayedTooltipProps } from './DelayedTooltip';
+export { TracesTable } from './TracesTable';
+export type { TracesTableProps, TracesSortState, TraceSortField, TraceSortOrder, TraceDatePreset } from './TracesTable';

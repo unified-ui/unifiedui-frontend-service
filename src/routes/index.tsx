@@ -8,6 +8,7 @@ import { TenantSettingsPage } from '../pages/TenantSettingsPage';
 import { ApplicationsPage } from '../pages/ApplicationsPage';
 import { ConversationsPage } from '../pages/ConversationsPage';
 import { AutonomousAgentsPage } from '../pages/AutonomousAgentsPage';
+import { AutonomousAgentDetailsPage } from '../pages/AutonomousAgentDetailsPage';
 import { ChatWidgetsPage } from '../pages/ChatWidgetsPage';
 import { WidgetDesignerPage } from '../pages/WidgetDesignerPage';
 import { TracesPage } from '../pages/TracesPage';
@@ -30,6 +31,7 @@ export const AppRoutes = () => {
         <Route path="/conversations" element={<ProtectedRoute><ConversationsPage /></ProtectedRoute>} />
         <Route path="/conversations/:conversationId" element={<ProtectedRoute><ConversationsPage /></ProtectedRoute>} />
         <Route path="/autonomous-agents" element={<ProtectedRoute><AutonomousAgentsPage /></ProtectedRoute>} />
+        <Route path="/autonomous-agents/:agentId" element={<ProtectedRoute><AutonomousAgentDetailsPage /></ProtectedRoute>} />
         <Route path="/traces" element={<ProtectedRoute><TracesPage /></ProtectedRoute>} />
         <Route path="/chat-widgets" element={<ProtectedRoute><ChatWidgetsPage /></ProtectedRoute>} />
         <Route path="/widget-designer" element={<ProtectedRoute><WidgetDesignerPage /></ProtectedRoute>} />
