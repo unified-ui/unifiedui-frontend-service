@@ -16,6 +16,7 @@ import {
   CopyButton,
   Box,
   Skeleton,
+  TextInput,
 } from '@mantine/core';
 import {
   IconArrowLeft,
@@ -26,12 +27,14 @@ import {
   IconListDetails,
   IconInfoCircle,
   IconRefresh,
+  IconBraces,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { PageContainer, SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip } from '../../components/common';
 import type { TracesSortState, TraceDatePreset } from '../../components/common';
 import { TracingVisualDialog } from '../../components/tracing';
 import { EditAutonomousAgentDialog } from '../../components/dialogs/EditAutonomousAgentDialog';
+import { IntegrationDialog } from '../../components/dialogs/IntegrationDialog';
 import { useIdentity } from '../../contexts';
 import { useSidebarData } from '../../contexts/SidebarDataContext';
 import type { AutonomousAgentResponse, FullTraceResponse, TracesListParams } from '../../api/types';
@@ -100,6 +103,10 @@ export const AutonomousAgentDetailsPage: FC = () => {
 
   // ---- Edit Dialog ----
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  // ---- Integration Dialog ----
+  const [integrationDialogOpen, setIntegrationDialogOpen] = useState(false);
+  const [integrationDialogTab, setIntegrationDialogTab] = useState<'post' | 'put'>('post');
 
   // ---- Traces ----
   const [traces, setTraces] = useState<FullTraceResponse[]>([]);
@@ -310,11 +317,17 @@ export const AutonomousAgentDetailsPage: FC = () => {
   }, [fetchAgent, refreshAutonomousAgents]);
 
   // ---- Computed ----
-  const endpointUrl = useMemo(() => {
+  const postEndpointUrl = useMemo(() => {
     if (!selectedTenant) return '';
     const host = window.location.origin;
-    return `POST ${host}/api/v1/agent-service/tenants/${selectedTenant.id}/traces`;
+    return `${host}/api/v1/agent-service/tenants/${selectedTenant.id}/traces`;
   }, [selectedTenant]);
+
+  const putEndpointUrl = useMemo(() => {
+    if (!selectedTenant || !agentId) return '';
+    const host = window.location.origin;
+    return `${host}/api/v1/agent-service/tenants/${selectedTenant.id}/autonomous-agents/${agentId}/traces/import`;
+  }, [selectedTenant, agentId]);
 
   const n8nConfig = useMemo(() => {
     if (!agent || agent.type !== 'N8N') return null;
@@ -357,8 +370,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
 
   return (
     <MainLayout>
-      <div className={classes.pageWrapper}>
-        <PageContainer size="xl">
+      <PageContainer size="xl">
           {/* Header */}
           <div className={classes.header}>
             <Group gap="sm" mb="xs">
@@ -436,106 +448,148 @@ export const AutonomousAgentDetailsPage: FC = () => {
             </Tabs.List>
 
             <Tabs.Panel value="traces" className={classes.tabPanel}>
-              <TracesTable
-                traces={traces}
-                isLoading={tracesLoading}
-                isLoadingMore={tracesLoadingMore}
-                hasMore={tracesHasMore}
-                onLoadMore={handleLoadMore}
-                onRowClick={handleTraceRowClick}
-                sort={traceSort}
-                onSortChange={setTraceSort}
-                datePreset={traceDatePreset}
-                onDatePresetChange={setTraceDatePreset}
-              />
+              <div className={classes.tabPanelScrollArea}>
+                <TracesTable
+                  traces={traces}
+                  isLoading={tracesLoading}
+                  isLoadingMore={tracesLoadingMore}
+                  hasMore={tracesHasMore}
+                  onLoadMore={handleLoadMore}
+                  onRowClick={handleTraceRowClick}
+                  sort={traceSort}
+                  onSortChange={setTraceSort}
+                  datePreset={traceDatePreset}
+                  onDatePresetChange={setTraceDatePreset}
+                />
+              </div>
             </Tabs.Panel>
 
             <Tabs.Panel value="details" className={classes.tabPanel}>
-              <Stack gap="xl" className={classes.detailsSection}>
+              <div className={classes.tabPanelScrollArea}>
+                <Stack gap="lg" className={classes.detailsSection}>
                 {/* Endpoint & Keys Section */}
-                <Stack gap="md">
+                <div className={classes.sectionCard}>
                   <Text className={classes.sectionTitle}>Endpoint & Keys</Text>
-
-                  {/* Endpoint URL */}
-                  <div className={classes.endpointCard}>
-                    <Text size="xs" fw={600} tt="uppercase" c="dimmed" mb={4}>
-                      Endpoint
-                    </Text>
-                    <Group gap="xs" wrap="nowrap">
-                      <Text size="sm" ff="monospace" className={classes.endpointUrl}>
-                        {endpointUrl}
-                      </Text>
-                      <CopyButton value={endpointUrl} timeout={2000}>
-                        {({ copied, copy }) => (
-                          <Tooltip label={copied ? 'Copied!' : 'Copy endpoint'}>
+                  <Stack gap="md">
+                    <TextInput
+                      label="POST Endpoint"
+                      value={postEndpointUrl}
+                      readOnly
+                      styles={{ input: { fontFamily: 'monospace', cursor: 'default' } }}
+                      rightSectionWidth={60}
+                      rightSection={
+                        <Group gap={2} wrap="nowrap">
+                          <CopyButton value={postEndpointUrl} timeout={2000}>
+                            {({ copied, copy }) => (
+                              <Tooltip label={copied ? 'Copied!' : 'Copy'}>
+                                <ActionIcon variant="subtle" color={copied ? 'teal' : 'gray'} size="sm" onClick={copy}>
+                                  {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+                                </ActionIcon>
+                              </Tooltip>
+                            )}
+                          </CopyButton>
+                          <Tooltip label="Sample JSON">
                             <ActionIcon
                               variant="subtle"
-                              color={copied ? 'teal' : 'gray'}
+                              color="gray"
                               size="sm"
-                              onClick={copy}
+                              onClick={() => {
+                                setIntegrationDialogTab('post');
+                                setIntegrationDialogOpen(true);
+                              }}
                             >
-                              {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+                              <IconBraces size={14} />
                             </ActionIcon>
                           </Tooltip>
-                        )}
-                      </CopyButton>
-                    </Group>
-                  </div>
+                        </Group>
+                      }
+                    />
 
-                  {/* Primary Key */}
-                  <SecretField
-                    label="Primary Key"
-                    value={primaryKey}
-                    isLoading={primaryKeyLoading}
-                    onReveal={() => revealKey(1)}
-                    onRotate={() => setConfirmRotateKey(1)}
-                    isRotating={rotatingKey === 1}
-                  />
+                    <TextInput
+                      label="PUT Import Endpoint"
+                      value={putEndpointUrl}
+                      readOnly
+                      styles={{ input: { fontFamily: 'monospace', cursor: 'default' } }}
+                      rightSectionWidth={60}
+                      rightSection={
+                        <Group gap={2} wrap="nowrap">
+                          <CopyButton value={putEndpointUrl} timeout={2000}>
+                            {({ copied, copy }) => (
+                              <Tooltip label={copied ? 'Copied!' : 'Copy'}>
+                                <ActionIcon variant="subtle" color={copied ? 'teal' : 'gray'} size="sm" onClick={copy}>
+                                  {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+                                </ActionIcon>
+                              </Tooltip>
+                            )}
+                          </CopyButton>
+                          <Tooltip label="Sample JSON">
+                            <ActionIcon
+                              variant="subtle"
+                              color="gray"
+                              size="sm"
+                              onClick={() => {
+                                setIntegrationDialogTab('put');
+                                setIntegrationDialogOpen(true);
+                              }}
+                            >
+                              <IconBraces size={14} />
+                            </ActionIcon>
+                          </Tooltip>
+                        </Group>
+                      }
+                    />
 
-                  {/* Secondary Key */}
-                  <SecretField
-                    label="Secondary Key"
-                    value={secondaryKey}
-                    isLoading={secondaryKeyLoading}
-                    onReveal={() => revealKey(2)}
-                    onRotate={() => setConfirmRotateKey(2)}
-                    isRotating={rotatingKey === 2}
-                  />
-                </Stack>
+                    <SecretField
+                      label="Primary Key"
+                      value={primaryKey}
+                      isLoading={primaryKeyLoading}
+                      onReveal={() => revealKey(1)}
+                      onRotate={() => setConfirmRotateKey(1)}
+                      isRotating={rotatingKey === 1}
+                    />
+
+                    <SecretField
+                      label="Secondary Key"
+                      value={secondaryKey}
+                      isLoading={secondaryKeyLoading}
+                      onReveal={() => revealKey(2)}
+                      onRotate={() => setConfirmRotateKey(2)}
+                      isRotating={rotatingKey === 2}
+                    />
+                  </Stack>
+                </div>
 
                 {/* N8N Config Section */}
                 {n8nConfig && (
-                  <Stack gap="md">
+                  <div className={classes.sectionCard}>
                     <Text className={classes.sectionTitle}>N8N Configuration</Text>
-                    <div className={classes.configCard}>
-                      <Stack gap="sm">
-                        <div>
-                          <Text className={classes.configLabel}>Workflow Endpoint</Text>
-                          <Text className={classes.configValue}>
-                            {n8nConfig.workflow_endpoint || '—'}
-                          </Text>
-                        </div>
-                        <div>
-                          <Text className={classes.configLabel}>API Version</Text>
-                          <Text className={classes.configValue}>
-                            {n8nConfig.api_version || '—'}
-                          </Text>
-                        </div>
-                        <div>
-                          <Text className={classes.configLabel}>API Key Credential ID</Text>
-                          <Text className={classes.configValue}>
-                            {n8nConfig.api_api_key_credential_id || '—'}
-                          </Text>
-                        </div>
-                      </Stack>
-                    </div>
-                  </Stack>
+                    <Stack gap="md">
+                      <TextInput
+                        label="Workflow Endpoint"
+                        value={n8nConfig.workflow_endpoint || '—'}
+                        readOnly
+                        styles={{ input: { cursor: 'default' } }}
+                      />
+                      <TextInput
+                        label="API Version"
+                        value={n8nConfig.api_version || '—'}
+                        readOnly
+                        styles={{ input: { cursor: 'default' } }}
+                      />
+                      <TextInput
+                        label="API Key Credential ID"
+                        value={n8nConfig.api_api_key_credential_id || '—'}
+                        readOnly
+                        styles={{ input: { cursor: 'default' } }}
+                      />
+                    </Stack>
+                  </div>
                 )}
               </Stack>
+              </div>
             </Tabs.Panel>
           </Tabs>
         </PageContainer>
-      </div>
 
       {/* Tracing Dialog */}
       <TracingVisualDialog
@@ -576,6 +630,17 @@ export const AutonomousAgentDetailsPage: FC = () => {
         confirmButtonText="Rotate Key"
         isLoading={rotatingKey !== null}
       />
+
+      {/* Integration Dialog */}
+      {selectedTenant && agentId && (
+        <IntegrationDialog
+          opened={integrationDialogOpen}
+          onClose={() => setIntegrationDialogOpen(false)}
+          tenantId={selectedTenant.id}
+          agentId={agentId}
+          defaultTab={integrationDialogTab}
+        />
+      )}
     </MainLayout>
   );
 };

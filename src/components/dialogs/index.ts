@@ -13,3 +13,4 @@ export { EditCustomGroupDialog } from './EditCustomGroupDialog';
 export { EditToolDialog } from './EditToolDialog';
 export { ShareConversationDialog } from './ShareConversationDialog';
 export { SearchConversationsDialog } from './SearchConversationsDialog';
+export { IntegrationDialog } from './IntegrationDialog';
