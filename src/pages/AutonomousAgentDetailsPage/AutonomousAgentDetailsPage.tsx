@@ -155,6 +155,11 @@ export const AutonomousAgentDetailsPage: FC = () => {
     fetchAgent();
   }, [fetchAgent]);
 
+  useEffect(() => {
+    setPrimaryKey(null);
+    setSecondaryKey(null);
+  }, [agentId]);
+
   // ---- Fetch traces ----
   const fetchTraces = useCallback(
     async (reset = false) => {

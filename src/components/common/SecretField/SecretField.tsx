@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Group, Text, ActionIcon, Tooltip, CopyButton, Loader, Box } from '@mantine/core';
 import { IconEye, IconEyeOff, IconCopy, IconCheck, IconRefresh } from '@tabler/icons-react';
 import classes from './SecretField.module.css';
@@ -41,13 +41,18 @@ export const SecretField: FC<SecretFieldProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
+  useEffect(() => {
+    if (value === null) {
+      setIsVisible(false);
+    }
+  }, [value]);
+
   const handleToggleVisibility = useCallback(() => {
-    if (!isVisible && value === null) {
-      // First reveal → fetch the secret
+    if (!isVisible) {
       onReveal();
     }
     setIsVisible((prev) => !prev);
-  }, [isVisible, value, onReveal]);
+  }, [isVisible, onReveal]);
 
   const displayValue = isVisible && value
     ? value

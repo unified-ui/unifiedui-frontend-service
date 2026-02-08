@@ -67,7 +67,7 @@ function buildPostSampleJson(agentId: string): string {
   );
 }
 
-function buildPutSampleJson(agentId: string): string {
+function buildPutSampleJson(_agentId: string): string {
   return JSON.stringify(
     {
       type: 'N8N',
