@@ -34,6 +34,7 @@ import {
   IconFocusCentered,
   IconLayoutSidebarRight,
   IconLayoutSidebarRightCollapse,
+  IconMessageCircle,
   // Node Type Icons
   IconBrain,
   IconTool,
@@ -772,6 +773,8 @@ export const TracingCanvasView: FC = () => {
     resetCanvasView,
     hierarchyVisible,
     toggleHierarchyVisible,
+    chatVisible,
+    toggleChatVisible,
   } = useTracing();
 
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
@@ -926,6 +929,11 @@ export const TracingCanvasView: FC = () => {
               ) : (
                 <IconLayoutSidebarRight size={18} />
               )}
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label={chatVisible ? 'Chat ausblenden' : 'Chat einblenden'}>
+            <ActionIcon variant={chatVisible ? 'filled' : 'light'} onClick={toggleChatVisible}>
+              <IconMessageCircle size={18} />
             </ActionIcon>
           </Tooltip>
         </Group>

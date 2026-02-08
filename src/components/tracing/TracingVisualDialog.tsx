@@ -12,6 +12,7 @@ import { TracingCanvasView } from './TracingCanvasView';
 import { TracingHierarchyView } from './TracingHierarchyView';
 import { TracingDataSection } from './TracingDataSection';
 import { TraceAnalysisPanel } from './TraceAnalysisPanel';
+import { TraceChatPanel } from './TraceChatPanel';
 import { useAICapabilities } from '../../contexts';
 import classes from './TracingVisualDialog.module.css';
 
@@ -35,13 +36,16 @@ interface DialogContentProps {
 }
 
 const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
-  const { selectedTrace, hierarchyVisible } = useTracing();
+  const { selectedTrace, hierarchyVisible, chatVisible } = useTracing();
   const capabilities = useAICapabilities();
 
   // Panel sizes (percentages)
   const [canvasHeight, setCanvasHeight] = useState(75); // 75% canvas, 25% data section
   const [hierarchyWidth, setHierarchyWidth] = useState(20); // 20% hierarchy width
+  const [chatWidth, setChatWidth] = useState(20); // 20% chat width
   const [analysisPanelOpened, setAnalysisPanelOpened] = useState(false);
+
+  const sidePanelTotalWidth = (hierarchyVisible ? hierarchyWidth : 0) + (chatVisible ? chatWidth : 0);
 
   // Resize handlers
   const handleVerticalResize = (e: React.MouseEvent) => {
@@ -94,6 +98,31 @@ const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
     document.addEventListener('mouseup', onMouseUp);
   };
 
+  const handleChatResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = chatWidth;
+    const container = e.currentTarget.closest(`.${classes.body}`);
+    if (!container) return;
+
+    const containerRect = container.getBoundingClientRect();
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = startX - moveEvent.clientX;
+      const deltaPercent = (deltaX / containerRect.width) * 100;
+      const newWidth = Math.min(Math.max(startWidth + deltaPercent, 15), 35);
+      setChatWidth(newWidth);
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  };
+
   return (
     <Stack className={classes.container} gap={0}>
       {/* Header */}
@@ -133,7 +162,7 @@ const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
         {/* Left: Canvas + Data Section */}
         <Box
           className={classes.mainContent}
-          style={{ width: hierarchyVisible ? `calc(100% - ${hierarchyWidth}%)` : '100%' }}
+          style={{ width: sidePanelTotalWidth > 0 ? `calc(100% - ${sidePanelTotalWidth}%)` : '100%' }}
         >
           {/* SubHeader (floating) */}
           <TracingSubHeader />
@@ -169,13 +198,31 @@ const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
           />
         )}
 
-        {/* Right: Hierarchy View - only show when visible */}
+        {/* Hierarchy View - only show when visible */}
         {hierarchyVisible && (
           <Box
             className={classes.hierarchyContainer}
             style={{ width: `${hierarchyWidth}%` }}
           >
             <TracingHierarchyView />
+          </Box>
+        )}
+
+        {/* Chat Resize Handle - only show when chat is visible */}
+        {chatVisible && (
+          <div
+            className={classes.resizeHandleHorizontal}
+            onMouseDown={handleChatResize}
+          />
+        )}
+
+        {/* Chat Panel - only show when visible */}
+        {chatVisible && (
+          <Box
+            className={classes.chatContainer}
+            style={{ width: `${chatWidth}%` }}
+          >
+            <TraceChatPanel />
           </Box>
         )}
       </Group>

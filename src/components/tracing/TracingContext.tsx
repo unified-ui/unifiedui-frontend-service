@@ -23,6 +23,7 @@ export type LayoutDirection = 'horizontal' | 'vertical';
 // LocalStorage Keys
 const LOCALSTORAGE_KEY_HIERARCHY_VISIBLE = 'unified-ui-tracing-hierarchy-visible';
 const LOCALSTORAGE_KEY_LAYOUT_DIRECTION = 'unified-ui-tracing-layout-direction';
+const LOCALSTORAGE_KEY_CHAT_VISIBLE = 'unified-ui-tracing-chat-visible';
 
 interface TracingContextState {
   // Data
@@ -35,6 +36,7 @@ interface TracingContextState {
   hierarchyCollapsed: Set<string>;
   canvasCollapsed: Set<string>;
   hierarchyVisible: boolean;
+  chatVisible: boolean;
 
   // Actions
   selectTrace: (traceId: string | null) => void;
@@ -45,6 +47,7 @@ interface TracingContextState {
   centerOnNode: (nodeId: string) => void;
   resetCanvasView: () => void;
   toggleHierarchyVisible: () => void;
+  toggleChatVisible: () => void;
   
   // Message-to-Trace mapping
   /** Find a trace node by extMessageId (matches TraceNode.referenceId) */
@@ -148,6 +151,10 @@ export const TracingProvider: FC<TracingProviderProps> = ({
   const [hierarchyVisible, setHierarchyVisible] = useState<boolean>(() => {
     const stored = localStorage.getItem(LOCALSTORAGE_KEY_HIERARCHY_VISIBLE);
     return stored === null ? true : stored === 'true';
+  });
+  const [chatVisible, setChatVisible] = useState<boolean>(() => {
+    const stored = localStorage.getItem(LOCALSTORAGE_KEY_CHAT_VISIBLE);
+    return stored === null ? false : stored === 'true';
   });
 
   // Callback for centering on node (will be connected to canvas)
@@ -269,6 +276,14 @@ export const TracingProvider: FC<TracingProviderProps> = ({
     });
   }, []);
 
+  const toggleChatVisible = useCallback(() => {
+    setChatVisible((prev) => {
+      const newValue = !prev;
+      localStorage.setItem(LOCALSTORAGE_KEY_CHAT_VISIBLE, String(newValue));
+      return newValue;
+    });
+  }, []);
+
   // Find a trace node by extMessageId (matches TraceNode.referenceId)
   const findNodeForMessage = useCallback(
     (extMessageId: string): TraceNodeResponse | null => {
@@ -302,6 +317,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
       hierarchyCollapsed,
       canvasCollapsed,
       hierarchyVisible,
+      chatVisible,
       selectTrace,
       selectNode,
       toggleHierarchyCollapse,
@@ -310,6 +326,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
       centerOnNode,
       resetCanvasView,
       toggleHierarchyVisible,
+      toggleChatVisible,
       findNodeForMessage,
       selectNodeByExtMessageId,
     }),
@@ -321,6 +338,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
       hierarchyCollapsed,
       canvasCollapsed,
       hierarchyVisible,
+      chatVisible,
       selectTrace,
       selectNode,
       toggleHierarchyCollapse,
@@ -329,6 +347,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
       centerOnNode,
       resetCanvasView,
       toggleHierarchyVisible,
+      toggleChatVisible,
       findNodeForMessage,
       selectNodeByExtMessageId,
     ]

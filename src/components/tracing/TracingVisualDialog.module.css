@@ -82,6 +82,14 @@
   background: var(--bg-app);
 }
 
+/* Chat Container */
+.chatContainer {
+  height: 100%;
+  overflow: hidden;
+  border-left: 1px solid var(--border-default);
+  background: var(--bg-app);
+}
+
 /* Resize Handles */
 .resizeHandleVertical {
   height: 4px;

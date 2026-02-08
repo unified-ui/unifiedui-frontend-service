@@ -98,6 +98,8 @@ import type {
   TestModelRequest,
   TestModelResponse,
   AICapabilitiesResponse,
+  TraceChatRequest,
+  TraceChatResponse,
   // Misc Types
   HealthCheckResponse,
   PrincipalTypeEnum,
@@ -1241,6 +1243,17 @@ export class UnifiedUIAPIClient {
     return this.agentServiceRequest<AICapabilitiesResponse>(
       'GET',
       `/api/v1/agent-service/tenants/${tenantId}/ai/capabilities`
+    );
+  }
+
+  async traceChat(
+    tenantId: string,
+    data: TraceChatRequest
+  ): Promise<TraceChatResponse> {
+    return this.agentServiceRequest<TraceChatResponse>(
+      'POST',
+      `/api/v1/agent-service/tenants/${tenantId}/ai/trace-chat`,
+      data
     );
   }
 }

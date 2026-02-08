@@ -1088,6 +1088,22 @@ export interface AICapabilitiesResponse {
   summarization: boolean;
 }
 
+export interface TraceChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface TraceChatRequest {
+  trace: string;
+  selected_node?: string;
+  message: string;
+  history?: TraceChatMessage[];
+}
+
+export interface TraceChatResponse {
+  reply: string;
+}
+
 // ========== User Favorites Types ==========
 
 export interface UserFavoriteResponse {

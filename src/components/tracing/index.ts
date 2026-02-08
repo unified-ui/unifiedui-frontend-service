@@ -17,3 +17,4 @@ export { TracingHierarchyView } from './TracingHierarchyView';
 export { TracingDataSection } from './TracingDataSection';
 export { TracingSidebar } from './TracingSidebar';
 export { TraceAnalysisPanel } from './TraceAnalysisPanel';
+export { TraceChatPanel } from './TraceChatPanel';
