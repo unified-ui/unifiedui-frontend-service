@@ -20,3 +20,5 @@ export { DelayedTooltip } from './DelayedTooltip';
 export type { DelayedTooltipProps } from './DelayedTooltip';
 export { TracesTable } from './TracesTable';
 export type { TracesTableProps, TracesSortState, TraceSortField, TraceSortOrder, TraceDatePreset } from './TracesTable';
+export { MarkdownRenderer } from './MarkdownRenderer';
+export { GenerateWithAIButton } from './GenerateWithAIButton';

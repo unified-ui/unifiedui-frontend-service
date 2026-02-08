@@ -13,6 +13,7 @@ import {
 import { useForm } from '@mantine/form';
 import { IconKey } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
+import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
 import { CredentialTypeEnum } from '../../api/types';
 import { TagInput } from '../common';
 
@@ -232,15 +233,24 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
             onChange={(tags) => form.setFieldValue('tags', tags)}
           />
 
-          <Textarea
-            label="Description"
-            placeholder="Optional description"
-            maxLength={2000}
-            minRows={3}
-            maxRows={6}
-            autosize
-            {...form.getInputProps('description')}
-          />
+          <Group gap="xs" align="flex-end">
+            <Textarea
+              label="Description"
+              placeholder="Optional description"
+              maxLength={2000}
+              minRows={3}
+              maxRows={6}
+              autosize
+              style={{ flex: 1 }}
+              {...form.getInputProps('description')}
+            />
+            <GenerateWithAIButton
+              entityType="credential"
+              entityName={form.values.name}
+              existingDescription={form.values.description || undefined}
+              onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+            />
+          </Group>
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={handleClose} disabled={isSubmitting}>

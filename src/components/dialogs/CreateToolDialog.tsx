@@ -12,6 +12,7 @@ import {
 import { useForm } from '@mantine/form';
 import { IconTool } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
+import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
 import { ToolTypeEnum } from '../../api/types';
 import { TagInput } from '../common';
 
@@ -140,13 +141,22 @@ export const CreateToolDialog: FC<CreateToolDialogProps> = ({
             disabled={isSubmitting}
           />
 
-          <Textarea
-            label="Description"
-            placeholder="Optional description"
-            minRows={3}
-            {...form.getInputProps('description')}
-            disabled={isSubmitting}
-          />
+          <Group gap="xs" align="flex-end">
+            <Textarea
+              label="Description"
+              placeholder="Optional description"
+              minRows={3}
+              style={{ flex: 1 }}
+              {...form.getInputProps('description')}
+              disabled={isSubmitting}
+            />
+            <GenerateWithAIButton
+              entityType="tool"
+              entityName={form.values.name}
+              existingDescription={form.values.description || undefined}
+              onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+            />
+          </Group>
 
           <TagInput
             label="Tags"

@@ -124,6 +124,7 @@ Methods are grouped by resource with comment headers:
 // ========== Custom Group Endpoints ==========
 // ========== Tags Endpoints ==========
 // ========== User Favorites Endpoints ==========
+// ========== AI Model Endpoints ==========
 // ========== Agent Service ==========
 // ========== Trace Endpoints ==========
 ```
@@ -152,14 +153,33 @@ Most resources follow this pattern:
 For chat messages, the client uses `EventSource`-style streaming via `fetch` with `ReadableStream`:
 
 ```typescript
-async sendMessageSSE(
+async *sendMessageStream(
   tenantId: string,
-  request: SendMessageRequest,
-  onEvent: (event: SSEEvent) => void
-): Promise<void>
+  data: SendMessageRequest,
+  onStreamStart?: (messageId: string, conversationId: string, isNewMessage: boolean) => void,
+  onTextChunk?: (content: string) => void,
+  onNewMessage?: () => void,
+  onStreamEnd?: () => void,
+  onError?: (code: string, message: string, details: string) => void,
+  onMessageComplete?: (message: MessageResponse) => void,
+  onTitleGeneration?: (title: string) => void,
+  foundryToken?: string
+): AsyncGenerator<SSEEvent, void, unknown>
 ```
 
-Events are parsed from SSE format (`data: {...}\n\n`) and delivered to the callback.
+### SSE Event Types
+
+| Type | Purpose |
+|------|--------|
+| `STREAM_START` | Stream begins, provides messageId and conversationId |
+| `TEXT_STREAM` | Text content chunk for typewriter effect |
+| `STREAM_NEW_MESSAGE` | New message in multi-message response |
+| `STREAM_END` | Stream complete |
+| `MESSAGE_COMPLETE` | Full message with metadata |
+| `TITLE_GENERATION` | AI-generated conversation title (streamed after first message) |
+| `ERROR` | Error in stream |
+
+The `onTitleGeneration` callback receives title text that can be displayed with typewriter animation in the conversations list.
 
 ---
 

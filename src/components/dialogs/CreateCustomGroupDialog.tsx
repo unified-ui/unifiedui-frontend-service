@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Modal, TextInput, Textarea, Button, Stack, Group } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useIdentity } from '../../contexts';
+import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
 
 interface CreateCustomGroupDialogProps {
   opened: boolean;
@@ -82,12 +83,21 @@ export const CreateCustomGroupDialog: FC<CreateCustomGroupDialogProps> = ({
             data-autofocus
             {...form.getInputProps('name')}
           />
-          <Textarea
-            label="Description"
-            placeholder="Enter group description (optional)"
-            minRows={3}
-            {...form.getInputProps('description')}
-          />
+          <Group gap="xs" align="flex-end">
+            <Textarea
+              label="Description"
+              placeholder="Enter group description (optional)"
+              minRows={3}
+              style={{ flex: 1 }}
+              {...form.getInputProps('description')}
+            />
+            <GenerateWithAIButton
+              entityType="custom_group"
+              entityName={form.values.name}
+              existingDescription={form.values.description || undefined}
+              onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+            />
+          </Group>
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={handleClose}>
               Cancel

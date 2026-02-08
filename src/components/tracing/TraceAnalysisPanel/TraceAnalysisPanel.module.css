@@ -1,0 +1,21 @@
+.titleIcon {
+  color: var(--color-primary-500);
+}
+
+.content {
+  height: calc(100vh - 80px);
+}
+
+.scrollArea {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 200px;
+}
+
+.loadingState {
+  min-height: 200px;
+}
+
+.errorState {
+  min-height: 200px;
+}

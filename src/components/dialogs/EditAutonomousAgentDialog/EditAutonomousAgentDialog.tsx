@@ -24,6 +24,7 @@ import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconAlertCircle, IconRobot, IconInfoCircle, IconShieldLock, IconPlus } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
+import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import { useEntityPermissions } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
 import type { AutonomousAgentResponse, PrincipalTypeEnum, CredentialResponse } from '../../../api/types';
@@ -522,15 +523,24 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
                 onChange={(tags) => form.setFieldValue('tags', tags)}
               />
 
-              <Textarea
-                label="Description"
-                placeholder="Optional description"
-                maxLength={2000}
-                minRows={3}
-                maxRows={6}
-                autosize
-                {...form.getInputProps('description')}
-              />
+              <Group gap="xs" align="flex-end">
+                <Textarea
+                  label="Description"
+                  placeholder="Optional description"
+                  maxLength={2000}
+                  minRows={3}
+                  maxRows={6}
+                  autosize
+                  style={{ flex: 1 }}
+                  {...form.getInputProps('description')}
+                />
+                <GenerateWithAIButton
+                  entityType="autonomous_agent"
+                  entityName={form.values.name}
+                  existingDescription={form.values.description || undefined}
+                  onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+                />
+              </Group>
 
               <Divider />
 

@@ -84,6 +84,20 @@ import type {
   FullTraceResponse,
   FullTracesListResponse,
   TracesListParams,
+  // AI Model Types
+  AIModelResponse,
+  CreateAIModelRequest,
+  UpdateAIModelRequest,
+  // AI Feature Types
+  GenerateDescriptionRequest,
+  GenerateDescriptionResponse,
+  AnalyzeTraceRequest,
+  AnalyzeTraceResponse,
+  SummarizeTraceRequest,
+  SummarizeTraceResponse,
+  TestModelRequest,
+  TestModelResponse,
+  AICapabilitiesResponse,
   // Misc Types
   HealthCheckResponse,
   PrincipalTypeEnum,
@@ -881,6 +895,7 @@ export class UnifiedUIAPIClient {
     onStreamEnd?: () => void,
     onError?: (code: string, message: string, details: string) => void,
     onMessageComplete?: (message: MessageResponse) => void,
+    onTitleGeneration?: (title: string) => void,
     foundryToken?: string
   ): AsyncGenerator<SSEEvent, void, unknown> {
     const token = await this.getAccessToken();
@@ -1001,6 +1016,11 @@ export class UnifiedUIAPIClient {
                       );
                     }
                     break;
+                  case 'TITLE_GENERATION':
+                    if (onTitleGeneration && streamMsg.content) {
+                      onTitleGeneration(streamMsg.content);
+                    }
+                    break;
                 }
               }
               
@@ -1117,6 +1137,110 @@ export class UnifiedUIAPIClient {
     return this.agentServiceRequest<void>(
       'DELETE',
       `/api/v1/agent-service/tenants/${tenantId}/traces/${traceId}`
+    );
+  }
+
+  // ========== AI Model Endpoints ==========
+
+  async listAIModels(
+    tenantId: string,
+    params?: PaginationParams & OrderParams & FilterParams,
+    options?: { noCache?: boolean }
+  ): Promise<AIModelResponse[]> {
+    const query = this.buildQueryString(params || {});
+    return this.request<AIModelResponse[]>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/ai-models${query}`,
+      undefined,
+      undefined,
+      options
+    );
+  }
+
+  async getAIModel(tenantId: string, modelId: string): Promise<AIModelResponse> {
+    return this.request<AIModelResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/ai-models/${modelId}`
+    );
+  }
+
+  async createAIModel(tenantId: string, data: CreateAIModelRequest): Promise<AIModelResponse> {
+    return this.request<AIModelResponse>(
+      'POST',
+      `/api/v1/platform-service/tenants/${tenantId}/ai-models`,
+      data,
+      'AI Model created successfully'
+    );
+  }
+
+  async updateAIModel(tenantId: string, modelId: string, data: UpdateAIModelRequest): Promise<AIModelResponse> {
+    return this.request<AIModelResponse>(
+      'PATCH',
+      `/api/v1/platform-service/tenants/${tenantId}/ai-models/${modelId}`,
+      data,
+      'AI Model updated successfully'
+    );
+  }
+
+  async deleteAIModel(tenantId: string, modelId: string): Promise<void> {
+    return this.request<void>(
+      'DELETE',
+      `/api/v1/platform-service/tenants/${tenantId}/ai-models/${modelId}`,
+      undefined,
+      'AI Model deleted successfully'
+    );
+  }
+
+  // ========== AI Feature Endpoints ==========
+
+  async generateDescription(
+    tenantId: string,
+    data: GenerateDescriptionRequest
+  ): Promise<GenerateDescriptionResponse> {
+    return this.agentServiceRequest<GenerateDescriptionResponse>(
+      'POST',
+      `/api/v1/agent-service/tenants/${tenantId}/ai/generate-description`,
+      data
+    );
+  }
+
+  async analyzeTrace(
+    tenantId: string,
+    data: AnalyzeTraceRequest
+  ): Promise<AnalyzeTraceResponse> {
+    return this.agentServiceRequest<AnalyzeTraceResponse>(
+      'POST',
+      `/api/v1/agent-service/tenants/${tenantId}/ai/analyze-trace`,
+      data
+    );
+  }
+
+  async summarizeTrace(
+    tenantId: string,
+    data: SummarizeTraceRequest
+  ): Promise<SummarizeTraceResponse> {
+    return this.agentServiceRequest<SummarizeTraceResponse>(
+      'POST',
+      `/api/v1/agent-service/tenants/${tenantId}/ai/summarize-trace`,
+      data
+    );
+  }
+
+  async testAIModel(
+    tenantId: string,
+    data: TestModelRequest
+  ): Promise<TestModelResponse> {
+    return this.agentServiceRequest<TestModelResponse>(
+      'POST',
+      `/api/v1/agent-service/tenants/${tenantId}/ai/test-model`,
+      data
+    );
+  }
+
+  async getAICapabilities(tenantId: string): Promise<AICapabilitiesResponse> {
+    return this.agentServiceRequest<AICapabilitiesResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/ai/capabilities`
     );
   }
 }

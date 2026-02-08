@@ -25,7 +25,8 @@ src/
 │   └── index.ts
 │
 ├── hooks/                      # Custom hooks
-│   └── useDebounce.ts
+│   ├── useDebounce.ts
+│   └── useEntityPermissions.ts
 │
 ├── routes/                     # Route definitions
 │   ├── index.tsx               # All routes (BrowserRouter + Routes)
@@ -84,6 +85,8 @@ src/
 | `AddPrincipalDialog` | Dialog for adding principals to resources |
 | `EditRolesDialog` | Dialog for editing principal roles |
 | `EntityDetailsForm` | Generic entity detail form |
+| `GenerateWithAIButton` | Button that triggers AI-powered content generation |
+| `MarkdownRenderer` | Renders markdown content with syntax highlighting |
 
 ### `components/dialogs/`
 
@@ -103,6 +106,8 @@ src/
 | `EditToolDialog/` | Edit tool |
 | `CreateTenantDialog` | Create new tenant |
 | `IntegrationDialog/` | API integration samples (POST/PUT payloads) |
+| `AIModelDialog/` | Create/edit tenant AI model configuration |
+| `AnalyzeErrorDialog/` | AI-powered trace error analysis dialog |
 | `SearchConversationsDialog` | Conversation search modal |
 | `ShareConversationDialog` | Share conversation modal |
 

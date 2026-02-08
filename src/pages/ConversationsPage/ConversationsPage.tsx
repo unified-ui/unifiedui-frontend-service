@@ -588,6 +588,23 @@ export const ConversationsPage: FC = () => {
             refreshTraces();
           }, 1500);
         },
+        // onTitleGeneration - Called when AI generates a conversation title
+        (title: string) => {
+          if (!activeConversationId) return;
+          const convId = activeConversationId;
+          let charIndex = 0;
+          const typewriterInterval = setInterval(() => {
+            charIndex++;
+            const partial = title.slice(0, charIndex);
+            setConversations(prev => prev.map(c =>
+              c.id === convId ? { ...c, name: partial } : c
+            ));
+            setCurrentConversation(prev => prev?.id === convId ? { ...prev, name: partial } : prev);
+            if (charIndex >= title.length) {
+              clearInterval(typewriterInterval);
+            }
+          }, 30);
+        },
         // Foundry token for Microsoft Foundry applications
         foundryToken
       );

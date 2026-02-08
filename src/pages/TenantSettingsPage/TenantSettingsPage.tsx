@@ -36,6 +36,7 @@ import {
   IconKey,
   IconShieldLock,
   IconTool,
+  IconBrain,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { PageContainer, ConfirmDeleteDialog, EditRolesDialog } from '../../components/common';
@@ -51,6 +52,7 @@ import {
   CreateToolDialog,
   EditToolDialog,
 } from '../../components/dialogs';
+import { AIModelDialog } from '../../components/dialogs/AIModelDialog';
 import type { EditDialogTab } from '../../components/dialogs';
 import { useIdentity } from '../../contexts';
 import type {
@@ -59,13 +61,14 @@ import type {
   CustomGroupResponse,
   CredentialResponse,
   ToolResponse,
+  AIModelResponse,
 } from '../../api/types';
-import { ToolTypeEnum } from '../../api/types';
+import { ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum } from '../../api/types';
 import classes from './TenantSettingsPage.module.css';
 
-type TabValue = 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'billing-and-licence';
+type TabValue = 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'ai-models' | 'billing-and-licence';
 
-const TAB_VALUES: TabValue[] = ['settings', 'iam', 'custom-groups', 'tools', 'credentials', 'billing-and-licence'];
+const TAB_VALUES: TabValue[] = ['settings', 'iam', 'custom-groups', 'tools', 'credentials', 'ai-models', 'billing-and-licence'];
 const DEFAULT_TAB: TabValue = 'settings';
 
 const isValidTab = (value: string | null): value is TabValue => {
@@ -208,13 +211,72 @@ export const TenantSettingsPage: FC = () => {
     { value: ToolTypeEnum.OPENAPI_DEFINITION, label: 'OpenAPI Definition' },
   ];
   
-  // Get badge color for tool type
   const getToolTypeBadgeColor = (type: string): string => {
     switch (type) {
       case ToolTypeEnum.MCP_SERVER:
         return 'blue';
       case ToolTypeEnum.OPENAPI_DEFINITION:
         return 'orange';
+      default:
+        return 'gray';
+    }
+  };
+
+  // ===== AI Models State =====
+  const [aiModels, setAiModels] = useState<AIModelResponse[]>([]);
+  const [aiModelsLoading, setAiModelsLoading] = useState(false);
+  const [aiModelsLoadingMore, setAiModelsLoadingMore] = useState(false);
+  const [aiModelsError, setAiModelsError] = useState<string | null>(null);
+  const [aiModelsFetched, setAiModelsFetched] = useState(false);
+  const [aiModelsHasMore, setAiModelsHasMore] = useState(true);
+  const [aiModelsSkip, setAiModelsSkip] = useState(0);
+  const [createAiModelDialogOpen, setCreateAiModelDialogOpen] = useState(false);
+  const [editAiModelId, setEditAiModelId] = useState<string | null>(null);
+  const [aiModelsSearch, setAiModelsSearch] = useState('');
+  const [debouncedAiModelsSearch] = useDebouncedValue(aiModelsSearch, 400);
+  const [aiModelsTypeFilter, setAiModelsTypeFilter] = useState<string[]>([]);
+  const [aiModelsProviderFilter, setAiModelsProviderFilter] = useState<string[]>([]);
+  const [deleteAiModelDialog, setDeleteAiModelDialog] = useState<{
+    open: boolean;
+    id: string;
+    name: string;
+  }>({ open: false, id: '', name: '' });
+  const [isDeletingAiModel, setIsDeletingAiModel] = useState(false);
+
+  const AI_MODELS_PAGE_SIZE = 50;
+  const aiModelsLoadMoreRef = useRef<HTMLDivElement>(null);
+
+  const AI_MODEL_TYPE_OPTIONS = [
+    { value: AIModelTypeEnum.LLM_MODEL, label: 'LLM Model' },
+    { value: AIModelTypeEnum.EMBEDDING_MODEL, label: 'Embedding Model' },
+  ];
+
+  const AI_MODEL_PROVIDER_OPTIONS = [
+    { value: AIModelProviderEnum.AZURE_OPENAI, label: 'Azure OpenAI' },
+    { value: AIModelProviderEnum.OPENAI, label: 'OpenAI' },
+    { value: AIModelProviderEnum.ANTHROPIC, label: 'Anthropic' },
+    { value: AIModelProviderEnum.GOOGLE_GENAI, label: 'Google GenAI' },
+    { value: AIModelProviderEnum.OLLAMA, label: 'Ollama' },
+    { value: AIModelProviderEnum.MISTRAL, label: 'Mistral' },
+    { value: AIModelProviderEnum.GROQ, label: 'Groq' },
+  ];
+
+  const getAiModelProviderBadgeColor = (provider: string): string => {
+    switch (provider) {
+      case AIModelProviderEnum.AZURE_OPENAI:
+        return 'blue';
+      case AIModelProviderEnum.OPENAI:
+        return 'green';
+      case AIModelProviderEnum.ANTHROPIC:
+        return 'orange';
+      case AIModelProviderEnum.GOOGLE_GENAI:
+        return 'yellow';
+      case AIModelProviderEnum.OLLAMA:
+        return 'gray';
+      case AIModelProviderEnum.MISTRAL:
+        return 'violet';
+      case AIModelProviderEnum.GROQ:
+        return 'teal';
       default:
         return 'gray';
     }
@@ -525,6 +587,76 @@ export const TenantSettingsPage: FC = () => {
     return () => observer.disconnect();
   }, [toolsHasMore, toolsLoadingMore, handleLoadMoreTools]);
 
+  // ===== Fetch AI Models =====
+  const fetchAIModels = useCallback(async (reset = false) => {
+    if (!apiClient || !selectedTenant) return;
+
+    const isInitialFetch = reset || !aiModelsFetched;
+    if (isInitialFetch) {
+      setAiModelsLoading(true);
+    } else {
+      setAiModelsLoadingMore(true);
+    }
+    setAiModelsError(null);
+
+    const skip = reset ? 0 : aiModelsSkip;
+
+    try {
+      const result = await apiClient.listAIModels(selectedTenant.id, {
+        skip,
+        limit: AI_MODELS_PAGE_SIZE,
+        name: debouncedAiModelsSearch || undefined,
+        type: aiModelsTypeFilter.length > 0 ? aiModelsTypeFilter.join(',') : undefined,
+        provider: aiModelsProviderFilter.length > 0 ? aiModelsProviderFilter.join(',') : undefined,
+        order_by: 'name',
+        order_direction: 'asc',
+      });
+
+      if (reset) {
+        setAiModels(result);
+        setAiModelsSkip(AI_MODELS_PAGE_SIZE);
+      } else {
+        setAiModels((prev) => {
+          const existingIds = new Set(prev.map(m => m.id));
+          const uniqueNew = result.filter(m => !existingIds.has(m.id));
+          return [...prev, ...uniqueNew];
+        });
+        setAiModelsSkip((prev) => prev + AI_MODELS_PAGE_SIZE);
+      }
+
+      setAiModelsHasMore(result.length === AI_MODELS_PAGE_SIZE);
+      setAiModelsFetched(true);
+    } catch {
+      setAiModelsError('Failed to load AI models');
+    } finally {
+      setAiModelsLoading(false);
+      setAiModelsLoadingMore(false);
+    }
+  }, [apiClient, selectedTenant, aiModelsFetched, aiModelsSkip, debouncedAiModelsSearch, aiModelsTypeFilter, aiModelsProviderFilter]);
+
+  const handleLoadMoreAIModels = useCallback(() => {
+    if (!aiModelsLoadingMore && aiModelsHasMore) {
+      fetchAIModels(false);
+    }
+  }, [fetchAIModels, aiModelsLoadingMore, aiModelsHasMore]);
+
+  useEffect(() => {
+    if (!aiModelsLoadMoreRef.current || !handleLoadMoreAIModels || !aiModelsHasMore || aiModelsLoadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && aiModelsHasMore && !aiModelsLoadingMore) {
+          handleLoadMoreAIModels();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(aiModelsLoadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [aiModelsHasMore, aiModelsLoadingMore, handleLoadMoreAIModels]);
+
   // ===== Load data based on active tab =====
   useEffect(() => {
     if (activeTab === 'iam' && !principalsFetched) {
@@ -539,7 +671,10 @@ export const TenantSettingsPage: FC = () => {
     if (activeTab === 'credentials' && !credentialsFetched) {
       fetchCredentials(true);
     }
-  }, [activeTab, principalsFetched, customGroupsFetched, toolsFetched, credentialsFetched, fetchPrincipals, fetchCustomGroups, fetchTools, fetchCredentials]);
+    if (activeTab === 'ai-models' && !aiModelsFetched) {
+      fetchAIModels(true);
+    }
+  }, [activeTab, principalsFetched, customGroupsFetched, toolsFetched, credentialsFetched, aiModelsFetched, fetchPrincipals, fetchCustomGroups, fetchTools, fetchCredentials, fetchAIModels]);
 
   // Re-fetch principals when search or filters change
   useEffect(() => {
@@ -568,6 +703,13 @@ export const TenantSettingsPage: FC = () => {
       fetchTools(true);
     }
   }, [debouncedToolsSearch, toolsTypeFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-fetch AI models when search or filters change
+  useEffect(() => {
+    if (activeTab === 'ai-models' && aiModelsFetched) {
+      fetchAIModels(true);
+    }
+  }, [debouncedAiModelsSearch, aiModelsTypeFilter, aiModelsProviderFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ===== Tenant Settings Handlers =====
   const handleSaveTenant = tenantForm.onSubmit(async (values) => {
@@ -812,6 +954,22 @@ export const TenantSettingsPage: FC = () => {
     fetchTools(true);
   };
 
+  // ===== AI Model Handlers =====
+  const handleDeleteAiModel = async () => {
+    if (!apiClient || !selectedTenant || !deleteAiModelDialog.id) return;
+
+    setIsDeletingAiModel(true);
+    try {
+      await apiClient.deleteAIModel(selectedTenant.id, deleteAiModelDialog.id);
+      setDeleteAiModelDialog({ open: false, id: '', name: '' });
+      await fetchAIModels(true);
+    } catch {
+      // Error handled by API client
+    } finally {
+      setIsDeletingAiModel(false);
+    }
+  };
+
   // Get existing principal IDs for AddPrincipalDialog
   const existingPrincipalIds = useMemo(
     () => principals.map((p) => p.principalId),
@@ -867,6 +1025,9 @@ export const TenantSettingsPage: FC = () => {
               </Tabs.Tab>
               <Tabs.Tab value="credentials" leftSection={<IconKey size={20} />}>
                 Credentials
+              </Tabs.Tab>
+              <Tabs.Tab value="ai-models" leftSection={<IconBrain size={20} />}>
+                AI Models
               </Tabs.Tab>
               <Tabs.Tab value="billing-and-licence" leftSection={<IconCreditCard size={20} />}>
                 Billing & Licence
@@ -1453,6 +1614,187 @@ export const TenantSettingsPage: FC = () => {
               </Stack>
             </Tabs.Panel>
 
+            {/* AI Models Tab */}
+            <Tabs.Panel value="ai-models">
+              <Stack gap="md">
+                <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+                  <Text size="sm">
+                    Configure AI models for agent features like description generation, trace analysis, and conversation summarization.
+                  </Text>
+                </Alert>
+
+                <Group justify="space-between">
+                  <Group gap="sm" style={{ flex: 1 }}>
+                    <TextInput
+                      placeholder="Search AI models..."
+                      leftSection={<IconSearch size={16} />}
+                      value={aiModelsSearch}
+                      onChange={(e) => setAiModelsSearch(e.currentTarget.value)}
+                      style={{ flex: 1, maxWidth: 250 }}
+                    />
+                    <MultiSelect
+                      placeholder="Type"
+                      data={AI_MODEL_TYPE_OPTIONS}
+                      value={aiModelsTypeFilter}
+                      onChange={setAiModelsTypeFilter}
+                      clearable
+                      style={{ maxWidth: 200 }}
+                    />
+                    <MultiSelect
+                      placeholder="Provider"
+                      data={AI_MODEL_PROVIDER_OPTIONS}
+                      value={aiModelsProviderFilter}
+                      onChange={setAiModelsProviderFilter}
+                      clearable
+                      style={{ maxWidth: 200 }}
+                    />
+                  </Group>
+                  <Button
+                    leftSection={<IconBrain size={16} />}
+                    onClick={() => setCreateAiModelDialogOpen(true)}
+                  >
+                    Create AI Model
+                  </Button>
+                </Group>
+
+                <div className={classes.tableScrollWrapper}>
+                  <div className={classes.tableScrollArea}>
+                  <div className={classes.tableWrapper}>
+                    <Table striped highlightOnHover>
+                      <Table.Thead className={classes.tableHeader}>
+                        <Table.Tr>
+                          <Table.Th className={classes.colName}>Name</Table.Th>
+                          <Table.Th className={classes.colType}>Type</Table.Th>
+                          <Table.Th className={classes.colType}>Provider</Table.Th>
+                          <Table.Th className={classes.colType}>Status</Table.Th>
+                          <Table.Th className={classes.colDescription}>Description</Table.Th>
+                          <Table.Th className={classes.colActions}></Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {aiModelsLoading && !aiModelsFetched ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={6}>
+                              <Center py="xl">
+                                <Loader size="lg" />
+                              </Center>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : aiModelsError ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={6}>
+                              <Alert color="red">{aiModelsError}</Alert>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : aiModels.length === 0 ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={6}>
+                              <Center py="xl">
+                                <Text c="dimmed">
+                                  {aiModelsSearch || aiModelsTypeFilter.length > 0 || aiModelsProviderFilter.length > 0
+                                    ? 'No AI models match your filters.'
+                                    : 'No AI models yet. Create one to get started.'}
+                                </Text>
+                              </Center>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : (
+                          aiModels.map((model) => (
+                            <Table.Tr
+                              key={model.id}
+                              className={classes.customGroupRow}
+                              onClick={() => setEditAiModelId(model.id)}
+                            >
+                              <Table.Td>
+                                <Group gap="sm">
+                                  <div className={classes.groupIcon}>
+                                    <IconBrain size={16} />
+                                  </div>
+                                  <Text fw={500}>{model.name}</Text>
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Badge size="sm" variant="light" color="gray">
+                                  {model.type === AIModelTypeEnum.LLM_MODEL ? 'LLM' : 'Embedding'}
+                                </Badge>
+                              </Table.Td>
+                              <Table.Td>
+                                <Badge size="sm" variant="light" color={getAiModelProviderBadgeColor(model.provider)}>
+                                  {model.provider.replace(/_/g, ' ')}
+                                </Badge>
+                              </Table.Td>
+                              <Table.Td>
+                                <Badge size="sm" variant="light" color={model.is_active ? 'green' : 'gray'}>
+                                  {model.is_active ? 'Active' : 'Inactive'}
+                                </Badge>
+                              </Table.Td>
+                              <Table.Td>
+                                <Text size="sm" c="dimmed" lineClamp={1}>
+                                  {model.description || '-'}
+                                </Text>
+                              </Table.Td>
+                              <Table.Td>
+                                <Group gap={0} justify="flex-end">
+                                  <Menu position="bottom-end" withinPortal shadow="md">
+                                    <Menu.Target>
+                                      <ActionIcon
+                                        variant="subtle"
+                                        color="gray"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <IconDots size={16} />
+                                      </ActionIcon>
+                                    </Menu.Target>
+                                    <Menu.Dropdown>
+                                      <Menu.Item
+                                        leftSection={<IconEdit size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setEditAiModelId(model.id);
+                                        }}
+                                      >
+                                        Edit
+                                      </Menu.Item>
+                                      <Menu.Divider />
+                                      <Menu.Item
+                                        color="red"
+                                        leftSection={<IconTrash size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setDeleteAiModelDialog({
+                                            open: true,
+                                            id: model.id,
+                                            name: model.name,
+                                          });
+                                        }}
+                                      >
+                                        Delete
+                                      </Menu.Item>
+                                    </Menu.Dropdown>
+                                  </Menu>
+                                </Group>
+                              </Table.Td>
+                            </Table.Tr>
+                          ))
+                        )}
+                      </Table.Tbody>
+                    </Table>
+                  </div>
+
+                    {aiModelsHasMore && (
+                      <div ref={aiModelsLoadMoreRef} className={classes.loadMoreTrigger}>
+                        {aiModelsLoadingMore && (
+                          <Center py="sm">
+                            <Loader size="sm" />
+                          </Center>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Stack>
+            </Tabs.Panel>
+
             {/* Billing Tab */}
             <Tabs.Panel value="billing-and-licence">
               <Stack gap="lg">
@@ -1615,6 +1957,31 @@ export const TenantSettingsPage: FC = () => {
         itemName={deleteToolDialog.name}
         itemType="Tool"
         isLoading={isDeletingTool}
+      />
+
+      {/* Create AI Model Dialog */}
+      <AIModelDialog
+        opened={createAiModelDialogOpen}
+        onClose={() => setCreateAiModelDialogOpen(false)}
+        onSuccess={() => fetchAIModels(true)}
+      />
+
+      {/* Edit AI Model Dialog */}
+      <AIModelDialog
+        opened={!!editAiModelId}
+        onClose={() => setEditAiModelId(null)}
+        onSuccess={() => fetchAIModels(true)}
+        modelId={editAiModelId}
+      />
+
+      {/* Delete AI Model Confirmation */}
+      <ConfirmDeleteDialog
+        opened={deleteAiModelDialog.open}
+        onClose={() => setDeleteAiModelDialog({ open: false, id: '', name: '' })}
+        onConfirm={handleDeleteAiModel}
+        itemName={deleteAiModelDialog.name}
+        itemType="AI Model"
+        isLoading={isDeletingAiModel}
       />
     </MainLayout>
   );

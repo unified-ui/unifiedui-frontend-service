@@ -14,3 +14,5 @@ export { EditToolDialog } from './EditToolDialog';
 export { ShareConversationDialog } from './ShareConversationDialog';
 export { SearchConversationsDialog } from './SearchConversationsDialog';
 export { IntegrationDialog } from './IntegrationDialog';
+export { AIModelDialog } from './AIModelDialog';
+export { AnalyzeErrorDialog } from './AnalyzeErrorDialog';

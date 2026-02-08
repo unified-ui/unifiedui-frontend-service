@@ -10,15 +10,17 @@
 
 import { useState, useMemo, useCallback, useRef } from 'react';
 import type { FC } from 'react';
-import { Text, Tabs, ScrollArea, Badge, Collapse, UnstyledButton, Group, Code } from '@mantine/core';
+import { Text, Tabs, ScrollArea, Badge, Collapse, UnstyledButton, Group, Code, Button } from '@mantine/core';
 import {
   IconChevronRight,
   IconChevronDown,
   IconNote,
   IconBraces,
   IconFileText,
+  IconAlertTriangle,
 } from '@tabler/icons-react';
 import { useTracing } from './TracingContext';
+import { AnalyzeErrorDialog } from '../dialogs/AnalyzeErrorDialog';
 import type { TraceNodeDataIO } from '../../api/types';
 import classes from './TracingDataSection.module.css';
 
@@ -274,9 +276,11 @@ export const TracingDataSection: FC = () => {
 
   // Active tab
   const [activeTab, setActiveTab] = useState<string | null>('io');
+  const [analyzeErrorOpened, setAnalyzeErrorOpened] = useState(false);
 
   // Wenn Root, zeige nur Metadata Tab
   const showIOTab = !isRoot;
+  const showAnalyzeError = !isRoot && selectedNode?.status === 'failed' && !!selectedNode?.error;
 
   if (!selectedTrace) {
     return (
@@ -315,6 +319,18 @@ export const TracingDataSection: FC = () => {
             <Tabs.Tab value="metadata" leftSection={<IconBraces size={14} />}>
               Metadata
             </Tabs.Tab>
+            {showAnalyzeError && (
+              <Button
+                variant="light"
+                color="red"
+                size="compact-xs"
+                leftSection={<IconAlertTriangle size={14} />}
+                ml="auto"
+                onClick={() => setAnalyzeErrorOpened(true)}
+              >
+                Analyze Error
+              </Button>
+            )}
           </Tabs.List>
 
           {/* Input/Output Tab */}
@@ -340,6 +356,20 @@ export const TracingDataSection: FC = () => {
           </Tabs.Panel>
         </Tabs>
       </div>
+
+      {showAnalyzeError && (
+        <AnalyzeErrorDialog
+          opened={analyzeErrorOpened}
+          onClose={() => setAnalyzeErrorOpened(false)}
+          traceId={selectedTrace.id}
+          nodeId={selectedNode?.id}
+          nodeName={selectedNode?.name || 'Unknown'}
+          nodeType={selectedNode?.type || 'Unknown'}
+          error={selectedNode?.error || ''}
+          input={selectedNode?.data?.input as Record<string, unknown> | undefined}
+          output={selectedNode?.data?.output as Record<string, unknown> | undefined}
+        />
+      )}
     </div>
   );
 };

@@ -21,6 +21,7 @@ import {
   IconAlertCircle,
 } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
+import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import { ManageAccessTable } from '../../common/ManageAccessTable';
 import type { PrincipalPermission } from '../../common/ManageAccessTable';
 import { AddPrincipalDialog } from '../../common/AddPrincipalDialog';
@@ -404,12 +405,21 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
                     required
                     {...form.getInputProps('name')}
                   />
-                  <Textarea
-                    label="Description"
-                    placeholder="Enter group description (optional)"
-                    minRows={3}
-                    {...form.getInputProps('description')}
-                  />
+                  <Group gap="xs" align="flex-end">
+                    <Textarea
+                      label="Description"
+                      placeholder="Enter group description (optional)"
+                      minRows={3}
+                      style={{ flex: 1 }}
+                      {...form.getInputProps('description')}
+                    />
+                    <GenerateWithAIButton
+                      entityType="custom_group"
+                      entityName={form.values.name}
+                      existingDescription={form.values.description || undefined}
+                      onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+                    />
+                  </Group>
                   <Group justify="flex-end" mt="md">
                     <Button variant="default" onClick={handleClose}>
                       Close

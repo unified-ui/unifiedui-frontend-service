@@ -7,7 +7,7 @@ import { PublicClientApplication } from '@azure/msal-browser';
 import { msalConfig } from './auth/authConfig';
 import { AuthProvider } from './auth';
 import { theme } from './theme';
-import { IdentityProvider, SidebarDataProvider } from './contexts';
+import { IdentityProvider, SidebarDataProvider, AICapabilitiesProvider } from './contexts';
 import App from './App.tsx';
 
 // Mantine Core Styles
@@ -40,9 +40,11 @@ createRoot(document.getElementById('root')!).render(
       <MsalProvider instance={msalInstance}>
         <AuthProvider>
           <IdentityProvider>
-            <SidebarDataProvider>
-              <App />
-            </SidebarDataProvider>
+            <AICapabilitiesProvider>
+              <SidebarDataProvider>
+                <App />
+              </SidebarDataProvider>
+            </AICapabilitiesProvider>
           </IdentityProvider>
         </AuthProvider>
       </MsalProvider>
