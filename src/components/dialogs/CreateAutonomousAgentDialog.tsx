@@ -14,6 +14,7 @@ import {
   Alert,
   Loader,
   Switch,
+  Box,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -350,7 +351,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
               onChange={(e) => form.setFieldValue('allow_api_keys', e.currentTarget.checked)}
             />
 
-            <Group gap="xs" align="flex-end">
+            <Box pos="relative">
               <Textarea
                 label="Description"
                 placeholder="Optional description"
@@ -358,16 +359,17 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
                 minRows={3}
                 maxRows={6}
                 autosize
-                style={{ flex: 1 }}
                 {...form.getInputProps('description')}
               />
-              <GenerateWithAIButton
-                entityType="autonomous_agent"
-                entityName={form.values.name}
-                existingDescription={form.values.description || undefined}
-                onGenerated={(desc: string) => form.setFieldValue('description', desc)}
-              />
-            </Group>
+              <Box pos="absolute" top={0} right={0}>
+                <GenerateWithAIButton
+                  entityType="autonomous_agent"
+                  entityName={form.values.name}
+                  existingDescription={form.values.description || undefined}
+                  onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+                />
+              </Box>
+            </Box>
 
             <Group justify="flex-end" mt="md">
               <Button variant="default" onClick={handleClose} disabled={isSubmitting}>

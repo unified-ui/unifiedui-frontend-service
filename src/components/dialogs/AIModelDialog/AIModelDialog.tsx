@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import type { FC } from 'react';
 import {
   Modal, TextInput, Textarea, Select, Button, Group, Stack,
-  Text, NumberInput, Switch, MultiSelect, Alert, LoadingOverlay, Divider,
+  Text, NumberInput, Switch, MultiSelect, Alert, LoadingOverlay, Divider, Box,
+  ActionIcon, Tooltip,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconBrain, IconCheck, IconX, IconAlertCircle } from '@tabler/icons-react';
+import { IconBrain, IconCheck, IconX, IconAlertCircle, IconPlus } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import {
@@ -14,6 +15,7 @@ import {
   AIModelPurposeGroupEnum,
 } from '../../../api/types';
 import type { QuickListItemResponse } from '../../../api/types';
+import { CreateCredentialDialog } from '../CreateCredentialDialog';
 import classes from './AIModelDialog.module.css';
 
 interface AIModelDialogProps {
@@ -82,6 +84,7 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [credentials, setCredentials] = useState<QuickListItemResponse[]>([]);
+  const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
 
   const form = useForm<FormValues>({
     initialValues: {
@@ -218,6 +221,17 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
     onClose();
   };
 
+  const handleOpenCreateCredential = () => {
+    setCreateCredentialOpen(true);
+  };
+
+  const handleCredentialCreated = async (credential?: { id: string; name: string }) => {
+    await fetchCredentials();
+    if (credential) {
+      form.setFieldValue('credential_id', credential.id);
+    }
+  };
+
   const provider = form.values.provider;
   const requiresCredential = provider ? PROVIDER_REQUIRES_CREDENTIAL[provider] ?? true : false;
   const credentialOptions = credentials.map((c) => ({ value: c.id, label: c.name }));
@@ -306,6 +320,7 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
   };
 
   return (
+    <>
     <Modal
       opened={opened}
       onClose={handleClose}
@@ -365,14 +380,27 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
               {renderProviderConfigFields()}
 
               {requiresCredential && (
-                <Select
-                  label="Credential"
-                  placeholder="Select a credential"
-                  data={credentialOptions}
-                  clearable
-                  searchable
-                  {...form.getInputProps('credential_id')}
-                />
+                <Group gap="xs" align="flex-end">
+                  <Select
+                    label="Credential"
+                    placeholder="Select a credential"
+                    data={credentialOptions}
+                    clearable
+                    searchable
+                    style={{ flex: 1 }}
+                    {...form.getInputProps('credential_id')}
+                  />
+                  <Tooltip label="Create new Credential">
+                    <ActionIcon
+                      variant="light"
+                      color="blue"
+                      size="lg"
+                      onClick={handleOpenCreateCredential}
+                    >
+                      <IconPlus size={18} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
               )}
 
               <Group justify="flex-start">
@@ -427,7 +455,7 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
             </div>
           </Group>
 
-          <Group gap="xs" align="flex-end">
+          <Box pos="relative">
             <Textarea
               label="Description"
               placeholder="Optional description"
@@ -435,16 +463,17 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
               minRows={2}
               maxRows={4}
               autosize
-              style={{ flex: 1 }}
               {...form.getInputProps('description')}
             />
-            <GenerateWithAIButton
-              entityType="ai_model"
-              entityName={form.values.name}
-              existingDescription={form.values.description || undefined}
-              onGenerated={(desc: string) => form.setFieldValue('description', desc)}
-            />
-          </Group>
+            <Box pos="absolute" top={0} right={0}>
+              <GenerateWithAIButton
+                entityType="ai_model"
+                entityName={form.values.name}
+                existingDescription={form.values.description || undefined}
+                onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+              />
+            </Box>
+          </Box>
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={handleClose} disabled={isSubmitting}>
@@ -457,5 +486,12 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
         </Stack>
       </form>
     </Modal>
+
+      <CreateCredentialDialog
+        opened={createCredentialOpen}
+        onClose={() => setCreateCredentialOpen(false)}
+        onSuccess={handleCredentialCreated}
+      />
+    </>
   );
 };

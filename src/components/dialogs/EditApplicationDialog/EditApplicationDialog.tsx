@@ -869,7 +869,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
                 onChange={(tags) => form.setFieldValue('tags', tags)}
               />
 
-              <Group gap="xs" align="flex-end">
+              <Box pos="relative">
                 <Textarea
                   label="Description"
                   placeholder="Optional description"
@@ -877,16 +877,17 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
                   minRows={3}
                   maxRows={6}
                   autosize
-                  style={{ flex: 1 }}
                   {...form.getInputProps('description')}
                 />
-                <GenerateWithAIButton
-                  entityType="application"
-                  entityName={form.values.name}
-                  existingDescription={form.values.description || undefined}
-                  onGenerated={(desc: string) => form.setFieldValue('description', desc)}
-                />
-              </Group>
+                <Box pos="absolute" top={0} right={0}>
+                  <GenerateWithAIButton
+                    entityType="application"
+                    entityName={form.values.name}
+                    existingDescription={form.values.description || undefined}
+                    onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+                  />
+                </Box>
+              </Box>
 
               <Divider />
 

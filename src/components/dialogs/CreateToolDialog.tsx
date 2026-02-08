@@ -8,6 +8,7 @@ import {
   Group,
   Stack,
   Text,
+  Box,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconTool } from '@tabler/icons-react';
@@ -141,22 +142,23 @@ export const CreateToolDialog: FC<CreateToolDialogProps> = ({
             disabled={isSubmitting}
           />
 
-          <Group gap="xs" align="flex-end">
+          <Box pos="relative">
             <Textarea
               label="Description"
               placeholder="Optional description"
               minRows={3}
-              style={{ flex: 1 }}
               {...form.getInputProps('description')}
               disabled={isSubmitting}
             />
-            <GenerateWithAIButton
-              entityType="tool"
-              entityName={form.values.name}
-              existingDescription={form.values.description || undefined}
-              onGenerated={(desc: string) => form.setFieldValue('description', desc)}
-            />
-          </Group>
+            <Box pos="absolute" top={0} right={0}>
+              <GenerateWithAIButton
+                entityType="tool"
+                entityName={form.values.name}
+                existingDescription={form.values.description || undefined}
+                onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+              />
+            </Box>
+          </Box>
 
           <TagInput
             label="Tags"

@@ -381,7 +381,7 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
                 onChange={(tags) => form.setFieldValue('tags', tags)}
               />
 
-              <Group gap="xs" align="flex-end">
+              <Box pos="relative">
                 <Textarea
                   label="Description"
                   placeholder="Optional description"
@@ -389,16 +389,17 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
                   minRows={3}
                   maxRows={6}
                   autosize
-                  style={{ flex: 1 }}
                   {...form.getInputProps('description')}
                 />
-                <GenerateWithAIButton
-                  entityType="credential"
-                  entityName={form.values.name}
-                  existingDescription={form.values.description || undefined}
-                  onGenerated={(desc: string) => form.setFieldValue('description', desc)}
-                />
-              </Group>
+                <Box pos="absolute" top={0} right={0}>
+                  <GenerateWithAIButton
+                    entityType="credential"
+                    entityName={form.values.name}
+                    existingDescription={form.values.description || undefined}
+                    onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+                  />
+                </Box>
+              </Box>
 
               <Divider />
 

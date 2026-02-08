@@ -405,21 +405,22 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
                     required
                     {...form.getInputProps('name')}
                   />
-                  <Group gap="xs" align="flex-end">
+                  <Box pos="relative">
                     <Textarea
                       label="Description"
                       placeholder="Enter group description (optional)"
                       minRows={3}
-                      style={{ flex: 1 }}
                       {...form.getInputProps('description')}
                     />
-                    <GenerateWithAIButton
-                      entityType="custom_group"
-                      entityName={form.values.name}
-                      existingDescription={form.values.description || undefined}
-                      onGenerated={(desc: string) => form.setFieldValue('description', desc)}
-                    />
-                  </Group>
+                    <Box pos="absolute" top={0} right={0}>
+                      <GenerateWithAIButton
+                        entityType="custom_group"
+                        entityName={form.values.name}
+                        existingDescription={form.values.description || undefined}
+                        onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+                      />
+                    </Box>
+                  </Box>
                   <Group justify="flex-end" mt="md">
                     <Button variant="default" onClick={handleClose}>
                       Close
