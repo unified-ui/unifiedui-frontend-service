@@ -1123,15 +1123,11 @@ export class UnifiedUIAPIClient {
   async refreshAutonomousAgentTraceImport(
     tenantId: string,
     agentId: string,
-    traceId: string,
-    apiKey: string
+    traceId: string
   ): Promise<FullTraceResponse> {
     return this.agentServiceRequest<FullTraceResponse>(
       'PUT',
-      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces/${traceId}/import/refresh`,
-      undefined,
-      undefined,
-      { 'X-Unified-UI-Autonomous-Agent-API-Key': apiKey }
+      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces/${traceId}/import/refresh`
     );
   }
 

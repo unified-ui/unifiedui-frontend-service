@@ -227,8 +227,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
     async (trace: FullTraceResponse) => {
       if (!apiClient || !selectedTenant || !agentId) return;
       try {
-        const keyResponse = await apiClient.getAutonomousAgentKey(selectedTenant.id, agentId, 1);
-        await apiClient.refreshAutonomousAgentTraceImport(selectedTenant.id, agentId, trace.id, keyResponse.key);
+        await apiClient.refreshAutonomousAgentTraceImport(selectedTenant.id, agentId, trace.id);
         fetchTraces(true);
       } catch {
         // Error handled by API client onError
