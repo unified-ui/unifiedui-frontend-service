@@ -1142,6 +1142,7 @@ export interface FilterParams {
   is_active?: number;
   tags?: string;
   type?: string;
+  provider?: string;
 }
 
 export interface SearchParams {

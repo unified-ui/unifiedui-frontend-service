@@ -1020,14 +1020,14 @@ export const TenantSettingsPage: FC = () => {
               <Tabs.Tab value="custom-groups" leftSection={<IconUsersGroup size={20} />}>
                 Custom Groups
               </Tabs.Tab>
+              <Tabs.Tab value="ai-models" leftSection={<IconBrain size={20} />}>
+                AI Models
+              </Tabs.Tab>
               <Tabs.Tab value="tools" leftSection={<IconTool size={20} />}>
                 ReACT Agent Tools
               </Tabs.Tab>
               <Tabs.Tab value="credentials" leftSection={<IconKey size={20} />}>
                 Credentials
-              </Tabs.Tab>
-              <Tabs.Tab value="ai-models" leftSection={<IconBrain size={20} />}>
-                AI Models
               </Tabs.Tab>
               <Tabs.Tab value="billing-and-licence" leftSection={<IconCreditCard size={20} />}>
                 Billing & Licence
