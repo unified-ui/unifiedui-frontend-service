@@ -1664,9 +1664,10 @@ export const TenantSettingsPage: FC = () => {
                       <Table.Thead className={classes.tableHeader}>
                         <Table.Tr>
                           <Table.Th className={classes.colName}>Name</Table.Th>
-                          <Table.Th className={classes.colType}>Type</Table.Th>
+                          <Table.Th className={classes.colTypeSmall}>Type</Table.Th>
                           <Table.Th className={classes.colType}>Provider</Table.Th>
-                          <Table.Th className={classes.colType}>Status</Table.Th>
+                          <Table.Th className={classes.colTypeSmall}>Status</Table.Th>
+                          <Table.Th className={classes.colPurposeGroups}>Purpose Groups</Table.Th>
                           <Table.Th className={classes.colDescription}>Description</Table.Th>
                           <Table.Th className={classes.colActions}></Table.Th>
                         </Table.Tr>
@@ -1674,7 +1675,7 @@ export const TenantSettingsPage: FC = () => {
                       <Table.Tbody>
                         {aiModelsLoading && !aiModelsFetched ? (
                           <Table.Tr>
-                            <Table.Td colSpan={6}>
+                            <Table.Td colSpan={7}>
                               <Center py="xl">
                                 <Loader size="lg" />
                               </Center>
@@ -1682,13 +1683,13 @@ export const TenantSettingsPage: FC = () => {
                           </Table.Tr>
                         ) : aiModelsError ? (
                           <Table.Tr>
-                            <Table.Td colSpan={6}>
+                            <Table.Td colSpan={7}>
                               <Alert color="red">{aiModelsError}</Alert>
                             </Table.Td>
                           </Table.Tr>
                         ) : aiModels.length === 0 ? (
                           <Table.Tr>
-                            <Table.Td colSpan={6}>
+                            <Table.Td colSpan={7}>
                               <Center py="xl">
                                 <Text c="dimmed">
                                   {aiModelsSearch || aiModelsTypeFilter.length > 0 || aiModelsProviderFilter.length > 0
@@ -1729,7 +1730,18 @@ export const TenantSettingsPage: FC = () => {
                                 </Badge>
                               </Table.Td>
                               <Table.Td>
-                                <Text size="sm" c="dimmed" lineClamp={1}>
+                                <Group gap={4} wrap="wrap">
+                                  {model.purpose_groups.length > 0 ? model.purpose_groups.map((pg) => (
+                                    <Badge key={pg} size="xs" variant="light" color="violet">
+                                      {pg.replace(/_/g, ' ')}
+                                    </Badge>
+                                  )) : (
+                                    <Text size="sm" c="dimmed">-</Text>
+                                  )}
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Text size="sm" c="dimmed" className={classes.descriptionText}>
                                   {model.description || '-'}
                                 </Text>
                               </Table.Td>

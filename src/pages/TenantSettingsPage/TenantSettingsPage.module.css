@@ -55,15 +55,33 @@
 }
 
 .colName {
-  min-width: 200px;
+  min-width: 280px;
 }
 
 .colType {
   min-width: 120px;
 }
 
+.colTypeSmall {
+  min-width: 80px;
+}
+
+.colPurposeGroups {
+  min-width: 180px;
+}
+
 .colDescription {
   min-width: 200px;
+}
+
+.descriptionText {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .colActions {
