@@ -1,11 +1,12 @@
 import type { FC, ReactNode } from 'react';
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { ScrollArea, Box, Text, Avatar, Stack, Loader, Paper, Tooltip, ActionIcon, CopyButton, Group, Button, Textarea } from '@mantine/core';
-import { IconUser, IconSparkles, IconCopy, IconCheck, IconBinaryTree, IconThumbUp, IconThumbDown, IconArrowDown, IconEdit, IconTrash, IconAlertTriangle, IconRefresh, IconFile, IconPhoto, IconFileTypePdf, IconFileTypeDoc, IconFileTypeXls, IconFileTypePpt, IconFileText, IconMusic, IconFileCode } from '@tabler/icons-react';
+import { IconUser, IconSparkles, IconCopy, IconCheck, IconBinaryTree, IconThumbUp, IconThumbDown, IconThumbUpFilled, IconThumbDownFilled, IconArrowDown, IconEdit, IconTrash, IconAlertTriangle, IconRefresh, IconFile, IconPhoto, IconFileTypePdf, IconFileTypeDoc, IconFileTypeXls, IconFileTypePpt, IconFileText, IconMusic, IconFileCode } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { MessageResponse, AttachmentMetadata } from '../../../../api/types';
+import type { MessageResponse, AttachmentMetadata, ReactionResponse } from '../../../../api/types';
 import { ConfirmDeleteDialog } from '../../../../components/common';
+import { FeedbackDialog } from '../FeedbackDialog';
 import classes from './ChatContent.module.css';
 
 interface ChatContentProps {
@@ -19,7 +20,8 @@ interface ChatContentProps {
   highlightedExtMessageId?: string | null;
   onEditMessage?: (messageId: string, newContent: string) => Promise<void>;
   onDeleteMessage?: (messageId: string) => Promise<void>;
-  onReaction?: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down') => Promise<void>;
+  onReaction?: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string) => Promise<void>;
+  reactions?: Map<string, ReactionResponse>;
   onRetry?: (content: string) => void;
 }
 
@@ -35,6 +37,7 @@ export const ChatContent: FC<ChatContentProps> = ({
   onEditMessage,
   onDeleteMessage,
   onReaction,
+  reactions,
   onRetry,
 }) => {
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -96,6 +99,14 @@ export const ChatContent: FC<ChatContentProps> = ({
     }
   }, [messages, streamingContent]);
 
+  useEffect(() => {
+    if (isStreaming) {
+      userScrolledUpRef.current = false;
+      setShowScrollButton(false);
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isStreaming]);
+
   const lastUserMessageId = (() => {
     for (let i = messages.length - 1; i >= 0; i--) {
       if (messages[i].type === 'user') return messages[i].id;
@@ -136,7 +147,7 @@ export const ChatContent: FC<ChatContentProps> = ({
             const isHighlighted = !!(messageExtId && highlightedExtMessageId === messageExtId);
             const isFlashing = !!(messageExtId && flashingExtId === messageExtId);
             const isLastUserMessage = message.id === lastUserMessageId;
-            const isError = message.status === 'error';
+            const isError = message.status === 'failed';
 
             if (isError) {
               return (
@@ -162,6 +173,7 @@ export const ChatContent: FC<ChatContentProps> = ({
                 onEditMessage={onEditMessage}
                 onDeleteMessage={onDeleteMessage}
                 onReaction={onReaction}
+                activeReaction={reactions?.get(message.id)}
               />
             );
           })}
@@ -169,6 +181,8 @@ export const ChatContent: FC<ChatContentProps> = ({
           {isStreaming && streamingContent && !streamingMessageId && (
             <StreamingMessage content={streamingContent} />
           )}
+
+          <ThinkingIndicator isVisible={!!isStreaming && !streamingContent && !streamingMessageId} />
 
           <div ref={bottomRef} />
         </Stack>
@@ -240,7 +254,8 @@ interface MessageBubbleProps {
   isLastUserMessage?: boolean;
   onEditMessage?: (messageId: string, newContent: string) => Promise<void>;
   onDeleteMessage?: (messageId: string) => Promise<void>;
-  onReaction?: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down') => Promise<void>;
+  onReaction?: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string) => Promise<void>;
+  activeReaction?: ReactionResponse;
 }
 
 const MessageBubble: FC<MessageBubbleProps> = ({
@@ -255,6 +270,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
   onEditMessage,
   onDeleteMessage,
   onReaction,
+  activeReaction,
 }) => {
   const isUser = message.type === 'user';
   const content = streamingContent || message.content;
@@ -262,6 +278,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(content);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
 
   const handleViewTrace = useCallback(() => {
     if (extMessageId && onViewTrace) {
@@ -452,20 +469,44 @@ const MessageBubble: FC<MessageBubbleProps> = ({
               )}
               {onReaction && (
                 <>
-                  <Tooltip label="Good response" withArrow position="bottom">
-                    <ActionIcon size="xs" variant="subtle" color="gray" onClick={() => onReaction(message.id, 'thumbs_up')}>
-                      <IconThumbUp size={14} />
+                  <Tooltip label={activeReaction?.reaction === 'thumbs_up' ? 'Remove rating' : 'Good response'} withArrow position="bottom">
+                    <ActionIcon
+                      size="xs"
+                      variant="subtle"
+                      color={activeReaction?.reaction === 'thumbs_up' ? 'teal' : 'gray'}
+                      onClick={() => onReaction(message.id, 'thumbs_up')}
+                    >
+                      {activeReaction?.reaction === 'thumbs_up' ? <IconThumbUpFilled size={14} /> : <IconThumbUp size={14} />}
                     </ActionIcon>
                   </Tooltip>
-                  <Tooltip label="Bad response" withArrow position="bottom">
-                    <ActionIcon size="xs" variant="subtle" color="gray" onClick={() => onReaction(message.id, 'thumbs_down')}>
-                      <IconThumbDown size={14} />
+                  <Tooltip label={activeReaction?.reaction === 'thumbs_down' ? 'Remove rating' : 'Bad response'} withArrow position="bottom">
+                    <ActionIcon
+                      size="xs"
+                      variant="subtle"
+                      color={activeReaction?.reaction === 'thumbs_down' ? 'orange' : 'gray'}
+                      onClick={() => {
+                        if (activeReaction?.reaction === 'thumbs_down') {
+                          onReaction(message.id, 'thumbs_down');
+                        } else {
+                          setFeedbackDialogOpen(true);
+                        }
+                      }}
+                    >
+                      {activeReaction?.reaction === 'thumbs_down' ? <IconThumbDownFilled size={14} /> : <IconThumbDown size={14} />}
                     </ActionIcon>
                   </Tooltip>
                 </>
               )}
             </Group>
           )}
+          <FeedbackDialog
+            opened={feedbackDialogOpen}
+            onClose={() => setFeedbackDialogOpen(false)}
+            onSubmit={(feedbackText) => {
+              onReaction?.(message.id, 'thumbs_down', feedbackText);
+              setFeedbackDialogOpen(false);
+            }}
+          />
         </Box>
       </Box>
     </Box>
@@ -532,6 +573,23 @@ const formatFileSize = (bytes: number): string => {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+interface ThinkingIndicatorProps {
+  isVisible: boolean;
+}
+
+const ThinkingIndicator: FC<ThinkingIndicatorProps> = ({ isVisible }) => {
+  if (!isVisible) return null;
+
+  return (
+    <Box style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0' }}>
+      <Avatar size="sm" radius="xl" color="violet">
+        <IconSparkles size={16} />
+      </Avatar>
+      <div className="thinking-shimmer-bar" />
+    </Box>
+  );
 };
 
 interface FileAttachmentChipsProps {

@@ -7,6 +7,7 @@ import {
   type ApplicationResponse,
   type MessageResponse,
   type FileAttachment,
+  type ReactionResponse,
 } from '../../../api/types';
 import { filesToAttachments } from '../../../utils/fileUtils';
 import type { UnifiedUIAPIClient } from '../../../api/client';
@@ -57,9 +58,11 @@ interface UseChatReturn {
   isLoadingMessages: boolean;
   abortControllerRef: React.RefObject<AbortController | null>;
   justCreatedConversationRef: React.RefObject<string | null>;
+  reactions: Map<string, ReactionResponse>;
   handleSendMessage: (content: string, attachments?: File[]) => Promise<void>;
   handleEditMessage: (messageId: string, newContent: string) => Promise<void>;
   handleDeleteMessage: (messageId: string) => Promise<void>;
+  handleReaction: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string) => Promise<void>;
   resetStreamingState: () => void;
   loadConversationMessages: (convId: string) => Promise<void>;
 }
@@ -88,6 +91,7 @@ export function useChat({
   const [streamingContent, setStreamingContent] = useState('');
   const [streamingMessageId, setStreamingMessageId] = useState<string | undefined>();
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [reactions, setReactions] = useState<Map<string, ReactionResponse>>(new Map());
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const justCreatedConversationRef = useRef<string | null>(null);
@@ -111,8 +115,25 @@ export function useChat({
       ]);
 
       setCurrentConversation(convData);
-      setMessages([...messagesData.messages].reverse());
+      const loadedMessages = [...messagesData.messages].reverse();
+      setMessages(loadedMessages);
       setSelectedApplicationId(convData.application_id);
+
+      const assistantMessages = loadedMessages.filter(m => m.type === 'assistant' && !m.id.startsWith('temp-'));
+      const reactionsMap = new Map<string, ReactionResponse>();
+      await Promise.all(
+        assistantMessages.map(async (msg) => {
+          try {
+            const res = await apiClient.getReactions(tenantId, convId, msg.id);
+            if (res.reactions.length > 0) {
+              reactionsMap.set(msg.id, res.reactions[0]);
+            }
+          } catch {
+            // ignore
+          }
+        })
+      );
+      setReactions(reactionsMap);
     } catch (error) {
       console.error('Failed to load conversation:', error);
       notifications.show({
@@ -482,6 +503,41 @@ export function useChat({
     }
   }, [apiClient, tenantId, conversationId]);
 
+  const handleReaction = useCallback(async (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string) => {
+    if (!apiClient || !tenantId || !conversationId) return;
+
+    const existingReaction = reactions.get(messageId);
+    const isSameReaction = existingReaction?.reaction === reaction;
+
+    try {
+      if (isSameReaction) {
+        await apiClient.deleteReaction(tenantId, conversationId, messageId);
+        setReactions(prev => {
+          const next = new Map(prev);
+          next.delete(messageId);
+          return next;
+        });
+      } else {
+        const result = await apiClient.upsertReaction(tenantId, conversationId, messageId, {
+          reaction,
+          feedbackText,
+        });
+        setReactions(prev => {
+          const next = new Map(prev);
+          next.set(messageId, result);
+          return next;
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update reaction:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to update reaction',
+        color: 'red',
+      });
+    }
+  }, [apiClient, tenantId, conversationId, reactions]);
+
   return {
     messages,
     setMessages,
@@ -494,6 +550,8 @@ export function useChat({
     handleSendMessage,
     handleEditMessage,
     handleDeleteMessage,
+    handleReaction,
+    reactions,
     resetStreamingState,
     loadConversationMessages,
   };

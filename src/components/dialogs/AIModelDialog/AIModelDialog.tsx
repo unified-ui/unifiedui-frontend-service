@@ -53,6 +53,7 @@ const PROVIDERS = [
 ];
 
 const PURPOSE_GROUPS = [
+  { value: AIModelPurposeGroupEnum.REACT_AGENT, label: 'ReAct Agent' },
   { value: AIModelPurposeGroupEnum.CONVERSATION_TITLE_GENERATION, label: 'Title Generation' },
   { value: AIModelPurposeGroupEnum.CONVERSATION_SUMMARIZATION, label: 'Conversation Summarization' },
   { value: AIModelPurposeGroupEnum.DESCRIPTION_GENERATION, label: 'Description Generation' },

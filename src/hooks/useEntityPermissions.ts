@@ -12,6 +12,7 @@ import type { SelectedPrincipal } from '../components/common/AddPrincipalDialog/
 export type EntityType = 
   | 'application' 
   | 'autonomous-agent' 
+  | 're-act-agent'
   | 'credential' 
   | 'chat-widget' 
   | 'conversation'

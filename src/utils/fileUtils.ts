@@ -2,6 +2,22 @@ import type { FileAttachment } from '../api/types';
 
 type FileType = 'image' | 'file' | 'audio';
 
+const MIME_TYPE_NORMALIZATIONS: Record<string, string> = {
+  'text/markdown': 'text/plain',
+  'text/x-markdown': 'text/plain',
+  'application/x-markdown': 'text/plain',
+};
+
+export const normalizeMimeType = (mimeType: string, filename: string): string => {
+  if (MIME_TYPE_NORMALIZATIONS[mimeType]) {
+    return MIME_TYPE_NORMALIZATIONS[mimeType];
+  }
+  if (!mimeType && filename.endsWith('.md')) {
+    return 'text/plain';
+  }
+  return mimeType;
+};
+
 const getFileType = (mimeType: string): FileType => {
   if (mimeType.startsWith('image/')) return 'image';
   if (mimeType.startsWith('audio/')) return 'audio';
@@ -22,15 +38,16 @@ const fileToBase64 = (file: File): Promise<string> => {
 };
 
 export const fileToAttachment = async (file: File): Promise<FileAttachment> => {
-  const type = getFileType(file.type);
+  const normalizedMimeType = normalizeMimeType(file.type, file.name);
+  const type = getFileType(normalizedMimeType);
   const base64Data = await fileToBase64(file);
 
   if (type === 'image') {
     return {
       type: 'image',
-      imageUrl: `data:${file.type};base64,${base64Data}`,
+      imageUrl: `data:${normalizedMimeType};base64,${base64Data}`,
       filename: file.name,
-      mimeType: file.type,
+      mimeType: normalizedMimeType,
       detail: 'auto',
     };
   }
@@ -39,7 +56,7 @@ export const fileToAttachment = async (file: File): Promise<FileAttachment> => {
     type,
     fileData: base64Data,
     filename: file.name,
-    mimeType: file.type,
+    mimeType: normalizedMimeType,
   };
 };
 

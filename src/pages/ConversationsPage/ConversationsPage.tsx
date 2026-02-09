@@ -287,6 +287,8 @@ export const ConversationsPage: FC = () => {
                       onEditMessage={chat.handleEditMessage}
                       onDeleteMessage={chat.handleDeleteMessage}
                       onRetry={(content) => chat.handleSendMessage(content)}
+                      onReaction={chat.handleReaction}
+                      reactions={chat.reactions}
                     />
                   </Box>
                   <ChatInput

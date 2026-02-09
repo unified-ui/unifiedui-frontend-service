@@ -64,5 +64,9 @@
   "yesterday": "Yesterday",
   "previous7Days": "Previous 7 days",
   "previous30Days": "Previous 30 days",
-  "older": "Older"
+  "older": "Older",
+  "feedbackTitle": "What went wrong?",
+  "feedbackDescription": "Help us improve by describing what was wrong with this response.",
+  "feedbackPlaceholder": "Describe what was not helpful or incorrect...",
+  "submitFeedback": "Submit Feedback"
 }

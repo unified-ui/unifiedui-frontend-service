@@ -27,13 +27,13 @@ export const ReActAgentsPage: FC = () => {
   }), []);
 
   const listEntities = useCallback(
-    (tenantId: string, params: Parameters<typeof apiClient.listReActAgents>[1]) =>
+    (tenantId: string, params: Parameters<NonNullable<typeof apiClient>['listReActAgents']>[1]) =>
       apiClient!.listReActAgents(tenantId, params) as Promise<ReActAgentResponse[]>,
     [apiClient]
   );
 
   const listTags = useCallback(
-    (tenantId: string, params: Parameters<typeof apiClient.listReActAgentTypeTags>[1]) =>
+    (tenantId: string, params: Parameters<NonNullable<typeof apiClient>['listReActAgentTypeTags']>[1]) =>
       apiClient!.listReActAgentTypeTags(tenantId, params),
     [apiClient]
   );
