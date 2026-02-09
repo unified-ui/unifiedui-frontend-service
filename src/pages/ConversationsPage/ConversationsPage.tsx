@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { Box, Loader, Center, Text, Drawer } from '@mantine/core';
+import { Box, Text, Drawer, Loader, Center, Title } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { IconUpload, IconMessageCircle } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
@@ -16,6 +16,7 @@ import { ChatHeader } from './components/ChatHeader';
 import { ChatContent } from './components/ChatContent';
 import { ChatInput } from './components/ChatInput';
 import { useConversationList, useChat, useConversationTracing, useFileUpload } from './hooks';
+import { useDelayedLoading } from '../../hooks';
 import classes from './ConversationsPage.module.css';
 
 /**
@@ -102,16 +103,42 @@ export const ConversationsPage: FC = () => {
   const handleShare = useCallback(() => setShareDialogOpen(true), []);
   const handleSearchOpen = useCallback(() => setSearchDialogOpen(true), []);
 
+  const showInitialLoading = useDelayedLoading(
+    convList.isLoadingConversations && !convList.conversations.length,
+    1000,
+  );
+
   if (convList.isLoadingConversations && !convList.conversations.length) {
     return (
       <MainLayout noPadding>
         <Box className={classes.pageContainer}>
-          <Center h="100%">
-            <Box ta="center">
-              <Loader size="lg" />
-              <Text c="dimmed" mt="md">{t('conversations:loading')}</Text>
+          <Box className={classes.pageHeader}>
+            <Title order={1} className={classes.pageTitle}>{t('conversations:yourAIChats')}</Title>
+          </Box>
+          <Box className={classes.pageContent}>
+            <Box className={classes.chatSidebarWrapper}>
+              {showInitialLoading && (
+                <Center style={{ flex: 1 }}>
+                  <Loader size="md" color="gray" />
+                </Center>
+              )}
             </Box>
-          </Center>
+            <Box className={classes.mainArea}>
+              <Box className={classes.chatTracingLayout}>
+                <Box className={classes.chatSection}>
+                  <Box className={classes.contentArea}>
+                    <Box className={classes.emptyState}>
+                      <IconMessageCircle size={64} className={classes.emptyStateIcon} />
+                      <Text className={classes.emptyStateTitle}>{t('conversations:startNewConversation')}</Text>
+                      <Text className={classes.emptyStateDescription}>
+                        {t('conversations:selectAgentToStart')}
+                      </Text>
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
         </Box>
       </MainLayout>
     );
@@ -120,11 +147,15 @@ export const ConversationsPage: FC = () => {
   return (
     <MainLayout noPadding>
       <Box className={classes.pageContainer}>
+        <Box className={classes.pageHeader}>
+          <Title order={1} className={classes.pageTitle}>{t('conversations:yourAIChats')}</Title>
+        </Box>
+        <Box className={classes.pageContent}>
         {isMobile ? (
           <Drawer
             opened={mobileSidebarOpen}
             onClose={() => setMobileSidebarOpen(false)}
-            size="280px"
+            size="330px"
             padding={0}
             withCloseButton={false}
             overlayProps={{ backgroundOpacity: 0.3 }}
@@ -285,6 +316,7 @@ export const ConversationsPage: FC = () => {
               </TracingProvider>
             )}
           </Box>
+        </Box>
         </Box>
       </Box>
 

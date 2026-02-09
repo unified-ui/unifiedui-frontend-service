@@ -1,5 +1,6 @@
 export { PageHeader } from './PageHeader';
 export { EntityAvatar } from './EntityAvatar';
+export type { EntityAvatarType } from './EntityAvatar';
 export { Breadcrumbs } from './Breadcrumbs';
 export type { BreadcrumbItem } from './Breadcrumbs';
 export { DataTable, DataTableRow, DataTableToolbar } from './DataTable';

@@ -10,7 +10,6 @@ import {
   ScrollArea,
   Tooltip,
   Menu,
-  Divider,
   SegmentedControl,
   Skeleton,
   Box,
@@ -21,8 +20,8 @@ import {
 import {
   IconPlus,
   IconSearch,
-  IconChevronLeft,
-  IconChevronRight,
+  IconLayoutSidebarLeftCollapse,
+  IconLayoutSidebarLeftExpand,
   IconMessage,
   IconPinned,
   IconTrash,
@@ -254,7 +253,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
             className={classes.expandButton}
             onClick={() => onCollapsedChange(false)}
           >
-            <IconChevronRight size={18} />
+            <IconLayoutSidebarLeftExpand size={18} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label={t('conversations:newChat')} position="right">
@@ -273,53 +272,34 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
 
   return (
     <div className={classes.sidebar}>
-      {/* Header */}
+      {/* Header: sidebar toggle + search */}
       <div className={classes.header}>
-        <Group justify="space-between" align="center">
-          <Text fw={600} size="lg">{t('conversations:chats')}</Text>
-          <ActionIcon
-            variant="subtle"
-            onClick={() => onCollapsedChange(true)}
-            aria-label="Collapse sidebar"
-          >
-            <IconChevronLeft size={18} />
-          </ActionIcon>
-        </Group>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          onClick={() => onCollapsedChange(true)}
+          aria-label="Collapse sidebar"
+          style={{ color: 'rgba(255,255,255,0.7)' }}
+        >
+          <IconLayoutSidebarLeftCollapse size={20} />
+        </ActionIcon>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          onClick={onSearchOpen}
+          aria-label="Search"
+          style={{ color: 'rgba(255,255,255,0.7)' }}
+        >
+          <IconSearch size={18} />
+        </ActionIcon>
       </div>
 
-      {/* Actions */}
+      {/* New Chat Button */}
       <div className={classes.actions}>
         <UnstyledButton className={classes.newChatButton} onClick={onNewChat}>
           <IconPlus size={18} />
           <Text size="sm">{t('conversations:newChat')}</Text>
         </UnstyledButton>
-
-        <Tooltip label={t('conversations:advancedSearch')}>
-          <ActionIcon
-            variant="subtle"
-            onClick={onSearchOpen}
-            aria-label="Advanced search"
-          >
-            <IconSearch size={18} />
-          </ActionIcon>
-        </Tooltip>
-      </div>
-
-      <div className={classes.searchWrapper}>
-        <TextInput
-          placeholder={t('conversations:searchConversations')}
-          size="xs"
-          leftSection={<IconSearch size={14} />}
-          value={searchQuery}
-          onChange={(e) => onSearchChange?.(e.currentTarget.value)}
-          rightSection={
-            searchQuery ? (
-              <ActionIcon size="xs" variant="subtle" onClick={() => onSearchChange?.('')}>
-                <IconX size={12} />
-              </ActionIcon>
-            ) : undefined
-          }
-        />
       </div>
 
       {/* Group Mode Toggle */}
@@ -328,6 +308,12 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
           size="xs"
           value={groupMode}
           onChange={(value) => setGroupMode(value as GroupMode)}
+          color="dark"
+          styles={{
+            root: { backgroundColor: 'rgba(255,255,255,0.06)' },
+            label: { color: 'rgba(255,255,255,0.7)' },
+            indicator: { backgroundColor: 'rgba(255,255,255,0.15)' },
+          }}
           data={[
             {
               value: 'time',
@@ -352,8 +338,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
         />
       </div>
 
-      <Divider />
-
       {/* Conversation List */}
       <ScrollArea
         className={classes.conversationList}
@@ -369,10 +353,10 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
           </Stack>
         ) : groupedConversations.length === 0 ? (
           <Box p="md" ta="center">
-            <Text c="dimmed" size="sm">
+            <Text c="rgba(255,255,255,0.5)" size="sm">
               {searchQuery ? t('conversations:noConversationsFound') : t('conversations:noConversations')}
             </Text>
-            <Text c="dimmed" size="xs" mt="xs">
+            <Text c="rgba(255,255,255,0.35)" size="xs" mt="xs">
               {t('conversations:startNewChat')}
             </Text>
           </Box>
@@ -380,7 +364,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
           <Stack gap={0}>
             {groupedConversations.map((group) => (
               <div key={group.label} className={classes.group}>
-                <Text size="xs" c="dimmed" className={classes.groupLabel}>
+                <Text size="xs" className={classes.groupLabel}>
                   {group.label}
                 </Text>
                 {group.conversations.map((conversation) => (
@@ -522,7 +506,7 @@ const ConversationItem: FC<ConversationItemProps> = ({
               {conversation.name}
             </Text>
           )}
-          <Text size="xs" c="dimmed" lineClamp={1}>
+          <Text size="xs" c="rgba(255,255,255,0.4)" lineClamp={1}>
             {applicationName}
           </Text>
         </div>

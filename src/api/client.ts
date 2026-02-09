@@ -850,7 +850,7 @@ export class UnifiedUIAPIClient {
   }
 
   async addUserFavorite(tenantId: string, userId: string, resourceType: FavoriteResourceTypeEnum, resourceId: string): Promise<UserFavoriteResponse> {
-    return this.request<UserFavoriteResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/favorites/${resourceType}/${resourceId}`, undefined, 'Added to favorites');
+    return this.request<UserFavoriteResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/favorites/${resourceType}/${resourceId}`, undefined, 'Added to favorites');
   }
 
   async removeUserFavorite(tenantId: string, userId: string, resourceType: FavoriteResourceTypeEnum, resourceId: string): Promise<void> {

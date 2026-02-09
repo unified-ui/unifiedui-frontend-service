@@ -95,8 +95,8 @@ export const AutonomousAgentsPage: FC = () => {
     void _isPinned;
   }, []);
 
-  const renderIcon = useCallback((item: DataTableItem) => (
-    <EntityAvatar name={item.name} size="sm" />
+  const renderIcon = useCallback(() => (
+    <EntityAvatar entityType="autonomous-agent" size="sm" />
   ), []);
 
   return (

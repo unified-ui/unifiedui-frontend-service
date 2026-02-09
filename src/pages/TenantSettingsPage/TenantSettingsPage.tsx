@@ -16,6 +16,7 @@ import {
   Loader,
   Center,
   Table,
+  Skeleton,
   ActionIcon,
   Menu,
   MultiSelect,
@@ -64,6 +65,7 @@ import type {
   AIModelResponse,
 } from '../../api/types';
 import { ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum } from '../../api/types';
+import { useDelayedLoading } from '../../hooks';
 import classes from './TenantSettingsPage.module.css';
 
 type TabValue = 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'ai-models' | 'billing-and-licence';
@@ -245,6 +247,11 @@ export const TenantSettingsPage: FC = () => {
 
   const AI_MODELS_PAGE_SIZE = 50;
   const aiModelsLoadMoreRef = useRef<HTMLDivElement>(null);
+
+  const showCustomGroupsSkeleton = useDelayedLoading(customGroupsLoading && !customGroupsFetched);
+  const showCredentialsSkeleton = useDelayedLoading(credentialsLoading && !credentialsFetched);
+  const showToolsSkeleton = useDelayedLoading(toolsLoading && !toolsFetched);
+  const showAiModelsSkeleton = useDelayedLoading(aiModelsLoading && !aiModelsFetched);
 
   const AI_MODEL_TYPE_OPTIONS = [
     { value: AIModelTypeEnum.LLM_MODEL, label: 'LLM Model' },
@@ -999,13 +1006,12 @@ export const TenantSettingsPage: FC = () => {
   return (
     <MainLayout>
         <Tabs
-          orientation="vertical"
           value={activeTab}
           onChange={handleTabChange}
           classNames={{
             root: classes.settingsLayout,
-            list: classes.settingsSidebar,
-            tab: classes.settingsNavItem,
+            list: classes.settingsTabList,
+            tab: classes.settingsTab,
             panel: classes.settingsContent,
           }}
         >
@@ -1158,13 +1164,17 @@ export const TenantSettingsPage: FC = () => {
                       </Table.Thead>
                       <Table.Tbody>
                         {customGroupsLoading && !customGroupsFetched ? (
-                          <Table.Tr>
-                            <Table.Td colSpan={3}>
-                              <Center py="xl">
-                                <Loader size="lg" />
-                              </Center>
-                            </Table.Td>
-                          </Table.Tr>
+                          showCustomGroupsSkeleton ? (
+                            <>
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Table.Tr key={i}>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} width={60} radius="sm" /></Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </>
+                          ) : null
                         ) : customGroupsError ? (
                           <Table.Tr>
                             <Table.Td colSpan={3}>
@@ -1327,13 +1337,18 @@ export const TenantSettingsPage: FC = () => {
                       </Table.Thead>
                       <Table.Tbody>
                         {toolsLoading && !toolsFetched ? (
-                          <Table.Tr>
-                            <Table.Td colSpan={4}>
-                              <Center py="xl">
-                                <Loader size="lg" />
-                              </Center>
-                            </Table.Td>
-                          </Table.Tr>
+                          showToolsSkeleton ? (
+                            <>
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Table.Tr key={i}>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} width={60} radius="sm" /></Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </>
+                          ) : null
                         ) : toolsError ? (
                           <Table.Tr>
                             <Table.Td colSpan={4}>
@@ -1491,13 +1506,18 @@ export const TenantSettingsPage: FC = () => {
                       </Table.Thead>
                       <Table.Tbody>
                         {credentialsLoading && !credentialsFetched ? (
-                          <Table.Tr>
-                            <Table.Td colSpan={4}>
-                              <Center py="xl">
-                                <Loader size="lg" />
-                              </Center>
-                            </Table.Td>
-                          </Table.Tr>
+                          showCredentialsSkeleton ? (
+                            <>
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Table.Tr key={i}>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} width={60} radius="sm" /></Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </>
+                          ) : null
                         ) : credentialsError ? (
                           <Table.Tr>
                             <Table.Td colSpan={4}>
@@ -1673,13 +1693,21 @@ export const TenantSettingsPage: FC = () => {
                       </Table.Thead>
                       <Table.Tbody>
                         {aiModelsLoading && !aiModelsFetched ? (
-                          <Table.Tr>
-                            <Table.Td colSpan={7}>
-                              <Center py="xl">
-                                <Loader size="lg" />
-                              </Center>
-                            </Table.Td>
-                          </Table.Tr>
+                          showAiModelsSkeleton ? (
+                            <>
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Table.Tr key={i}>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} width={60} radius="sm" /></Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </>
+                          ) : null
                         ) : aiModelsError ? (
                           <Table.Tr>
                             <Table.Td colSpan={7}>

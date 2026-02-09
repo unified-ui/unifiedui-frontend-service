@@ -89,8 +89,8 @@ export const ReActAgentsPage: FC = () => {
     void _id;
   }, []);
 
-  const renderIcon = useCallback((item: DataTableItem) => (
-    <EntityAvatar name={item.name} size="sm" />
+  const renderIcon = useCallback(() => (
+    <EntityAvatar entityType="re-act-agent" size="sm" />
   ), []);
 
   return (
@@ -120,6 +120,7 @@ export const ReActAgentsPage: FC = () => {
         onFilterChange={handleFilterChange}
         onTagSearch={handleTagSearch}
         onStatusChange={handleStatusChange}
+        onRowClick={handleOpen}
         onOpen={handleOpen}
         onEdit={handleEdit}
         onShare={handleShare}

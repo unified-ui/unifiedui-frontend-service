@@ -7,18 +7,19 @@ import {
   Text,
   Paper,
   CloseButton,
-  Loader,
 } from '@mantine/core';
 import {
   IconSend,
   IconPaperclip,
   IconPhoto,
   IconFile,
+  IconPlayerStop,
 } from '@tabler/icons-react';
 import classes from './ChatInput.module.css';
 
 interface ChatInputProps {
   onSend: (content: string, attachments?: File[]) => void;
+  onCancel?: () => void;
   isDisabled?: boolean;
   isStreaming?: boolean;
   placeholder?: string;
@@ -31,6 +32,7 @@ export interface ChatInputRef {
 
 export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
   onSend,
+  onCancel,
   isDisabled,
   isStreaming,
   placeholder = 'Type a message...',
@@ -214,26 +216,35 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
               value={content}
               onChange={handleContentChange}
               onKeyDown={handleKeyDown}
-              disabled={isDisabled || isStreaming}
+              disabled={isDisabled}
               rows={1}
             />
 
-            {/* Send button */}
-            <Tooltip label={isStreaming ? 'Generating...' : 'Send message'}>
-              <ActionIcon
-                variant="filled"
-                color="primary"
-                className={classes.sendButton}
-                onClick={handleSend}
-                disabled={!canSend}
-              >
-                {isStreaming ? (
-                  <Loader size={16} color="white" />
-                ) : (
+            {/* Send/Cancel button */}
+            {isStreaming ? (
+              <Tooltip label="Stop generating">
+                <ActionIcon
+                  variant="filled"
+                  color="red"
+                  className={classes.sendButton}
+                  onClick={onCancel}
+                >
+                  <IconPlayerStop size={18} />
+                </ActionIcon>
+              </Tooltip>
+            ) : (
+              <Tooltip label="Send message">
+                <ActionIcon
+                  variant="filled"
+                  color="primary"
+                  className={classes.sendButton}
+                  onClick={handleSend}
+                  disabled={!canSend}
+                >
                   <IconSend size={18} />
-                )}
-              </ActionIcon>
-            </Tooltip>
+                </ActionIcon>
+              </Tooltip>
+            )}
           </Box>
 
           {/* Character count */}

@@ -208,6 +208,13 @@
   --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.7);
 }
 
+/* ===== SKELETON DARK MODE FIX ===== */
+[data-mantine-color-scheme='dark'] .mantine-Skeleton-root,
+[data-mantine-color-scheme='dark'] [class*='mantine-Skeleton'] {
+  --mantine-color-dark-4: #2a2a2a;
+  --mantine-color-dark-3: #333333;
+}
+
 /* ===== UTILITY CLASSES ===== */
 
 /* Backgrounds */

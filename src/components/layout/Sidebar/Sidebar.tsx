@@ -149,7 +149,7 @@ export const Sidebar: FC = () => {
       icon: <IconBrandWechat size={24} />,
       addButtonLabel: t('addChatWidget'),
       fetchData: () => fetchEntityData('chat-widgets'),
-      getLink: (id) => `/chat-widgets/${id}`,
+      getLink: (id) => `/widget-designer/${id}`,
     },
     're-act-agents': {
       title: t('reactAgents'),
@@ -169,28 +169,28 @@ export const Sidebar: FC = () => {
           id: app.id,
           name: app.name,
           link: entityConfigs.applications.getLink(app.id),
-          icon: <EntityAvatar name={app.name} size="xs" />,
+          icon: <EntityAvatar entityType="application" size="xs" />,
         }));
       case 'autonomous-agents':
         return autonomousAgents.map(agent => ({
           id: agent.id,
           name: agent.name,
           link: entityConfigs['autonomous-agents'].getLink(agent.id),
-          icon: <EntityAvatar name={agent.name} size="xs" />,
+          icon: <EntityAvatar entityType="autonomous-agent" size="xs" />,
         }));
       case 'chat-widgets':
         return chatWidgets.map(widget => ({
           id: widget.id,
           name: widget.name,
           link: entityConfigs['chat-widgets'].getLink(widget.id),
-          icon: <EntityAvatar name={widget.name} size="xs" />,
+          icon: <EntityAvatar entityType="chat-widget" size="xs" />,
         }));
       case 're-act-agents':
         return reActAgents.map(agent => ({
           id: agent.id,
           name: agent.name,
           link: entityConfigs['re-act-agents'].getLink(agent.id),
-          icon: <EntityAvatar name={agent.name} size="xs" />,
+          icon: <EntityAvatar entityType="re-act-agent" size="xs" />,
         }));
       default:
         return [];

@@ -11,6 +11,7 @@ import { AutonomousAgentsPage } from '../pages/AutonomousAgentsPage';
 import { AutonomousAgentDetailsPage } from '../pages/AutonomousAgentDetailsPage';
 import { ChatWidgetsPage } from '../pages/ChatWidgetsPage';
 import { WidgetDesignerPage } from '../pages/WidgetDesignerPage';
+import { IframeWidgetPreviewPage } from '../pages/IframeWidgetPreviewPage';
 import { ReActAgentsPage } from '../pages/ReActAgentsPage';
 import { ReActAgentDeveloperPage } from '../pages/ReActAgentDeveloperPage';
 import { EmbedChatPage } from '../pages/EmbedChatPage';
@@ -34,6 +35,7 @@ export const AppRoutes = () => {
         <Route path="/autonomous-agents" element={<ProtectedRoute><AutonomousAgentsPage /></ProtectedRoute>} />
         <Route path="/autonomous-agents/:agentId" element={<ProtectedRoute><AutonomousAgentDetailsPage /></ProtectedRoute>} />
         <Route path="/chat-widgets" element={<ProtectedRoute><ChatWidgetsPage /></ProtectedRoute>} />
+        <Route path="/chat-widgets/:widgetId/preview" element={<ProtectedRoute><IframeWidgetPreviewPage /></ProtectedRoute>} />
         <Route path="/widget-designer/:widgetId" element={<ProtectedRoute><WidgetDesignerPage /></ProtectedRoute>} />
         <Route path="/re-act-agents" element={<ProtectedRoute><ReActAgentsPage /></ProtectedRoute>} />
         <Route path="/re-act-agents/:agentId" element={<ProtectedRoute><ReActAgentDeveloperPage /></ProtectedRoute>} />

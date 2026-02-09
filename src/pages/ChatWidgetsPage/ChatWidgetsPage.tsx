@@ -80,6 +80,8 @@ export const ChatWidgetsPage: FC = () => {
     const widget = rawDataRef.current.get(id) as ChatWidgetResponse | undefined;
     if (widget?.type === ChatWidgetTypeEnum.FORM) {
       navigate(`/widget-designer/${id}`);
+    } else if (widget?.type === ChatWidgetTypeEnum.IFRAME) {
+      navigate(`/chat-widgets/${id}/preview`);
     } else {
       handleEdit(id);
     }
@@ -89,8 +91,8 @@ export const ChatWidgetsPage: FC = () => {
     void _id;
   }, []);
 
-  const renderIcon = useCallback((item: DataTableItem) => (
-    <EntityAvatar name={item.name} size="sm" />
+  const renderIcon = useCallback(() => (
+    <EntityAvatar entityType="chat-widget" size="sm" />
   ), []);
 
   const handleWidgetCreated = useCallback((widget?: ChatWidgetResponse) => {
@@ -127,6 +129,7 @@ export const ChatWidgetsPage: FC = () => {
         onFilterChange={handleFilterChange}
         onTagSearch={handleTagSearch}
         onStatusChange={handleStatusChange}
+        onRowClick={handleOpen}
         onOpen={handleOpen}
         onEdit={handleEdit}
         onShare={handleShare}

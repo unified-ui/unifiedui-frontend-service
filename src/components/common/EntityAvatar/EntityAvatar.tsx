@@ -1,48 +1,63 @@
 import type { FC } from 'react';
 import { Avatar } from '@mantine/core';
+import {
+  IconSparkles,
+  IconRobot,
+  IconBrandWechat,
+  IconBrain,
+  IconMessages,
+  IconFile,
+} from '@tabler/icons-react';
+
+export type EntityAvatarType =
+  | 'application'
+  | 'autonomous-agent'
+  | 'chat-widget'
+  | 're-act-agent'
+  | 'conversation';
 
 interface EntityAvatarProps {
-  name: string;
+  entityType: EntityAvatarType;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
+const ENTITY_ICONS: Record<EntityAvatarType, typeof IconSparkles> = {
+  'application': IconSparkles,
+  'autonomous-agent': IconRobot,
+  'chat-widget': IconBrandWechat,
+  're-act-agent': IconBrain,
+  'conversation': IconMessages,
+};
 
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }
-  return name.slice(0, 2).toUpperCase();
-}
+const SIZE_MAP: Record<string, number> = {
+  xs: 24,
+  sm: 32,
+  md: 40,
+  lg: 48,
+  xl: 56,
+};
 
-function getAvatarColor(name: string): string {
-  const hue = hashString(name) % 360;
-  return `hsl(${hue}, 65%, 45%)`;
-}
+const ICON_SIZE_MAP: Record<string, number> = {
+  xs: 14,
+  sm: 18,
+  md: 22,
+  lg: 26,
+  xl: 32,
+};
 
-export const EntityAvatar: FC<EntityAvatarProps> = ({ name, size = 'sm' }) => {
-  const initials = getInitials(name);
-  const color = getAvatarColor(name);
+export const EntityAvatar: FC<EntityAvatarProps> = ({ entityType, size = 'sm' }) => {
+  const Icon = ENTITY_ICONS[entityType] || IconFile;
+  const avatarSize = SIZE_MAP[size] || 32;
+  const iconSize = ICON_SIZE_MAP[size] || 18;
 
   return (
     <Avatar
-      size={size}
+      size={avatarSize}
       radius="sm"
-      styles={{
-        root: { backgroundColor: color },
-        placeholder: { color: 'white', fontWeight: 600, fontSize: size === 'xs' ? 10 : undefined },
-      }}
+      color="gray"
+      variant="light"
     >
-      {initials}
+      <Icon size={iconSize} stroke={1.5} />
     </Avatar>
   );
 };

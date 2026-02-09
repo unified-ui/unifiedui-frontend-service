@@ -1,7 +1,7 @@
 .container {
   position: fixed;
-  top: 70px; /* Same as sidebar - below header */
-  left: 100px; /* Right next to sidebar */
+  top: var(--header-height);
+  left: var(--sidebar-width);
   bottom: 0;
   width: 320px;
   background: var(--bg-paper);

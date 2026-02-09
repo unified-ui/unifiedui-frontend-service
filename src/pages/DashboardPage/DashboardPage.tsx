@@ -6,6 +6,7 @@ import { Stack, Loader, Text, Button, Skeleton } from '@mantine/core';
 import { IconSparkles, IconRobot, IconMessages, IconArrowRight } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { EntityAvatar } from '../../components/common';
+import type { EntityAvatarType } from '../../components/common';
 import { useIdentity, useFavorites, useRecentVisits, useSidebarData } from '../../contexts';
 import { FavoriteResourceTypeEnum } from '../../api/types';
 import type { DashboardStatsResponse } from '../../api/types';
@@ -29,10 +30,22 @@ const FAVORITE_TYPE_LABEL_KEYS: Record<string, string> = {
   [FavoriteResourceTypeEnum.CONVERSATION]: 'conversation',
 };
 
+const FAVORITE_TYPE_TO_ENTITY: Record<string, EntityAvatarType> = {
+  [FavoriteResourceTypeEnum.APPLICATION]: 'application',
+  [FavoriteResourceTypeEnum.AUTONOMOUS_AGENT]: 'autonomous-agent',
+  [FavoriteResourceTypeEnum.CONVERSATION]: 'conversation',
+};
+
 const RESOURCE_ROUTE_MAP: Record<string, string> = {
   application: '/applications',
   autonomous_agent: '/autonomous-agents',
   conversation: '/conversations',
+};
+
+const RESOURCE_TYPE_TO_ENTITY: Record<string, EntityAvatarType> = {
+  application: 'application',
+  autonomous_agent: 'autonomous-agent',
+  conversation: 'conversation',
 };
 
 export const DashboardPage: FC = () => {
@@ -163,7 +176,7 @@ export const DashboardPage: FC = () => {
                   className={classes.entityCard}
                   onClick={() => navigate(`${FAVORITE_ROUTE_MAP[item.type]}/${item.id}`)}
                 >
-                  <EntityAvatar name={item.name} size="sm" />
+                  <EntityAvatar entityType={FAVORITE_TYPE_TO_ENTITY[item.type] || 'application'} size="sm" />
                   <div className={classes.entityCardContent}>
                     <div className={classes.entityCardName}>{item.name}</div>
                     <div className={classes.entityCardType}>
@@ -200,7 +213,7 @@ export const DashboardPage: FC = () => {
                   className={classes.entityCard}
                   onClick={() => navigate(`${RESOURCE_ROUTE_MAP[item.resource_type] || '/'}/${item.resource_id}`)}
                 >
-                  <EntityAvatar name={item.resource_name} size="sm" />
+                  <EntityAvatar entityType={RESOURCE_TYPE_TO_ENTITY[item.resource_type] || 'application'} size="sm" />
                   <div className={classes.entityCardContent}>
                     <div className={classes.entityCardName}>{item.resource_name}</div>
                     <div className={classes.entityCardType}>{item.resource_type}</div>

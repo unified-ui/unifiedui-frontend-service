@@ -86,8 +86,8 @@ export const ApplicationsPage: FC = () => {
     navigate(`/conversations?chat-agent=${id}`);
   }, [navigate]);
 
-  const renderIcon = useCallback((item: DataTableItem) => (
-    <EntityAvatar name={item.name} size="sm" />
+  const renderIcon = useCallback(() => (
+    <EntityAvatar entityType="application" size="sm" />
   ), []);
 
   return (

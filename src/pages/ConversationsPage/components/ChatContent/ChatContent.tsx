@@ -55,7 +55,7 @@ export const ChatContent: FC<ChatContentProps> = ({
   const isNearBottom = useCallback(() => {
     const viewport = viewportRef.current;
     if (!viewport) return true;
-    const threshold = 100;
+    const threshold = 50;
     return viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < threshold;
   }, []);
 

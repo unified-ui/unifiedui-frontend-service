@@ -6,7 +6,9 @@ import {
   type ConversationResponse,
   type ApplicationResponse,
   type MessageResponse,
+  type FileAttachment,
 } from '../../../api/types';
+import { filesToAttachments } from '../../../utils/fileUtils';
 import type { UnifiedUIAPIClient } from '../../../api/client';
 
 const CONTEXT_DATA_PREFIX = 'ctx_';
@@ -132,6 +134,7 @@ export function useChat({
     foundryToken: string | undefined,
     isFoundryApp: boolean,
     isRetry: boolean,
+    files?: FileAttachment[],
   ) => {
     let accumulatedContent = '';
     let currentStreamingMessageId = '';
@@ -146,6 +149,7 @@ export function useChat({
         message: {
           content,
           attachments: undefined,
+          files,
         },
         invokeConfig: contextData ? { contextData } : undefined,
         extConversationId: isFoundryApp ? activeExtConversationId : undefined,
@@ -244,6 +248,7 @@ export function useChat({
               foundryToken,
               isFoundryApp,
               true,
+              files,
             );
             return;
           } catch {
@@ -379,8 +384,9 @@ export function useChat({
     setStreamingContent('');
     retryCountRef.current = 0;
 
+    let files: FileAttachment[] | undefined;
     if (attachments && attachments.length > 0) {
-      void attachments;
+      files = await filesToAttachments(attachments);
     }
 
     try {
@@ -392,6 +398,7 @@ export function useChat({
         foundryToken,
         isFoundryApp,
         false,
+        files,
       );
     } catch (error) {
       console.error('Failed to send message:', error);

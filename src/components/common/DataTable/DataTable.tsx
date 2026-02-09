@@ -3,6 +3,7 @@ import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Stack, Text, Center, Loader, Skeleton, Group, Button, Checkbox } from '@mantine/core';
 import { IconInbox, IconPlus, IconTrash, IconToggleLeft, IconX } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { useDelayedLoading } from '../../../hooks';
 import { DataTableToolbar, type SortOption, type FilterState } from './DataTableToolbar';
 import { DataTableRow, type DataTableItem } from './DataTableRow';
 import classes from './DataTable.module.css';
@@ -85,6 +86,8 @@ export const DataTable: FC<DataTableProps> = ({
   const [internalSortBy, setInternalSortBy] = useState<SortOption>('updated');
   const [internalFilters, setInternalFilters] = useState<FilterState>({ tags: [], status: 'all' });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  
+  const showLoadingSkeleton = useDelayedLoading(isLoading, 500);
 
   const filters = externalFilters ?? internalFilters;
   const isExternalFilters = externalOnFilterChange !== undefined;
@@ -308,7 +311,7 @@ export const DataTable: FC<DataTableProps> = ({
         </Group>
       )}
 
-      {isLoading ? (
+      {showLoadingSkeleton ? (
         <Stack gap="xs" className={classes.tableBody} p="xs">
           {Array.from({ length: 5 }).map((_, i) => (
             <Group
@@ -340,7 +343,7 @@ export const DataTable: FC<DataTableProps> = ({
       ) : (
         <div ref={scrollAreaRef} className={classes.scrollArea}>
           <Stack gap="xs" className={classes.tableBody}>
-            {processedItems.length === 0 ? (
+            {!isLoading && processedItems.length === 0 ? (
               <Center py={60}>
                 <Stack align="center" gap="md">
                   <IconInbox size={56} stroke={1} className={classes.emptyIcon} />

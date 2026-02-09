@@ -31,6 +31,7 @@ export interface ChatPanelProps {
   streamingMessageId?: string;
   emptyStateMessage?: string;
   onSendMessage?: (content: string, attachments?: File[]) => void;
+  onCancelStream?: () => void;
   onEditMessage?: (messageId: string, content: string) => Promise<void>;
   onDeleteMessage?: (messageId: string) => Promise<void>;
   onReaction?: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down') => Promise<void>;
@@ -52,6 +53,7 @@ export const ChatPanel: FC<ChatPanelProps> = ({
   streamingMessageId,
   emptyStateMessage,
   onSendMessage,
+  onCancelStream,
   onEditMessage,
   onDeleteMessage,
   onReaction,
@@ -114,6 +116,7 @@ export const ChatPanel: FC<ChatPanelProps> = ({
       <Box className={classes.chatInput}>
         <ChatInput
           onSend={handleSend}
+          onCancel={onCancelStream}
           isDisabled={isLoading}
           isStreaming={isStreaming}
           placeholder={inputPlaceholder}

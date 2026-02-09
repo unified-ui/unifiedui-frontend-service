@@ -156,6 +156,7 @@ export const CommandPalette: FC<CommandPaletteProps> = ({ open, onOpenChange }) 
       <div className={classes.dialog} onClick={e => e.stopPropagation()}>
         <Command shouldFilter={false}>
           <Command.Input
+            autoFocus
             className={classes.input}
             placeholder={t('searchPlaceholder')}
             value={query}

@@ -414,7 +414,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
           {/* Header */}
           <div className={classes.header}>
             <Group gap="sm" mb="xs">
-              <EntityAvatar name={agent.name} size="md" />
+              <EntityAvatar entityType="autonomous-agent" size="md" />
               <Title order={2} className={classes.title}>
                 {agent.name}
               </Title>

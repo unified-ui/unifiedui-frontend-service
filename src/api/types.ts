@@ -204,9 +204,19 @@ export interface GetMessagesResponse {
   messages: MessageResponse[];
 }
 
+export interface FileAttachment {
+  type: 'image' | 'file' | 'audio';
+  imageUrl?: string;
+  fileData?: string;
+  filename?: string;
+  mimeType?: string;
+  detail?: 'low' | 'high' | 'auto';
+}
+
 export interface MessageContent {
   content: string;
   attachments?: string[];
+  files?: FileAttachment[];
 }
 
 export interface InvokeConfig {

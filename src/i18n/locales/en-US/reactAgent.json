@@ -22,9 +22,12 @@
     "aiModels": "AI Models",
     "instructions": "Instructions",
     "tools": "Tools",
-    "promptTemplates": "Prompt Templates",
+    "toolUseInstructions": "Tool Use Instructions",
+    "securityInstructions": "Security Instructions",
+    "responseFormat": "Response Format",
     "greetingMessages": "Greeting Messages"
   },
+  "useDefault": "Use Default",
   "aiModels": {
     "addModel": "Add Model",
     "createNewModel": "Create New Model",
