@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Container, Text, Button, Paper, Stack, CopyButton, ActionIcon, Tooltip, Group, Code, Loader } from '@mantine/core';
 import { IconCopy, IconCheck, IconArrowLeft, IconKey } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +8,7 @@ import { useIdentity } from '../../contexts';
 import classes from './LoginTokenPage.module.css';
 
 export const LoginTokenPage = () => {
+  const { t } = useTranslation('token');
   const { isAuthenticated, getAccessToken, getFoundryToken, account } = useAuth();
   const { user, selectedTenant, isLoading: identityLoading } = useIdentity();
   const [token, setToken] = useState<string | null>(null);
@@ -74,7 +76,7 @@ export const LoginTokenPage = () => {
             onClick={() => navigate(isAuthenticated ? '/dashboard' : '/login')}
             className={classes.backButton}
           >
-            {isAuthenticated ? 'Zurück zum Dashboard' : 'Zur Login-Seite'}
+            {isAuthenticated ? t('backToDashboard') : t('backToLogin')}
           </Button>
 
           {/* Show login prompt if not authenticated */}
@@ -83,17 +85,17 @@ export const LoginTokenPage = () => {
               <Stack gap="md" align="center">
                 <IconKey size={48} />
                 <Text size="lg" fw={600} ta="center">
-                  Nicht angemeldet
+                  {t('notAuthenticated')}
                 </Text>
                 <Text size="sm" c="dimmed" ta="center">
-                  Du musst angemeldet sein, um deinen Access Token zu sehen.
+                  {t('mustBeLoggedIn')}
                 </Text>
                 <Button
                   leftSection={<IconArrowLeft size={18} />}
                   onClick={() => navigate('/login')}
                   fullWidth
                 >
-                  Zur Login-Seite
+                  {t('goToLogin')}
                 </Button>
               </Stack>
             </Paper>
@@ -106,7 +108,7 @@ export const LoginTokenPage = () => {
                 <Stack gap="md" align="center">
                   <Loader size="lg" />
                   <Text size="md" c="dimmed">
-                    Identity-Daten werden geladen...
+                    {t('loadingIdentity')}
                   </Text>
                 </Stack>
               </Paper>
@@ -120,11 +122,11 @@ export const LoginTokenPage = () => {
                     </Text>
                   </Group>
                   <Text size="sm" c="dimmed">
-                    Angemeldet als: {user?.mail || user?.display_name || account?.username || 'Unbekannt'}
+                    {t('loggedInAs', { email: user?.mail || user?.display_name || account?.username || t('unknown') })}
                   </Text>
                   {selectedTenant && (
                     <Text size="sm" c="dimmed">
-                      Aktueller Tenant: {selectedTenant.name}
+                      {t('currentTenant', { name: selectedTenant.name })}
                     </Text>
                   )}
                 </Stack>
@@ -159,7 +161,7 @@ export const LoginTokenPage = () => {
                   {getTokenPreview(token)}
                 </Code>
                 <Text size="xs" c="dimmed" ta="center">
-                  Klicke auf das Kopier-Symbol, um den vollständigen Token zu kopieren
+                  {t('clickCopyIcon')}
                 </Text>
                 <Button
                   onClick={fetchToken}
@@ -167,7 +169,7 @@ export const LoginTokenPage = () => {
                   variant="light"
                   fullWidth
                 >
-                  Token neu laden
+                  {t('reloadToken')}
                 </Button>
               </Stack>
             </Paper>
@@ -176,10 +178,10 @@ export const LoginTokenPage = () => {
               <Stack gap="md" align="center">
                 <Loader size="lg" />
                 <Text size="md" c="dimmed">
-                  Token wird geladen...
+                  {t('loadingToken')}
                 </Text>
                 <Button onClick={fetchToken} loading={isLoading}>
-                  Token neu laden
+                  {t('reloadToken')}
                 </Button>
               </Stack>
             </Paper>
@@ -191,11 +193,11 @@ export const LoginTokenPage = () => {
               <Stack gap="md">
                 <Group justify="space-between">
                   <Text size="md" fw={500}>
-                    Foundry Token (https://ai.azure.com/.default)
+                    {t('foundryTokenTitle')}
                   </Text>
                   <CopyButton value={foundryToken} timeout={2000}>
                     {({ copied, copy }) => (
-                      <Tooltip label={copied ? 'Kopiert!' : 'Token kopieren'} position="left">
+                      <Tooltip label={copied ? t('copied') : t('copyToken')} position="left">
                         <ActionIcon
                           color={copied ? 'teal' : 'gray'}
                           variant="subtle"
@@ -212,7 +214,7 @@ export const LoginTokenPage = () => {
                   {getTokenPreview(foundryToken)}
                 </Code>
                 <Text size="xs" c="dimmed" ta="center">
-                  Klicke auf das Kopier-Symbol, um den vollständigen Foundry Token zu kopieren
+                  {t('clickCopyFoundryIcon')}
                 </Text>
                 <Button
                   onClick={fetchFoundryToken}
@@ -220,7 +222,7 @@ export const LoginTokenPage = () => {
                   variant="light"
                   fullWidth
                 >
-                  Foundry Token neu laden
+                  {t('reloadFoundryToken')}
                 </Button>
               </Stack>
             </Paper>
@@ -229,10 +231,10 @@ export const LoginTokenPage = () => {
               <Stack gap="md" align="center">
                 <IconKey size={32} />
                 <Text size="md" fw={500}>
-                  Foundry Token (https://ai.azure.com/.default)
+                  {t('foundryTokenTitle')}
                 </Text>
                 <Text size="sm" c="dimmed" ta="center">
-                  Klicke auf den Button, um einen Token für Azure AI Foundry zu holen.
+                  {t('fetchFoundryTokenDescription')}
                   {foundryError && <Text c="red" size="xs" mt="xs">{foundryError}</Text>}
                 </Text>
                 <Button 
@@ -240,7 +242,7 @@ export const LoginTokenPage = () => {
                   loading={isFoundryLoading}
                   fullWidth
                 >
-                  Foundry Token holen
+                  {t('fetchFoundryToken')}
                 </Button>
               </Stack>
             </Paper>

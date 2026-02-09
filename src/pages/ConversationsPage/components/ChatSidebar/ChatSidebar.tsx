@@ -1,5 +1,6 @@
 import type { FC } from 'react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Stack,
   ActionIcon,
@@ -14,6 +15,8 @@ import {
   Skeleton,
   Box,
   TextInput,
+  Loader,
+  CopyButton,
 } from '@mantine/core';
 import {
   IconPlus,
@@ -29,6 +32,8 @@ import {
   IconEdit,
   IconCheck,
   IconX,
+  IconCopy,
+  IconFileExport,
 } from '@tabler/icons-react';
 import { ConfirmDeleteDialog } from '../../../../components/common';
 import { useIdentity } from '../../../../contexts';
@@ -42,6 +47,8 @@ interface ChatSidebarProps {
   favoriteIds: Set<string>;
   isLoading?: boolean;
   isCollapsed: boolean;
+  hasMore?: boolean;
+  searchQuery?: string;
   onCollapsedChange: (collapsed: boolean) => void;
   onNewChat: () => void;
   onSelectConversation: (conversationId: string) => void;
@@ -49,6 +56,8 @@ interface ChatSidebarProps {
   onRenameConversation?: (conversationId: string, newName: string) => void;
   onDeleteConversation?: (conversationId: string) => void;
   onSearchOpen?: () => void;
+  onSearchChange?: (query: string) => void;
+  onLoadMore?: () => void;
 }
 
 type GroupMode = 'time' | 'application';
@@ -65,6 +74,8 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
   favoriteIds,
   isLoading,
   isCollapsed,
+  hasMore = false,
+  searchQuery = '',
   onCollapsedChange,
   onNewChat,
   onSelectConversation,
@@ -72,22 +83,32 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
   onRenameConversation,
   onDeleteConversation,
   onSearchOpen,
+  onSearchChange,
+  onLoadMore,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
-  const [searchQuery] = useState('');
+  const { t } = useTranslation();
   const [groupMode, setGroupMode] = useState<GroupMode>('time');
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  // Rename state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
 
-  // Delete state
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     conversationId: string;
     conversationName: string;
   }>({ open: false, conversationId: '', conversationName: '' });
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleScrollPositionChange = useCallback(({ y }: { x: number; y: number }) => {
+    if (!scrollAreaRef.current || !hasMore || !onLoadMore) return;
+    const scrollHeight = scrollAreaRef.current.scrollHeight;
+    const clientHeight = scrollAreaRef.current.clientHeight;
+    if (scrollHeight - y - clientHeight < 100) {
+      onLoadMore();
+    }
+  }, [hasMore, onLoadMore]);
 
   // Rename handlers
   const handleRenameStart = (id: string, currentName: string) => {
@@ -135,26 +156,14 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
     }
   };
 
-  // Get application name by ID
   const getApplicationName = (applicationId: string): string => {
     const app = applications.find(a => a.id === applicationId);
     return app?.name || 'Unknown Application';
   };
 
-  // Filter conversations by search
-  const filteredConversations = useMemo(() => {
-    if (!searchQuery.trim()) return conversations;
-    const query = searchQuery.toLowerCase();
-    return conversations.filter(
-      conv => conv.name.toLowerCase().includes(query) ||
-        conv.description?.toLowerCase().includes(query)
-    );
-  }, [conversations, searchQuery]);
-
-  // Group conversations
   const groupedConversations = useMemo((): GroupedConversations[] => {
-    const pinned = filteredConversations.filter(c => favoriteIds.has(c.id));
-    const unpinned = filteredConversations.filter(c => !favoriteIds.has(c.id));
+    const pinned = conversations.filter(c => favoriteIds.has(c.id));
+    const unpinned = conversations.filter(c => !favoriteIds.has(c.id));
 
     if (groupMode === 'application') {
       // Group by application
@@ -171,7 +180,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
       const result: GroupedConversations[] = [];
       
       if (pinned.length > 0) {
-        result.push({ label: 'Pinned', conversations: pinned });
+        result.push({ label: t('conversations:pinned'), conversations: pinned });
       }
       
       // Sort groups by most recent conversation
@@ -200,28 +209,28 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
       const monthAgo = new Date(today.getTime() - 30 * 86400000);
 
       const groups: Record<string, ConversationResponse[]> = {
-        'Pinned': [],
-        'Today': [],
-        'Yesterday': [],
-        'Previous 7 days': [],
-        'Previous 30 days': [],
-        'Older': [],
+        [t('conversations:pinned')]: [],
+        [t('conversations:today')]: [],
+        [t('conversations:yesterday')]: [],
+        [t('conversations:previous7Days')]: [],
+        [t('conversations:previous30Days')]: [],
+        [t('conversations:older')]: [],
       };
 
-      pinned.forEach(conv => groups['Pinned'].push(conv));
+      pinned.forEach(conv => groups[t('conversations:pinned')].push(conv));
 
       unpinned.forEach(conv => {
         const date = new Date(conv.updated_at);
         if (date >= today) {
-          groups['Today'].push(conv);
+          groups[t('conversations:today')].push(conv);
         } else if (date >= yesterday) {
-          groups['Yesterday'].push(conv);
+          groups[t('conversations:yesterday')].push(conv);
         } else if (date >= weekAgo) {
-          groups['Previous 7 days'].push(conv);
+          groups[t('conversations:previous7Days')].push(conv);
         } else if (date >= monthAgo) {
-          groups['Previous 30 days'].push(conv);
+          groups[t('conversations:previous30Days')].push(conv);
         } else {
-          groups['Older'].push(conv);
+          groups[t('conversations:older')].push(conv);
         }
       });
 
@@ -234,12 +243,12 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
         .filter(([, convs]) => convs.length > 0)
         .map(([label, convs]) => ({ label, conversations: convs }));
     }
-  }, [filteredConversations, groupMode, applications]);
+  }, [conversations, groupMode, applications, favoriteIds]);
 
   if (isCollapsed) {
     return (
       <div className={classes.sidebarCollapsed}>
-        <Tooltip label="Expand sidebar" position="right">
+        <Tooltip label={t('conversations:expandSidebar')} position="right">
           <ActionIcon
             variant="subtle"
             className={classes.expandButton}
@@ -248,7 +257,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
             <IconChevronRight size={18} />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label="New Chat" position="right">
+        <Tooltip label={t('conversations:newChat')} position="right">
           <ActionIcon
             variant="filled"
             color="primary"
@@ -267,7 +276,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
       {/* Header */}
       <div className={classes.header}>
         <Group justify="space-between" align="center">
-          <Text fw={600} size="lg">Chats</Text>
+          <Text fw={600} size="lg">{t('conversations:chats')}</Text>
           <ActionIcon
             variant="subtle"
             onClick={() => onCollapsedChange(true)}
@@ -282,18 +291,35 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
       <div className={classes.actions}>
         <UnstyledButton className={classes.newChatButton} onClick={onNewChat}>
           <IconPlus size={18} />
-          <Text size="sm">New Chat</Text>
+          <Text size="sm">{t('conversations:newChat')}</Text>
         </UnstyledButton>
 
-        <Tooltip label="Search chats">
+        <Tooltip label={t('conversations:advancedSearch')}>
           <ActionIcon
             variant="subtle"
             onClick={onSearchOpen}
-            aria-label="Search chats"
+            aria-label="Advanced search"
           >
             <IconSearch size={18} />
           </ActionIcon>
         </Tooltip>
+      </div>
+
+      <div className={classes.searchWrapper}>
+        <TextInput
+          placeholder={t('conversations:searchConversations')}
+          size="xs"
+          leftSection={<IconSearch size={14} />}
+          value={searchQuery}
+          onChange={(e) => onSearchChange?.(e.currentTarget.value)}
+          rightSection={
+            searchQuery ? (
+              <ActionIcon size="xs" variant="subtle" onClick={() => onSearchChange?.('')}>
+                <IconX size={12} />
+              </ActionIcon>
+            ) : undefined
+          }
+        />
       </div>
 
       {/* Group Mode Toggle */}
@@ -308,7 +334,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
               label: (
                 <Group gap={4}>
                   <IconLayoutList size={14} />
-                  <span>Time</span>
+                  <span>{t('conversations:groupByTime')}</span>
                 </Group>
               ),
             },
@@ -317,7 +343,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
               label: (
                 <Group gap={4}>
                   <IconApps size={14} />
-                  <span>Agent</span>
+                  <span>{t('conversations:groupByAgent')}</span>
                 </Group>
               ),
             },
@@ -329,7 +355,12 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
       <Divider />
 
       {/* Conversation List */}
-      <ScrollArea className={classes.conversationList} scrollbarSize={6}>
+      <ScrollArea
+        className={classes.conversationList}
+        scrollbarSize={6}
+        viewportRef={scrollAreaRef}
+        onScrollPositionChange={handleScrollPositionChange}
+      >
         {isLoading ? (
           <Stack gap="xs" p="sm">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -339,10 +370,10 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
         ) : groupedConversations.length === 0 ? (
           <Box p="md" ta="center">
             <Text c="dimmed" size="sm">
-              {searchQuery ? 'No conversations found' : 'No conversations yet'}
+              {searchQuery ? t('conversations:noConversationsFound') : t('conversations:noConversations')}
             </Text>
             <Text c="dimmed" size="xs" mt="xs">
-              Start a new chat to begin
+              {t('conversations:startNewChat')}
             </Text>
           </Box>
         ) : (
@@ -372,6 +403,11 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
                 ))}
               </div>
             ))}
+            {hasMore && (
+              <Box ta="center" py="sm">
+                <Loader size="xs" />
+              </Box>
+            )}
           </Stack>
         )}
       </ScrollArea>
@@ -420,6 +456,8 @@ const ConversationItem: FC<ConversationItemProps> = ({
   onSaveRename,
   onCancelRename,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <Box
       className={`${classes.conversationItem} ${isSelected ? classes.selected : ''}`}
@@ -508,7 +546,7 @@ const ConversationItem: FC<ConversationItemProps> = ({
                   onToggleFavorite?.();
                 }}
               >
-                {isFavorite ? 'Unpin' : 'Pin'}
+                {isFavorite ? t('conversations:unpin') : t('conversations:pin')}
               </Menu.Item>
               <Menu.Item
                 leftSection={<IconEdit size={14} />}
@@ -517,8 +555,21 @@ const ConversationItem: FC<ConversationItemProps> = ({
                   onRename?.(conversation.id);
                 }}
               >
-                Rename
+                {t('conversations:rename')}
               </Menu.Item>
+              <CopyButton value={conversation.id}>
+                {({ copy }) => (
+                  <Menu.Item
+                    leftSection={<IconCopy size={14} />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copy();
+                    }}
+                  >
+                    {t('conversations:copyId')}
+                  </Menu.Item>
+                )}
+              </CopyButton>
               <Menu.Divider />
               <Menu.Item
                 color="red"
@@ -528,7 +579,7 @@ const ConversationItem: FC<ConversationItemProps> = ({
                   onDelete?.(conversation.id);
                 }}
               >
-                Delete
+                {t('conversations:deleteConversation')}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>

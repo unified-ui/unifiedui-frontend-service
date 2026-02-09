@@ -1,0 +1,485 @@
+import { useState, useCallback, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { notifications } from '@mantine/notifications';
+import {
+  ApplicationTypeEnum,
+  type ConversationResponse,
+  type ApplicationResponse,
+  type MessageResponse,
+} from '../../../api/types';
+import type { UnifiedUIAPIClient } from '../../../api/client';
+
+const CONTEXT_DATA_PREFIX = 'ctx_';
+
+/**
+ * Extracts context data from URL search parameters.
+ * Query params with 'ctx_' prefix are extracted and the prefix is removed from keys.
+ */
+function extractContextDataFromSearchParams(
+  searchParams: URLSearchParams
+): Record<string, string> | undefined {
+  const contextData: Record<string, string> = {};
+
+  searchParams.forEach((value, key) => {
+    if (key.startsWith(CONTEXT_DATA_PREFIX)) {
+      const cleanKey = key.slice(CONTEXT_DATA_PREFIX.length);
+      if (cleanKey) {
+        contextData[cleanKey] = value;
+      }
+    }
+  });
+
+  return Object.keys(contextData).length > 0 ? contextData : undefined;
+}
+
+interface UseChatParams {
+  apiClient: UnifiedUIAPIClient | null;
+  tenantId: string | undefined;
+  selectedApplicationId: string | undefined;
+  conversationId: string | undefined;
+  applications: ApplicationResponse[];
+  currentConversation: ConversationResponse | null;
+  getFoundryToken: () => Promise<string | null>;
+  setCurrentConversation: React.Dispatch<React.SetStateAction<ConversationResponse | null>>;
+  setConversations: React.Dispatch<React.SetStateAction<ConversationResponse[]>>;
+  setSelectedApplicationId: React.Dispatch<React.SetStateAction<string | undefined>>;
+  onRefreshTraces: () => Promise<void>;
+}
+
+interface UseChatReturn {
+  messages: MessageResponse[];
+  setMessages: React.Dispatch<React.SetStateAction<MessageResponse[]>>;
+  isStreaming: boolean;
+  streamingContent: string;
+  streamingMessageId: string | undefined;
+  isLoadingMessages: boolean;
+  abortControllerRef: React.RefObject<AbortController | null>;
+  justCreatedConversationRef: React.RefObject<string | null>;
+  handleSendMessage: (content: string, attachments?: File[]) => Promise<void>;
+  handleEditMessage: (messageId: string, newContent: string) => Promise<void>;
+  handleDeleteMessage: (messageId: string) => Promise<void>;
+  resetStreamingState: () => void;
+  loadConversationMessages: (convId: string) => Promise<void>;
+}
+
+/**
+ * Hook for chat messaging: SSE streaming, send, edit, delete, error handling with auto-retry.
+ */
+export function useChat({
+  apiClient,
+  tenantId,
+  selectedApplicationId,
+  conversationId,
+  applications,
+  currentConversation,
+  getFoundryToken,
+  setCurrentConversation,
+  setConversations,
+  setSelectedApplicationId,
+  onRefreshTraces,
+}: UseChatParams): UseChatReturn {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const [messages, setMessages] = useState<MessageResponse[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
+  const [streamingMessageId, setStreamingMessageId] = useState<string | undefined>();
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const justCreatedConversationRef = useRef<string | null>(null);
+  const retryCountRef = useRef(0);
+
+  const resetStreamingState = useCallback(() => {
+    setIsStreaming(false);
+    setStreamingContent('');
+    setStreamingMessageId(undefined);
+    setMessages([]);
+  }, []);
+
+  const loadConversationMessages = useCallback(async (convId: string) => {
+    if (!apiClient || !tenantId) return;
+
+    setIsLoadingMessages(true);
+    try {
+      const [convData, messagesData] = await Promise.all([
+        apiClient.getConversation(tenantId, convId),
+        apiClient.getMessages(tenantId, convId),
+      ]);
+
+      setCurrentConversation(convData);
+      setMessages([...messagesData.messages].reverse());
+      setSelectedApplicationId(convData.application_id);
+    } catch (error) {
+      console.error('Failed to load conversation:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to load conversation',
+        color: 'red',
+      });
+      navigate('/conversations');
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  }, [apiClient, tenantId, navigate, setCurrentConversation, setSelectedApplicationId]);
+
+  const executeStream = useCallback(async (
+    content: string,
+    activeConversationId: string,
+    activeExtConversationId: string | undefined,
+    optimisticUserMessage: MessageResponse,
+    foundryToken: string | undefined,
+    isFoundryApp: boolean,
+    isRetry: boolean,
+  ) => {
+    let accumulatedContent = '';
+    let currentStreamingMessageId = '';
+
+    const contextData = extractContextDataFromSearchParams(searchParams);
+
+    const stream = apiClient!.sendMessageStream(
+      tenantId!,
+      {
+        conversationId: activeConversationId,
+        applicationId: selectedApplicationId!,
+        message: {
+          content,
+          attachments: undefined,
+        },
+        invokeConfig: contextData ? { contextData } : undefined,
+        extConversationId: isFoundryApp ? activeExtConversationId : undefined,
+      },
+      (messageId: string, _newConversationId: string, isNewMessage: boolean) => {
+        if (isNewMessage) {
+          currentStreamingMessageId = messageId;
+          setStreamingMessageId(messageId);
+
+          const newStreamingMessage: MessageResponse = {
+            id: messageId,
+            type: 'assistant',
+            conversationId: activeConversationId,
+            applicationId: selectedApplicationId!,
+            content: '',
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+
+          setMessages(prev => [...prev, newStreamingMessage]);
+        } else {
+          currentStreamingMessageId = messageId;
+          setStreamingMessageId(messageId);
+
+          const streamingAssistantMessage: MessageResponse = {
+            id: messageId,
+            type: 'assistant',
+            conversationId: activeConversationId,
+            applicationId: selectedApplicationId!,
+            content: '',
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+
+          setMessages(prev => {
+            const updated = prev.map(m =>
+              m.id === optimisticUserMessage.id
+                ? { ...m, status: 'completed' as const }
+                : m
+            );
+            return [...updated, streamingAssistantMessage];
+          });
+        }
+      },
+      (chunk: string) => {
+        accumulatedContent += chunk;
+        setStreamingContent(accumulatedContent);
+      },
+      () => {
+        if (currentStreamingMessageId && accumulatedContent) {
+          const previousMessageId = currentStreamingMessageId;
+          const previousContent = accumulatedContent;
+          setMessages(prev => prev.map(m =>
+            m.id === previousMessageId
+              ? { ...m, content: previousContent, status: 'completed' as const }
+              : m
+          ));
+        }
+
+        accumulatedContent = '';
+        setStreamingContent('');
+      },
+      () => {
+        setIsStreaming(false);
+
+        const finalContent = accumulatedContent;
+        if (finalContent && currentStreamingMessageId) {
+          setMessages(prev => prev.map(m =>
+            m.id === currentStreamingMessageId
+              ? { ...m, content: finalContent, status: 'completed' as const }
+              : m
+          ));
+        }
+
+        setStreamingContent('');
+        setStreamingMessageId(undefined);
+        retryCountRef.current = 0;
+      },
+      async (code: string, message: string, details: string) => {
+        console.error('Stream error:', { code, message, details });
+
+        if (!isRetry && retryCountRef.current === 0) {
+          retryCountRef.current = 1;
+          setMessages(prev => prev.filter(m => m.id !== currentStreamingMessageId));
+          setStreamingContent('');
+          setStreamingMessageId(undefined);
+
+          try {
+            await executeStream(
+              content,
+              activeConversationId,
+              activeExtConversationId,
+              optimisticUserMessage,
+              foundryToken,
+              isFoundryApp,
+              true,
+            );
+            return;
+          } catch {
+            // Fall through to error display
+          }
+        }
+
+        setIsStreaming(false);
+        setStreamingContent('');
+        setStreamingMessageId(undefined);
+        retryCountRef.current = 0;
+
+        setMessages(prev => {
+          const withoutStreaming = prev.filter(m => m.id !== currentStreamingMessageId);
+          const errorMessage: MessageResponse = {
+            id: `error-${Date.now()}`,
+            type: 'assistant',
+            conversationId: activeConversationId,
+            applicationId: selectedApplicationId!,
+            content: message || 'An error occurred while generating the response.',
+            status: 'failed',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          return [...withoutStreaming, errorMessage];
+        });
+      },
+      (completedMessage: MessageResponse) => {
+        setMessages(prev => prev.map(m =>
+          m.id === completedMessage.id ? completedMessage : m
+        ));
+
+        setTimeout(() => {
+          onRefreshTraces();
+        }, 1500);
+      },
+      (title: string) => {
+        if (!activeConversationId) return;
+        const convId = activeConversationId;
+        let charIndex = 0;
+        const typewriterInterval = setInterval(() => {
+          charIndex++;
+          const partial = title.slice(0, charIndex);
+          setConversations(prev => prev.map(c =>
+            c.id === convId ? { ...c, name: partial } : c
+          ));
+          setCurrentConversation(prev => prev?.id === convId ? { ...prev, name: partial } : prev);
+          if (charIndex >= title.length) {
+            clearInterval(typewriterInterval);
+          }
+        }, 30);
+      },
+      foundryToken
+    );
+
+    for await (const _event of stream) {
+      if (abortControllerRef.current?.signal.aborted) {
+        break;
+      }
+    }
+  }, [apiClient, tenantId, selectedApplicationId, searchParams, setConversations, setCurrentConversation, onRefreshTraces]);
+
+  const handleSendMessage = useCallback(async (content: string, attachments?: File[]) => {
+    if (!apiClient || !tenantId || !selectedApplicationId) {
+      notifications.show({
+        title: 'Error',
+        message: 'Please select a chat agent first',
+        color: 'red',
+      });
+      return;
+    }
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
+    const selectedApp = applications.find(app => app.id === selectedApplicationId);
+    const isFoundryApp = selectedApp?.type === ApplicationTypeEnum.MICROSOFT_FOUNDRY;
+    let foundryToken: string | undefined;
+    if (isFoundryApp) {
+      const token = await getFoundryToken();
+      foundryToken = token ?? undefined;
+    }
+
+    let activeConversationId = conversationId;
+    let activeExtConversationId = currentConversation?.ext_conversation_id;
+
+    if (!activeConversationId) {
+      try {
+        const newConv = await apiClient.createConversation(
+          tenantId,
+          {
+            application_id: selectedApplicationId,
+            name: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
+          },
+          foundryToken
+        );
+
+        activeConversationId = newConv.id;
+        activeExtConversationId = newConv.ext_conversation_id;
+
+        justCreatedConversationRef.current = newConv.id;
+
+        navigate(`/conversations/${newConv.id}`, { replace: true });
+
+        setCurrentConversation(newConv);
+        setConversations(prev => [newConv, ...prev]);
+      } catch (error) {
+        console.error('Failed to create conversation:', error);
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to create conversation',
+          color: 'red',
+        });
+        return;
+      }
+    }
+
+    const optimisticUserMessage: MessageResponse = {
+      id: `temp-${Date.now()}`,
+      type: 'user',
+      conversationId: activeConversationId!,
+      applicationId: selectedApplicationId,
+      content,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setMessages(prev => [...prev, optimisticUserMessage]);
+    setIsStreaming(true);
+    setStreamingContent('');
+    retryCountRef.current = 0;
+
+    if (attachments && attachments.length > 0) {
+      void attachments;
+    }
+
+    try {
+      await executeStream(
+        content,
+        activeConversationId!,
+        activeExtConversationId,
+        optimisticUserMessage,
+        foundryToken,
+        isFoundryApp,
+        false,
+      );
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      setIsStreaming(false);
+      setStreamingContent('');
+      setStreamingMessageId(undefined);
+
+      setMessages(prev => prev.filter(m => m.id !== optimisticUserMessage.id));
+
+      if ((error as Error).name !== 'AbortError') {
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to send message',
+          color: 'red',
+        });
+      }
+    }
+  }, [apiClient, tenantId, selectedApplicationId, conversationId, applications, currentConversation, getFoundryToken, navigate, setCurrentConversation, setConversations, executeStream]);
+
+  const handleEditMessage = useCallback(async (messageId: string, newContent: string) => {
+    if (!apiClient || !tenantId || !conversationId) return;
+
+    try {
+      const updatedMessage = await apiClient.editMessage(
+        tenantId,
+        conversationId,
+        messageId,
+        { content: newContent }
+      );
+
+      setMessages(prev => prev.map(m =>
+        m.id === messageId ? updatedMessage : m
+      ));
+
+      await handleSendMessage(newContent);
+    } catch (error) {
+      console.error('Failed to edit message:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to edit message',
+        color: 'red',
+      });
+    }
+  }, [apiClient, tenantId, conversationId, handleSendMessage]);
+
+  const handleDeleteMessage = useCallback(async (messageId: string) => {
+    if (!apiClient || !tenantId || !conversationId) return;
+
+    try {
+      await apiClient.deleteMessage(tenantId, conversationId, messageId);
+
+      setMessages(prev => {
+        const deletedIndex = prev.findIndex(m => m.id === messageId);
+        if (deletedIndex === -1) return prev;
+
+        const deletedMessage = prev[deletedIndex];
+        if (deletedMessage.type === 'user') {
+          const nextMessage = prev[deletedIndex + 1];
+          if (nextMessage && nextMessage.type === 'assistant') {
+            return prev.filter(m => m.id !== messageId && m.id !== nextMessage.id);
+          }
+        }
+
+        return prev.filter(m => m.id !== messageId);
+      });
+    } catch (error) {
+      console.error('Failed to delete message:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to delete message',
+        color: 'red',
+      });
+    }
+  }, [apiClient, tenantId, conversationId]);
+
+  return {
+    messages,
+    setMessages,
+    isStreaming,
+    streamingContent,
+    streamingMessageId,
+    isLoadingMessages,
+    abortControllerRef,
+    justCreatedConversationRef,
+    handleSendMessage,
+    handleEditMessage,
+    handleDeleteMessage,
+    resetStreamingState,
+    loadConversationMessages,
+  };
+}

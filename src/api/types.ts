@@ -188,8 +188,16 @@ export interface MessageResponse {
   errorMessage?: string;
   statusTraces?: StatusTrace[];
   metadata?: AssistantMetadata;
+  attachmentsMetadata?: AttachmentMetadata[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AttachmentMetadata {
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  fileCategory: string;
 }
 
 export interface GetMessagesResponse {
@@ -218,6 +226,40 @@ export interface SendMessageResponse {
   userMessageId: string;
   assistantMessageId: string;
   conversationId: string;
+}
+
+// ========== Reaction Types ==========
+
+export const ReactionType = {
+  THUMBS_UP: 'thumbs_up',
+  THUMBS_DOWN: 'thumbs_down',
+} as const;
+
+export type ReactionType = typeof ReactionType[keyof typeof ReactionType];
+
+export interface ReactionResponse {
+  id: string;
+  tenantId: string;
+  conversationId: string;
+  messageId: string;
+  userId: string;
+  reaction: ReactionType;
+  feedbackText?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ListReactionsResponse {
+  reactions: ReactionResponse[];
+}
+
+export interface UpsertReactionRequest {
+  reaction: ReactionType;
+  feedbackText?: string;
+}
+
+export interface EditMessageRequest {
+  content: string;
 }
 
 // ========== Trace Types (Full Hierarchical Traces) ==========
@@ -983,6 +1025,7 @@ export const AIModelProviderEnum = {
 export type AIModelProviderEnum = typeof AIModelProviderEnum[keyof typeof AIModelProviderEnum];
 
 export const AIModelPurposeGroupEnum = {
+  REACT_AGENT: 'REACT_AGENT',
   CONVERSATION_TITLE_GENERATION: 'CONVERSATION_TITLE_GENERATION',
   CONVERSATION_SUMMARIZATION: 'CONVERSATION_SUMMARIZATION',
   DESCRIPTION_GENERATION: 'DESCRIPTION_GENERATION',
@@ -1030,6 +1073,63 @@ export interface UpdateAIModelRequest {
   credential_id?: string;
   priority?: number;
   is_active?: boolean;
+}
+
+// ========== ReACT Agent Types ==========
+
+export interface ReActAgentResponse {
+  id: string;
+  tenant_id: string;
+  name: string;
+  description?: string;
+  ai_model_ids: string[];
+  system_prompt?: string;
+  tool_ids: string[];
+  security_prompt?: string;
+  tool_use_prompt?: string;
+  response_prompt?: string;
+  greeting_messages: string[];
+  config: Record<string, unknown>;
+  is_active: boolean;
+  tags: TagSummary[];
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+export interface CreateReActAgentRequest {
+  name: string;
+  description?: string;
+  ai_model_ids?: string[];
+  system_prompt?: string;
+  tool_ids?: string[];
+  security_prompt?: string;
+  tool_use_prompt?: string;
+  response_prompt?: string;
+  greeting_messages?: string[];
+  config?: Record<string, unknown>;
+  is_active?: boolean;
+}
+
+export interface UpdateReActAgentRequest {
+  name?: string;
+  description?: string;
+  ai_model_ids?: string[];
+  system_prompt?: string;
+  tool_ids?: string[];
+  security_prompt?: string;
+  tool_use_prompt?: string;
+  response_prompt?: string;
+  greeting_messages?: string[];
+  config?: Record<string, unknown>;
+  is_active?: boolean;
+}
+
+export interface SetReActAgentPermissionRequest {
+  principal_id: string;
+  principal_type: PrincipalTypeEnum;
+  role: PermissionActionEnum;
 }
 
 // ========== AI Feature Types ==========
@@ -1128,6 +1228,109 @@ export interface HealthCheckResponse {
   status: string;
   timestamp: string;
   version: string;
+}
+
+// ========== Dashboard Types ==========
+
+export interface EntityStatsResponse {
+  total: number;
+  active: number;
+  inactive: number;
+}
+
+export interface DashboardStatsResponse {
+  applications: EntityStatsResponse;
+  autonomous_agents: EntityStatsResponse;
+  conversations: EntityStatsResponse;
+}
+
+// ========== Search Types ==========
+
+export interface SearchResultItem {
+  type: string;
+  id: string;
+  name: string;
+  description?: string;
+  match_field: string;
+  is_active?: boolean;
+  tags: string[];
+}
+
+export interface SearchResponse {
+  results: SearchResultItem[];
+  total: number;
+  query: string;
+}
+
+export interface GlobalSearchParams {
+  q: string;
+  types?: string;
+  limit?: number;
+}
+
+// ========== Notification Types ==========
+
+export const NotificationTypeEnum = {
+  AGENT_RUN_FAILED: 'AGENT_RUN_FAILED',
+  CREDENTIAL_EXPIRING: 'CREDENTIAL_EXPIRING',
+  TRACE_IMPORTED: 'TRACE_IMPORTED',
+} as const;
+export type NotificationTypeEnum = typeof NotificationTypeEnum[keyof typeof NotificationTypeEnum];
+
+export interface NotificationResponse {
+  id: string;
+  tenant_id: string;
+  user_id?: string;
+  type: NotificationTypeEnum;
+  title: string;
+  message?: string;
+  resource_type?: string;
+  resource_id?: string;
+  is_read: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotificationListResponse {
+  notifications: NotificationResponse[];
+  total: number;
+}
+
+export interface UnreadCountResponse {
+  unread_count: number;
+}
+
+export interface NotificationQueryParams {
+  is_read?: boolean;
+  limit?: number;
+  offset?: number;
+}
+
+// ========== Recent Visits Types ==========
+
+export interface RecentVisitResponse {
+  id: string;
+  tenant_id: string;
+  user_id: string;
+  resource_type: string;
+  resource_id: string;
+  resource_name: string;
+  visited_at: string;
+}
+
+export interface RecentVisitListResponse {
+  visits: RecentVisitResponse[];
+  total: number;
+}
+
+export interface RecentVisitItem {
+  resource_type: string;
+  resource_id: string;
+  resource_name: string;
+}
+
+export interface SyncRecentVisitsRequest {
+  visits: RecentVisitItem[];
 }
 
 // ========== Query Parameters ==========

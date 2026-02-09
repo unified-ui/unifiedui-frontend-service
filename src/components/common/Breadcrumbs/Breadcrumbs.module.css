@@ -1,0 +1,17 @@
+.breadcrumbs {
+  margin-bottom: var(--spacing-md);
+}
+
+.link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.link:hover {
+  color: var(--color-primary);
+}
+
+.current {
+  color: var(--text-primary);
+}

@@ -90,8 +90,9 @@ Used for detail pages and settings pages with multiple sections.
 Standard layout for entity detail pages (e.g., AutonomousAgentDetailsPage):
 
 ```
-MainLayout > PageContainer
-├── Header section (breadcrumb, title, actions)
+MainLayout
+├── Breadcrumbs (e.g., "Agents > Agent Name")
+├── Header section (EntityAvatar, title, actions)
 ├── Tabs
 │   ├── Tab 1 (e.g., Traces) → scrollWrapper > scrollArea > TracesTable
 │   └── Tab 2 (e.g., Details) → scrollWrapper > scrollArea > sectionCards
@@ -142,10 +143,12 @@ When a dialog has tabs, apply the same scrolling pattern as pages but with a sma
 List pages follow a standard pattern:
 
 ```
-MainLayout > PageContainer
+MainLayout
 ├── PageHeader (title + "Create" button)
 └── DataTable (search + sort + filter + infinite scroll)
 ```
+
+List pages use the `useEntityList<T>` hook which extracts all common logic (state, pagination, search, sort, filter, tags, CRUD, edit dialog URL state). Pages only define entity-specific config and render.
 
 See [components/data-table.instructions.md](./components/data-table.instructions.md) for DataTable internals.
 

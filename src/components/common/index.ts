@@ -1,5 +1,7 @@
-export { PageContainer } from './PageContainer';
 export { PageHeader } from './PageHeader';
+export { EntityAvatar } from './EntityAvatar';
+export { Breadcrumbs } from './Breadcrumbs';
+export type { BreadcrumbItem } from './Breadcrumbs';
 export { DataTable, DataTableRow, DataTableToolbar } from './DataTable';
 export type { DataTableItem, SortOption, FilterState } from './DataTable';
 export { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
@@ -22,3 +24,4 @@ export { TracesTable } from './TracesTable';
 export type { TracesTableProps, TracesSortState, TraceSortField, TraceSortOrder, TraceDatePreset } from './TracesTable';
 export { MarkdownRenderer } from './MarkdownRenderer';
 export { GenerateWithAIButton } from './GenerateWithAIButton';
+export { CommandPalette } from './CommandPalette';

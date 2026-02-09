@@ -1,0 +1,12 @@
+{
+  "title": "Settings",
+  "general": "General",
+  "iam": "IAM",
+  "groups": "Groups",
+  "credentials": "Credentials",
+  "aiModels": "AI Models",
+  "tools": "Tools",
+  "billing": "Billing",
+  "newApiKey": "New API Key",
+  "keepCurrentValue": "Leave empty to keep the current value"
+}

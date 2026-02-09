@@ -1,0 +1,56 @@
+{
+  "title": "ReACT Agent Developer",
+  "createAgent": "Create Agent",
+  "saveConfig": "Save Config",
+  "testAgent": "Test Agent",
+  "agentName": "Agent Name",
+  "agentNamePlaceholder": "Enter agent name...",
+  "agentDescription": "Description",
+  "agentDescriptionPlaceholder": "Enter agent description...",
+  "configuration": "Configuration",
+  "playground": "Playground Chat",
+  "clearChat": "Clear Chat",
+  "noAgentSelected": "Select or create a ReACT Agent to begin.",
+  "sections": {
+    "aiModels": "AI Models",
+    "instructions": "Instructions",
+    "tools": "Tools",
+    "promptTemplates": "Prompt Templates",
+    "greetingMessages": "Greeting Messages"
+  },
+  "aiModels": {
+    "addModel": "Add Model",
+    "createNewModel": "Create New Model",
+    "noModels": "No AI models assigned. Add models with purpose group REACT_AGENT.",
+    "onlyReactAgent": "Only models with purpose group REACT_AGENT are shown.",
+    "selectModel": "Select AI Model..."
+  },
+  "instructions": {
+    "systemPrompt": "System Instructions",
+    "systemPromptPlaceholder": "Enter system instructions for the agent...",
+    "maxChars": "{{count}} / {{max}} characters"
+  },
+  "tools": {
+    "addTool": "Add Tool",
+    "createNewTool": "Create New Tool",
+    "noTools": "No tools assigned. Add tools for agent capabilities.",
+    "selectTool": "Select Tool..."
+  },
+  "promptTemplates": {
+    "securityPrompt": "Security Instructions",
+    "securityPromptPlaceholder": "Enter security instructions...",
+    "toolUsePrompt": "Tool Use Instructions",
+    "toolUsePromptPlaceholder": "Enter tool use instructions...",
+    "responsePrompt": "Response Format Instructions",
+    "responsePromptPlaceholder": "Enter response formatting instructions..."
+  },
+  "greetingMessages": {
+    "addMessage": "Add Greeting",
+    "noMessages": "No greeting messages. The agent will start with a default greeting.",
+    "messagePlaceholder": "Enter greeting message..."
+  },
+  "agentSaved": "Agent configuration saved successfully.",
+  "agentSaveFailed": "Failed to save agent configuration.",
+  "agentCreated": "ReACT Agent created successfully.",
+  "agentDeleted": "ReACT Agent deleted successfully."
+}

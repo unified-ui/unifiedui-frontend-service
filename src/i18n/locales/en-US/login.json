@@ -1,0 +1,23 @@
+{
+  "heroTitle": "AI Hub",
+  "heroSubtitle": "The multi-tenant platform for AI agent integration",
+  "heroDescription": "Connect and manage various AI agent systems centrally. With role-based access control, comprehensive audit logging, and enterprise-ready security.",
+  "welcome": "Welcome",
+  "signInPrompt": "Sign in to access your AI agents",
+  "signInWithMicrosoft": "Sign in with Microsoft",
+  "loadingIdentity": "Loading identity data...",
+  "successfullyLoggedIn": "Successfully logged in",
+  "loggedInAs": "Logged in as: {{email}}",
+  "currentTenant": "Current Tenant: {{name}}",
+  "availableTenants": "Available Tenants ({{count}})",
+  "noId": "No ID",
+  "signOut": "Sign out",
+  "featureMultiAgent": "Multi-Agent",
+  "featureMultiAgentDesc": "Integration of various AI agent systems",
+  "featureMultiTenant": "Multi-Tenant",
+  "featureMultiTenantDesc": "Strict tenant isolation with RBAC",
+  "featureSecure": "Secure",
+  "featureSecureDesc": "Enterprise-ready with audit logging",
+  "featureScalable": "Scalable",
+  "featureScalableDesc": "Flexible infrastructure integration"
+}

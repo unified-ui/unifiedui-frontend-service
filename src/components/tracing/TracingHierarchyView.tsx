@@ -18,6 +18,7 @@
 
 import { useCallback, useMemo, useState, useRef } from 'react';
 import type { FC } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, ScrollArea, Badge, UnstyledButton, ActionIcon, Tooltip, Code, Collapse } from '@mantine/core';
 import {
   IconChevronDown,
@@ -278,8 +279,8 @@ interface DataPanelsContainerProps {
 
 const DataPanelsContainer: FC<DataPanelsContainerProps> = ({ maxHeight: _maxHeight = 600 }) => {
   const { selectedTrace, selectedNode } = useTracing();
+  const { t } = useTranslation();
   
-  // Gemeinsame aktive Höhe - wird bei Panel-Wechsel übernommen
   const [activeHeight, setActiveHeight] = useState(PANEL_DEFAULT_HEIGHT);
   
   // Panel states - alle initial collapsed, teilen sich activeHeight
@@ -314,14 +315,14 @@ const DataPanelsContainer: FC<DataPanelsContainerProps> = ({ maxHeight: _maxHeig
   // Render Data Content Helper
   const renderDataContent = (data: TraceNodeDataIO | null | undefined, title: string) => {
     if (!data) {
-      return <Text size="xs" c="dimmed" fs="italic">Keine {title}-Daten</Text>;
+      return <Text size="xs" c="dimmed" fs="italic">{t('tracing:noData', { title })}</Text>;
     }
     
     const { text, arguments: args, extraData, metadata: dataMeta, ...rest } = data;
     const hasContent = text || args || dataMeta || extraData || Object.keys(rest).length > 0;
     
     if (!hasContent) {
-      return <Text size="xs" c="dimmed" fs="italic">Keine {title}-Daten</Text>;
+      return <Text size="xs" c="dimmed" fs="italic">{t('tracing:noData', { title })}</Text>;
     }
     
     return (
@@ -424,7 +425,7 @@ const DataPanelsContainer: FC<DataPanelsContainerProps> = ({ maxHeight: _maxHeig
             ))}
           </div>
         ) : (
-          <Text size="xs" c="dimmed" fs="italic">Keine Logs</Text>
+          <Text size="xs" c="dimmed" fs="italic">{t('tracing:noLogs')}</Text>
         )}
       </ResizablePanel>
 
@@ -441,7 +442,7 @@ const DataPanelsContainer: FC<DataPanelsContainerProps> = ({ maxHeight: _maxHeig
         {hasMetadata ? (
           <JsonViewer data={metadata} initialCollapsed={false} />
         ) : (
-          <Text size="xs" c="dimmed" fs="italic">Keine Metadata</Text>
+          <Text size="xs" c="dimmed" fs="italic">{t('tracing:noMetadata')}</Text>
         )}
       </ResizablePanel>
     </div>
@@ -701,13 +702,13 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
     toggleHierarchyCollapse,
   } = useTracing();
 
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Wenn keine Traces, leeren State zeigen
   if (!traces || traces.length === 0) {
     return (
       <div className={classes.emptyContainer}>
-        <Text size="sm" c="dimmed">Keine Traces verfügbar</Text>
+        <Text size="sm" c="dimmed">{t('tracing:noTracesAvailable')}</Text>
       </div>
     );
   }

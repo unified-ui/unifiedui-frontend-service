@@ -1,31 +1,45 @@
 import type { FC } from 'react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Group, TextInput, Indicator, ActionIcon, Avatar, Text, Title, useMantineColorScheme, Stack, Paper, Button, Divider, Select, UnstyledButton } from '@mantine/core';
-import { IconSearch, IconBell, IconBrain, IconSun, IconMoon, IconLogout, IconExternalLink, IconPlus } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
+import { Group, TextInput, ActionIcon, Avatar, Text, Title, useMantineColorScheme, Stack, Paper, Button, Divider, Select, Indicator } from '@mantine/core';
+import { IconSearch, IconBell, IconBrain, IconSun, IconMoon, IconLogout, IconPlus } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
-import { useIdentity } from '../../../contexts';
+import { useIdentity, useNotifications } from '../../../contexts';
+import { useKeyboardShortcuts } from '../../../hooks';
 import { CreateTenantDialog } from '../../dialogs';
+import { CommandPalette } from '../../common';
 import classes from './Header.module.css';
 
 export const Header: FC = () => {
+  const { t } = useTranslation('header');
+  const { t: tCommon } = useTranslation('common');
   const navigate = useNavigate();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const { account, logout } = useAuth();
   const { user, tenants, selectedTenant, selectTenant } = useIdentity();
+  const { unreadCount, togglePanel: toggleNotificationPanel } = useNotifications();
   const isDark = colorScheme === 'dark';
   const [userDropdownOpened, setUserDropdownOpened] = useState(false);
   const [isTenantDialogOpen, setIsTenantDialogOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const userAccountRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
+  const handleOpenCommandPalette = useCallback(() => setIsCommandPaletteOpen(true), []);
+
+  const handleFocusSearch = useCallback(() => setIsCommandPaletteOpen(true), []);
+
+  useKeyboardShortcuts({
+    onCommandPalette: () => setIsCommandPaletteOpen(prev => !prev),
+    onFocusSearch: handleFocusSearch,
+    onOpenSettings: () => navigate('/tenant-settings'),
+  });
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
       
-      // Check if click is outside userAccountRef
       if (userAccountRef.current && !userAccountRef.current.contains(target)) {
-        // Check if click is on a Mantine portal element (dropdown, select options, etc.)
         const isPortalElement = (target as Element).closest?.('[data-portal]');
         
         if (!isPortalElement) {
@@ -47,20 +61,20 @@ export const Header: FC = () => {
   const userEmail = user?.mail || account?.username || 'user@example.com';
   const displayName = userName.length > 20 ? userName.substring(0, 20) + '…' : userName;
   
-  const tenantDisplayName = selectedTenant?.name || 'Kein Tenant';
+  const tenantDisplayName = selectedTenant?.name || t('noTenant');
   const tenantOptions = tenants.length > 0 
     ? tenants.map(t => ({ value: t.id, label: t.name }))
-    : [{ value: '', label: 'Keine Tenants verfügbar' }];
+    : [{ value: '', label: t('noTenantsAvailable') }];
 
   const handleTenantChange = (value: string | null) => {
     if (value && value !== '') {
       selectTenant(value);
+      navigate('/dashboard');
     }
   };
 
   return (
     <header className={classes.header}>
-      {/* Left: Logo + Title */}
       <Group gap="sm" className={classes.logo} onClick={() => navigate('/dashboard')}>
         <div className={classes.logoWrapper}>
           <IconBrain size={22} stroke={2} />
@@ -70,28 +84,37 @@ export const Header: FC = () => {
         </Title>
       </Group>
 
-      {/* Center: Search Bar */}
       <TextInput
         className={classes.search}
-        placeholder="Search..."
+        placeholder={t('searchPlaceholder')}
         leftSection={<IconSearch size={16} />}
+        rightSection={<span className={classes.searchKbd}>⌘K</span>}
         radius="xl"
+        readOnly
+        onClick={handleOpenCommandPalette}
+        style={{ cursor: 'pointer' }}
       />
 
-      {/* Right: Theme Toggle + Notifications + User */}
       <Group gap="md">
         <ActionIcon 
           variant="subtle" 
           size="lg" 
           radius="xl"
           onClick={() => toggleColorScheme()}
-          title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+          aria-label={isDark ? t('switchToLight') : t('switchToDark')}
+          title={isDark ? t('switchToLight') : t('switchToDark')}
         >
           {isDark ? <IconSun size={20} /> : <IconMoon size={20} />}
         </ActionIcon>
 
-        <Indicator inline label="2" size={16} color="red">
-          <ActionIcon variant="subtle" size="lg" radius="xl">
+        <Indicator disabled={unreadCount === 0} color="red" size={8} offset={4}>
+          <ActionIcon
+            variant="subtle"
+            size="lg"
+            radius="xl"
+            aria-label={t('notifications', { ns: 'notifications' })}
+            onClick={toggleNotificationPanel}
+          >
             <IconBell size={20} />
           </ActionIcon>
         </Indicator>
@@ -118,7 +141,6 @@ export const Header: FC = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <Stack gap="md">
-                {/* User Info */}
                 <Stack gap={4}>
                   <Text size="sm" fw={700}>{userName}</Text>
                   <Text size="xs" c="dimmed">{userEmail}</Text>
@@ -126,24 +148,22 @@ export const Header: FC = () => {
 
                 <Divider />
 
-                {/* Tenant Selection */}
                 <Stack gap="xs">
-                  <Text size="xs" fw={700}>Tenant:</Text>
+                  <Text size="xs" fw={700}>{t('tenantLabel')}</Text>
                   <Select
                     data={tenantOptions}
                     value={selectedTenant?.id || null}
                     onChange={handleTenantChange}
                     searchable
                     size="xs"
-                    placeholder="Tenant auswählen"
+                    placeholder={t('selectTenant')}
                     disabled={tenants.length === 0}
                   />
                 </Stack>
 
-                {/* Tenant Info */}
                 {selectedTenant && (
                   <Stack gap={4}>
-                    <Text size="xs" fw={700}>Tenant ID:</Text>
+                    <Text size="xs" fw={700}>{t('tenantId')}</Text>
                     <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>
                       {selectedTenant.id}
                     </Text>
@@ -157,36 +177,11 @@ export const Header: FC = () => {
                   fullWidth
                   onClick={() => setIsTenantDialogOpen(true)}
                 >
-                  Add Tenant
+                  {t('addTenant')}
                 </Button>
 
                 <Divider />
 
-                {/* Management Links */}
-                <Stack gap="xs">
-                  <UnstyledButton className={classes.menuLink}>
-                    <Group gap="xs" justify="space-between">
-                      <Text size="sm">Manage Account</Text>
-                      <IconExternalLink size={16} />
-                    </Group>
-                  </UnstyledButton>
-                  <UnstyledButton className={classes.menuLink}>
-                    <Group gap="xs" justify="space-between">
-                      <Text size="sm">Manage Tenant</Text>
-                      <IconExternalLink size={16} />
-                    </Group>
-                  </UnstyledButton>
-                  <UnstyledButton className={classes.menuLink}>
-                    <Group gap="xs" justify="space-between">
-                      <Text size="sm">Manage Licence</Text>
-                      <IconExternalLink size={16} />
-                    </Group>
-                  </UnstyledButton>
-                </Stack>
-
-                <Divider />
-
-                {/* Logout Button */}
                 <Button 
                   leftSection={<IconLogout size={16} />}
                   variant="light" 
@@ -194,7 +189,7 @@ export const Header: FC = () => {
                   fullWidth
                   onClick={logout}
                 >
-                  Logout
+                  {t('logout')}
                 </Button>
               </Stack>
             </Paper>
@@ -202,10 +197,14 @@ export const Header: FC = () => {
         </div>
       </Group>
 
-      {/* Create Tenant Dialog */}
       <CreateTenantDialog
         opened={isTenantDialogOpen}
         onClose={() => setIsTenantDialogOpen(false)}
+      />
+
+      <CommandPalette
+        open={isCommandPaletteOpen}
+        onOpenChange={setIsCommandPaletteOpen}
       />
     </header>
   );

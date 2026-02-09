@@ -185,9 +185,21 @@
 }
 
 .codeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: var(--spacing-xs) var(--spacing-md);
   background-color: var(--color-gray-800);
   border-bottom: 1px solid var(--color-gray-700);
+}
+
+.codeBlockCopyButton {
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+.codeBlockCopyButton:hover {
+  opacity: 1;
 }
 
 .pre {
@@ -289,4 +301,40 @@
     transform: scale(1);
     opacity: 1;
   }
+}
+
+/* Scroll to bottom button */
+.scrollToBottomWrapper {
+  position: absolute;
+  bottom: var(--spacing-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.scrollToBottomButton {
+  box-shadow: var(--shadow-md);
+}
+
+/* Error bubble */
+.errorBubble {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-red-50);
+  border: 1px solid var(--color-red-200);
+  border-radius: var(--radius-md);
+}
+
+[data-mantine-color-scheme='dark'] .errorBubble {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Edit container */
+.editContainer {
+  max-width: 70%;
+  width: 100%;
+}
+
+.editTextarea {
+  width: 100%;
 }

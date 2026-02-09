@@ -28,7 +28,7 @@ import {
   IconBraces,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { PageContainer, SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip } from '../../components/common';
+import { SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip, Breadcrumbs, EntityAvatar } from '../../components/common';
 import type { TracesSortState, TraceDatePreset } from '../../components/common';
 import { TracingVisualDialog } from '../../components/tracing';
 import { EditAutonomousAgentDialog } from '../../components/dialogs/EditAutonomousAgentDialog';
@@ -36,6 +36,7 @@ import type { EditDialogTab } from '../../components/dialogs/EditAutonomousAgent
 import { IntegrationDialog } from '../../components/dialogs/IntegrationDialog';
 import { useIdentity } from '../../contexts';
 import { useSidebarData } from '../../contexts/SidebarDataContext';
+import { useRecentVisits } from '../../contexts';
 import type { AutonomousAgentResponse, FullTraceResponse, TracesListParams } from '../../api/types';
 import classes from './AutonomousAgentDetailsPage.module.css';
 
@@ -80,6 +81,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
   const { refreshAutonomousAgents } = useSidebarData();
+  const { trackVisit } = useRecentVisits();
 
   // ---- Agent data ----
   const [agent, setAgent] = useState<AutonomousAgentResponse | null>(null);
@@ -154,6 +156,16 @@ export const AutonomousAgentDetailsPage: FC = () => {
   useEffect(() => {
     fetchAgent();
   }, [fetchAgent]);
+
+  useEffect(() => {
+    if (agent) {
+      trackVisit({
+        resource_type: 'autonomous_agent',
+        resource_id: agent.id,
+        resource_name: agent.name,
+      });
+    }
+  }, [agent?.id]);
 
   useEffect(() => {
     setPrimaryKey(null);
@@ -368,11 +380,9 @@ export const AutonomousAgentDetailsPage: FC = () => {
   if (agentLoading) {
     return (
       <MainLayout>
-        <PageContainer size="xl">
           <Center py="xl" style={{ minHeight: '60vh' }}>
             <Loader size="lg" />
           </Center>
-        </PageContainer>
       </MainLayout>
     );
   }
@@ -380,7 +390,6 @@ export const AutonomousAgentDetailsPage: FC = () => {
   if (agentError || !agent) {
     return (
       <MainLayout>
-        <PageContainer size="xl">
           <Stack py="xl" gap="md">
             <Alert icon={<IconAlertCircle size={16} />} title="Error" color="red">
               {agentError || 'Agent not found'}
@@ -392,26 +401,20 @@ export const AutonomousAgentDetailsPage: FC = () => {
               <Text c="dimmed">Back to Autonomous Agents</Text>
             </Group>
           </Stack>
-        </PageContainer>
       </MainLayout>
     );
   }
 
   return (
     <MainLayout>
-      <PageContainer size="xl">
+          <Breadcrumbs items={[
+            { label: 'Autonomous Agents', path: '/autonomous-agents' },
+            { label: agent.name },
+          ]} />
           {/* Header */}
           <div className={classes.header}>
             <Group gap="sm" mb="xs">
-              <Tooltip label="Back to list">
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  onClick={() => navigate('/autonomous-agents')}
-                >
-                  <IconArrowLeft size={20} />
-                </ActionIcon>
-              </Tooltip>
+              <EntityAvatar name={agent.name} size="md" />
               <Title order={2} className={classes.title}>
                 {agent.name}
               </Title>
@@ -428,13 +431,13 @@ export const AutonomousAgentDetailsPage: FC = () => {
 
             {agent.description && (
               <DelayedTooltip label={agent.description}>
-                <Text size="sm" c="dimmed" className={classes.description} ml={44}>
+                <Text size="sm" c="dimmed" className={classes.description} ml={46}>
                   {agent.description}
                 </Text>
               </DelayedTooltip>
             )}
 
-            <Group gap="xs" mt="sm" ml={44}>
+            <Group gap="xs" mt="sm" ml={46}>
               <Badge variant="filled" size="sm" color="blue">
                 {agent.type.toUpperCase()}
               </Badge>
@@ -626,7 +629,6 @@ export const AutonomousAgentDetailsPage: FC = () => {
               </div>
             </Tabs.Panel>
           </Tabs>
-        </PageContainer>
 
       {/* Tracing Dialog */}
       <TracingVisualDialog

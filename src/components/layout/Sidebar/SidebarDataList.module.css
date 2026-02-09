@@ -146,6 +146,11 @@
   min-width: 0;
 }
 
+.favoriteIndicator {
+  flex-shrink: 0;
+  color: var(--color-warning-500, #f59f00);
+}
+
 /* Empty State */
 .emptyIcon {
   color: var(--text-disabled);

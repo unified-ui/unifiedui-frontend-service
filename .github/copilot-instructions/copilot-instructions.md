@@ -8,7 +8,7 @@ applyTo: '**'
 
 **unified-ui** is a multi-tenant integration platform for AI agent systems with role-based access control (RBAC). This frontend provides management UIs for AI agents, conversations, credentials, tracing, and tenant settings.
 
-**Tech Stack**: React 18+ · TypeScript · Vite · Mantine v7+ · React Router v6 · MSAL · CSS Modules
+**Tech Stack**: React 19 · TypeScript 5.9 · Vite 7 · Mantine v8 · React Router v7 · MSAL · CSS Modules · i18next · Vitest + RTL + MSW
 
 ---
 
@@ -23,9 +23,10 @@ Read the relevant instruction file **before** working in that area.
 | [api-client.instructions.md](./api-client.instructions.md) | Adding API calls, new endpoints, or working with IdentityContext |
 | [ui-patterns.instructions.md](./ui-patterns.instructions.md) | Implementing scrolling, tabs, dialogs, forms, lists, or detail pages |
 | [instruction-management.instructions.md](./instruction-management.instructions.md) | After completing work — decides if/how to update docs |
-| [components/layout.instructions.md](./components/layout.instructions.md) | Touching MainLayout, Sidebar, Header, PageContainer, or page shells |
+| [components/layout.instructions.md](./components/layout.instructions.md) | Touching MainLayout, Sidebar, Header, or page shells |
 | [components/data-table.instructions.md](./components/data-table.instructions.md) | Working with DataTable, list pages, infinite scroll, or search/filter |
 | [components/tracing.instructions.md](./components/tracing.instructions.md) | Working with trace visualization, TracingVisualDialog, or canvas |
+| [testing.instructions.md](./testing.instructions.md) | Writing tests, running tests, understanding test patterns |
 
 ---
 
@@ -41,6 +42,8 @@ Read the relevant instruction file **before** working in that area.
 8. **Mantine first** — Use Mantine components before building custom ones.
 9. **Dark mode aware** — Use semantic CSS variables. Test both modes.
 10. **Keep files under 400 lines** — Split into sub-components if exceeding.
+11. **i18n for all UI strings** — Never hardcode user-visible strings. Use `useTranslation()` from `react-i18next`. Keys in `src/i18n/locales/en-US/{namespace}.json`. Outside React components (callbacks, contexts), use `i18next.t('namespace:key')`.
+12. **Run tests after changes** — After significant changes: `npx vitest run`. Write tests for new components/features using Vitest + RTL.
 
 ---
 
@@ -98,12 +101,22 @@ export const MyComponent: FC<Props> = ({ ... }) => {
 ## Quick Reference
 
 - **Dev server**: `npm run dev`
+- **Run tests**: `npx vitest run`
+- **Run tests (watch)**: `npx vitest`
 - **Type check**: `npx tsc --noEmit`
 - **Routes**: `src/routes/index.tsx`
-- **API Client**: `src/api/client.ts` (~110 methods)
-- **Types**: `src/api/types.ts` (~1000 lines, all enums + interfaces)
+- **API Client**: `src/api/client.ts` (~130 methods)
+- **Types**: `src/api/types.ts` (~1370 lines, all enums + interfaces)
 - **Design tokens**: `src/styles/variables.css`
 - **Theme config**: `src/theme/theme.ts`
+- **Contexts**: `src/contexts/` — IdentityContext (wraps AuthContext, TenantContext, ApiClientContext), SidebarDataContext, ChatSidebarContext, AICapabilitiesContext, FavoritesContext, NotificationsContext, RecentVisitsContext
+- **i18n config**: `src/i18n/index.ts` (production), `src/i18n/i18nForTests.ts` (test)
+- **Locales**: `src/i18n/locales/en-US/` (12 namespaces: common, dashboard, login, header, conversations, settings, notifications, tracing, credentials, token, widgetDesigner, reactAgent)
+- **Command Palette**: `src/components/common/CommandPalette/` (cmdk library, `⌘K` shortcut)
+- **Notification Panel**: `src/components/layout/NotificationPanel/` (Mantine Drawer, right slide-out)
+- **Chat Panel**: `src/components/common/ChatPanel/` (dual-mode: conversation + playground)
+- **Test setup**: `src/test/setup.ts` (MSW lifecycle, mocks)
+- **Test utils**: `src/test/utils.tsx` (`renderWithProviders()`)
 
 ---
 

@@ -1,0 +1,480 @@
+import type { FC } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import {
+  Title,
+  Stack,
+  Group,
+  Paper,
+  Text,
+  Button,
+  TextInput,
+  Textarea,
+  ActionIcon,
+  Accordion,
+  Badge,
+  Select,
+  ScrollArea,
+  Divider,
+} from '@mantine/core';
+import {
+  IconPlus,
+  IconX,
+  IconDeviceFloppy,
+  IconPlayerPlay,
+  IconTrash,
+  IconBrain,
+  IconTool,
+} from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
+import { MainLayout } from '../../components/layout/MainLayout';
+import { ChatPanel } from '../../components/common/ChatPanel';
+import type { AIModelResponse, ToolResponse } from '../../api/types';
+import { AIModelPurposeGroupEnum } from '../../api/types';
+import { useIdentity } from '../../contexts';
+import classes from './ReActAgentDeveloperPage.module.css';
+
+interface AgentConfig {
+  name: string;
+  description: string;
+  ai_model_ids: string[];
+  system_prompt: string;
+  tool_ids: string[];
+  security_prompt: string;
+  tool_use_prompt: string;
+  response_prompt: string;
+  greeting_messages: string[];
+}
+
+const DEFAULT_CONFIG: AgentConfig = {
+  name: '',
+  description: '',
+  ai_model_ids: [],
+  system_prompt: '',
+  tool_ids: [],
+  security_prompt: '',
+  tool_use_prompt: '',
+  response_prompt: '',
+  greeting_messages: [],
+};
+
+const SYSTEM_PROMPT_MAX = 8000;
+const PROMPT_MAX = 8000;
+
+const AIModelsSection: FC<{
+  selectedIds: string[];
+  availableModels: AIModelResponse[];
+  onAdd: (id: string) => void;
+  onRemove: (id: string) => void;
+}> = ({ selectedIds, availableModels, onAdd, onRemove }) => {
+  const { t } = useTranslation('reactAgent');
+
+  const unselectedModels = useMemo(
+    () => availableModels.filter(m => !selectedIds.includes(m.id)),
+    [availableModels, selectedIds]
+  );
+
+  const selectedModels = useMemo(
+    () => selectedIds
+      .map(id => availableModels.find(m => m.id === id))
+      .filter((m): m is AIModelResponse => m !== undefined),
+    [selectedIds, availableModels]
+  );
+
+  return (
+    <Stack gap="sm">
+      <Text size="xs" c="dimmed">{t('aiModels.onlyReactAgent')}</Text>
+      {selectedModels.length === 0 && (
+        <Text size="sm" c="dimmed">{t('aiModels.noModels')}</Text>
+      )}
+      <Stack gap={4}>
+        {selectedModels.map(model => (
+          <Group key={model.id} gap="xs" wrap="nowrap">
+            <IconBrain size={14} />
+            <Text size="sm" style={{ flex: 1 }} truncate>{model.name}</Text>
+            <ActionIcon size="xs" variant="subtle" color="red" onClick={() => onRemove(model.id)}>
+              <IconX size={12} />
+            </ActionIcon>
+          </Group>
+        ))}
+      </Stack>
+      {unselectedModels.length > 0 && (
+        <Select
+          placeholder={t('aiModels.selectModel')}
+          data={unselectedModels.map(m => ({ value: m.id, label: m.name }))}
+          onChange={(val) => { if (val) onAdd(val); }}
+          value={null}
+          size="sm"
+          clearable
+        />
+      )}
+    </Stack>
+  );
+};
+
+const ToolsSection: FC<{
+  selectedIds: string[];
+  availableTools: ToolResponse[];
+  onAdd: (id: string) => void;
+  onRemove: (id: string) => void;
+}> = ({ selectedIds, availableTools, onAdd, onRemove }) => {
+  const { t } = useTranslation('reactAgent');
+
+  const unselectedTools = useMemo(
+    () => availableTools.filter(tool => !selectedIds.includes(tool.id)),
+    [availableTools, selectedIds]
+  );
+
+  const selectedTools = useMemo(
+    () => selectedIds
+      .map(id => availableTools.find(tool => tool.id === id))
+      .filter((tool): tool is ToolResponse => tool !== undefined),
+    [selectedIds, availableTools]
+  );
+
+  return (
+    <Stack gap="sm">
+      {selectedTools.length === 0 && (
+        <Text size="sm" c="dimmed">{t('tools.noTools')}</Text>
+      )}
+      <Stack gap={4}>
+        {selectedTools.map(tool => (
+          <Group key={tool.id} gap="xs" wrap="nowrap">
+            <IconTool size={14} />
+            <Text size="sm" style={{ flex: 1 }} truncate>{tool.name}</Text>
+            <Badge size="xs" variant="light">{tool.type}</Badge>
+            <ActionIcon size="xs" variant="subtle" color="red" onClick={() => onRemove(tool.id)}>
+              <IconX size={12} />
+            </ActionIcon>
+          </Group>
+        ))}
+      </Stack>
+      {unselectedTools.length > 0 && (
+        <Select
+          placeholder={t('tools.selectTool')}
+          data={unselectedTools.map(tool => ({ value: tool.id, label: tool.name }))}
+          onChange={(val) => { if (val) onAdd(val); }}
+          value={null}
+          size="sm"
+          clearable
+        />
+      )}
+    </Stack>
+  );
+};
+
+const GreetingMessagesSection: FC<{
+  messages: string[];
+  onChange: (messages: string[]) => void;
+}> = ({ messages, onChange }) => {
+  const { t } = useTranslation('reactAgent');
+
+  const handleAdd = useCallback(() => {
+    onChange([...messages, '']);
+  }, [messages, onChange]);
+
+  const handleRemove = useCallback((index: number) => {
+    onChange(messages.filter((_: string, i: number) => i !== index));
+  }, [messages, onChange]);
+
+  const handleChange = useCallback((index: number, value: string) => {
+    const updated = [...messages];
+    updated[index] = value;
+    onChange(updated);
+  }, [messages, onChange]);
+
+  return (
+    <Stack gap="sm">
+      {messages.length === 0 && (
+        <Text size="sm" c="dimmed">{t('greetingMessages.noMessages')}</Text>
+      )}
+      {messages.map((msg: string, i: number) => (
+        <Group key={i} gap="xs" wrap="nowrap">
+          <TextInput
+            value={msg}
+            onChange={(e) => handleChange(i, e.currentTarget.value)}
+            placeholder={t('greetingMessages.messagePlaceholder')}
+            size="sm"
+            style={{ flex: 1 }}
+          />
+          <ActionIcon size="sm" variant="subtle" color="red" onClick={() => handleRemove(i)}>
+            <IconTrash size={14} />
+          </ActionIcon>
+        </Group>
+      ))}
+      <Button variant="light" size="xs" leftSection={<IconPlus size={14} />} onClick={handleAdd}>
+        {t('greetingMessages.addMessage')}
+      </Button>
+    </Stack>
+  );
+};
+
+export const ReActAgentDeveloperPage: FC = () => {
+  const { t } = useTranslation('reactAgent');
+  const { apiClient, selectedTenant } = useIdentity();
+  const [config, setConfig] = useState<AgentConfig>(DEFAULT_CONFIG);
+  const [availableModels, setAvailableModels] = useState<AIModelResponse[]>([]);
+  const [availableTools, setAvailableTools] = useState<ToolResponse[]>([]);
+  const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [toolsLoaded, setToolsLoaded] = useState(false);
+  const [chatKey, setChatKey] = useState(0);
+
+  const tenantId = selectedTenant?.id;
+
+  const loadModels = useCallback(async () => {
+    if (!tenantId || !apiClient || modelsLoaded) return;
+    try {
+      const models = await apiClient.listAIModels(tenantId) as AIModelResponse[];
+      const reactAgentModels = models.filter(m =>
+        m.purpose_groups?.includes(AIModelPurposeGroupEnum.REACT_AGENT) && m.is_active
+      );
+      setAvailableModels(reactAgentModels);
+      setModelsLoaded(true);
+    } catch { /* empty */ }
+  }, [tenantId, apiClient, modelsLoaded]);
+
+  const loadTools = useCallback(async () => {
+    if (!tenantId || !apiClient || toolsLoaded) return;
+    try {
+      const tools = await apiClient.listTools(tenantId) as ToolResponse[];
+      setAvailableTools(tools.filter(t => t.is_active));
+      setToolsLoaded(true);
+    } catch { /* empty */ }
+  }, [tenantId, apiClient, toolsLoaded]);
+
+  useEffect(() => {
+    loadModels();
+  }, [loadModels]);
+
+  useEffect(() => {
+    loadTools();
+  }, [loadTools]);
+
+  const updateConfig = useCallback(<K extends keyof AgentConfig>(key: K, value: AgentConfig[K]) => {
+    setConfig(prev => ({ ...prev, [key]: value }));
+  }, []);
+
+  const handleAddModel = useCallback((id: string) => {
+    setConfig(prev => ({ ...prev, ai_model_ids: [...prev.ai_model_ids, id] }));
+  }, []);
+
+  const handleRemoveModel = useCallback((id: string) => {
+    setConfig(prev => ({ ...prev, ai_model_ids: prev.ai_model_ids.filter(mid => mid !== id) }));
+  }, []);
+
+  const handleAddTool = useCallback((id: string) => {
+    setConfig(prev => ({ ...prev, tool_ids: [...prev.tool_ids, id] }));
+  }, []);
+
+  const handleRemoveTool = useCallback((id: string) => {
+    setConfig(prev => ({ ...prev, tool_ids: prev.tool_ids.filter(tid => tid !== id) }));
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    if (!tenantId || !apiClient) return;
+    try {
+      await apiClient.createReActAgent(tenantId, {
+        name: config.name,
+        description: config.description || undefined,
+        ai_model_ids: config.ai_model_ids,
+        system_prompt: config.system_prompt || undefined,
+        tool_ids: config.tool_ids,
+        security_prompt: config.security_prompt || undefined,
+        tool_use_prompt: config.tool_use_prompt || undefined,
+        response_prompt: config.response_prompt || undefined,
+        greeting_messages: config.greeting_messages.filter(Boolean),
+      });
+    } catch { /* empty */ }
+  }, [tenantId, apiClient, config]);
+
+  const handleClearChat = useCallback(() => {
+    setChatKey(prev => prev + 1);
+  }, []);
+
+  return (
+    <MainLayout>
+      <Stack gap="md" className={classes.page}>
+        <Group justify="space-between">
+          <Title order={2}>{t('title')}</Title>
+          <Group gap="sm">
+            <Button variant="light" leftSection={<IconPlayerPlay size={16} />} onClick={handleClearChat}>
+              {t('clearChat')}
+            </Button>
+            <Button leftSection={<IconDeviceFloppy size={16} />} onClick={handleSave}>
+              {t('saveConfig')}
+            </Button>
+          </Group>
+        </Group>
+
+        <div className={classes.developerGrid}>
+          <Paper className={classes.configPanel} p="md" withBorder>
+            <ScrollArea h="100%">
+              <Stack gap="md">
+                <TextInput
+                  label={t('agentName')}
+                  placeholder={t('agentNamePlaceholder')}
+                  value={config.name}
+                  onChange={(e) => updateConfig('name', e.currentTarget.value)}
+                  size="sm"
+                  required
+                />
+                <Textarea
+                  label={t('agentDescription')}
+                  placeholder={t('agentDescriptionPlaceholder')}
+                  value={config.description}
+                  onChange={(e) => updateConfig('description', e.currentTarget.value)}
+                  size="sm"
+                  rows={2}
+                />
+
+                <Divider />
+
+                <Accordion
+                  variant="separated"
+                  multiple
+                  defaultValue={['aiModels', 'instructions', 'tools', 'promptTemplates']}
+                >
+                  <Accordion.Item value="aiModels">
+                    <Accordion.Control>
+                      <Group gap="xs">
+                        <Text fw={600} size="sm">{t('sections.aiModels')}</Text>
+                        {config.ai_model_ids.length > 0 && (
+                          <Badge size="xs" variant="light">{config.ai_model_ids.length}</Badge>
+                        )}
+                      </Group>
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <AIModelsSection
+                        selectedIds={config.ai_model_ids}
+                        availableModels={availableModels}
+                        onAdd={handleAddModel}
+                        onRemove={handleRemoveModel}
+                      />
+                    </Accordion.Panel>
+                  </Accordion.Item>
+
+                  <Accordion.Item value="instructions">
+                    <Accordion.Control>
+                      <Text fw={600} size="sm">{t('sections.instructions')}</Text>
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <Stack gap="sm">
+                        <Textarea
+                          label={t('instructions.systemPrompt')}
+                          placeholder={t('instructions.systemPromptPlaceholder')}
+                          value={config.system_prompt}
+                          onChange={(e) => updateConfig('system_prompt', e.currentTarget.value)}
+                          maxLength={SYSTEM_PROMPT_MAX}
+                          rows={6}
+                          size="sm"
+                        />
+                        <Text size="xs" c="dimmed" ta="right">
+                          {t('instructions.maxChars', { count: config.system_prompt.length, max: SYSTEM_PROMPT_MAX })}
+                        </Text>
+                      </Stack>
+                    </Accordion.Panel>
+                  </Accordion.Item>
+
+                  <Accordion.Item value="tools">
+                    <Accordion.Control>
+                      <Group gap="xs">
+                        <Text fw={600} size="sm">{t('sections.tools')}</Text>
+                        {config.tool_ids.length > 0 && (
+                          <Badge size="xs" variant="light">{config.tool_ids.length}</Badge>
+                        )}
+                      </Group>
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <ToolsSection
+                        selectedIds={config.tool_ids}
+                        availableTools={availableTools}
+                        onAdd={handleAddTool}
+                        onRemove={handleRemoveTool}
+                      />
+                    </Accordion.Panel>
+                  </Accordion.Item>
+
+                  <Accordion.Item value="promptTemplates">
+                    <Accordion.Control>
+                      <Text fw={600} size="sm">{t('sections.promptTemplates')}</Text>
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <Stack gap="md">
+                        <Textarea
+                          label={t('promptTemplates.securityPrompt')}
+                          placeholder={t('promptTemplates.securityPromptPlaceholder')}
+                          value={config.security_prompt}
+                          onChange={(e) => updateConfig('security_prompt', e.currentTarget.value)}
+                          maxLength={PROMPT_MAX}
+                          rows={4}
+                          size="sm"
+                        />
+                        <Textarea
+                          label={t('promptTemplates.toolUsePrompt')}
+                          placeholder={t('promptTemplates.toolUsePromptPlaceholder')}
+                          value={config.tool_use_prompt}
+                          onChange={(e) => updateConfig('tool_use_prompt', e.currentTarget.value)}
+                          maxLength={PROMPT_MAX}
+                          rows={4}
+                          size="sm"
+                        />
+                        <Textarea
+                          label={t('promptTemplates.responsePrompt')}
+                          placeholder={t('promptTemplates.responsePromptPlaceholder')}
+                          value={config.response_prompt}
+                          onChange={(e) => updateConfig('response_prompt', e.currentTarget.value)}
+                          maxLength={PROMPT_MAX}
+                          rows={4}
+                          size="sm"
+                        />
+                      </Stack>
+                    </Accordion.Panel>
+                  </Accordion.Item>
+
+                  <Accordion.Item value="greetingMessages">
+                    <Accordion.Control>
+                      <Group gap="xs">
+                        <Text fw={600} size="sm">{t('sections.greetingMessages')}</Text>
+                        {config.greeting_messages.length > 0 && (
+                          <Badge size="xs" variant="light">{config.greeting_messages.length}</Badge>
+                        )}
+                      </Group>
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <GreetingMessagesSection
+                        messages={config.greeting_messages}
+                        onChange={(msgs) => updateConfig('greeting_messages', msgs)}
+                      />
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                </Accordion>
+              </Stack>
+            </ScrollArea>
+          </Paper>
+
+          <Paper className={classes.chatPanel} p={0} withBorder>
+            <Stack gap={0} h="100%">
+              <Group justify="space-between" p="sm" className={classes.chatHeader}>
+                <Text fw={600} size="sm">{t('playground')}</Text>
+              </Group>
+              <ChatPanel
+                key={chatKey}
+                mode="playground"
+                agentConfig={{
+                  agentId: 'playground',
+                  agentName: config.name || t('title'),
+                  systemPrompt: config.system_prompt,
+                  aiModelIds: config.ai_model_ids,
+                  toolIds: config.tool_ids,
+                }}
+                persistMessages={false}
+                showTracing={false}
+                showExport={false}
+                showReactions={false}
+              />
+            </Stack>
+          </Paper>
+        </div>
+      </Stack>
+    </MainLayout>
+  );
+};

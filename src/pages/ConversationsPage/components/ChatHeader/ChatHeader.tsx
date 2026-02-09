@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { FC } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Group,
   Select,
@@ -18,9 +19,12 @@ import {
   IconChevronDown,
   IconSparkles,
   IconChartDots,
+  IconFileText,
+  IconFileTypePdf,
+  IconFileTypeJs,
 } from '@tabler/icons-react';
 import { ConfirmDeleteDialog } from '../../../../components/common';
-import type { ApplicationResponse, ConversationResponse } from '../../../../api/types';
+import type { ApplicationResponse, ConversationResponse, MessageResponse } from '../../../../api/types';
 import classes from './ChatHeader.module.css';
 
 interface ChatHeaderProps {
@@ -31,6 +35,7 @@ interface ChatHeaderProps {
   isFavorite?: boolean;
   tracingSidebarVisible?: boolean;
   hasTraces?: boolean;
+  messages?: MessageResponse[];
   onApplicationChange: (applicationId: string) => void;
   onShare?: () => void;
   onToggleFavorite?: () => void;
@@ -46,6 +51,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
   isFavorite = false,
   tracingSidebarVisible = false,
   hasTraces = false,
+  messages = [],
   onApplicationChange,
   onShare,
   onToggleFavorite,
@@ -53,8 +59,49 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
   onToggleTracingSidebar,
 }) => {
   const selectedApp = applications.find(a => a.id === selectedApplicationId);
+  const { t } = useTranslation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleExportMarkdown = () => {
+    const title = conversation?.name || 'Conversation';
+    const lines = [`# ${title}\n`];
+    for (const msg of messages) {
+      const role = msg.role === 'user' ? 'User' : 'Assistant';
+      lines.push(`## ${role}\n`);
+      lines.push(`${msg.content}\n`);
+    }
+    downloadFile(`${title}.md`, lines.join('\n'), 'text/markdown');
+  };
+
+  const handleExportJson = () => {
+    const title = conversation?.name || 'Conversation';
+    const data = {
+      conversation: { id: conversation?.id, name: title },
+      messages: messages.map(m => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        created_at: m.created_at,
+      })),
+      exported_at: new Date().toISOString(),
+    };
+    downloadFile(`${title}.json`, JSON.stringify(data, null, 2), 'application/json');
+  };
+
+  const handleExportPdf = () => {
+    window.print();
+  };
+
+  const downloadFile = (filename: string, content: string, mimeType: string) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true);
@@ -85,7 +132,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
         <Box className={classes.leftSection}>
           {isNewChat ? (
             <Select
-              placeholder="Select Chat Agent"
+              placeholder={t('conversations:selectAgent')}
               data={applicationOptions}
               value={selectedApplicationId}
               onChange={(value) => value && onApplicationChange(value)}
@@ -93,7 +140,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
               rightSection={<IconChevronDown size={16} />}
               className={classes.applicationSelect}
               searchable
-              nothingFoundMessage="No agents found"
+              nothingFoundMessage={t('conversations:noAgentsFound')}
               comboboxProps={{ position: 'bottom-start', shadow: 'md' }}
             />
           ) : (
@@ -102,7 +149,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
                 <IconSparkles size={20} className={classes.applicationIcon} />
                 <Stack gap={0}>
                   <Text size="sm" fw={600} lineClamp={1}>
-                    {selectedApp?.name || 'Unknown Agent'}
+                    {selectedApp?.name || t('conversations:unknownAgent')}
                   </Text>
                   {selectedApp?.description && (
                     <Text size="xs" c="dimmed" lineClamp={1}>
@@ -119,7 +166,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
         <Group gap="xs" className={classes.rightSection}>
           {selectedApplicationId && (
             <>
-              <Tooltip label={tracingSidebarVisible ? 'Tracing ausblenden' : 'Tracing anzeigen'}>
+              <Tooltip label={tracingSidebarVisible ? t('tracing:hideTracing') : t('tracing:showTracing')}>
                 <ActionIcon
                   variant={tracingSidebarVisible ? 'filled' : 'subtle'}
                   color={tracingSidebarVisible ? 'primary' : undefined}
@@ -131,7 +178,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
                 </ActionIcon>
               </Tooltip>
 
-              <Tooltip label="Share conversation">
+              <Tooltip label={t('conversations:shareConversation')}>
                 <ActionIcon
                   variant="subtle"
                   onClick={onShare}
@@ -144,7 +191,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
 
               <Menu position="bottom-end" shadow="md" withinPortal>
                 <Menu.Target>
-                  <ActionIcon variant="subtle" aria-label="More options">
+                  <ActionIcon variant="subtle" aria-label={t('conversations:moreOptions')}>
                     <IconDots size={18} />
                   </ActionIcon>
                 </Menu.Target>
@@ -154,7 +201,30 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
                     onClick={onToggleFavorite}
                     disabled={isNewChat}
                   >
-                    {isFavorite ? 'Unpin chat' : 'Pin chat'}
+                    {isFavorite ? t('conversations:unpinChat') : t('conversations:pinChat')}
+                  </Menu.Item>
+                  <Menu.Divider />
+                  <Menu.Label>{t('conversations:export')}</Menu.Label>
+                  <Menu.Item
+                    leftSection={<IconFileText size={16} />}
+                    onClick={handleExportMarkdown}
+                    disabled={isNewChat || messages.length === 0}
+                  >
+                    {t('conversations:exportMarkdown')}
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconFileTypePdf size={16} />}
+                    onClick={handleExportPdf}
+                    disabled={isNewChat || messages.length === 0}
+                  >
+                    {t('conversations:exportPdf')}
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconFileTypeJs size={16} />}
+                    onClick={handleExportJson}
+                    disabled={isNewChat || messages.length === 0}
+                  >
+                    {t('conversations:exportJson')}
                   </Menu.Item>
                   <Menu.Divider />
                   <Menu.Item
@@ -163,7 +233,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
                     onClick={handleDeleteClick}
                     disabled={isNewChat}
                   >
-                    Delete chat
+                    {t('conversations:deleteChat')}
                   </Menu.Item>
                 </Menu.Dropdown>
               </Menu>

@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 70px;
+  height: var(--header-height);
   padding: 0 var(--spacing-lg);
   background: var(--bg-paper);
   border-bottom: 1px solid var(--border-default);
@@ -56,6 +56,22 @@
 .search {
   flex: 1;
   max-width: 600px;
+}
+
+.searchKbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 20px;
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
 }
 
 /* User Account */

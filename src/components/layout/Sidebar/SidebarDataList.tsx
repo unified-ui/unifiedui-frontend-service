@@ -1,4 +1,5 @@
 import { type FC, useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Stack,
   Group,
@@ -20,6 +21,7 @@ import {
   IconPlus,
   IconInbox,
   IconRefresh,
+  IconStarFilled,
 } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import classes from './SidebarDataList.module.css';
@@ -62,6 +64,8 @@ export interface SidebarDataListProps {
   onRefresh?: () => void;
   /** Whether refresh is in progress */
   isRefreshing?: boolean;
+  /** Check if an item is a favorite */
+  isFavorite?: (id: string) => boolean;
 }
 
 const ITEMS_PER_PAGE = 20;
@@ -81,9 +85,11 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
   addButtonLabel = 'Add',
   onRefresh,
   isRefreshing = false,
+  isFavorite,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation('common');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [showLoading, setShowLoading] = useState(false);
@@ -221,7 +227,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
       <div className={classes.searchContainer}>
         <Group gap="xs" wrap="nowrap">
           <TextInput
-            placeholder="Suchen..."
+            placeholder={t('common:search')}
             value={searchQuery}
             onChange={handleSearchChange}
             leftSection={<IconSearch size={16} />}
@@ -316,6 +322,9 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
                         </Text>
                       )}
                     </Stack>
+                    {isFavorite?.(item.id) && (
+                      <IconStarFilled size={14} className={classes.favoriteIndicator} />
+                    )}
                   </Group>
                 </Box>
               ))}

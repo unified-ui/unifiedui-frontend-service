@@ -15,6 +15,7 @@
  */
 
 import { type FC, useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import {
   Container,
@@ -37,6 +38,7 @@ import type { FullTraceResponse, FullTracesListResponse } from '../../api/types'
 
 export const TracingDialogDevelopmentPage: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t } = useTranslation();
   const { apiClient, selectedTenant } = useIdentity();
 
   // State
@@ -63,7 +65,7 @@ export const TracingDialogDevelopmentPage: FC = () => {
    */
   const fetchTraces = useCallback(async () => {
     if (!apiClient || !selectedTenant) {
-      setError('Kein API-Client oder Tenant verfügbar');
+      setError(t('tracing:noApiClientOrTenant'));
       return;
     }
 

@@ -1,0 +1,1 @@
+export { EntityAvatar } from './EntityAvatar';

@@ -2,7 +2,7 @@
 
 ## Architecture
 
-The API client (`src/api/client.ts`) is a single class `UnifiedUIAPIClient` with ~110 methods organized by resource type.
+The API client (`src/api/client.ts`) is a single class `UnifiedUIAPIClient` with ~130 methods organized by resource type.
 
 ### Dual Base URL
 
@@ -124,7 +124,12 @@ Methods are grouped by resource with comment headers:
 // ========== Custom Group Endpoints ==========
 // ========== Tags Endpoints ==========
 // ========== User Favorites Endpoints ==========
+// ========== Dashboard Endpoints ==========
+// ========== Search Endpoints ==========
+// ========== Notification Endpoints ==========
+// ========== Recent Visit Endpoints ==========
 // ========== AI Model Endpoints ==========
+// ========== ReACT Agent Endpoints ==========
 // ========== Agent Service ==========
 // ========== Trace Endpoints ==========
 ```
@@ -185,7 +190,7 @@ The `onTitleGeneration` callback receives title text that can be displayed with 
 
 ## Types File
 
-`src/api/types.ts` contains all interfaces and enums (~1000 lines). Key patterns:
+`src/api/types.ts` contains all interfaces and enums (~1370 lines). Key patterns:
 
 - **Enums**: Defined as `const` objects with a derived type (not TypeScript `enum`)
 - **Responses**: Suffixed with `Response` (e.g., `ApplicationResponse`)

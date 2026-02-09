@@ -39,7 +39,7 @@ import {
   IconBrain,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { PageContainer, ConfirmDeleteDialog, EditRolesDialog } from '../../components/common';
+import { ConfirmDeleteDialog, EditRolesDialog } from '../../components/common';
 import { ManageTenantAccessTable, TENANT_ROLE_OPTIONS } from '../../components/common/ManageTenantAccessTable';
 import type { TenantPrincipalPermission } from '../../components/common/ManageTenantAccessTable';
 import { AddPrincipalDialog } from '../../components/common/AddPrincipalDialog';
@@ -998,41 +998,40 @@ export const TenantSettingsPage: FC = () => {
 
   return (
     <MainLayout>
-      <PageContainer>
-        <Stack gap="lg">
-          <Tabs
-            value={activeTab}
-            onChange={handleTabChange}
-            classNames={{
-              root: classes.tabs,
-              list: classes.tabsList,
-              tab: classes.tab,
-              panel: classes.tabPanel,
-            }}
-          >
-            <Tabs.List>
-              <Tabs.Tab value="settings" leftSection={<IconSettings size={20} />}>
-                Tenant Settings
-              </Tabs.Tab>
-              <Tabs.Tab value="iam" leftSection={<IconUsers size={20} />}>
-                Manage Access
-              </Tabs.Tab>
-              <Tabs.Tab value="custom-groups" leftSection={<IconUsersGroup size={20} />}>
-                Custom Groups
-              </Tabs.Tab>
-              <Tabs.Tab value="ai-models" leftSection={<IconBrain size={20} />}>
-                AI Models
-              </Tabs.Tab>
-              <Tabs.Tab value="tools" leftSection={<IconTool size={20} />}>
-                ReACT Agent Tools
-              </Tabs.Tab>
-              <Tabs.Tab value="credentials" leftSection={<IconKey size={20} />}>
-                Credentials
-              </Tabs.Tab>
-              <Tabs.Tab value="billing-and-licence" leftSection={<IconCreditCard size={20} />}>
-                Billing & Licence
-              </Tabs.Tab>
-            </Tabs.List>
+        <Tabs
+          orientation="vertical"
+          value={activeTab}
+          onChange={handleTabChange}
+          classNames={{
+            root: classes.settingsLayout,
+            list: classes.settingsSidebar,
+            tab: classes.settingsNavItem,
+            panel: classes.settingsContent,
+          }}
+        >
+          <Tabs.List>
+            <Tabs.Tab value="settings" leftSection={<IconSettings size={18} />}>
+              General
+            </Tabs.Tab>
+            <Tabs.Tab value="iam" leftSection={<IconUsers size={18} />}>
+              Access (IAM)
+            </Tabs.Tab>
+            <Tabs.Tab value="custom-groups" leftSection={<IconUsersGroup size={18} />}>
+              Groups
+            </Tabs.Tab>
+            <Tabs.Tab value="ai-models" leftSection={<IconBrain size={18} />}>
+              AI Models
+            </Tabs.Tab>
+            <Tabs.Tab value="tools" leftSection={<IconTool size={18} />}>
+              Tools
+            </Tabs.Tab>
+            <Tabs.Tab value="credentials" leftSection={<IconKey size={18} />}>
+              Credentials
+            </Tabs.Tab>
+            <Tabs.Tab value="billing-and-licence" leftSection={<IconCreditCard size={18} />}>
+              Billing
+            </Tabs.Tab>
+          </Tabs.List>
 
             {/* Tenant Settings Tab */}
             <Tabs.Panel value="settings">
@@ -1837,9 +1836,7 @@ export const TenantSettingsPage: FC = () => {
                 </Paper>
               </Stack>
             </Tabs.Panel>
-          </Tabs>
-        </Stack>
-      </PageContainer>
+        </Tabs>
 
       {/* Delete Tenant - First Confirmation */}
       <ConfirmDeleteDialog

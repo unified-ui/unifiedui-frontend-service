@@ -47,7 +47,7 @@ After completing work, ask yourself:
 | `api-client.instructions.md` | API client architecture, adding endpoints, types patterns |
 | `ui-patterns.instructions.md` | Scrolling, tabs, dialogs, lists, event handling |
 | `instruction-management.instructions.md` | This file — when/how to update docs |
-| `components/layout.instructions.md` | MainLayout, Sidebar, Header, PageContainer |
+| `components/layout.instructions.md` | MainLayout, Sidebar, Header |
 | `components/data-table.instructions.md` | DataTable, toolbar, infinite scroll, filtering |
 | `components/tracing.instructions.md` | Trace visualization, canvas, hierarchy, context |
 

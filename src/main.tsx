@@ -4,30 +4,24 @@ import { MantineProvider, ColorSchemeScript } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { MsalProvider } from '@azure/msal-react';
 import { PublicClientApplication } from '@azure/msal-browser';
+import { I18nextProvider } from 'react-i18next';
 import { msalConfig } from './auth/authConfig';
 import { AuthProvider } from './auth';
 import { theme } from './theme';
-import { IdentityProvider, SidebarDataProvider, AICapabilitiesProvider } from './contexts';
+import { IdentityProvider, SidebarDataProvider, AICapabilitiesProvider, FavoritesProvider, NotificationsProvider, RecentVisitsProvider } from './contexts';
+import i18n from './i18n';
 import App from './App.tsx';
 
-// Mantine Core Styles
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 
-// Custom Styles
 import './styles/variables.css';
 import './index.css';
 
-// Create MSAL instance
 const msalInstance = new PublicClientApplication(msalConfig);
 
-// Handle redirect after login
 msalInstance.initialize().then(() => {
-  msalInstance.handleRedirectPromise().then((response) => {
-    if (response) {
-      console.log('Login successful:', response);
-    }
-  }).catch((error) => {
+  msalInstance.handleRedirectPromise().catch((error) => {
     console.error('Redirect error:', error);
   });
 });
@@ -37,17 +31,25 @@ createRoot(document.getElementById('root')!).render(
     <ColorSchemeScript defaultColorScheme="auto" />
     <MantineProvider theme={theme} defaultColorScheme="auto">
       <Notifications position="top-right" />
-      <MsalProvider instance={msalInstance}>
-        <AuthProvider>
-          <IdentityProvider>
-            <AICapabilitiesProvider>
-              <SidebarDataProvider>
-                <App />
-              </SidebarDataProvider>
-            </AICapabilitiesProvider>
-          </IdentityProvider>
-        </AuthProvider>
-      </MsalProvider>
+      <I18nextProvider i18n={i18n}>
+        <MsalProvider instance={msalInstance}>
+          <AuthProvider>
+            <IdentityProvider>
+              <AICapabilitiesProvider>
+                <FavoritesProvider>
+                  <NotificationsProvider>
+                    <RecentVisitsProvider>
+                      <SidebarDataProvider>
+                        <App />
+                      </SidebarDataProvider>
+                    </RecentVisitsProvider>
+                  </NotificationsProvider>
+                </FavoritesProvider>
+              </AICapabilitiesProvider>
+            </IdentityProvider>
+          </AuthProvider>
+        </MsalProvider>
+      </I18nextProvider>
     </MantineProvider>
   </StrictMode>,
 );

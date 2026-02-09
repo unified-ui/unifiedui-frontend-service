@@ -3,6 +3,48 @@
   min-height: 100vh;
 }
 
+.settingsLayout {
+  display: flex;
+  gap: 0;
+  min-height: calc(100vh - var(--header-height) - var(--content-padding-y) * 2);
+}
+
+.settingsSidebar {
+  width: 220px;
+  min-width: 220px;
+  border-right: 1px solid var(--mantine-color-default-border);
+  border-bottom: none;
+  padding: var(--spacing-sm) 0;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+}
+
+.settingsNavItem {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  padding: var(--spacing-sm) var(--spacing-md);
+  min-height: 40px;
+  border-radius: 0;
+  border-left: 3px solid transparent;
+  border-right: none;
+  border-bottom: none;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.settingsNavItem[data-active] {
+  border-left-color: var(--color-primary);
+  background-color: var(--bg-selected);
+}
+
+.settingsContent {
+  flex: 1;
+  padding: 0 0 0 var(--spacing-xl);
+  min-width: 0;
+}
+
+/* Legacy classes kept for backward compat */
 .tabs {
   margin-bottom: var(--spacing-md);
 }
@@ -111,4 +153,35 @@
 
 .loadMoreTrigger {
   min-height: 40px;
+}
+
+@media (max-width: 768px) {
+  .settingsLayout {
+    flex-direction: column;
+  }
+
+  .settingsSidebar {
+    width: 100%;
+    min-width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--mantine-color-default-border);
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .settingsNavItem {
+    border-left: none;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+  }
+
+  .settingsNavItem[data-active] {
+    border-left-color: transparent;
+    border-bottom-color: var(--color-primary);
+  }
+
+  .settingsContent {
+    padding: var(--spacing-md) 0 0 0;
+  }
 }

@@ -73,6 +73,10 @@
   flex-shrink: 0;
 }
 
+.favoriteButton {
+  flex-shrink: 0;
+}
+
 .emptyIcon {
   color: var(--color-gray-400);
 }
@@ -83,6 +87,43 @@
 
 .sentinel {
   min-height: 1px;
+}
+
+.bulkActionBar {
+  background: var(--color-primary-50);
+  border: 1px solid var(--color-primary-200);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-xs);
+  align-items: center;
+}
+
+[data-mantine-color-scheme='dark'] .bulkActionBar {
+  background: var(--color-primary-900);
+  border-color: var(--color-primary-700);
+}
+
+.rowSelected {
+  border-color: var(--color-primary-300) !important;
+  background: var(--color-primary-50) !important;
+}
+
+[data-mantine-color-scheme='dark'] .rowSelected {
+  border-color: var(--color-primary-700) !important;
+  background: var(--color-primary-900) !important;
+}
+
+.rowCheckbox {
+  flex-shrink: 0;
+}
+
+.rowDeleting {
+  opacity: 0;
+  transform: translateX(-20px);
+  max-height: 0;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden;
+  transition: opacity 200ms ease-out, transform 200ms ease-out, max-height 300ms ease-out 100ms, padding 300ms ease-out 100ms, margin 300ms ease-out 100ms;
 }
 
 /* Responsive adjustments */

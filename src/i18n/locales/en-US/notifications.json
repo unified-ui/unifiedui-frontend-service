@@ -1,0 +1,14 @@
+{
+  "title": "Notifications",
+  "markAllRead": "Mark all as read",
+  "noNotifications": "No notifications",
+  "noNotificationsDescription": "You're all caught up!",
+  "markAsRead": "Mark as read",
+  "minutesAgo": "{{count}} minutes ago",
+  "hoursAgo": "{{count}} hours ago",
+  "daysAgo": "{{count}} days ago",
+  "justNow": "just now",
+  "minutesAgoShort": "{{count}}m ago",
+  "hoursAgoShort": "{{count}}h ago",
+  "daysAgoShort": "{{count}}d ago"
+}

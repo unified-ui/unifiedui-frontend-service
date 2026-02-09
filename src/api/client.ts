@@ -54,6 +54,11 @@ import type {
   CreateToolRequest,
   UpdateToolRequest,
   SetToolPermissionRequest,
+  // ReACT Agent Types
+  ReActAgentResponse,
+  CreateReActAgentRequest,
+  UpdateReActAgentRequest,
+  SetReActAgentPermissionRequest,
   // Custom Group Types
   CustomGroupResponse,
   CreateCustomGroupRequest,
@@ -71,10 +76,27 @@ import type {
   // User Favorites Types
   UserFavoriteResponse,
   UserFavoritesListResponse,
+  // Dashboard Types
+  DashboardStatsResponse,
+  // Search Types
+  SearchResponse,
+  GlobalSearchParams,
+  // Notification Types
+  NotificationListResponse,
+  NotificationResponse,
+  UnreadCountResponse,
+  NotificationQueryParams,
+  // Recent Visits Types
+  RecentVisitListResponse,
+  SyncRecentVisitsRequest,
   // Agent Service Types
   GetMessagesResponse,
   MessageResponse,
   SendMessageRequest,
+  EditMessageRequest,
+  UpsertReactionRequest,
+  ReactionResponse,
+  ListReactionsResponse,
   GetTracesResponse,
   BatchUpdateTracesRequest,
   UpdateTracesResponse,
@@ -398,7 +420,7 @@ export class UnifiedUIAPIClient {
 
   // ========== Conversation Endpoints ==========
 
-  async listConversations(tenantId: string, params?: PaginationParams): Promise<ConversationResponse[]> {
+  async listConversations(tenantId: string, params?: PaginationParams & OrderParams & { name?: string }): Promise<ConversationResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<ConversationResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/conversations${query}`);
   }
@@ -624,6 +646,72 @@ export class UnifiedUIAPIClient {
     return this.setResourceTags(tenantId, 'tools', toolId, { tags });
   }
 
+  // ========== ReACT Agent Endpoints ==========
+
+  async listReActAgents(
+    tenantId: string,
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
+    options?: { noCache?: boolean }
+  ): Promise<ReActAgentResponse[] | QuickListItemResponse[]> {
+    const query = this.buildQueryString(params || {});
+    return this.request<ReActAgentResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents${query}`, undefined, undefined, options);
+  }
+
+  async getReActAgent(tenantId: string, agentId: string): Promise<ReActAgentResponse> {
+    return this.request<ReActAgentResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}`);
+  }
+
+  async createReActAgent(tenantId: string, data: CreateReActAgentRequest): Promise<ReActAgentResponse> {
+    return this.request<ReActAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents`, data, 'ReACT Agent created successfully');
+  }
+
+  async updateReActAgent(tenantId: string, agentId: string, data: UpdateReActAgentRequest): Promise<ReActAgentResponse> {
+    return this.request<ReActAgentResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}`, data, 'ReACT Agent updated successfully');
+  }
+
+  async deleteReActAgent(tenantId: string, agentId: string): Promise<void> {
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}`, undefined, 'ReACT Agent deleted successfully');
+  }
+
+  // ========== ReACT Agent Permissions ==========
+
+  async getReActAgentPrincipals(tenantId: string, agentId: string): Promise<ResourcePrincipalsResponse> {
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/principals`);
+  }
+
+  async setReActAgentPermission(tenantId: string, agentId: string, data: SetReActAgentPermissionRequest): Promise<PrincipalWithRolesResponse> {
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/principals`, data, 'Permission added successfully');
+  }
+
+  async deleteReActAgentPermission(
+    tenantId: string,
+    agentId: string,
+    principalId: string,
+    principalType: PrincipalTypeEnum,
+    role: PermissionActionEnum
+  ): Promise<void> {
+    return this.request<void>(
+      'DELETE',
+      `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/principals`,
+      { principal_id: principalId, principal_type: principalType, role },
+      'Permission removed successfully'
+    );
+  }
+
+  // ========== ReACT Agent Tags ==========
+
+  async listReActAgentTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
+    return this.listResourceTypeTags(tenantId, 're-act-agents', params);
+  }
+
+  async getReActAgentTags(tenantId: string, agentId: string): Promise<ResourceTagsResponse> {
+    return this.getResourceTags(tenantId, 're-act-agents', agentId);
+  }
+
+  async setReActAgentTags(tenantId: string, agentId: string, tags: string[]): Promise<ResourceTagsResponse> {
+    return this.setResourceTags(tenantId, 're-act-agents', agentId, { tags });
+  }
+
   // ========== Custom Group Endpoints ==========
 
   async listCustomGroups(tenantId: string, params?: PaginationParams & { name?: string }): Promise<CustomGroupResponse[]> {
@@ -791,6 +879,53 @@ export class UnifiedUIAPIClient {
     }
   }
 
+  // ========== Dashboard Endpoints ==========
+
+  async getDashboardStats(tenantId: string, noCache?: boolean): Promise<DashboardStatsResponse> {
+    return this.request<DashboardStatsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/dashboard/stats`, undefined, undefined, noCache ? { noCache: true } : undefined);
+  }
+
+  // ========== Search Endpoints ==========
+
+  async globalSearch(tenantId: string, params: GlobalSearchParams): Promise<SearchResponse> {
+    const query = this.buildQueryString(params);
+    return this.request<SearchResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/search${query}`);
+  }
+
+  // ========== Notification Endpoints ==========
+
+  async listNotifications(tenantId: string, params?: NotificationQueryParams): Promise<NotificationListResponse> {
+    const query = this.buildQueryString(params || {});
+    return this.request<NotificationListResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/notifications${query}`);
+  }
+
+  async getUnreadNotificationCount(tenantId: string): Promise<UnreadCountResponse> {
+    return this.request<UnreadCountResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/notifications/unread-count`);
+  }
+
+  async markNotificationAsRead(tenantId: string, notificationId: string): Promise<NotificationResponse> {
+    return this.request<NotificationResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/notifications/${notificationId}/read`);
+  }
+
+  async markAllNotificationsAsRead(tenantId: string): Promise<void> {
+    return this.request<void>('PUT', `/api/v1/platform-service/tenants/${tenantId}/notifications/read-all`);
+  }
+
+  async deleteNotification(tenantId: string, notificationId: string): Promise<void> {
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/notifications/${notificationId}`);
+  }
+
+  // ========== Recent Visits Endpoints ==========
+
+  async listRecentVisits(tenantId: string, userId: string, limit?: number): Promise<RecentVisitListResponse> {
+    const query = limit ? this.buildQueryString({ limit }) : '';
+    return this.request<RecentVisitListResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/recent-visits${query}`);
+  }
+
+  async syncRecentVisits(tenantId: string, userId: string, data: SyncRecentVisitsRequest): Promise<RecentVisitListResponse> {
+    return this.request<RecentVisitListResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/recent-visits/sync`, data);
+  }
+
   // ========== Agent Service Endpoints ==========
 
   private agentServiceBaseURL: string | null = null;
@@ -881,6 +1016,82 @@ export class UnifiedUIAPIClient {
     return this.agentServiceRequest<GetMessagesResponse>(
       'GET',
       `/api/v1/agent-service/tenants/${tenantId}/conversation/messages${query}`
+    );
+  }
+
+  /**
+   * Edit a user message.
+   */
+  async editMessage(
+    tenantId: string,
+    conversationId: string,
+    messageId: string,
+    data: EditMessageRequest
+  ): Promise<MessageResponse> {
+    return this.agentServiceRequest<MessageResponse>(
+      'PUT',
+      `/api/v1/agent-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}`,
+      data
+    );
+  }
+
+  /**
+   * Delete a message and its associated assistant response.
+   */
+  async deleteMessage(
+    tenantId: string,
+    conversationId: string,
+    messageId: string
+  ): Promise<void> {
+    return this.agentServiceRequest<void>(
+      'DELETE',
+      `/api/v1/agent-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}`
+    );
+  }
+
+  // ========== Reactions Endpoints ==========
+
+  /**
+   * Create or update a reaction on a message.
+   */
+  async upsertReaction(
+    tenantId: string,
+    conversationId: string,
+    messageId: string,
+    data: UpsertReactionRequest
+  ): Promise<ReactionResponse> {
+    return this.agentServiceRequest<ReactionResponse>(
+      'POST',
+      `/api/v1/agent-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}/reactions`,
+      data
+    );
+  }
+
+  /**
+   * Delete the current user's reaction from a message.
+   */
+  async deleteReaction(
+    tenantId: string,
+    conversationId: string,
+    messageId: string
+  ): Promise<void> {
+    return this.agentServiceRequest<void>(
+      'DELETE',
+      `/api/v1/agent-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}/reactions`
+    );
+  }
+
+  /**
+   * Get all reactions for a message.
+   */
+  async getReactions(
+    tenantId: string,
+    conversationId: string,
+    messageId: string
+  ): Promise<ListReactionsResponse> {
+    return this.agentServiceRequest<ListReactionsResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}/reactions`
     );
   }
 

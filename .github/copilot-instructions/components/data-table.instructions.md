@@ -140,6 +140,36 @@ Contains: Search `TextInput`, Sort `Select`, Filter `Popover` with `MultiSelect`
 
 ---
 
+## Multi-Select / Bulk Actions
+
+DataTable supports row selection with bulk action capabilities.
+
+### Props
+
+| Prop | Type | Purpose |
+|------|------|---------|
+| `enableSelection` | `boolean` | Show checkboxes on rows |
+| `onBulkDelete` | `(ids: string[]) => void` | Callback for bulk delete action |
+| `onBulkStatusToggle` | `(ids: string[], active: boolean) => void` | Callback for bulk status toggle |
+
+### Behavior
+
+- When `enableSelection` is true, each row shows a `Checkbox` before the favorite button
+- A bulk action bar appears above the list when items are selected
+- Bulk action bar shows: selected count, "Activate" / "Deactivate" buttons (if `onBulkStatusToggle`), "Delete" button (if `onBulkDelete`)
+- Selection state (`selectedIds: Set<string>`) is managed internally by DataTable
+- Selected rows get `.rowSelected` styling
+
+### CSS Classes
+
+| Class | Purpose |
+|-------|---------|
+| `.bulkActionBar` | Floating action bar above list |
+| `.rowSelected` | Highlighted selected row background |
+| `.rowCheckbox` | Checkbox alignment within row |
+
+---
+
 ## Using DataTable
 
 ```tsx
@@ -155,5 +185,8 @@ Contains: Search `TextInput`, Sort `Select`, Filter `Popover` with `MultiSelect`
   onEdit={handleEdit}
   onDelete={handleDelete}
   renderIcon={(item) => <IconRobot />}
+  enableSelection
+  onBulkDelete={handleBulkDelete}
+  onBulkStatusToggle={handleBulkStatusToggle}
 />
 ```

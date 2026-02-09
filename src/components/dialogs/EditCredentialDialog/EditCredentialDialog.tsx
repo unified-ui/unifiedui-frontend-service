@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Modal,
   TextInput,
@@ -60,6 +61,7 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
   onTabChange,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { t } = useTranslation();
   const [credential, setCredential] = useState<CredentialResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -350,9 +352,9 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
               {/* Credential value fields - type specific */}
               {credential?.type === CredentialTypeEnum.API_KEY && (
                 <PasswordInput
-                  label="Neuer API Key"
-                  placeholder="Leer lassen um den aktuellen Wert beizubehalten"
-                  description="Nur ausfüllen, wenn Sie den API Key ändern möchten"
+                  label={t('credentials:newApiKey')}
+                  placeholder={t('credentials:leaveEmptyToKeep')}
+                  description={t('credentials:fillOnlyToChangeApiKey')}
                   {...form.getInputProps('secret_value')}
                 />
               )}
@@ -360,15 +362,15 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
               {credential?.type === CredentialTypeEnum.BASIC_AUTH && (
                 <>
                   <TextInput
-                    label="Neuer Username"
-                    placeholder="Leer lassen um den aktuellen Wert beizubehalten"
-                    description="Nur ausfüllen, wenn Sie den Username ändern möchten"
+                    label={t('credentials:newUsername')}
+                    placeholder={t('credentials:leaveEmptyToKeep')}
+                    description={t('credentials:fillOnlyToChangeUsername')}
                     {...form.getInputProps('username')}
                   />
                   <PasswordInput
-                    label="Neues Password"
-                    placeholder="Leer lassen um den aktuellen Wert beizubehalten"
-                    description="Nur ausfüllen, wenn Sie das Password ändern möchten"
+                    label={t('credentials:newPassword')}
+                    placeholder={t('credentials:leaveEmptyToKeep')}
+                    description={t('credentials:fillOnlyToChangePassword')}
                     {...form.getInputProps('password')}
                   />
                 </>

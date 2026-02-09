@@ -4,13 +4,13 @@
 
 ```
 src/
-├── main.tsx                    # Entry point (MantineProvider, AuthProvider, Router)
-├── App.tsx                     # Root component
+├── main.tsx                    # Entry point (MantineProvider, I18nextProvider, AuthProvider, Router)
+├── App.tsx                     # Root component (renders AppRoutes)
 ├── authConfig.ts               # MSAL configuration
 │
 ├── api/                        # API layer
-│   ├── client.ts               # UnifiedUIAPIClient (~110 methods)
-│   ├── types.ts                # All API types + enums (~1000 lines)
+│   ├── client.ts               # UnifiedUIAPIClient (~130 methods)
+│   ├── types.ts                # All API types + enums (~1370 lines)
 │   └── index.ts                # Barrel export
 │
 ├── auth/                       # Authentication
@@ -18,15 +18,55 @@ src/
 │   ├── AuthProvider.tsx         # MSAL context wrapper
 │   └── index.ts
 │
+├── i18n/                       # Internationalization
+│   ├── index.ts                # Production i18n config (LanguageDetector, 12 namespaces)
+│   ├── i18nForTests.ts         # Test i18n config (no detection, hardcoded en-US)
+│   └── locales/
+│       └── en-US/              # English locale files
+│           ├── common.json     # Shared strings (search, CRUD, errors)
+│           ├── dashboard.json  # Dashboard page strings
+│           ├── login.json      # Login page strings
+│           ├── header.json     # Header/tenant selector strings
+│           ├── conversations.json
+│           ├── settings.json
+│           ├── notifications.json
+│           ├── tracing.json    # Trace visualization strings
+│           ├── credentials.json
+│           ├── token.json      # Token page strings
+│           ├── widgetDesigner.json  # Widget designer page strings
+│           └── reactAgent.json # ReACT agent developer strings
+│
+├── test/                       # Test infrastructure
+│   ├── setup.ts                # Vitest setup (MSW lifecycle, matchMedia/ResizeObserver mocks)
+│   ├── utils.tsx               # renderWithProviders() helper
+│   ├── mocks/
+│   │   ├── handlers.ts         # MSW request handlers
+│   │   ├── server.ts           # MSW server instance
+│   │   └── index.ts
+│   └── __tests__/              # Test files
+│       ├── setup.test.tsx      # Smoke tests
+│       ├── i18n.test.tsx       # i18n namespace validation
+│       ├── dashboard.test.tsx  # DashboardPage tests
+│       └── header.test.tsx     # Header tests
+│
 ├── contexts/                   # Global state
-│   ├── IdentityContext.tsx      # User, tenants, apiClient, selectedTenant
+│   ├── IdentityContext.tsx      # Composite provider (wraps AuthContext, TenantContext, ApiClientContext)
+│   ├── AuthContext.tsx          # User authentication state + setters
+│   ├── TenantContext.tsx        # Tenant selection + persistence
+│   ├── ApiClientContext.tsx     # API client instance
+│   ├── AICapabilitiesContext.tsx # AI model capabilities for current tenant
+│   ├── FavoritesContext.tsx     # User favorites management
+│   ├── NotificationsContext.tsx # Notification state + polling
+│   ├── RecentVisitsContext.tsx  # Recent visits tracking + sync
 │   ├── SidebarDataContext.tsx   # Cached entity lists for sidebar
 │   ├── ChatSidebarContext.tsx   # Global chat sidebar visibility
 │   └── index.ts
 │
 ├── hooks/                      # Custom hooks
 │   ├── useDebounce.ts
-│   └── useEntityPermissions.ts
+│   ├── useEntityList.ts          # Shared list page logic (pagination, search, sort, filter, CRUD)
+│   ├── useEntityPermissions.ts
+│   └── useKeyboardShortcuts.ts  # Global keyboard shortcut bindings
 │
 ├── routes/                     # Route definitions
 │   ├── index.tsx               # All routes (BrowserRouter + Routes)
@@ -41,8 +81,9 @@ src/
 │   ├── ChatWidgetsPage/        # Chat widget list
 │   ├── TenantSettingsPage/     # Tenant config (tabs: general, IAM, groups, danger)
 │   ├── DashboardPage/          # Home dashboard
-│   ├── TracesPage/             # Standalone traces browser
-│   ├── WidgetDesignerPage/     # Chat widget visual designer
+│   ├── WidgetDesignerPage/     # Chat widget visual designer (drag & drop fields)
+│   ├── ReActAgentDeveloperPage/ # ReACT agent config + playground
+│   ├── EmbedChatPage/          # Standalone embed chat (no sidebar/header)
 │   ├── LoginPage/              # Login screen
 │   ├── LoginTokenPage/         # Token-based login
 │   ├── TracingDialogDevelopmentPage/  # Dev-only tracing test page
@@ -69,8 +110,9 @@ src/
 
 | Component | Purpose |
 |-----------|---------|
-| `PageContainer` | Max-width wrapper (sm/md/lg/xl) for page content |
 | `PageHeader` | Page title + description + action button |
+| `EntityAvatar` | Hash-based colored initials avatar for entities |
+| `Breadcrumbs` | Navigation breadcrumbs for detail pages |
 | `DataTable` | Feature-rich list with search, sort, filter, infinite scroll → see [data-table.instructions.md](./components/data-table.instructions.md) |
 | `DataTableToolbar` | Search bar + sort + filter popover (child of DataTable) |
 | `DataTableRow` | Single row card in DataTable (child of DataTable) |
@@ -87,6 +129,9 @@ src/
 | `EntityDetailsForm` | Generic entity detail form |
 | `GenerateWithAIButton` | Button that triggers AI-powered content generation |
 | `MarkdownRenderer` | Renders markdown content with syntax highlighting |
+| `ChatPanel` | Dual-mode chat panel (conversation + playground) for pages |
+| `CommandPalette` | Global command palette (cmdk, `⌘K` shortcut) |
+| `SkeletonLoaders` | Skeleton loading placeholders for list/detail pages |
 
 ### `components/dialogs/`
 
@@ -119,8 +164,9 @@ See [components/layout.instructions.md](./components/layout.instructions.md) for
 |-----------|---------|
 | `MainLayout` | App shell: Header + Sidebar + content area |
 | `Sidebar` | Left nav rail with expandable entity lists |
-| `Header` | Top bar: logo, tenant selector, theme toggle, user menu |
+| `Header` | Top bar: logo, search (CommandPalette), notifications, theme toggle, user menu |
 | `GlobalChatSidebar` | Right hover panel for recent conversations |
+| `NotificationPanel` | Right slide-out drawer for notifications (Mantine Drawer) |
 
 ### `components/tracing/`
 
@@ -153,10 +199,11 @@ See [components/tracing.instructions.md](./components/tracing.instructions.md) f
 | `/conversations/:conversationId` | ConversationsPage | Protected |
 | `/autonomous-agents` | AutonomousAgentsPage | Protected |
 | `/autonomous-agents/:agentId` | AutonomousAgentDetailsPage | Protected |
-| `/traces` | TracesPage | Protected |
 | `/chat-widgets` | ChatWidgetsPage | Protected |
 | `/widget-designer` | WidgetDesignerPage | Protected |
+| `/re-act-agents` | ReActAgentDeveloperPage | Protected |
 | `/dev/tracing` | TracingDialogDevelopmentPage | Protected (dev) |
+| `/embed/chat/:agentId` | EmbedChatPage | Public |
 | `*` | NotFoundPage | — |
 
 ---
@@ -165,7 +212,14 @@ See [components/tracing.instructions.md](./components/tracing.instructions.md) f
 
 | Context | Key Exports | Purpose |
 |---------|-------------|---------|
-| `IdentityContext` | `useIdentity()` → `{ user, tenants, selectedTenant, apiClient, refreshIdentity, selectTenant, getFoundryToken }` | Global auth + API client |
+| `IdentityContext` | `useIdentity()` → `{ user, tenants, selectedTenant, apiClient, refreshIdentity, selectTenant, getFoundryToken }` | Composite provider wrapping Auth + Tenant + ApiClient |
+| `AuthContext` | `useAuthContext()` → `{ user, isLoading, setUser, setIsLoading }` | User authentication state |
+| `TenantContext` | `useTenantContext()` → `{ tenants, selectedTenant, selectTenant, setTenants }` | Tenant selection + persistence |
+| `ApiClientContext` | `useApiClient()` → `UnifiedUIAPIClient` | API client instance |
+| `AICapabilitiesContext` | `useAICapabilities()` → `{ aiModels, isLoading }` | AI model data for current tenant |
+| `FavoritesContext` | `useFavorites()` → `{ favorites, toggleFavorite, isFavorite }` | User favorites management |
+| `NotificationsContext` | `useNotifications()` → `{ notifications, unreadCount, markAsRead, markAllRead, deleteNotification }` | Notification polling + state |
+| `RecentVisitsContext` | `useRecentVisits()` → `{ recentVisits, trackVisit, syncVisits }` | Recent visit tracking |
 | `SidebarDataContext` | `useSidebarData()` → `{ applications, autonomousAgents, chatWidgets, fetch*, refresh* }` | Cached sidebar entity lists |
 | `ChatSidebarContext` | `useChatSidebar()` → `{ isVisible, onSidebarHoverEnter, onSidebarHoverLeave }` | Right chat sidebar visibility |
 

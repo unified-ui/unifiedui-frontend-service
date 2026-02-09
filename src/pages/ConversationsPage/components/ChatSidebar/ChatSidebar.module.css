@@ -69,6 +69,11 @@
   color: var(--color-primary-400);
 }
 
+.searchWrapper {
+  padding: 0 var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+}
+
 .searchContainer {
   padding: 0 var(--spacing-md);
   padding-bottom: var(--spacing-sm);

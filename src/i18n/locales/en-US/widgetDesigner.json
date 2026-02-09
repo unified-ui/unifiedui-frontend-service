@@ -1,0 +1,48 @@
+{
+  "title": "Widget Designer",
+  "fieldPalette": "Field Palette",
+  "canvas": "Canvas",
+  "fieldProperties": "Field Properties",
+  "livePreview": "Live Preview",
+  "dragFieldsHere": "Click fields from the palette to add them here",
+  "addField": "Add Field",
+  "removeField": "Remove Field",
+  "noFieldSelected": "Select a field to edit its properties",
+  "saveWidget": "Save Widget",
+  "fieldTypes": {
+    "text": "Text Field",
+    "textarea": "Text Area",
+    "description_textarea": "Description Area",
+    "select": "Select",
+    "multi_select": "Multi Select",
+    "toggle": "Toggle",
+    "label": "Label",
+    "file": "File Upload"
+  },
+  "properties": {
+    "label": "Label",
+    "placeholder": "Placeholder",
+    "required": "Required",
+    "maxLength": "Max Length",
+    "rows": "Rows",
+    "options": "Options",
+    "addOption": "Add Option",
+    "defaultValue": "Default Value",
+    "text": "Text",
+    "style": "Style",
+    "heading": "Heading",
+    "info": "Info",
+    "content": "Content",
+    "acceptedTypes": "Accepted File Types",
+    "maxSize": "Max File Size (MB)"
+  },
+  "preview": {
+    "submit": "Submit",
+    "formPreview": "Widget Form Preview",
+    "selectPlaceholder": "Select...",
+    "chooseFile": "Choose file",
+    "noFields": "Add fields to see a preview"
+  },
+  "widgetSaved": "Widget configuration saved",
+  "widgetSaveFailed": "Failed to save widget configuration"
+}

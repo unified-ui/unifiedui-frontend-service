@@ -11,7 +11,8 @@ import { AutonomousAgentsPage } from '../pages/AutonomousAgentsPage';
 import { AutonomousAgentDetailsPage } from '../pages/AutonomousAgentDetailsPage';
 import { ChatWidgetsPage } from '../pages/ChatWidgetsPage';
 import { WidgetDesignerPage } from '../pages/WidgetDesignerPage';
-import { TracesPage } from '../pages/TracesPage';
+import { ReActAgentDeveloperPage } from '../pages/ReActAgentDeveloperPage';
+import { EmbedChatPage } from '../pages/EmbedChatPage';
 import { TracingDialogDevelopmentPage } from '../pages/TracingDialogDevelopmentPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 
@@ -20,11 +21,10 @@ export const AppRoutes = () => {
     <BrowserRouter>
       <ChatSidebarProvider>
         <Routes>
-        {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login/token" element={<LoginTokenPage />} />
+        <Route path="/embed/chat/:agentId" element={<EmbedChatPage />} />
         
-        {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/tenant-settings" element={<ProtectedRoute><TenantSettingsPage /></ProtectedRoute>} />
         <Route path="/applications" element={<ProtectedRoute><ApplicationsPage /></ProtectedRoute>} />
@@ -32,14 +32,12 @@ export const AppRoutes = () => {
         <Route path="/conversations/:conversationId" element={<ProtectedRoute><ConversationsPage /></ProtectedRoute>} />
         <Route path="/autonomous-agents" element={<ProtectedRoute><AutonomousAgentsPage /></ProtectedRoute>} />
         <Route path="/autonomous-agents/:agentId" element={<ProtectedRoute><AutonomousAgentDetailsPage /></ProtectedRoute>} />
-        <Route path="/traces" element={<ProtectedRoute><TracesPage /></ProtectedRoute>} />
         <Route path="/chat-widgets" element={<ProtectedRoute><ChatWidgetsPage /></ProtectedRoute>} />
         <Route path="/widget-designer" element={<ProtectedRoute><WidgetDesignerPage /></ProtectedRoute>} />
+        <Route path="/re-act-agents" element={<ProtectedRoute><ReActAgentDeveloperPage /></ProtectedRoute>} />
         
-        {/* Development Routes */}
         <Route path="/dev/tracing" element={<ProtectedRoute><TracingDialogDevelopmentPage /></ProtectedRoute>} />
         
-        {/* Redirects */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

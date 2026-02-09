@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Container, Title, Text, Button, Paper, Stack, Group, Grid, Loader } from '@mantine/core';
 import { IconLogin, IconLogout, IconRobot, IconBrain, IconNetwork, IconShield, IconUsers, IconSparkles } from '@tabler/icons-react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
@@ -7,6 +8,7 @@ import { useIdentity } from '../../contexts';
 import classes from './LoginPage.module.css';
 
 export const LoginPage = () => {
+  const { t } = useTranslation('login');
   const { isAuthenticated, login, logout, account } = useAuth();
   const { user, tenants, selectedTenant, isLoading: identityLoading } = useIdentity();
   const [isLoading, setIsLoading] = useState(false);
@@ -14,8 +16,6 @@ export const LoginPage = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
 
-  // Redirect to original URL or dashboard if already authenticated AND identity is loaded
-  // But DON'T redirect if user is on /login/token page
   useEffect(() => {
     if (isAuthenticated && !identityLoading && user && location.pathname === '/login') {
       const redirectUrl = searchParams.get('redirect') || '/dashboard';
@@ -43,12 +43,11 @@ export const LoginPage = () => {
     }
   };
 
-  // Features für die Landing-Section
   const features = [
-    { icon: IconRobot, title: 'Multi-Agent', description: 'Integration verschiedener AI-Agent-Systeme' },
-    { icon: IconUsers, title: 'Multi-Tenant', description: 'Strikte Tenant-Isolation mit RBAC' },
-    { icon: IconShield, title: 'Sicher', description: 'Enterprise-ready mit Audit-Logging' },
-    { icon: IconNetwork, title: 'Skalierbar', description: 'Flexible Infrastruktur-Integration' },
+    { icon: IconRobot, title: t('featureMultiAgent'), description: t('featureMultiAgentDesc') },
+    { icon: IconUsers, title: t('featureMultiTenant'), description: t('featureMultiTenantDesc') },
+    { icon: IconShield, title: t('featureSecure'), description: t('featureSecureDesc') },
+    { icon: IconNetwork, title: t('featureScalable'), description: t('featureScalableDesc') },
   ];
 
   return (
@@ -89,15 +88,13 @@ export const LoginPage = () => {
             {/* Hero Section */}
             <Stack gap="md" align="center" ta="center">
               <Title order={1} className={classes.heroTitle}>
-                AI Hub
+                {t('heroTitle')}
               </Title>
               <Text size="xl" c="dimmed" className={classes.heroSubtitle}>
-                Die Multi-Tenant Plattform für AI-Agent-Integration
+                {t('heroSubtitle')}
               </Text>
               <Text size="md" c="dimmed" className={classes.heroDescription}>
-                Verbinde und verwalte verschiedene AI-Agent-Systeme zentral. 
-                Mit rollenbasierter Zugriffskontrolle, umfassendem Audit-Logging 
-                und Enterprise-ready Sicherheit.
+                {t('heroDescription')}
               </Text>
             </Stack>
 
@@ -124,9 +121,9 @@ export const LoginPage = () => {
             <Paper shadow="xl" radius="lg" p="xl" className={classes.loginCard}>
               <Stack gap="lg">
                 <Stack gap="xs" ta="center">
-                  <Title order={3}>Willkommen</Title>
+                  <Title order={3}>{t('welcome')}</Title>
                   <Text size="sm" c="dimmed">
-                    Melde dich an, um auf deine AI-Agents zuzugreifen
+                    {t('signInPrompt')}
                   </Text>
                 </Stack>
                 <Button
@@ -138,7 +135,7 @@ export const LoginPage = () => {
                   variant="gradient"
                   gradient={{ from: 'primary.6', to: 'secondary.6', deg: 45 }}
                 >
-                  Mit Microsoft anmelden
+                  {t('signInWithMicrosoft')}
                 </Button>
               </Stack>
             </Paper>
@@ -150,7 +147,7 @@ export const LoginPage = () => {
                 <Stack gap="md" align="center">
                   <Loader size="lg" />
                   <Text size="md" c="dimmed">
-                    Identity-Daten werden geladen...
+                    {t('loadingIdentity')}
                   </Text>
                 </Stack>
               </Paper>
@@ -159,14 +156,14 @@ export const LoginPage = () => {
                 <Stack gap="md">
                   <div>
                     <Text size="lg" fw={500} c="green">
-                      ✓ Successfully logged in
+                      ✓ {t('successfullyLoggedIn')}
                     </Text>
                     <Text size="sm" c="dimmed">
-                      Logged in as: {user?.mail || user?.display_name || account?.username || 'Unknown'}
+                      {t('loggedInAs', { email: user?.mail || user?.display_name || account?.username || 'Unknown' })}
                     </Text>
                     {selectedTenant && (
                       <Text size="sm" c="dimmed">
-                        Current Tenant: {selectedTenant.name}
+                        {t('currentTenant', { name: selectedTenant.name })}
                       </Text>
                     )}
                   </div>
@@ -177,13 +174,13 @@ export const LoginPage = () => {
                     onClick={handleLogout}
                     loading={isLoading}
                   >
-                    Sign out
+                    {t('signOut')}
                   </Button>
 
                   {tenants.length > 0 && (
                     <Stack gap="xs">
                       <Text size="sm" fw={500}>
-                        Verfügbare Tenants ({tenants.length}):
+                        {t('availableTenants', { count: tenants.length })}
                       </Text>
                       <Grid gutter="xs">
                         {tenants.map((tenant) => (
@@ -191,7 +188,7 @@ export const LoginPage = () => {
                             <Paper p="xs" withBorder>
                               <Text size="xs" fw={500}>{tenant.name}</Text>
                               <Text size="xs" c="dimmed">
-                                {tenant.id ? `${tenant.id.substring(0, 8)}...` : 'Keine ID'}
+                                {tenant.id ? `${tenant.id.substring(0, 8)}...` : t('noId')}
                               </Text>
                             </Paper>
                           </Grid.Col>

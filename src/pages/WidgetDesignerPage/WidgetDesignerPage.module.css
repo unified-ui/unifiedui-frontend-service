@@ -1,4 +1,59 @@
-.container {
-  padding: var(--spacing-xl);
-  min-height: 100vh;
+.page {
+  height: 100%;
+  overflow: hidden;
+}
+
+.designerGrid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--spacing-md);
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - 180px);
+}
+
+.leftPanel {
+  overflow: hidden;
+  height: 100%;
+}
+
+.rightPanel {
+  min-height: 0;
+  height: 100%;
+}
+
+.canvas {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.preview {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.canvasField {
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.canvasField:hover {
+  background-color: var(--surface-hover);
+}
+
+.canvasFieldSelected {
+  border-color: var(--mantine-color-primary-5);
+  background-color: var(--mantine-color-primary-0);
+}
+
+[data-mantine-color-scheme='dark'] .canvasFieldSelected {
+  background-color: var(--mantine-color-primary-9);
+}
+
+.gripIcon {
+  color: var(--text-tertiary);
+  cursor: grab;
+  flex-shrink: 0;
 }

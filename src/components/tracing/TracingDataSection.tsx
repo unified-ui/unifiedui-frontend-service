@@ -10,6 +10,7 @@
 
 import { useState, useMemo, useCallback, useRef } from 'react';
 import type { FC } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, Tabs, ScrollArea, Badge, Collapse, UnstyledButton, Group, Code, Button } from '@mantine/core';
 import {
   IconChevronRight,
@@ -122,6 +123,7 @@ interface DataPanelProps {
 }
 
 const DataPanel: FC<DataPanelProps> = ({ title, data }) => {
+  const { t } = useTranslation();
   if (!data) {
     return (
       <div className={classes.dataPanel}>
@@ -129,7 +131,7 @@ const DataPanel: FC<DataPanelProps> = ({ title, data }) => {
           <Text size="sm" fw={600}>{title}</Text>
         </div>
         <ScrollArea className={classes.dataPanelContent} type="auto" offsetScrollbars>
-          <Text size="xs" c="dimmed" fs="italic">Keine Daten</Text>
+          <Text size="xs" c="dimmed" fs="italic">{t('tracing:noDataAvailable')}</Text>
         </ScrollArea>
       </div>
     );
@@ -174,9 +176,8 @@ const DataPanel: FC<DataPanelProps> = ({ title, data }) => {
           <CollapsibleSection title="Other" data={rest} />
         )}
 
-        {/* Wenn nichts da ist */}
         {!text && !args && !metadata && !extraData && !hasOtherKeys && (
-          <Text size="xs" c="dimmed" fs="italic">Keine Daten</Text>
+          <Text size="xs" c="dimmed" fs="italic">{t('tracing:noDataAvailable')}</Text>
         )}
       </ScrollArea>
     </div>
@@ -192,6 +193,7 @@ interface LogsPanelProps {
 }
 
 const LogsPanel: FC<LogsPanelProps> = ({ logs }) => {
+  const { t } = useTranslation();
   return (
     <div className={classes.logsPanel}>
       <div className={classes.logsPanelHeader}>
@@ -205,7 +207,7 @@ const LogsPanel: FC<LogsPanelProps> = ({ logs }) => {
       </div>
       <ScrollArea className={classes.logsPanelContent} type="auto">
         {(!logs || logs.length === 0) ? (
-          <Text size="xs" c="dimmed" fs="italic">Keine Logs</Text>
+          <Text size="xs" c="dimmed" fs="italic">{t('tracing:noLogs')}</Text>
         ) : (
           <div className={classes.logsList}>
             {logs.map((log, index) => (
@@ -230,6 +232,7 @@ const LogsPanel: FC<LogsPanelProps> = ({ logs }) => {
 
 export const TracingDataSection: FC = () => {
   const { selectedTrace, selectedNode } = useTracing();
+  const { t } = useTranslation();
 
   // Resize state für Logs/Content Trennung
   const [logsWidth, setLogsWidth] = useState(25); // Prozent
@@ -285,7 +288,7 @@ export const TracingDataSection: FC = () => {
   if (!selectedTrace) {
     return (
       <div className={classes.emptyContainer}>
-        <Text size="sm" c="dimmed">Kein Trace ausgewählt</Text>
+        <Text size="sm" c="dimmed">{t('tracing:noTraceSelected')}</Text>
       </div>
     );
   }
@@ -350,7 +353,7 @@ export const TracingDataSection: FC = () => {
               {metadata ? (
                 <JsonViewer data={metadata} initialCollapsed={false} />
               ) : (
-                <Text size="xs" c="dimmed" fs="italic">Keine Metadata</Text>
+                <Text size="xs" c="dimmed" fs="italic">{t('tracing:noMetadata')}</Text>
               )}
             </ScrollArea>
           </Tabs.Panel>
