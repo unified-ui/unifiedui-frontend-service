@@ -5,6 +5,7 @@ import { IconUser, IconSparkles, IconCopy, IconCheck, IconBinaryTree, IconThumbU
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { MessageResponse, AttachmentMetadata } from '../../../../api/types';
+import { ConfirmDeleteDialog } from '../../../../components/common';
 import classes from './ChatContent.module.css';
 
 interface ChatContentProps {
@@ -260,6 +261,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
   const extMessageId = !isUser ? message.metadata?.extMessageId : undefined;
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(content);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const handleViewTrace = useCallback(() => {
     if (extMessageId && onViewTrace) {
@@ -335,9 +337,9 @@ const MessageBubble: FC<MessageBubbleProps> = ({
                   </ActionIcon>
                 </Tooltip>
               )}
-              {onDeleteMessage && (
+              {onDeleteMessage && !message.id.startsWith('temp-') && (
                 <Tooltip label="Delete message" withArrow position="bottom">
-                  <ActionIcon size="xs" variant="subtle" color="red" onClick={() => onDeleteMessage(message.id)}>
+                  <ActionIcon size="xs" variant="subtle" color="red" onClick={() => setDeleteDialogOpen(true)}>
                     <IconTrash size={14} />
                   </ActionIcon>
                 </Tooltip>
@@ -345,6 +347,15 @@ const MessageBubble: FC<MessageBubbleProps> = ({
             </Group>
           )}
         </Box>
+        <ConfirmDeleteDialog
+          opened={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+          onConfirm={() => {
+            onDeleteMessage?.(message.id);
+            setDeleteDialogOpen(false);
+          }}
+          itemType="message"
+        />
       </Box>
     );
   }

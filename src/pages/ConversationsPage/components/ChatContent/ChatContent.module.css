@@ -115,7 +115,8 @@
 }
 
 .userBubble {
-  max-width: 70%;
+  max-width: 85%;
+  width: fit-content;
   padding: var(--spacing-sm) var(--spacing-md);
   background-color: var(--color-primary-600);
   color: white;
@@ -124,7 +125,9 @@
 }
 
 [data-mantine-color-scheme='dark'] .userBubble {
-  background-color: var(--color-primary-500);
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-weight: 500;
 }
 
 /* Assistant message - left aligned */
