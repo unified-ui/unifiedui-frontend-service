@@ -35,14 +35,14 @@
 }
 
 .header {
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-md) var(--spacing-xs);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .actions {
-  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+  padding: var(--spacing-lg) var(--spacing-md) var(--spacing-md);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
@@ -53,7 +53,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-md);
   border-radius: var(--radius-md);
   border: 1px dashed rgba(255, 255, 255, 0.25);
   color: rgba(255, 255, 255, 0.7);
@@ -99,25 +99,32 @@
   padding: var(--spacing-xs) 0;
 }
 
-.groupLabel {
-  padding: var(--spacing-xs) var(--spacing-xl);
-  margin-top: var(--spacing-2xl);
-  text-transform: uppercase;
-  font-weight: var(--font-weight-bold);
-  letter-spacing: 0.5px;
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.6);
+.groupLabelWrapper {
+  padding: calc(var(--spacing-2xl) * 4) 0 var(--spacing-lg) var(--spacing-md);
+  margin-right: var(--spacing-xs);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #1a1a1a;
 }
 
-.groupLabel:first-of-type {
-  margin-top: var(--spacing-md);
+.groupLabelWrapper:first-of-type {
+  padding-top: var(--spacing-2xl);
+}
+
+.groupLabel {
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: 10px;
+  color: #ffffff;
 }
 
 .conversationItem {
-  width: calc(100% - var(--spacing-md) * 2);
-  margin: 0 var(--spacing-md);
+  width: calc(100% - var(--spacing-lg) * 2);
+  margin: 0 var(--spacing-lg) var(--spacing-xs);
   padding: var(--spacing-md) var(--spacing-md);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   transition: background-color var(--transition-fast) var(--easing-ease-in-out);
   cursor: pointer;
@@ -129,7 +136,7 @@
 }
 
 .conversationItem.selected {
-  background-color: rgba(33, 150, 243, 0.2);
+  background-color: rgba(255, 255, 255, 0.14);
 }
 
 .conversationContent {
@@ -152,7 +159,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  color: rgba(255, 255, 255, 0.9);
+  color: #ffffff;
 }
 
 .pinnedIcon {

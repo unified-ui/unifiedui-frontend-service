@@ -364,9 +364,11 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
           <Stack gap={0}>
             {groupedConversations.map((group) => (
               <div key={group.label} className={classes.group}>
-                <Text size="xs" className={classes.groupLabel}>
-                  {group.label}
-                </Text>
+                <div className={classes.groupLabelWrapper}>
+                  <Text size="xs" fw={800} c="white" className={classes.groupLabel}>
+                    {group.label}
+                  </Text>
+                </div>
                 {group.conversations.map((conversation) => (
                   <ConversationItem
                     key={conversation.id}

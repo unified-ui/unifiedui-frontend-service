@@ -4,7 +4,7 @@
   background-color: transparent;
   display: flex;
   align-items: flex-start;
-  padding: var(--spacing-sm) var(--spacing-md) 0;
+  padding: 0 var(--spacing-md);
 }
 
 .headerContent {

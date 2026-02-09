@@ -1,10 +1,10 @@
 import type { FC, ReactNode } from 'react';
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { ScrollArea, Box, Text, Avatar, Stack, Loader, Paper, Tooltip, ActionIcon, CopyButton, Group, Button, Textarea } from '@mantine/core';
-import { IconUser, IconSparkles, IconCopy, IconCheck, IconBinaryTree, IconThumbUp, IconThumbDown, IconArrowDown, IconEdit, IconTrash, IconAlertTriangle, IconRefresh } from '@tabler/icons-react';
+import { IconUser, IconSparkles, IconCopy, IconCheck, IconBinaryTree, IconThumbUp, IconThumbDown, IconArrowDown, IconEdit, IconTrash, IconAlertTriangle, IconRefresh, IconFile, IconPhoto, IconFileTypePdf, IconFileTypeDoc, IconFileTypeXls, IconFileTypePpt, IconFileText, IconMusic, IconFileCode } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { MessageResponse } from '../../../../api/types';
+import type { MessageResponse, AttachmentMetadata } from '../../../../api/types';
 import classes from './ChatContent.module.css';
 
 interface ChatContentProps {
@@ -314,6 +314,9 @@ const MessageBubble: FC<MessageBubbleProps> = ({
               </>
             )}
           </Box>
+          {message.attachmentsMetadata && message.attachmentsMetadata.length > 0 && (
+            <FileAttachmentChips attachments={message.attachmentsMetadata} />
+          )}
           {!isEditing && (
             <Group gap="xs" className={classes.messageActions}>
               <CopyButton value={content} timeout={2000}>
@@ -478,6 +481,70 @@ const StreamingMessage: FC<StreamingMessageProps> = ({ content }) => {
           </Box>
         </Box>
       </Box>
+    </Box>
+  );
+};
+
+const getFileIcon = (attachment: AttachmentMetadata): ReactNode => {
+  const mimeType = attachment.fileType?.toLowerCase() || '';
+  const fileName = attachment.fileName?.toLowerCase() || '';
+  const category = attachment.fileCategory?.toLowerCase() || '';
+
+  if (category === 'image' || mimeType.startsWith('image/')) {
+    return <IconPhoto size={14} className={classes.attachmentChipIcon} />;
+  }
+  if (mimeType.includes('pdf') || fileName.endsWith('.pdf')) {
+    return <IconFileTypePdf size={14} className={classes.attachmentChipIcon} />;
+  }
+  if (mimeType.includes('word') || fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
+    return <IconFileTypeDoc size={14} className={classes.attachmentChipIcon} />;
+  }
+  if (mimeType.includes('excel') || mimeType.includes('spreadsheet') || fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) {
+    return <IconFileTypeXls size={14} className={classes.attachmentChipIcon} />;
+  }
+  if (mimeType.includes('powerpoint') || mimeType.includes('presentation') || fileName.endsWith('.ppt') || fileName.endsWith('.pptx')) {
+    return <IconFileTypePpt size={14} className={classes.attachmentChipIcon} />;
+  }
+  if (mimeType.includes('text') || fileName.endsWith('.txt') || fileName.endsWith('.md')) {
+    return <IconFileText size={14} className={classes.attachmentChipIcon} />;
+  }
+  if (category === 'audio' || mimeType.startsWith('audio/')) {
+    return <IconMusic size={14} className={classes.attachmentChipIcon} />;
+  }
+  if (mimeType.includes('json') || mimeType.includes('javascript') || mimeType.includes('typescript') || fileName.endsWith('.json') || fileName.endsWith('.js') || fileName.endsWith('.ts')) {
+    return <IconFileCode size={14} className={classes.attachmentChipIcon} />;
+  }
+  return <IconFile size={14} className={classes.attachmentChipIcon} />;
+};
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+interface FileAttachmentChipsProps {
+  attachments: AttachmentMetadata[];
+}
+
+const FileAttachmentChips: FC<FileAttachmentChipsProps> = ({ attachments }) => {
+  if (!attachments || attachments.length === 0) return null;
+
+  return (
+    <Box className={classes.attachmentsContainer}>
+      {attachments.map((attachment, index) => (
+        <Tooltip
+          key={index}
+          label={`${attachment.fileName} (${formatFileSize(attachment.fileSize)})`}
+          withArrow
+          position="bottom"
+        >
+          <Box className={classes.attachmentChip}>
+            {getFileIcon(attachment)}
+            <span className={classes.attachmentChipName}>{attachment.fileName}</span>
+          </Box>
+        </Tooltip>
+      ))}
     </Box>
   );
 };

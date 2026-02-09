@@ -368,6 +368,13 @@ export function useChat({
       }
     }
 
+    const attachmentsMetadata = attachments?.map(file => ({
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      fileCategory: file.type.startsWith('image/') ? 'image' : file.type.startsWith('audio/') ? 'audio' : 'file',
+    }));
+
     const optimisticUserMessage: MessageResponse = {
       id: `temp-${Date.now()}`,
       type: 'user',
@@ -375,6 +382,7 @@ export function useChat({
       applicationId: selectedApplicationId,
       content,
       status: 'pending',
+      attachmentsMetadata,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
