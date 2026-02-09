@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Title,
   Stack,
@@ -11,10 +11,13 @@ import {
   Divider,
   ScrollArea,
   Badge,
+  LoadingOverlay,
 } from '@mantine/core';
-import { IconX, IconGripVertical, IconDeviceFloppy } from '@tabler/icons-react';
+import { IconX, IconGripVertical, IconDeviceFloppy, IconArrowLeft } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../../components/layout/MainLayout';
+import { useIdentity } from '../../contexts';
 import { FieldPalette } from './FieldPalette';
 import { FieldProperties } from './FieldProperties';
 import { FieldPreview } from './FieldPreview';
@@ -23,8 +26,26 @@ import classes from './WidgetDesignerPage.module.css';
 
 export const WidgetDesignerPage: FC = () => {
   const { t } = useTranslation('widgetDesigner');
+  const { widgetId } = useParams<{ widgetId: string }>();
+  const navigate = useNavigate();
+  const { apiClient, selectedTenant } = useIdentity();
   const [fields, setFields] = useState<FormFieldConfig[]>([]);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
+  const [widgetName, setWidgetName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!widgetId || !apiClient || !selectedTenant) return;
+    setIsLoading(true);
+    apiClient.getChatWidget(selectedTenant.id, widgetId)
+      .then(widget => {
+        setWidgetName(widget.name);
+        const savedFields = (widget.config?.fields as FormFieldConfig[]) || [];
+        setFields(savedFields);
+      })
+      .catch(() => { /* handled by API client */ })
+      .finally(() => setIsLoading(false));
+  }, [widgetId, apiClient, selectedTenant]);
 
   const selectedField = useMemo(
     () => fields.find(f => f.id === selectedFieldId) || null,
@@ -61,15 +82,24 @@ export const WidgetDesignerPage: FC = () => {
     });
   }, []);
 
-  const handleSave = useCallback(() => {
-    void fields;
-  }, [fields]);
+  const handleSave = useCallback(async () => {
+    if (!widgetId || !apiClient || !selectedTenant) return;
+    await apiClient.updateChatWidget(selectedTenant.id, widgetId, {
+      config: { fields },
+    });
+  }, [fields, widgetId, apiClient, selectedTenant]);
 
   return (
     <MainLayout>
-      <Stack gap="md" className={classes.page}>
+      <Stack gap="md" className={classes.page} pos="relative">
+        <LoadingOverlay visible={isLoading} />
         <Group justify="space-between">
-          <Title order={2}>{t('title')}</Title>
+          <Group gap="sm">
+            <ActionIcon variant="subtle" onClick={() => navigate('/chat-widgets')}>
+              <IconArrowLeft size={20} />
+            </ActionIcon>
+            <Title order={2}>{widgetName || t('title')}</Title>
+          </Group>
           <Button leftSection={<IconDeviceFloppy size={16} />} onClick={handleSave}>
             {t('saveWidget')}
           </Button>

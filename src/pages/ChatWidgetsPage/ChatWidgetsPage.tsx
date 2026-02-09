@@ -9,6 +9,7 @@ import { CreateChatWidgetDialog, EditChatWidgetDialog } from '../../components/d
 import { useIdentity } from '../../contexts';
 import { useEntityList } from '../../hooks';
 import type { ChatWidgetResponse } from '../../api/types';
+import { ChatWidgetTypeEnum } from '../../api/types';
 
 const SORT_STORAGE_KEY = 'unified-ui:sort:chat-widgets';
 
@@ -76,8 +77,13 @@ export const ChatWidgetsPage: FC = () => {
   } = useEntityList<ChatWidgetResponse>(config);
 
   const handleOpen = useCallback((id: string) => {
-    navigate(`/chat-widgets/${id}`);
-  }, [navigate]);
+    const widget = rawDataRef.current.get(id) as ChatWidgetResponse | undefined;
+    if (widget?.type === ChatWidgetTypeEnum.FORM) {
+      navigate(`/widget-designer/${id}`);
+    } else {
+      handleEdit(id);
+    }
+  }, [navigate, handleEdit, rawDataRef]);
 
   const handleShare = useCallback((_id: string) => {
     void _id;
@@ -86,6 +92,13 @@ export const ChatWidgetsPage: FC = () => {
   const renderIcon = useCallback((item: DataTableItem) => (
     <EntityAvatar name={item.name} size="sm" />
   ), []);
+
+  const handleWidgetCreated = useCallback((widget?: ChatWidgetResponse) => {
+    handleCreateSuccess();
+    if (widget?.type === ChatWidgetTypeEnum.FORM) {
+      navigate(`/widget-designer/${widget.id}`);
+    }
+  }, [handleCreateSuccess, navigate]);
 
   return (
     <MainLayout>
@@ -129,7 +142,7 @@ export const ChatWidgetsPage: FC = () => {
       <CreateChatWidgetDialog
         opened={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
-        onSuccess={handleCreateSuccess}
+        onSuccess={handleWidgetCreated}
       />
 
       <EditChatWidgetDialog

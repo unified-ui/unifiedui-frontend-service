@@ -11,6 +11,9 @@
   "addAutonomousAgent": "Add Autonomous Agent",
   "chatWidgets": "Chat Widgets",
   "addChatWidget": "Add Chat Widget",
+  "reactAgents": "ReACT Agents",
+  "addReActAgent": "Add ReACT Agent",
+  "untitledReActAgent": "Untitled Agent",
   "conversations": "Conversations",
   "newConversation": "New Conversation",
   "failedToLoadConversations": "Failed to load conversations"

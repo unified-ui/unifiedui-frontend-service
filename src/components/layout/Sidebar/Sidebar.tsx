@@ -8,6 +8,7 @@ import {
   IconSettings, IconSettingsFilled,
   IconBrandWechat,
   IconRobot,
+  IconBrain,
 } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSidebarData, useIdentity, useFavorites, type EntityType } from '../../../contexts';
@@ -39,6 +40,7 @@ const mainNavItemsTop: NavItem[] = [
 ];
 
 const mainNavItemsBottom: NavItem[] = [
+  { icon: IconBrain, labelKey: 'reactAgents', path: '/re-act-agents', hasDataList: true, entityType: 're-act-agents' },
   { icon: IconBrandWechat, labelKey: 'widgets', path: '/chat-widgets', hasDataList: true, entityType: 'chat-widgets' },
 ];
 
@@ -65,6 +67,7 @@ export const Sidebar: FC = () => {
     applications,
     autonomousAgents,
     chatWidgets,
+    reActAgents,
     loadingStates,
     errorStates,
     fetchEntityData,
@@ -72,6 +75,7 @@ export const Sidebar: FC = () => {
     refreshApplications,
     refreshAutonomousAgents,
     refreshChatWidgets,
+    refreshReActAgents,
   } = useSidebarData();
   
   const { apiClient, selectedTenant } = useIdentity();
@@ -147,6 +151,13 @@ export const Sidebar: FC = () => {
       fetchData: () => fetchEntityData('chat-widgets'),
       getLink: (id) => `/chat-widgets/${id}`,
     },
+    're-act-agents': {
+      title: t('reactAgents'),
+      icon: <IconBrain size={24} />,
+      addButtonLabel: t('addReActAgent'),
+      fetchData: () => fetchEntityData('re-act-agents'),
+      getLink: (id) => `/re-act-agents/${id}`,
+    },
   }), [fetchEntityData, t]);
 
   const dataListItems: DataListItem[] = useMemo(() => {
@@ -174,16 +185,24 @@ export const Sidebar: FC = () => {
           link: entityConfigs['chat-widgets'].getLink(widget.id),
           icon: <EntityAvatar name={widget.name} size="xs" />,
         }));
+      case 're-act-agents':
+        return reActAgents.map(agent => ({
+          id: agent.id,
+          name: agent.name,
+          link: entityConfigs['re-act-agents'].getLink(agent.id),
+          icon: <EntityAvatar name={agent.name} size="xs" />,
+        }));
       default:
         return [];
     }
-  }, [activeEntity, applications, autonomousAgents, chatWidgets, entityConfigs]);
+  }, [activeEntity, applications, autonomousAgents, chatWidgets, reActAgents, entityConfigs]);
 
   const isOnEntityListPage = useCallback((entityType: EntityType) => {
     const entityPaths: Record<EntityType, string> = {
       applications: '/applications',
       'autonomous-agents': '/autonomous-agents',
       'chat-widgets': '/chat-widgets',
+      're-act-agents': '/re-act-agents',
     };
     return location.pathname === entityPaths[entityType];
   }, [location.pathname]);
@@ -374,7 +393,7 @@ export const Sidebar: FC = () => {
     });
   }, []);
 
-  const handleAddClick = useCallback(() => {
+  const handleAddClick = useCallback(async () => {
     if (!activeEntity) return;
     
     switch (activeEntity) {
@@ -387,8 +406,18 @@ export const Sidebar: FC = () => {
       case 'chat-widgets':
         setIsChatWidgetDialogOpen(true);
         break;
+      case 're-act-agents':
+        if (!apiClient || !selectedTenant) return;
+        try {
+          const agent = await apiClient.createReActAgent(selectedTenant.id, {
+            name: t('untitledReActAgent'),
+          });
+          refreshReActAgents();
+          navigate(`/re-act-agents/${agent.id}`);
+        } catch { /* handled by API client */ }
+        break;
     }
-  }, [activeEntity]);
+  }, [activeEntity, apiClient, selectedTenant, navigate, t, refreshReActAgents]);
 
   const handleApplicationCreated = useCallback(() => {
     refreshApplications();

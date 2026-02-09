@@ -1,6 +1,13 @@
 {
   "title": "ReACT Agent Developer",
   "createAgent": "Create Agent",
+  "listTitle": "ReACT Agents",
+  "listDescription": "Manage your ReACT agents",
+  "searchPlaceholder": "Search agents...",
+  "emptyMessage": "No ReACT agents found. Create your first agent to get started.",
+  "loadFailed": "Failed to load ReACT agents",
+  "agentItemType": "ReACT Agent",
+  "untitledAgent": "Untitled Agent",
   "saveConfig": "Save Config",
   "testAgent": "Test Agent",
   "agentName": "Agent Name",

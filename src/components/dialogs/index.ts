@@ -8,6 +8,7 @@ export { CreateToolDialog } from './CreateToolDialog';
 export { EditApplicationDialog, type EditDialogTab } from './EditApplicationDialog';
 export { EditAutonomousAgentDialog } from './EditAutonomousAgentDialog';
 export { EditChatWidgetDialog } from './EditChatWidgetDialog';
+export { EditReActAgentDialog } from './EditReActAgentDialog';
 export { EditCredentialDialog } from './EditCredentialDialog';
 export { EditCustomGroupDialog } from './EditCustomGroupDialog';
 export { EditToolDialog } from './EditToolDialog';

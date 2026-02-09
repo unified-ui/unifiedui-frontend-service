@@ -15,6 +15,7 @@ import {
   Select,
   ScrollArea,
   Divider,
+  LoadingOverlay,
 } from '@mantine/core';
 import {
   IconPlus,
@@ -24,8 +25,10 @@ import {
   IconTrash,
   IconBrain,
   IconTool,
+  IconArrowLeft,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { ChatPanel } from '../../components/common/ChatPanel';
 import type { AIModelResponse, ToolResponse } from '../../api/types';
@@ -210,6 +213,8 @@ const GreetingMessagesSection: FC<{
 
 export const ReActAgentDeveloperPage: FC = () => {
   const { t } = useTranslation('reactAgent');
+  const { agentId } = useParams<{ agentId: string }>();
+  const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
   const [config, setConfig] = useState<AgentConfig>(DEFAULT_CONFIG);
   const [availableModels, setAvailableModels] = useState<AIModelResponse[]>([]);
@@ -217,8 +222,33 @@ export const ReActAgentDeveloperPage: FC = () => {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [toolsLoaded, setToolsLoaded] = useState(false);
   const [chatKey, setChatKey] = useState(0);
+  const [isLoadingAgent, setIsLoadingAgent] = useState(false);
 
   const tenantId = selectedTenant?.id;
+
+  const loadAgent = useCallback(async () => {
+    if (!tenantId || !apiClient || !agentId) return;
+    setIsLoadingAgent(true);
+    try {
+      const agent = await apiClient.getReActAgent(tenantId, agentId);
+      setConfig({
+        name: agent.name || '',
+        description: agent.description || '',
+        ai_model_ids: agent.ai_model_ids || [],
+        system_prompt: agent.system_prompt || '',
+        tool_ids: agent.tool_ids || [],
+        security_prompt: agent.security_prompt || '',
+        tool_use_prompt: agent.tool_use_prompt || '',
+        response_prompt: agent.response_prompt || '',
+        greeting_messages: agent.greeting_messages || [],
+      });
+    } catch { /* empty */ }
+    finally { setIsLoadingAgent(false); }
+  }, [tenantId, apiClient, agentId]);
+
+  useEffect(() => {
+    loadAgent();
+  }, [loadAgent]);
 
   const loadModels = useCallback(async () => {
     if (!tenantId || !apiClient || modelsLoaded) return;
@@ -270,9 +300,9 @@ export const ReActAgentDeveloperPage: FC = () => {
   }, []);
 
   const handleSave = useCallback(async () => {
-    if (!tenantId || !apiClient) return;
+    if (!tenantId || !apiClient || !agentId) return;
     try {
-      await apiClient.createReActAgent(tenantId, {
+      await apiClient.updateReActAgent(tenantId, agentId, {
         name: config.name,
         description: config.description || undefined,
         ai_model_ids: config.ai_model_ids,
@@ -284,7 +314,7 @@ export const ReActAgentDeveloperPage: FC = () => {
         greeting_messages: config.greeting_messages.filter(Boolean),
       });
     } catch { /* empty */ }
-  }, [tenantId, apiClient, config]);
+  }, [tenantId, apiClient, agentId, config]);
 
   const handleClearChat = useCallback(() => {
     setChatKey(prev => prev + 1);
@@ -293,8 +323,14 @@ export const ReActAgentDeveloperPage: FC = () => {
   return (
     <MainLayout>
       <Stack gap="md" className={classes.page}>
+        <LoadingOverlay visible={isLoadingAgent} zIndex={1000} overlayProps={{ blur: 2 }} />
         <Group justify="space-between">
-          <Title order={2}>{t('title')}</Title>
+          <Group gap="sm">
+            <ActionIcon variant="subtle" onClick={() => navigate('/re-act-agents')} size="lg">
+              <IconArrowLeft size={20} />
+            </ActionIcon>
+            <Title order={2}>{config.name || t('title')}</Title>
+          </Group>
           <Group gap="sm">
             <Button variant="light" leftSection={<IconPlayerPlay size={16} />} onClick={handleClearChat}>
               {t('clearChat')}

@@ -42,6 +42,7 @@
   "errorLoadingApplications": "Failed to load applications",
   "errorLoadingAutonomousAgents": "Failed to load autonomous agents",
   "errorLoadingChatWidgets": "Failed to load chat widgets",
+  "errorLoadingReActAgents": "Failed to load ReACT agents",
   "applications": "Applications",
   "autonomousAgents": "Autonomous Agents",
   "conversations": "Conversations",

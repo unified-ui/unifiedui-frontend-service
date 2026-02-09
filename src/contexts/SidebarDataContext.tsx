@@ -3,45 +3,52 @@ import i18next from 'i18next';
 import type { QuickListItemResponse } from '../api/types';
 import { useIdentity } from './IdentityContext';
 
-export type EntityType = 'applications' | 'autonomous-agents' | 'chat-widgets';
+export type EntityType = 'applications' | 'autonomous-agents' | 'chat-widgets' | 're-act-agents';
 
 interface SidebarDataState {
   applications: QuickListItemResponse[];
   autonomousAgents: QuickListItemResponse[];
   chatWidgets: QuickListItemResponse[];
+  reActAgents: QuickListItemResponse[];
 }
 
 interface LoadingState {
   applications: boolean;
   'autonomous-agents': boolean;
   'chat-widgets': boolean;
+  're-act-agents': boolean;
 }
 
 interface ErrorState {
   applications: string | null;
   'autonomous-agents': string | null;
   'chat-widgets': string | null;
+  're-act-agents': string | null;
 }
 
 interface FetchedState {
   applications: boolean;
   'autonomous-agents': boolean;
   'chat-widgets': boolean;
+  're-act-agents': boolean;
 }
 
 interface SidebarDataContextType {
   applications: QuickListItemResponse[];
   autonomousAgents: QuickListItemResponse[];
   chatWidgets: QuickListItemResponse[];
+  reActAgents: QuickListItemResponse[];
   loadingStates: LoadingState;
   errorStates: ErrorState;
   fetchApplications: () => Promise<void>;
   fetchAutonomousAgents: () => Promise<void>;
   fetchChatWidgets: () => Promise<void>;
+  fetchReActAgents: () => Promise<void>;
   fetchEntityData: (entityType: EntityType) => Promise<void>;
   refreshApplications: () => Promise<void>;
   refreshAutonomousAgents: () => Promise<void>;
   refreshChatWidgets: () => Promise<void>;
+  refreshReActAgents: () => Promise<void>;
   refreshEntityData: (entityType: EntityType) => Promise<void>;
   hasFetched: (entityType: EntityType) => boolean;
   clearCache: () => void;
@@ -60,24 +67,28 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     applications: [],
     autonomousAgents: [],
     chatWidgets: [],
+    reActAgents: [],
   });
   
   const [loadingStates, setLoadingStates] = useState<LoadingState>({
     applications: false,
     'autonomous-agents': false,
     'chat-widgets': false,
+    're-act-agents': false,
   });
   
   const [errorStates, setErrorStates] = useState<ErrorState>({
     applications: null,
     'autonomous-agents': null,
     'chat-widgets': null,
+    're-act-agents': null,
   });
   
   const [fetchedStates, setFetchedStates] = useState<FetchedState>({
     applications: false,
     'autonomous-agents': false,
     'chat-widgets': false,
+    're-act-agents': false,
   });
 
   const previousTenantIdRef = useRef(selectedTenant?.id);
@@ -85,9 +96,9 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
   useEffect(() => {
     if (selectedTenant?.id && selectedTenant.id !== previousTenantIdRef.current) {
       previousTenantIdRef.current = selectedTenant.id;
-      setData({ applications: [], autonomousAgents: [], chatWidgets: [] });
-      setFetchedStates({ applications: false, 'autonomous-agents': false, 'chat-widgets': false });
-      setErrorStates({ applications: null, 'autonomous-agents': null, 'chat-widgets': null });
+      setData({ applications: [], autonomousAgents: [], chatWidgets: [], reActAgents: [] });
+      setFetchedStates({ applications: false, 'autonomous-agents': false, 'chat-widgets': false, 're-act-agents': false });
+      setErrorStates({ applications: null, 'autonomous-agents': null, 'chat-widgets': null, 're-act-agents': null });
     }
   }, [selectedTenant?.id]);
 
@@ -175,6 +186,34 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     }
   }, [apiClient, selectedTenant, fetchedStates['chat-widgets'], data.chatWidgets.length]);
 
+  const fetchReActAgents = useCallback(async (noCache = false) => {
+    if (!apiClient || !selectedTenant) return;
+    
+    if (!noCache && fetchedStates['re-act-agents'] && data.reActAgents.length > 0) {
+      return;
+    }
+    
+    setLoadingStates(prev => ({ ...prev, 're-act-agents': true }));
+    setErrorStates(prev => ({ ...prev, 're-act-agents': null }));
+    
+    try {
+      const result = await apiClient.listReActAgents(
+        selectedTenant.id, 
+        { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' },
+        noCache ? { noCache: true } : undefined
+      );
+      if (Array.isArray(result)) {
+        setData(prev => ({ ...prev, reActAgents: result as QuickListItemResponse[] }));
+        setFetchedStates(prev => ({ ...prev, 're-act-agents': true }));
+      }
+    } catch (error) {
+      setErrorStates(prev => ({ ...prev, 're-act-agents': i18next.t('common:errorLoadingReActAgents') }));
+      console.error('Error fetching ReACT agents:', error);
+    } finally {
+      setLoadingStates(prev => ({ ...prev, 're-act-agents': false }));
+    }
+  }, [apiClient, selectedTenant, fetchedStates['re-act-agents'], data.reActAgents.length]);
+
   const fetchEntityData = useCallback(async (entityType: EntityType) => {
     switch (entityType) {
       case 'applications':
@@ -186,8 +225,11 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
       case 'chat-widgets':
         await fetchChatWidgets(false);
         break;
+      case 're-act-agents':
+        await fetchReActAgents(false);
+        break;
     }
-  }, [fetchApplications, fetchAutonomousAgents, fetchChatWidgets]);
+  }, [fetchApplications, fetchAutonomousAgents, fetchChatWidgets, fetchReActAgents]);
   
   const refreshApplications = useCallback(async () => {
     await fetchApplications(true);
@@ -201,6 +243,10 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     await fetchChatWidgets(true);
   }, [fetchChatWidgets]);
 
+  const refreshReActAgents = useCallback(async () => {
+    await fetchReActAgents(true);
+  }, [fetchReActAgents]);
+
   const refreshEntityData = useCallback(async (entityType: EntityType) => {
     switch (entityType) {
       case 'applications':
@@ -212,8 +258,11 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
       case 'chat-widgets':
         await refreshChatWidgets();
         break;
+      case 're-act-agents':
+        await refreshReActAgents();
+        break;
     }
-  }, [refreshApplications, refreshAutonomousAgents, refreshChatWidgets]);
+  }, [refreshApplications, refreshAutonomousAgents, refreshChatWidgets, refreshReActAgents]);
   
   const hasFetched = useCallback((entityType: EntityType): boolean => {
     return fetchedStates[entityType] || false;
@@ -224,16 +273,19 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
       applications: [],
       autonomousAgents: [],
       chatWidgets: [],
+      reActAgents: [],
     });
     setFetchedStates({
       applications: false,
       'autonomous-agents': false,
       'chat-widgets': false,
+      're-act-agents': false,
     });
     setErrorStates({
       applications: null,
       'autonomous-agents': null,
       'chat-widgets': null,
+      're-act-agents': null,
     });
   }, []);
 
@@ -241,15 +293,18 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     applications: data.applications,
     autonomousAgents: data.autonomousAgents,
     chatWidgets: data.chatWidgets,
+    reActAgents: data.reActAgents,
     loadingStates,
     errorStates,
     fetchApplications: () => fetchApplications(false),
     fetchAutonomousAgents: () => fetchAutonomousAgents(false),
     fetchChatWidgets: () => fetchChatWidgets(false),
+    fetchReActAgents: () => fetchReActAgents(false),
     fetchEntityData,
     refreshApplications,
     refreshAutonomousAgents,
     refreshChatWidgets,
+    refreshReActAgents,
     refreshEntityData,
     hasFetched,
     clearCache,
