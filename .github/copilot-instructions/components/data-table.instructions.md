@@ -127,6 +127,14 @@ Contains: Search `TextInput`, Sort `Select`, Filter `Popover` with `MultiSelect`
 
 **Context menu**: 3-dot `ActionIcon` with Mantine `Menu` — Open, Edit, Manage Access, Duplicate, Pin/Unpin, Delete.
 
+**Row layout**: Outer `Group wrap="nowrap" gap="lg"` contains:
+1. Left group (`flex: 1, minWidth: 0, maxWidth: 600`) — checkbox, favorite, icon, name/description
+2. Type text (`width: 180px, flex-shrink: 0`)
+3. Tags group (`width: 200px, flex-shrink: 0`)
+4. Right group (`marginLeft: auto, flexShrink: 0`) — status switch + menu dots
+
+The left group uses `flex: 1` to fill available space (capped at 600px). The right group uses `marginLeft: auto` to always pin status and action dots to the right edge.
+
 **Event propagation**: All interactive elements (switches, menu buttons) call `e.stopPropagation()` to prevent `onRowClick`.
 
 ---

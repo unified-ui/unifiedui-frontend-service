@@ -1,11 +1,9 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useBlocker } from 'react-router-dom';
 
 /**
  * Hook that tracks unsaved changes and prevents accidental navigation.
  *
- * Handles both browser-level navigation (tab close, refresh via beforeunload)
- * and React Router navigation (useBlocker with confirmation dialog).
+ * Handles browser-level navigation (tab close, refresh via beforeunload).
  *
  * For useForm-based dialogs, prefer using form.isDirty() / form.resetDirty() directly.
  * This hook is designed for pages with useState-based form state.
@@ -38,11 +36,6 @@ export function useUnsavedChanges<T>(
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
   }, [hasChanges]);
-
-  useBlocker(({ currentLocation, nextLocation }) => {
-    if (!hasChanges) return false;
-    return currentLocation.pathname !== nextLocation.pathname;
-  });
 
   return { hasChanges, resetBaseline };
 }

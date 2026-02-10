@@ -103,6 +103,16 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
   });
 
   const previousTenantIdRef = useRef(selectedTenant?.id);
+  const fetchedStatesRef = useRef(fetchedStates);
+  const dataRef = useRef(data);
+
+  useEffect(() => {
+    fetchedStatesRef.current = fetchedStates;
+  }, [fetchedStates]);
+
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   useEffect(() => {
     if (selectedTenant?.id && selectedTenant.id !== previousTenantIdRef.current) {
@@ -116,7 +126,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
   const fetchApplications = useCallback(async (noCache = false) => {
     if (!apiClient || !selectedTenant) return;
     
-    if (!noCache && fetchedStates.applications && data.applications.length > 0) {
+    if (!noCache && fetchedStatesRef.current.applications && dataRef.current.applications.length > 0) {
       return;
     }
     
@@ -139,12 +149,12 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     } finally {
       setLoadingStates(prev => ({ ...prev, applications: false }));
     }
-  }, [apiClient, selectedTenant, fetchedStates.applications, data.applications.length]);
+  }, [apiClient, selectedTenant]);
   
   const fetchAutonomousAgents = useCallback(async (noCache = false) => {
     if (!apiClient || !selectedTenant) return;
     
-    if (!noCache && fetchedStates['autonomous-agents'] && data.autonomousAgents.length > 0) {
+    if (!noCache && fetchedStatesRef.current['autonomous-agents'] && dataRef.current.autonomousAgents.length > 0) {
       return;
     }
     
@@ -167,12 +177,12 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     } finally {
       setLoadingStates(prev => ({ ...prev, 'autonomous-agents': false }));
     }
-  }, [apiClient, selectedTenant, fetchedStates['autonomous-agents'], data.autonomousAgents.length]);
+  }, [apiClient, selectedTenant]);
 
   const fetchChatWidgets = useCallback(async (noCache = false) => {
     if (!apiClient || !selectedTenant) return;
     
-    if (!noCache && fetchedStates['chat-widgets'] && data.chatWidgets.length > 0) {
+    if (!noCache && fetchedStatesRef.current['chat-widgets'] && dataRef.current.chatWidgets.length > 0) {
       return;
     }
     
@@ -195,12 +205,12 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     } finally {
       setLoadingStates(prev => ({ ...prev, 'chat-widgets': false }));
     }
-  }, [apiClient, selectedTenant, fetchedStates['chat-widgets'], data.chatWidgets.length]);
+  }, [apiClient, selectedTenant]);
 
   const fetchReActAgents = useCallback(async (noCache = false) => {
     if (!apiClient || !selectedTenant) return;
     
-    if (!noCache && fetchedStates['re-act-agents'] && data.reActAgents.length > 0) {
+    if (!noCache && fetchedStatesRef.current['re-act-agents'] && dataRef.current.reActAgents.length > 0) {
       return;
     }
     
@@ -223,12 +233,12 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     } finally {
       setLoadingStates(prev => ({ ...prev, 're-act-agents': false }));
     }
-  }, [apiClient, selectedTenant, fetchedStates['re-act-agents'], data.reActAgents.length]);
+  }, [apiClient, selectedTenant]);
 
   const fetchConversations = useCallback(async (noCache = false) => {
     if (!apiClient || !selectedTenant) return;
     
-    if (!noCache && fetchedStates.conversations && data.conversations.length > 0) {
+    if (!noCache && fetchedStatesRef.current.conversations && dataRef.current.conversations.length > 0) {
       return;
     }
     
@@ -251,7 +261,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     } finally {
       setLoadingStates(prev => ({ ...prev, conversations: false }));
     }
-  }, [apiClient, selectedTenant, fetchedStates.conversations, data.conversations.length]);
+  }, [apiClient, selectedTenant]);
 
   const fetchEntityData = useCallback(async (entityType: EntityType) => {
     switch (entityType) {
@@ -314,8 +324,8 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
   }, [refreshApplications, refreshAutonomousAgents, refreshChatWidgets, refreshReActAgents, refreshConversations]);
   
   const hasFetched = useCallback((entityType: EntityType): boolean => {
-    return fetchedStates[entityType] || false;
-  }, [fetchedStates]);
+    return fetchedStatesRef.current[entityType] || false;
+  }, []);
   
   const clearCache = useCallback(() => {
     setData({
@@ -341,6 +351,12 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     });
   }, []);
 
+  const stableFetchApplications = useCallback(() => fetchApplications(false), [fetchApplications]);
+  const stableFetchAutonomousAgents = useCallback(() => fetchAutonomousAgents(false), [fetchAutonomousAgents]);
+  const stableFetchChatWidgets = useCallback(() => fetchChatWidgets(false), [fetchChatWidgets]);
+  const stableFetchReActAgents = useCallback(() => fetchReActAgents(false), [fetchReActAgents]);
+  const stableFetchConversations = useCallback(() => fetchConversations(false), [fetchConversations]);
+
   const value: SidebarDataContextType = {
     applications: data.applications,
     autonomousAgents: data.autonomousAgents,
@@ -349,11 +365,11 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     conversations: data.conversations,
     loadingStates,
     errorStates,
-    fetchApplications: () => fetchApplications(false),
-    fetchAutonomousAgents: () => fetchAutonomousAgents(false),
-    fetchChatWidgets: () => fetchChatWidgets(false),
-    fetchReActAgents: () => fetchReActAgents(false),
-    fetchConversations: () => fetchConversations(false),
+    fetchApplications: stableFetchApplications,
+    fetchAutonomousAgents: stableFetchAutonomousAgents,
+    fetchChatWidgets: stableFetchChatWidgets,
+    fetchReActAgents: stableFetchReActAgents,
+    fetchConversations: stableFetchConversations,
     fetchEntityData,
     refreshApplications,
     refreshAutonomousAgents,

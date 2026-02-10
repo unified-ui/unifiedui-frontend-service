@@ -81,8 +81,6 @@
 .tracingSidebarWrapper {
   width: 320px;
   min-width: 320px;
-  border-left: 1px solid var(--border-default);
-  background-color: var(--bg-paper);
   display: flex;
   flex-direction: column;
   overflow: hidden;

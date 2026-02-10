@@ -8,7 +8,7 @@ import { I18nextProvider } from 'react-i18next';
 import { msalConfig } from './auth/authConfig';
 import { AuthProvider } from './auth';
 import { theme } from './theme';
-import { IdentityProvider, SidebarDataProvider, AICapabilitiesProvider, FavoritesProvider, NotificationsProvider, RecentVisitsProvider } from './contexts';
+import { IdentityProvider, SidebarDataProvider, AICapabilitiesProvider, FavoritesProvider, RecentVisitsProvider } from './contexts';
 import i18n from './i18n';
 import App from './App.tsx';
 
@@ -37,13 +37,11 @@ createRoot(document.getElementById('root')!).render(
             <IdentityProvider>
               <AICapabilitiesProvider>
                 <FavoritesProvider>
-                  <NotificationsProvider>
                     <RecentVisitsProvider>
                       <SidebarDataProvider>
                         <App />
                       </SidebarDataProvider>
                     </RecentVisitsProvider>
-                  </NotificationsProvider>
                 </FavoritesProvider>
               </AICapabilitiesProvider>
             </IdentityProvider>

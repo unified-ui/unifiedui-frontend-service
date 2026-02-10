@@ -233,3 +233,62 @@ if (items.length === 0) {
 ### Error Handling
 
 Errors from `apiClient` trigger the `onError` callback in IdentityContext, which shows a Mantine notification. Individual pages do not need manual error display unless custom handling is needed.
+
+---
+
+## Dirty Tracking & Unsaved Changes
+
+### Two Hook Approach
+
+| Hook | Use when... |
+|------|-------------|
+| `useFormDirtyGuard(form.isDirty())` | Mantine `useForm`-based dialogs — registers `beforeunload` handler |
+| `useUnsavedChanges(currentValue, baselineValue)` | `useState`-based pages — deep comparison + `beforeunload` |
+
+### useForm-Based Dialogs (EditApplicationDialog, EditToolDialog, etc.)
+
+```tsx
+import { useFormDirtyGuard } from '../../../hooks';
+
+const form = useForm({ initialValues: { ... } });
+useFormDirtyGuard(form.isDirty());
+
+// After loading data into form:
+form.setValues(data);
+form.resetDirty();  // Mark current values as "clean"
+
+// After successful save:
+form.resetDirty();  // Reset dirty state before closing
+onSuccess?.();
+
+// Save button:
+<Button disabled={!form.isDirty()} onClick={handleSave}>Save</Button>
+```
+
+### useState-Based Pages (ReActAgentDeveloperPage, WidgetDesignerPage)
+
+```tsx
+import { useUnsavedChanges } from '../../hooks';
+
+const [config, setConfig] = useState(DEFAULT_CONFIG);
+const [savedConfig, setSavedConfig] = useState<Config | undefined>(undefined);
+const { hasChanges, resetBaseline } = useUnsavedChanges(config, savedConfig);
+
+// After loading data:
+const loadedConfig = { ...apiData };
+setConfig(loadedConfig);
+setSavedConfig(structuredClone(loadedConfig));
+
+// After successful save:
+resetBaseline(config);
+
+// Save button:
+<Button disabled={!hasChanges} onClick={handleSave}>Save</Button>
+```
+
+### Rules
+
+1. **Every edit dialog** must use `useFormDirtyGuard` + `disabled={!form.isDirty()}` on save button
+2. **Every edit page** must use `useUnsavedChanges` + `disabled={!hasChanges}` on save button
+3. Always call `form.resetDirty()` / `resetBaseline()` **after loading data** and **after successful save**
+4. For create/edit dual-mode dialogs (e.g., AIModelDialog), only disable in edit mode: `disabled={isEdit && !form.isDirty()}`

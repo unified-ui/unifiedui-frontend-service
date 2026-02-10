@@ -104,8 +104,8 @@ export const DataTableRow: FC<DataTableRowProps> = ({
       onClick={() => onRowClick?.(item.id)}
       style={onRowClick ? { cursor: 'pointer' } : undefined}
     >
-      <Group justify="space-between" wrap="nowrap" gap="lg">
-        <Group gap="md" wrap="nowrap" style={{ minWidth: 0, maxWidth: 600 }}>
+      <Group wrap="nowrap" gap="lg">
+        <Group gap="md" wrap="nowrap" style={{ flex: 1, minWidth: 0, maxWidth: 600 }}>
           {showCheckbox && onSelect && (
             <Checkbox
               checked={isSelected}
@@ -205,18 +205,19 @@ export const DataTableRow: FC<DataTableRowProps> = ({
           )}
         </Group>
 
-        {showStatus && item.isActive !== undefined && (
-          <div onClick={(e) => e.stopPropagation()}>
-            <Switch
-              checked={item.isActive}
-              onChange={(e) => onStatusChange?.(item.id, e.currentTarget.checked)}
-              size="sm"
-              className={classes.statusSwitch}
-            />
-          </div>
-        )}
+        <Group gap="lg" wrap="nowrap" style={{ marginLeft: 'auto', flexShrink: 0 }}>
+          {showStatus && item.isActive !== undefined && (
+            <div onClick={(e) => e.stopPropagation()}>
+              <Switch
+                checked={item.isActive}
+                onChange={(e) => onStatusChange?.(item.id, e.currentTarget.checked)}
+                size="sm"
+                className={classes.statusSwitch}
+              />
+            </div>
+          )}
 
-        <Menu shadow="md" position="bottom-end" withinPortal>
+          <Menu shadow="md" position="bottom-end" withinPortal>
           <Menu.Target>
             <ActionIcon variant="subtle" color="gray" onClick={(e) => e.stopPropagation()}>
               <IconDots size={18} />
@@ -283,6 +284,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
             </Menu.Item>
           </Menu.Dropdown>
         </Menu>
+        </Group>
       </Group>
     </Paper>
   );

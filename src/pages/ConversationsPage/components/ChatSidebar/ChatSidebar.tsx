@@ -135,6 +135,8 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
   const handleSelectApplication = useCallback((app: QuickListItemResponse) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set('selected-applicationId', app.id);
+    newParams.set('applicationId', app.id);
+    newParams.set('chat-agent', app.id);
     setSearchParams(newParams, { replace: true });
   }, [searchParams, setSearchParams]);
 
@@ -352,20 +354,16 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
             className={`${classes.segmentedTab} ${effectiveGroupMode === 'time' ? classes.segmentedTabActive : ''}`}
             onClick={() => !isFilterActive && setGroupMode('time')}
           >
-            <Group gap={4} wrap="nowrap">
-              <IconLayoutList size={14} />
-              <span>{t('conversations:groupByTime')}</span>
-            </Group>
+            <IconLayoutList size={14} />
+            <span>{t('conversations:groupByTime')}</span>
           </UnstyledButton>
           
           {isFilterActive ? (
             <div className={classes.segmentedTabFilter}>
-              <Group gap={4} wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
-                <IconApps size={14} style={{ flexShrink: 0 }} />
-                <Text size="xs" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>
-                  {selectedApplication?.name || t('conversations:unknownAgent')}
-                </Text>
-              </Group>
+              <IconApps size={14} style={{ flexShrink: 0 }} />
+              <Text size="xs" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>
+                {selectedApplication?.name || t('conversations:unknownAgent')}
+              </Text>
               <ActionIcon
                 size="xs"
                 variant="subtle"
@@ -380,22 +378,18 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
               className={`${classes.segmentedTab} ${groupMode === 'application' ? classes.segmentedTabActive : ''}`}
               onClick={() => setGroupMode('application')}
             >
-              <Group gap={4} wrap="nowrap" justify="space-between" style={{ width: '100%' }}>
-                <Group gap={4} wrap="nowrap">
-                  <IconApps size={14} />
-                  <span>{t('conversations:groupByAgent')}</span>
-                </Group>
-                <Box
-                  component="span"
-                  className={classes.dropdownArrow}
-                  onClick={(e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    setApplicationSelectDialogOpen(true);
-                  }}
-                >
-                  <IconChevronDown size={12} />
-                </Box>
-              </Group>
+              <IconApps size={14} />
+              <span style={{ flex: 1 }}>{t('conversations:groupByAgent')}</span>
+              <Box
+                component="span"
+                className={classes.dropdownArrow}
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  setApplicationSelectDialogOpen(true);
+                }}
+              >
+                <IconChevronDown size={12} />
+              </Box>
             </UnstyledButton>
           )}
         </div>
@@ -452,7 +446,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
                 ))}
               </div>
             ))}
-            {hasMore && (
+            {hasMore && !isFilterActive && (
               <Box ta="center" py="sm">
                 <Loader size="xs" />
               </Box>

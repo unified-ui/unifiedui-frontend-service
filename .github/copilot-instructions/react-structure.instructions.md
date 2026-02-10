@@ -29,7 +29,6 @@ src/
 │           ├── header.json     # Header/tenant selector strings
 │           ├── conversations.json
 │           ├── settings.json
-│           ├── notifications.json
 │           ├── tracing.json    # Trace visualization strings
 │           ├── credentials.json
 │           ├── token.json      # Token page strings
@@ -56,17 +55,18 @@ src/
 │   ├── ApiClientContext.tsx     # API client instance
 │   ├── AICapabilitiesContext.tsx # AI model capabilities for current tenant
 │   ├── FavoritesContext.tsx     # User favorites management
-│   ├── NotificationsContext.tsx # Notification state + polling
 │   ├── RecentVisitsContext.tsx  # Recent visits tracking + sync
 │   ├── SidebarDataContext.tsx   # Cached entity lists for sidebar
 │   ├── ChatSidebarContext.tsx   # Global chat sidebar visibility
 │   └── index.ts
 │
 ├── hooks/                      # Custom hooks
-│   ├── useDebounce.ts
+│   ├── useDelayedLoading.ts      # Delayed loading state (show skeleton only after N ms)
 │   ├── useEntityList.ts          # Shared list page logic (pagination, search, sort, filter, CRUD)
-│   ├── useEntityPermissions.ts
-│   └── useKeyboardShortcuts.ts  # Global keyboard shortcut bindings
+│   ├── useEntityPermissions.ts   # Permission methods per entity type
+│   ├── useFormDirtyGuard.ts      # beforeunload guard for Mantine useForm-based dialogs
+│   ├── useKeyboardShortcuts.ts   # Global keyboard shortcut bindings
+│   └── useUnsavedChanges.ts      # Dirty tracking + beforeunload for useState-based pages
 │
 ├── routes/                     # Route definitions
 │   ├── index.tsx               # All routes (BrowserRouter + Routes)

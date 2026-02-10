@@ -132,24 +132,25 @@
 }
 
 .groupToggle {
-  padding: var(--spacing-sm) var(--spacing-md) 0;
+  padding: var(--spacing-xs) var(--spacing-md);
 }
 
 .customSegmentedControl {
   display: flex;
-  gap: 2px;
+  gap: 4px;
   background-color: var(--sidebar-segmented-bg);
-  border-radius: var(--radius-sm);
-  padding: 2px;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
 }
 
 .segmentedTab {
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: calc(var(--radius-sm) - 2px);
+  justify-content: flex-start;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-md) !important;
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-xs);
   color: var(--sidebar-text-secondary);
   transition: all var(--transition-fast) var(--easing-ease-in-out);
@@ -161,7 +162,7 @@
 }
 
 .segmentedTabActive {
-  background-color: var(--sidebar-segmented-indicator);
+  background-color: #000000 !important;
   color: var(--sidebar-text);
 }
 
@@ -171,10 +172,10 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: calc(var(--radius-sm) - 2px);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-xs);
-  color: var(--sidebar-text-secondary);
-  background-color: var(--color-primary-900);
+  color: var(--color-primary-300);
+  background-color: transparent;
   gap: var(--spacing-xs);
 }
 
@@ -215,7 +216,7 @@
 }
 
 .groupLabelWrapper {
-  padding: calc(var(--spacing-2xl) * 4) 0 var(--spacing-lg) var(--spacing-md);
+  padding: calc(var(--spacing-2xl) * 4) 0 var(--spacing-md) var(--spacing-md);
   margin-right: var(--spacing-xs);
   position: sticky;
   top: 0;
@@ -224,7 +225,7 @@
 }
 
 .groupLabelWrapper:first-of-type {
-  padding-top: var(--spacing-2xl);
+  padding-top: var(--spacing-lg);
 }
 
 .groupLabel {

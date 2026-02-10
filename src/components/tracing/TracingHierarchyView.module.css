@@ -21,6 +21,28 @@
   border-left: none;
 }
 
+.containerChatSidebar {
+  border-left: none;
+  border-top-left-radius: var(--radius-lg);
+}
+
+.containerChatSidebar .header {
+  border-bottom: none;
+}
+
+.containerChatSidebar .dataPanelsContainer {
+  background: transparent;
+}
+
+:global([data-mantine-color-scheme='dark']) .containerChatSidebar {
+  background: #1a1a1a;
+}
+
+:global([data-mantine-color-scheme='dark']) .containerChatSidebar .header {
+  background: #1a1a1a;
+  border-bottom: none;
+}
+
 .emptyContainer {
   display: flex;
   align-items: center;

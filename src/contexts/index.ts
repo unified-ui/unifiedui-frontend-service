@@ -6,5 +6,4 @@ export { SidebarDataProvider, useSidebarData, type EntityType } from './SidebarD
 export { ChatSidebarProvider, useChatSidebar } from './ChatSidebarContext';
 export { AICapabilitiesProvider, useAICapabilities } from './AICapabilitiesContext';
 export { FavoritesProvider, useFavorites } from './FavoritesContext';
-export { NotificationsProvider, useNotifications } from './NotificationsContext';
 export { RecentVisitsProvider, useRecentVisits } from './RecentVisitsContext';

@@ -53,7 +53,7 @@ This wraps components with `MantineProvider`, `I18nextProvider`, and `MemoryRout
 
 ### Mocking Contexts
 
-Components that use contexts (`useIdentity`, `useAuth`, `useSidebarData`, `useChatSidebar`, `useAuthContext`, `useTenantContext`, `useApiClient`, `useFavorites`, `useNotifications`, `useRecentVisits`) need vi.mock:
+Components that use contexts (`useIdentity`, `useAuth`, `useSidebarData`, `useChatSidebar`, `useAuthContext`, `useTenantContext`, `useApiClient`, `useFavorites`, `useRecentVisits`) need vi.mock:
 
 ```typescript
 vi.mock('../../contexts', () => ({

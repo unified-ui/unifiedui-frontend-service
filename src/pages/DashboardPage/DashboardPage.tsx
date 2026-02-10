@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Stack, Loader, Text, Button, Skeleton } from '@mantine/core';
+import { Stack, Button, Skeleton } from '@mantine/core';
 import { IconSparkles, IconRobot, IconMessages, IconArrowRight } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { EntityAvatar } from '../../components/common';
@@ -58,10 +58,19 @@ export const DashboardPage: FC = () => {
   const { applications, autonomousAgents } = useSidebarData();
 
   const [stats, setStats] = useState<DashboardStatsResponse | null>(null);
-  const [isStatsLoading, setIsStatsLoading] = useState(false);
+  const [isStatsLoading, setIsStatsLoading] = useState(true);
+  const [showSkeleton, setShowSkeleton] = useState(false);
 
   useEffect(() => {
-    if (!apiClient || !selectedTenant) return;
+    const timer = setTimeout(() => setShowSkeleton(true), 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!apiClient || !selectedTenant) {
+      setIsStatsLoading(false);
+      return;
+    }
 
     const fetchStats = async () => {
       setIsStatsLoading(true);
@@ -97,16 +106,8 @@ export const DashboardPage: FC = () => {
 
   const recentItems = useMemo(() => recentVisits.slice(0, 6), [recentVisits]);
 
-  if (isIdentityLoading) {
-    return (
-      <MainLayout>
-        <Stack align="center" justify="center" h="50vh">
-          <Loader size="xl" />
-          <Text c="dimmed">{t('loadingDashboard')}</Text>
-        </Stack>
-      </MainLayout>
-    );
-  }
+  const isDataReady = !isIdentityLoading && !isStatsLoading;
+  const isLoading = showSkeleton && !isDataReady;
 
   const statLabels: Record<string, string> = {
     applications: t('applications'),
@@ -114,17 +115,30 @@ export const DashboardPage: FC = () => {
     conversations: t('conversations'),
   };
 
+  if (!isDataReady && !showSkeleton) {
+    return <MainLayout><></></MainLayout>;
+  }
+
   return (
     <MainLayout>
       <Stack gap="lg">
         <div className={classes.greeting}>
-          <div className={classes.greetingTitle}>
-            {t('welcomeBack', { userName: user?.display_name || 'User' })}
-          </div>
-          {selectedTenant && (
-            <div className={classes.greetingSubtitle}>
-              {t('tenantSubtitle', { tenantName: selectedTenant.name })}
-            </div>
+          {isLoading ? (
+            <>
+              <Skeleton height={30} width="40%" radius="sm" mb={8} />
+              <Skeleton height={16} width="30%" radius="sm" />
+            </>
+          ) : (
+            <>
+              <div className={classes.greetingTitle}>
+                {t('welcomeBack', { userName: user?.display_name || 'User' })}
+              </div>
+              {selectedTenant && (
+                <div className={classes.greetingSubtitle}>
+                  {t('tenantSubtitle', { tenantName: selectedTenant.name })}
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -140,7 +154,7 @@ export const DashboardPage: FC = () => {
                 <div className={classes.statIconWrapper} style={{ background: color }}>
                   <Icon size={20} style={{ color: iconColor }} />
                 </div>
-                {isStatsLoading ? (
+                {isLoading ? (
                   <Stack gap={6} style={{ flex: 1 }}>
                     <Skeleton height={28} width="50%" radius="sm" />
                     <Skeleton height={12} width="40%" radius="sm" />
@@ -168,7 +182,19 @@ export const DashboardPage: FC = () => {
           <div className={classes.sectionHeader}>
             <span className={classes.sectionTitle}>{t('favorites')}</span>
           </div>
-          {favoriteItems.length > 0 ? (
+          {isLoading ? (
+            <div className={classes.entityGrid}>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className={classes.entityCard} style={{ cursor: 'default' }}>
+                  <Skeleton height={32} width={32} radius="xl" />
+                  <Stack gap={4} style={{ flex: 1 }}>
+                    <Skeleton height={14} width="70%" radius="sm" />
+                    <Skeleton height={12} width="40%" radius="sm" />
+                  </Stack>
+                </div>
+              ))}
+            </div>
+          ) : favoriteItems.length > 0 ? (
             <div className={classes.entityGrid}>
               {favoriteItems.map(item => (
                 <div
@@ -194,7 +220,7 @@ export const DashboardPage: FC = () => {
         <div className={classes.section}>
           <div className={classes.sectionHeader}>
             <span className={classes.sectionTitle}>{t('recentlyVisited')}</span>
-            {recentItems.length > 0 && (
+            {!isLoading && recentItems.length > 0 && (
               <Button
                 variant="subtle"
                 size="compact-xs"
@@ -205,7 +231,19 @@ export const DashboardPage: FC = () => {
               </Button>
             )}
           </div>
-          {recentItems.length > 0 ? (
+          {isLoading ? (
+            <div className={classes.entityGrid}>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className={classes.entityCard} style={{ cursor: 'default' }}>
+                  <Skeleton height={32} width={32} radius="xl" />
+                  <Stack gap={4} style={{ flex: 1 }}>
+                    <Skeleton height={14} width="70%" radius="sm" />
+                    <Skeleton height={12} width="40%" radius="sm" />
+                  </Stack>
+                </div>
+              ))}
+            </div>
+          ) : recentItems.length > 0 ? (
             <div className={classes.entityGrid}>
               {recentItems.map(item => (
                 <div

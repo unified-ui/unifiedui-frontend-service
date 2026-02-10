@@ -168,7 +168,7 @@
 
 .textarea {
   flex: 1;
-  min-height: 24px;
+  min-height: 50px;
   max-height: 200px;
   padding: var(--spacing-xs) 0;
   border: none !important;

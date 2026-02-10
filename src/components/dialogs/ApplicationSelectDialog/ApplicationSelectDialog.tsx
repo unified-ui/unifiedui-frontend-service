@@ -7,16 +7,18 @@ import {
   TextInput,
   Text,
   Group,
-  ScrollArea,
   UnstyledButton,
   ActionIcon,
   Loader,
   Center,
+  Paper,
+  Box,
 } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
-import { IconSearch, IconApps, IconRefresh } from '@tabler/icons-react';
+import { IconSearch, IconRefresh, IconApps } from '@tabler/icons-react';
 import type { QuickListItemResponse } from '../../../api/types';
 import { useSidebarData } from '../../../contexts/SidebarDataContext';
+import { EntityAvatar } from '../../common';
 import classes from './ApplicationSelectDialog.module.css';
 
 interface ApplicationSelectDialogProps {
@@ -74,7 +76,12 @@ export const ApplicationSelectDialog: FC<ApplicationSelectDialogProps> = ({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={t('conversations:selectApplication')}
+      title={
+        <Group gap="sm">
+          <IconApps size={24} />
+          <Text fw={600} size="lg">{t('conversations:selectApplication')}</Text>
+        </Group>
+      }
       size="md"
       centered
     >
@@ -97,39 +104,41 @@ export const ApplicationSelectDialog: FC<ApplicationSelectDialogProps> = ({
           </ActionIcon>
         </Group>
 
-        <ScrollArea.Autosize mah={400}>
-          {isLoading ? (
-            <Center py="xl">
-              <Loader size="sm" />
-            </Center>
-          ) : filteredApplications.length === 0 ? (
-            <Center py="xl">
-              <Stack align="center" gap="xs">
-                <IconApps size={32} style={{ opacity: 0.5 }} />
-                <Text size="sm" c="dimmed">
+        <Box className={classes.listContainer}>
+          <div className={classes.scrollArea}>
+            {isLoading ? (
+              <Center h={300}>
+                <Loader size="sm" />
+              </Center>
+            ) : filteredApplications.length === 0 ? (
+              <Center h={300} className={classes.emptyState}>
+                <IconApps size={40} className={classes.emptyIcon} />
+                <Text size="sm" c="dimmed" mt="sm">
                   {searchQuery ? t('conversations:noApplicationsFound') : t('conversations:noApplicationsAvailable')}
                 </Text>
+              </Center>
+            ) : (
+              <Stack gap="xs">
+                {filteredApplications.map((app) => (
+                  <UnstyledButton
+                    key={app.id}
+                    className={classes.applicationItem}
+                    onClick={() => handleSelect(app)}
+                  >
+                    <Paper className={classes.applicationPaper} p="sm" radius="md" withBorder>
+                      <Group gap="sm" wrap="nowrap">
+                        <EntityAvatar entityType="application" size="sm" />
+                        <Text size="sm" fw={500} lineClamp={1} style={{ flex: 1 }}>
+                          {app.name}
+                        </Text>
+                      </Group>
+                    </Paper>
+                  </UnstyledButton>
+                ))}
               </Stack>
-            </Center>
-          ) : (
-            <Stack gap={4}>
-              {filteredApplications.map((app) => (
-                <UnstyledButton
-                  key={app.id}
-                  className={classes.applicationItem}
-                  onClick={() => handleSelect(app)}
-                >
-                  <Group gap="sm" wrap="nowrap">
-                    <IconApps size={18} className={classes.applicationIcon} />
-                    <Text size="sm" lineClamp={1}>
-                      {app.name}
-                    </Text>
-                  </Group>
-                </UnstyledButton>
-              ))}
-            </Stack>
-          )}
-        </ScrollArea.Autosize>
+            )}
+          </div>
+        </Box>
       </Stack>
     </Modal>
   );

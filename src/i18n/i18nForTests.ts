@@ -7,7 +7,6 @@ import loginEN from './locales/en-US/login.json';
 import headerEN from './locales/en-US/header.json';
 import conversationsEN from './locales/en-US/conversations.json';
 import settingsEN from './locales/en-US/settings.json';
-import notificationsEN from './locales/en-US/notifications.json';
 import tracingEN from './locales/en-US/tracing.json';
 import credentialsEN from './locales/en-US/credentials.json';
 import tokenEN from './locales/en-US/token.json';
@@ -26,7 +25,6 @@ i18n
         header: headerEN,
         conversations: conversationsEN,
         settings: settingsEN,
-        notifications: notificationsEN,
         tracing: tracingEN,
         credentials: credentialsEN,
         token: tokenEN,

@@ -3,6 +3,7 @@
  * 
  * Nutzt TracingHierarchyView mit:
  * - variant: 'compact'
+ * - theme: 'chatSidebar' (black background, border-radius left-top)
  * - showHeader: true
  * - showDataPanels: true
  * - onOpenFullscreen: Callback für Vollbild-Dialog
@@ -30,6 +31,7 @@ export const TracingSidebar: FC<TracingSidebarProps> = ({ onOpenFullscreen }) =>
     <div className={classes.container}>
       <TracingHierarchyView
         variant="compact"
+        theme="chatSidebar"
         showHeader={true}
         showDataPanels={true}
         onOpenFullscreen={onOpenFullscreen}

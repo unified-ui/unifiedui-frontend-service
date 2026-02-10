@@ -1,14 +1,49 @@
+.listContainer {
+  min-height: 300px;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-sunken);
+  padding: var(--spacing-xs);
+  margin-right: calc(-1 * var(--spacing-md));
+  overflow: hidden;
+}
+
+.scrollArea {
+  max-height: 300px;
+  min-height: 300px;
+  overflow-y: auto;
+  padding-right: var(--spacing-md);
+}
+
 .applicationItem {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-sm);
-  transition: background-color var(--transition-fast) var(--easing-ease-in-out);
+  display: block;
+  width: 100%;
+  text-align: left;
+  transition: transform var(--transition-fast);
 }
 
 .applicationItem:hover {
-  background-color: var(--color-surface-hover);
+  transform: translateX(4px);
 }
 
-.applicationIcon {
-  color: var(--color-text-secondary);
-  flex-shrink: 0;
+.applicationPaper {
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.applicationPaper:hover {
+  border-color: var(--color-primary-400);
+  background-color: var(--bg-elevated);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.emptyIcon {
+  color: var(--color-gray-400);
+  opacity: 0.5;
 }

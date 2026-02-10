@@ -2,7 +2,6 @@ import type { FC, ReactNode } from 'react';
 import { Header } from '../Header';
 import { Sidebar } from '../Sidebar';
 import { GlobalChatSidebar } from '../GlobalChatSidebar';
-import { NotificationPanel } from '../NotificationPanel';
 import classes from './MainLayout.module.css';
 
 interface MainLayoutProps {
@@ -16,7 +15,6 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, noPadding = false })
       <Header />
       <Sidebar />
       <GlobalChatSidebar />
-      <NotificationPanel />
       <main className={`${classes.content} ${noPadding ? classes.noPadding : ''}`}>
         {children}
       </main>

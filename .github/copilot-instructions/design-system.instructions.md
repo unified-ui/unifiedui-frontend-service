@@ -23,7 +23,7 @@ All styles reference tokens from `src/styles/variables.css`. **Never hardcode** 
 | Radius | `--radius-{xs,sm,md,lg,xl,full}` | `var(--radius-md)` (8px) |
 | Shadows | `--shadow-{xs,sm,md,lg,xl}` | `var(--shadow-sm)` |
 | Transitions | `--transition-{fast,normal,slow}` | `var(--transition-fast)` (150ms) |
-| Z-Index | `--z-{base,dropdown,sticky,overlay,modal,notification,max}` | `var(--z-modal)` |
+| Z-Index | `--z-{base,dropdown,sticky,overlay,modal,max}` | `var(--z-modal)` |
 
 ### Spacing Scale
 

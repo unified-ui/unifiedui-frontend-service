@@ -82,11 +82,6 @@ import type {
   // Search Types
   SearchResponse,
   GlobalSearchParams,
-  // Notification Types
-  NotificationListResponse,
-  NotificationResponse,
-  UnreadCountResponse,
-  NotificationQueryParams,
   // Recent Visits Types
   RecentVisitListResponse,
   SyncRecentVisitsRequest,
@@ -891,29 +886,6 @@ export class UnifiedUIAPIClient {
   async globalSearch(tenantId: string, params: GlobalSearchParams): Promise<SearchResponse> {
     const query = this.buildQueryString(params);
     return this.request<SearchResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/search${query}`);
-  }
-
-  // ========== Notification Endpoints ==========
-
-  async listNotifications(tenantId: string, params?: NotificationQueryParams): Promise<NotificationListResponse> {
-    const query = this.buildQueryString(params || {});
-    return this.request<NotificationListResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/notifications${query}`);
-  }
-
-  async getUnreadNotificationCount(tenantId: string): Promise<UnreadCountResponse> {
-    return this.request<UnreadCountResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/notifications/unread-count`);
-  }
-
-  async markNotificationAsRead(tenantId: string, notificationId: string): Promise<NotificationResponse> {
-    return this.request<NotificationResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/notifications/${notificationId}/read`);
-  }
-
-  async markAllNotificationsAsRead(tenantId: string): Promise<void> {
-    return this.request<void>('PUT', `/api/v1/platform-service/tenants/${tenantId}/notifications/read-all`);
-  }
-
-  async deleteNotification(tenantId: string, notificationId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/notifications/${notificationId}`);
   }
 
   // ========== Recent Visits Endpoints ==========

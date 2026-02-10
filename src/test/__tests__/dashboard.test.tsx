@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import { renderWithProviders } from '../utils';
 import { DashboardPage } from '../../pages/DashboardPage';
 
@@ -36,17 +36,6 @@ vi.mock('../../contexts', () => ({
     trackVisit: vi.fn(),
     refreshRecentVisits: vi.fn(),
   }),
-  useNotifications: vi.fn().mockReturnValue({
-    unreadCount: 0,
-    isPanelOpen: false,
-    notifications: [],
-    openPanel: vi.fn(),
-    closePanel: vi.fn(),
-    togglePanel: vi.fn(),
-    markAsRead: vi.fn(),
-    markAllAsRead: vi.fn(),
-    deleteNotification: vi.fn(),
-  }),
 }));
 
 vi.mock('../../auth', () => ({
@@ -82,7 +71,9 @@ describe('DashboardPage', () => {
     vi.clearAllMocks();
   });
 
-  it('shows loading state', () => {
+  it('shows loading state with skeletons', () => {
+    vi.useFakeTimers();
+
     mockUseIdentity.mockReturnValue({
       user: null,
       tenants: [],
@@ -94,8 +85,16 @@ describe('DashboardPage', () => {
       getFoundryToken: vi.fn(),
     });
 
-    renderWithProviders(<DashboardPage />);
-    expect(screen.getByText('Loading dashboard...')).toBeInTheDocument();
+    const { container } = renderWithProviders(<DashboardPage />);
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    const skeletons = container.querySelectorAll('[data-mantine-component="Skeleton"],.mantine-Skeleton-root');
+    expect(skeletons.length).toBeGreaterThan(0);
+
+    vi.useRealTimers();
   });
 
   it('shows welcome message with user name', () => {

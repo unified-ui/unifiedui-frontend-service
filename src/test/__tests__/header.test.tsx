@@ -5,17 +5,6 @@ import { Header } from '../../components/layout/Header';
 vi.mock('../../contexts', () => ({
   useIdentity: vi.fn(),
   useSidebarData: vi.fn(),
-  useNotifications: vi.fn().mockReturnValue({
-    unreadCount: 0,
-    isPanelOpen: false,
-    notifications: [],
-    openPanel: vi.fn(),
-    closePanel: vi.fn(),
-    togglePanel: vi.fn(),
-    markAsRead: vi.fn(),
-    markAllAsRead: vi.fn(),
-    deleteNotification: vi.fn(),
-  }),
 }));
 
 vi.mock('../../auth', () => ({
@@ -120,23 +109,6 @@ describe('Header', () => {
     renderWithProviders(<Header />);
     const searchInput = screen.getByPlaceholderText('Search or type a command...');
     expect(searchInput).toHaveAttribute('readonly');
-  });
-
-  it('does not show hardcoded notification badge', () => {
-    mockUseIdentity.mockReturnValue({
-      user: mockUser,
-      tenants: mockTenants,
-      selectedTenant: mockTenants[0],
-      isLoading: false,
-      apiClient: null,
-      refreshIdentity: vi.fn(),
-      selectTenant: vi.fn(),
-      getFoundryToken: vi.fn(),
-    });
-
-    const { container } = renderWithProviders(<Header />);
-    const indicators = container.querySelectorAll('.mantine-Indicator-indicator');
-    expect(indicators.length).toBe(0);
   });
 
   it('does not contain any German strings', () => {

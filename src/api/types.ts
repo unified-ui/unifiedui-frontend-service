@@ -1286,44 +1286,6 @@ export interface GlobalSearchParams {
   limit?: number;
 }
 
-// ========== Notification Types ==========
-
-export const NotificationTypeEnum = {
-  AGENT_RUN_FAILED: 'AGENT_RUN_FAILED',
-  CREDENTIAL_EXPIRING: 'CREDENTIAL_EXPIRING',
-  TRACE_IMPORTED: 'TRACE_IMPORTED',
-} as const;
-export type NotificationTypeEnum = typeof NotificationTypeEnum[keyof typeof NotificationTypeEnum];
-
-export interface NotificationResponse {
-  id: string;
-  tenant_id: string;
-  user_id?: string;
-  type: NotificationTypeEnum;
-  title: string;
-  message?: string;
-  resource_type?: string;
-  resource_id?: string;
-  is_read: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface NotificationListResponse {
-  notifications: NotificationResponse[];
-  total: number;
-}
-
-export interface UnreadCountResponse {
-  unread_count: number;
-}
-
-export interface NotificationQueryParams {
-  is_read?: boolean;
-  limit?: number;
-  offset?: number;
-}
-
 // ========== Recent Visits Types ==========
 
 export interface RecentVisitResponse {

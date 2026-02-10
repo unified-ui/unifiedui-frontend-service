@@ -678,6 +678,8 @@ const TraceRootItem: FC<TraceRootItemProps> = ({
 interface TracingHierarchyViewProps {
   /** Variant: 'full' for dialog, 'compact' for sidebar */
   variant?: 'full' | 'compact';
+  /** Theme: 'default' for dialog styling, 'chatSidebar' for conversation page sidebar */
+  theme?: 'default' | 'chatSidebar';
   /** Show header with title */
   showHeader?: boolean;
   /** Show VS Code-style data panels at bottom */
@@ -688,6 +690,7 @@ interface TracingHierarchyViewProps {
 
 export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
   variant = 'full',
+  theme = 'default',
   showHeader = true,
   showDataPanels = false,
   onOpenFullscreen,
@@ -714,11 +717,12 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
   }
 
   const isCompact = variant === 'compact';
+  const isChatSidebar = theme === 'chatSidebar';
 
   return (
     <div 
       ref={containerRef}
-      className={`${classes.container} ${isCompact ? classes.containerCompact : ''} ${showDataPanels ? classes.containerWithPanels : ''}`}
+      className={`${classes.container} ${isCompact ? classes.containerCompact : ''} ${isChatSidebar ? classes.containerChatSidebar : ''} ${showDataPanels ? classes.containerWithPanels : ''}`}
     >
       {/* Header */}
       {showHeader && (

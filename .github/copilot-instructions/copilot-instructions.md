@@ -109,11 +109,10 @@ export const MyComponent: FC<Props> = ({ ... }) => {
 - **Types**: `src/api/types.ts` (~1370 lines, all enums + interfaces)
 - **Design tokens**: `src/styles/variables.css`
 - **Theme config**: `src/theme/theme.ts`
-- **Contexts**: `src/contexts/` — IdentityContext (wraps AuthContext, TenantContext, ApiClientContext), SidebarDataContext, ChatSidebarContext, AICapabilitiesContext, FavoritesContext, NotificationsContext, RecentVisitsContext
+- **Contexts**: `src/contexts/` — IdentityContext (wraps AuthContext, TenantContext, ApiClientContext), SidebarDataContext, ChatSidebarContext, AICapabilitiesContext, FavoritesContext, RecentVisitsContext
 - **i18n config**: `src/i18n/index.ts` (production), `src/i18n/i18nForTests.ts` (test)
-- **Locales**: `src/i18n/locales/en-US/` (12 namespaces: common, dashboard, login, header, conversations, settings, notifications, tracing, credentials, token, widgetDesigner, reactAgent)
+- **Locales**: `src/i18n/locales/en-US/` (11 namespaces: common, dashboard, login, header, conversations, settings, tracing, credentials, token, widgetDesigner, reactAgent)
 - **Command Palette**: `src/components/common/CommandPalette/` (cmdk library, `⌘K` shortcut)
-- **Notification Panel**: `src/components/layout/NotificationPanel/` (Mantine Drawer, right slide-out)
 - **Chat Panel**: `src/components/common/ChatPanel/` (dual-mode: conversation + playground)
 - **Test setup**: `src/test/setup.ts` (MSW lifecycle, mocks)
 - **Test utils**: `src/test/utils.tsx` (`renderWithProviders()`)

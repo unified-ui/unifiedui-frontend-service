@@ -2,10 +2,10 @@ import type { FC } from 'react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Group, TextInput, ActionIcon, Avatar, Text, Title, useMantineColorScheme, Stack, Paper, Button, Divider, Select, Indicator } from '@mantine/core';
-import { IconSearch, IconBell, IconBrain, IconSun, IconMoon, IconLogout, IconPlus } from '@tabler/icons-react';
+import { Group, TextInput, ActionIcon, Avatar, Text, Title, useMantineColorScheme, Stack, Paper, Button, Divider, Select } from '@mantine/core';
+import { IconSearch, IconBrain, IconSun, IconMoon, IconLogout, IconPlus } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
-import { useIdentity, useNotifications } from '../../../contexts';
+import { useIdentity } from '../../../contexts';
 import { useKeyboardShortcuts } from '../../../hooks';
 import { CreateTenantDialog } from '../../dialogs';
 import { CommandPalette } from '../../common';
@@ -18,7 +18,6 @@ export const Header: FC = () => {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const { account, logout } = useAuth();
   const { user, tenants, selectedTenant, selectTenant } = useIdentity();
-  const { unreadCount, togglePanel: toggleNotificationPanel } = useNotifications();
   const isDark = colorScheme === 'dark';
   const [userDropdownOpened, setUserDropdownOpened] = useState(false);
   const [isTenantDialogOpen, setIsTenantDialogOpen] = useState(false);
@@ -106,18 +105,6 @@ export const Header: FC = () => {
         >
           {isDark ? <IconSun size={20} /> : <IconMoon size={20} />}
         </ActionIcon>
-
-        <Indicator disabled={unreadCount === 0} color="red" size={8} offset={4}>
-          <ActionIcon
-            variant="subtle"
-            size="lg"
-            radius="xl"
-            aria-label={t('notifications', { ns: 'notifications' })}
-            onClick={toggleNotificationPanel}
-          >
-            <IconBell size={20} />
-          </ActionIcon>
-        </Indicator>
         
         <div ref={userAccountRef} className={classes.userAccountWrapper}>
           <Group 
