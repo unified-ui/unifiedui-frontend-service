@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { useIdentity } from '../../contexts';
+import { useUnsavedChanges } from '../../hooks';
 import { FieldPalette } from './FieldPalette';
 import { FieldProperties } from './FieldProperties';
 import { FieldPreview } from './FieldPreview';
@@ -30,9 +31,12 @@ export const WidgetDesignerPage: FC = () => {
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
   const [fields, setFields] = useState<FormFieldConfig[]>([]);
+  const [savedFields, setSavedFields] = useState<FormFieldConfig[] | undefined>(undefined);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [widgetName, setWidgetName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const { hasChanges, resetBaseline } = useUnsavedChanges(fields, savedFields);
 
   useEffect(() => {
     if (!widgetId || !apiClient || !selectedTenant) return;
@@ -40,8 +44,9 @@ export const WidgetDesignerPage: FC = () => {
     apiClient.getChatWidget(selectedTenant.id, widgetId)
       .then(widget => {
         setWidgetName(widget.name);
-        const savedFields = (widget.config?.fields as FormFieldConfig[]) || [];
-        setFields(savedFields);
+        const savedFieldsData = (widget.config?.fields as FormFieldConfig[]) || [];
+        setFields(savedFieldsData);
+        setSavedFields(structuredClone(savedFieldsData));
       })
       .catch(() => { /* handled by API client */ })
       .finally(() => setIsLoading(false));
@@ -87,7 +92,8 @@ export const WidgetDesignerPage: FC = () => {
     await apiClient.updateChatWidget(selectedTenant.id, widgetId, {
       config: { fields },
     });
-  }, [fields, widgetId, apiClient, selectedTenant]);
+    resetBaseline(fields);
+  }, [fields, widgetId, apiClient, selectedTenant, resetBaseline]);
 
   return (
     <MainLayout>
@@ -100,7 +106,7 @@ export const WidgetDesignerPage: FC = () => {
             </ActionIcon>
             <Title order={2}>{widgetName || t('title')}</Title>
           </Group>
-          <Button leftSection={<IconDeviceFloppy size={16} />} onClick={handleSave}>
+          <Button leftSection={<IconDeviceFloppy size={16} />} onClick={handleSave} disabled={!hasChanges}>
             {t('saveWidget')}
           </Button>
         </Group>

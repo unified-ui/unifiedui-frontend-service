@@ -22,6 +22,7 @@ import { IconAlertCircle, IconKey, IconInfoCircle, IconShieldLock } from '@table
 import { useIdentity } from '../../../contexts';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import { useEntityPermissions } from '../../../hooks';
+import { useFormDirtyGuard } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
 import type { CredentialResponse, PrincipalTypeEnum } from '../../../api/types';
 import { PermissionActionEnum, CredentialTypeEnum } from '../../../api/types';
@@ -103,6 +104,8 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
     },
   });
 
+  useFormDirtyGuard(form.isDirty());
+
   // Initialize form from data
   const initializeFromData = useCallback(
     (data: CredentialResponse) => {
@@ -116,6 +119,7 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
         username: '',
         password: '',
       });
+      form.resetDirty();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
@@ -199,6 +203,7 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
         await apiClient.setCredentialTags(selectedTenant.id, credentialId, newTags);
       }
 
+      form.resetDirty();
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -409,7 +414,7 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
                 <Button variant="default" onClick={handleClose} disabled={isSaving}>
                   Cancel
                 </Button>
-                <Button type="submit" loading={isSaving}>
+                <Button type="submit" loading={isSaving} disabled={!form.isDirty()}>
                   Save Changes
                 </Button>
               </Group>

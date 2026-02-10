@@ -548,6 +548,12 @@ export interface QuickListItemResponse {
   name: string;
 }
 
+export interface ConversationQuickListItemResponse {
+  id: string;
+  name: string;
+  application_id: string;
+}
+
 // ========== Principal Types ==========
 
 export interface PrincipalResponse {

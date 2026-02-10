@@ -51,6 +51,7 @@ import { TagInput, ManageAccessTable, AddPrincipalDialog } from '../../common';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
 import type { PrincipalPermission } from '../../common/ManageAccessTable/ManageAccessTable';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
+import { useFormDirtyGuard } from '../../../hooks';
 import classes from './EditApplicationDialog.module.css';
 
 const APPLICATION_TYPES = [
@@ -255,6 +256,8 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
     },
   });
 
+  useFormDirtyGuard(form.isDirty());
+
   // Update activeTab when initialTab changes
   useEffect(() => {
     setActiveTab(initialTab);
@@ -328,6 +331,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       foundry_project_endpoint: foundryConfig?.project_endpoint || '',
       foundry_agent_name: foundryConfig?.agent_name || '',
     });
+    form.resetDirty();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -469,6 +473,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
         await apiClient.setApplicationTags(selectedTenant.id, applicationId, newTags);
       }
 
+      form.resetDirty();
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -895,7 +900,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
                 <Button variant="default" onClick={handleClose} disabled={isSaving}>
                   Cancel
                 </Button>
-                <Button type="submit" loading={isSaving}>
+                <Button type="submit" loading={isSaving} disabled={!form.isDirty()}>
                   Save Changes
                 </Button>
               </Group>

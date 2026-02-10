@@ -1,0 +1,14 @@
+.applicationItem {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast) var(--easing-ease-in-out);
+}
+
+.applicationItem:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.applicationIcon {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}

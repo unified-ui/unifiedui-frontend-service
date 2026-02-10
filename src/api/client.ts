@@ -35,6 +35,7 @@ import type {
   AutonomousAgentKeyResponse,
   // Conversation Types
   ConversationResponse,
+  ConversationQuickListItemResponse,
   CreateConversationRequest,
   UpdateConversationRequest,
   SetConversationPermissionRequest,
@@ -420,9 +421,9 @@ export class UnifiedUIAPIClient {
 
   // ========== Conversation Endpoints ==========
 
-  async listConversations(tenantId: string, params?: PaginationParams & OrderParams & { name?: string; view?: 'quick-list' }, options?: { noCache?: boolean }): Promise<ConversationResponse[] | QuickListItemResponse[]> {
+  async listConversations(tenantId: string, params?: PaginationParams & OrderParams & { name?: string; view?: 'quick-list' }, options?: { noCache?: boolean }): Promise<ConversationResponse[] | ConversationQuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
-    return this.request<ConversationResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/conversations${query}`, undefined, undefined, options);
+    return this.request<ConversationResponse[] | ConversationQuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/conversations${query}`, undefined, undefined, options);
   }
 
   async getConversation(tenantId: string, conversationId: string): Promise<ConversationResponse> {

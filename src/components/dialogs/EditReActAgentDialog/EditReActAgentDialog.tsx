@@ -21,6 +21,7 @@ import { IconAlertCircle, IconBrain, IconInfoCircle, IconShieldLock } from '@tab
 import { useIdentity } from '../../../contexts';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import { useEntityPermissions } from '../../../hooks';
+import { useFormDirtyGuard } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
 import type { ReActAgentResponse, PrincipalTypeEnum } from '../../../api/types';
 import { PermissionActionEnum } from '../../../api/types';
@@ -93,6 +94,8 @@ export const EditReActAgentDialog: FC<EditReActAgentDialogProps> = ({
     },
   });
 
+  useFormDirtyGuard(form.isDirty());
+
   const initializeFromData = useCallback(
     (data: ReActAgentResponse) => {
       setAgent(data);
@@ -102,6 +105,7 @@ export const EditReActAgentDialog: FC<EditReActAgentDialogProps> = ({
         tags: data.tags?.map((t) => t.name) || [],
         is_active: data.is_active,
       });
+      form.resetDirty();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
@@ -161,6 +165,7 @@ export const EditReActAgentDialog: FC<EditReActAgentDialogProps> = ({
         await apiClient.setReActAgentTags(selectedTenant.id, agentId, newTags);
       }
 
+      form.resetDirty();
       onSuccess?.();
       onClose();
     } catch {
@@ -325,7 +330,7 @@ export const EditReActAgentDialog: FC<EditReActAgentDialogProps> = ({
                 <Button variant="default" onClick={handleClose} disabled={isSaving}>
                   Cancel
                 </Button>
-                <Button type="submit" loading={isSaving}>
+                <Button type="submit" loading={isSaving} disabled={!form.isDirty()}>
                   Save Changes
                 </Button>
               </Group>

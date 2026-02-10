@@ -83,7 +83,7 @@ export const ApplicationsPage: FC = () => {
   } = useEntityList<ApplicationResponse>(config);
 
   const handleOpen = useCallback((id: string) => {
-    navigate(`/conversations?chat-agent=${id}`);
+    navigate(`/conversations?chat-agent=${id}&selected-applicationId=${id}`);
   }, [navigate]);
 
   const renderIcon = useCallback(() => (

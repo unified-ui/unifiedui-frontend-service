@@ -3,3 +3,5 @@ export type { EntityType } from './useEntityPermissions';
 export { useEntityList } from './useEntityList';
 export { useKeyboardShortcuts } from './useKeyboardShortcuts';
 export { useDelayedLoading } from './useDelayedLoading';
+export { useUnsavedChanges } from './useUnsavedChanges';
+export { useFormDirtyGuard } from './useFormDirtyGuard';

@@ -34,6 +34,7 @@ import { ChatPanel } from '../../components/common/ChatPanel';
 import type { AIModelResponse, ToolResponse } from '../../api/types';
 import { AIModelPurposeGroupEnum } from '../../api/types';
 import { useIdentity } from '../../contexts';
+import { useUnsavedChanges } from '../../hooks';
 import classes from './ReActAgentDeveloperPage.module.css';
 
 interface AgentConfig {
@@ -233,12 +234,15 @@ export const ReActAgentDeveloperPage: FC = () => {
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
   const [config, setConfig] = useState<AgentConfig>(DEFAULT_CONFIG);
+  const [savedConfig, setSavedConfig] = useState<AgentConfig | undefined>(undefined);
   const [availableModels, setAvailableModels] = useState<AIModelResponse[]>([]);
   const [availableTools, setAvailableTools] = useState<ToolResponse[]>([]);
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [toolsLoaded, setToolsLoaded] = useState(false);
   const [chatKey, setChatKey] = useState(0);
   const [isLoadingAgent, setIsLoadingAgent] = useState(false);
+
+  const { hasChanges, resetBaseline } = useUnsavedChanges(config, savedConfig);
 
   const tenantId = selectedTenant?.id;
 
@@ -247,7 +251,7 @@ export const ReActAgentDeveloperPage: FC = () => {
     setIsLoadingAgent(true);
     try {
       const agent = await apiClient.getReActAgent(tenantId, agentId);
-      setConfig({
+      const loadedConfig: AgentConfig = {
         name: agent.name || '',
         description: agent.description || '',
         ai_model_ids: agent.ai_model_ids || [],
@@ -257,7 +261,9 @@ export const ReActAgentDeveloperPage: FC = () => {
         tool_use_prompt: agent.tool_use_prompt || '',
         response_prompt: agent.response_prompt || '',
         greeting_messages: agent.greeting_messages || [],
-      });
+      };
+      setConfig(loadedConfig);
+      setSavedConfig(structuredClone(loadedConfig));
     } catch { /* empty */ }
     finally { setIsLoadingAgent(false); }
   }, [tenantId, apiClient, agentId]);
@@ -329,8 +335,9 @@ export const ReActAgentDeveloperPage: FC = () => {
         response_prompt: config.response_prompt || undefined,
         greeting_messages: config.greeting_messages.filter(Boolean),
       });
+      resetBaseline(config);
     } catch { /* empty */ }
-  }, [tenantId, apiClient, agentId, config]);
+  }, [tenantId, apiClient, agentId, config, resetBaseline]);
 
   const handleClearChat = useCallback(() => {
     setChatKey(prev => prev + 1);
@@ -351,7 +358,7 @@ export const ReActAgentDeveloperPage: FC = () => {
             <Button variant="light" leftSection={<IconPlayerPlay size={16} />} onClick={handleClearChat}>
               {t('clearChat')}
             </Button>
-            <Button leftSection={<IconDeviceFloppy size={16} />} onClick={handleSave}>
+            <Button leftSection={<IconDeviceFloppy size={16} />} onClick={handleSave} disabled={!hasChanges}>
               {t('saveConfig')}
             </Button>
           </Group>

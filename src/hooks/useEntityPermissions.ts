@@ -130,6 +130,14 @@ export const useEntityPermissions = ({
           deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
             apiClient.deleteToolPermission(tenantId, entityId, principalId, principalType, role),
         };
+      case 're-act-agent':
+        return {
+          getPrincipals: () => apiClient.getReActAgentPrincipals(tenantId, entityId),
+          setPermission: (data: { principal_id: string; principal_type: PrincipalTypeEnum; role: PermissionActionEnum }) =>
+            apiClient.setReActAgentPermission(tenantId, entityId, data),
+          deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
+            apiClient.deleteReActAgentPermission(tenantId, entityId, principalId, principalType, role),
+        };
       default:
         return null;
     }

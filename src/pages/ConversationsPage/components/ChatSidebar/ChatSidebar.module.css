@@ -135,6 +135,76 @@
   padding: var(--spacing-sm) var(--spacing-md) 0;
 }
 
+.customSegmentedControl {
+  display: flex;
+  gap: 2px;
+  background-color: var(--sidebar-segmented-bg);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+
+.segmentedTab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: calc(var(--radius-sm) - 2px);
+  font-size: var(--font-size-xs);
+  color: var(--sidebar-text-secondary);
+  transition: all var(--transition-fast) var(--easing-ease-in-out);
+  cursor: pointer;
+}
+
+.segmentedTab:hover {
+  color: var(--sidebar-text);
+}
+
+.segmentedTabActive {
+  background-color: var(--sidebar-segmented-indicator);
+  color: var(--sidebar-text);
+}
+
+.segmentedTabFilter {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: calc(var(--radius-sm) - 2px);
+  font-size: var(--font-size-xs);
+  color: var(--sidebar-text-secondary);
+  background-color: var(--color-primary-900);
+  gap: var(--spacing-xs);
+}
+
+.clearFilterButton {
+  color: var(--sidebar-text-secondary);
+  flex-shrink: 0;
+}
+
+.clearFilterButton:hover {
+  color: var(--sidebar-text);
+  background-color: var(--sidebar-hover);
+}
+
+.dropdownArrow {
+  color: var(--sidebar-text-secondary);
+  flex-shrink: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--mantine-radius-xs);
+}
+
+.dropdownArrow:hover {
+  color: var(--sidebar-text);
+  background-color: var(--sidebar-hover);
+}
+
 .conversationList {
   flex: 1;
   overflow-y: auto;

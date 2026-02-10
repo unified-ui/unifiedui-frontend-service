@@ -31,6 +31,7 @@ import type { AutonomousAgentResponse, PrincipalTypeEnum, CredentialResponse } f
 import { PermissionActionEnum, AutonomousAgentTypeEnum, CredentialTypeEnum } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
+import { useFormDirtyGuard } from '../../../hooks';
 import classes from './EditAutonomousAgentDialog.module.css';
 
 export type EditDialogTab = 'details' | 'iam';
@@ -142,6 +143,8 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
     },
   });
 
+  useFormDirtyGuard(form.isDirty());
+
   // Load credentials
   const loadCredentials = useCallback(async (searchTerm?: string) => {
     if (!apiClient || !selectedTenant) return;
@@ -204,6 +207,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         n8n_workflow_endpoint: (config.workflow_endpoint as string) || '',
         n8n_api_api_key_credential_id: (config.api_api_key_credential_id as string) || '',
       });
+      form.resetDirty();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
@@ -283,6 +287,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         await apiClient.setAutonomousAgentTags(selectedTenant.id, autonomousAgentId, newTags);
       }
 
+      form.resetDirty();
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -549,7 +554,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
                 <Button variant="default" onClick={handleClose} disabled={isSaving}>
                   Cancel
                 </Button>
-                <Button type="submit" loading={isSaving}>
+                <Button type="submit" loading={isSaving} disabled={!form.isDirty()}>
                   Save Changes
                 </Button>
               </Group>
