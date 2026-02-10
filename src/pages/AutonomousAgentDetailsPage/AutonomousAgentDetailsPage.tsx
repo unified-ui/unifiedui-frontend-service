@@ -16,6 +16,7 @@ import {
   CopyButton,
   Box,
   TextInput,
+  Skeleton,
 } from '@mantine/core';
 import {
   IconArrowLeft,
@@ -37,6 +38,7 @@ import { IntegrationDialog } from '../../components/dialogs/IntegrationDialog';
 import { useIdentity } from '../../contexts';
 import { useSidebarData } from '../../contexts/SidebarDataContext';
 import { useRecentVisits } from '../../contexts';
+import { useDelayedLoading } from '../../hooks';
 import type { AutonomousAgentResponse, FullTraceResponse, TracesListParams } from '../../api/types';
 import classes from './AutonomousAgentDetailsPage.module.css';
 
@@ -87,6 +89,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
   const [agent, setAgent] = useState<AutonomousAgentResponse | null>(null);
   const [agentLoading, setAgentLoading] = useState(true);
   const [agentError, setAgentError] = useState<string | null>(null);
+  const showAgentSkeleton = useDelayedLoading(agentLoading, 500);
 
   // ---- Tabs ----
   const activeTab = (searchParams.get('tab') as DetailsTab) || 'traces';
@@ -377,86 +380,90 @@ export const AutonomousAgentDetailsPage: FC = () => {
   }, [agent]);
 
   // ---- Render ----
-  if (agentLoading) {
-    return (
-      <MainLayout>
-          <Center py="xl" style={{ minHeight: '60vh' }}>
-            <Loader size="lg" />
-          </Center>
-      </MainLayout>
-    );
-  }
-
-  if (agentError || !agent) {
-    return (
-      <MainLayout>
-          <Stack py="xl" gap="md">
-            <Alert icon={<IconAlertCircle size={16} />} title="Error" color="red">
-              {agentError || 'Agent not found'}
-            </Alert>
-            <Group>
-              <ActionIcon variant="subtle" onClick={() => navigate('/autonomous-agents')}>
-                <IconArrowLeft size={20} />
-              </ActionIcon>
-              <Text c="dimmed">Back to Autonomous Agents</Text>
-            </Group>
-          </Stack>
-      </MainLayout>
-    );
-  }
-
   return (
     <MainLayout>
           <Breadcrumbs items={[
             { label: 'Autonomous Agents', path: '/autonomous-agents' },
-            { label: agent.name },
+            { label: agent?.name || '' },
           ]} />
-          {/* Header */}
+
+          {agentError && !agentLoading && (
+            <Stack py="xl" gap="md">
+              <Alert icon={<IconAlertCircle size={16} />} title="Error" color="red">
+                {agentError}
+              </Alert>
+              <Group>
+                <ActionIcon variant="subtle" onClick={() => navigate('/autonomous-agents')}>
+                  <IconArrowLeft size={20} />
+                </ActionIcon>
+                <Text c="dimmed">Back to Autonomous Agents</Text>
+              </Group>
+            </Stack>
+          )}
+
+          {!agentError && (
+            <>
           <div className={classes.header}>
             <Group gap="sm" mb="xs">
               <EntityAvatar entityType="autonomous-agent" size="md" />
-              <Title order={2} className={classes.title}>
-                {agent.name}
-              </Title>
-              <Tooltip label="Edit">
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  onClick={() => setEditDialogOpen(true)}
-                >
-                  <IconEdit size={18} />
-                </ActionIcon>
-              </Tooltip>
+              {showAgentSkeleton ? (
+                <Skeleton height={28} width={200} radius="sm" />
+              ) : (
+                <Title order={2} className={classes.title}>
+                  {agent?.name}
+                </Title>
+              )}
+              {agent && (
+                <Tooltip label="Edit">
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    onClick={() => setEditDialogOpen(true)}
+                  >
+                    <IconEdit size={18} />
+                  </ActionIcon>
+                </Tooltip>
+              )}
             </Group>
 
-            {agent.description && (
+            {showAgentSkeleton ? (
+              <Skeleton height={14} width={300} radius="sm" ml={46} mt={4} />
+            ) : agent?.description ? (
               <DelayedTooltip label={agent.description}>
                 <Text size="sm" c="dimmed" className={classes.description} ml={46}>
                   {agent.description}
                 </Text>
               </DelayedTooltip>
-            )}
+            ) : null}
 
             <Group gap="xs" mt="sm" ml={46}>
-              <Badge variant="filled" size="sm" color="blue">
-                {agent.type.toUpperCase()}
-              </Badge>
-              {agent.tags?.map((tag) => (
-                <Badge key={tag.id} variant="light" size="sm" color="gray">
-                  {tag.name}
-                </Badge>
-              ))}
-              <Badge
-                variant="dot"
-                size="sm"
-                color={agent.is_active ? 'green' : 'gray'}
-              >
-                {agent.is_active ? 'Active' : 'Inactive'}
-              </Badge>
+              {showAgentSkeleton ? (
+                <>
+                  <Skeleton height={20} width={60} radius="xl" />
+                  <Skeleton height={20} width={50} radius="xl" />
+                </>
+              ) : agent ? (
+                <>
+                  <Badge variant="filled" size="sm" color="blue">
+                    {agent.type.toUpperCase()}
+                  </Badge>
+                  {agent.tags?.map((tag) => (
+                    <Badge key={tag.id} variant="light" size="sm" color="gray">
+                      {tag.name}
+                    </Badge>
+                  ))}
+                  <Badge
+                    variant="dot"
+                    size="sm"
+                    color={agent.is_active ? 'green' : 'gray'}
+                  >
+                    {agent.is_active ? 'Active' : 'Inactive'}
+                  </Badge>
+                </>
+              ) : null}
             </Group>
           </div>
 
-          {/* Tabs */}
           <Tabs
             value={activeTab}
             onChange={setActiveTab}
@@ -494,7 +501,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                   onRefresh={handleRefreshTraces}
                   onReImport={handleReImportTrace}
                   onDelete={setTraceToDelete}
-                  showReImport={agent.type === 'N8N'}
+                  showReImport={agent?.type === 'N8N'}
                 />
             </Tabs.Panel>
 
@@ -581,7 +588,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                       onReveal={() => revealKey(1)}
                       onRotate={() => setConfirmRotateKey(1)}
                       isRotating={rotatingKey === 1}
-                      disabled={!agent.allow_api_keys}
+                      disabled={!agent?.allow_api_keys}
                       disabledTooltip="API key authentication is not allowed for this agent"
                     />
 
@@ -592,7 +599,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                       onReveal={() => revealKey(2)}
                       onRotate={() => setConfirmRotateKey(2)}
                       isRotating={rotatingKey === 2}
-                      disabled={!agent.allow_api_keys}
+                      disabled={!agent?.allow_api_keys}
                       disabledTooltip="API key authentication is not allowed for this agent"
                     />
                   </Stack>
@@ -629,6 +636,8 @@ export const AutonomousAgentDetailsPage: FC = () => {
               </div>
             </Tabs.Panel>
           </Tabs>
+            </>
+          )}
 
       {/* Tracing Dialog */}
       <TracingVisualDialog

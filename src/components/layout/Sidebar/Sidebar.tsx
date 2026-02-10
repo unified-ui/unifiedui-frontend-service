@@ -80,12 +80,14 @@ export const Sidebar: FC = () => {
   
   const { apiClient, selectedTenant } = useIdentity();
 
-  const { isFavorite: checkFavorite } = useFavorites();
+  const { isFavorite: checkFavorite, toggleFavorite } = useFavorites();
 
   const ENTITY_TO_FAVORITE_TYPE: Record<string, FavoriteResourceTypeEnum> = useMemo(() => ({
     applications: FavoriteResourceTypeEnum.APPLICATION,
     'autonomous-agents': FavoriteResourceTypeEnum.AUTONOMOUS_AGENT,
+    'chat-widgets': FavoriteResourceTypeEnum.CHAT_WIDGET,
     conversations: FavoriteResourceTypeEnum.CONVERSATION,
+    're-act-agents': FavoriteResourceTypeEnum.RE_ACT_AGENT,
   }), []);
 
   const getIsFavoriteForEntity = useCallback(
@@ -95,6 +97,15 @@ export const Sidebar: FC = () => {
       return (id: string) => checkFavorite(favType, id);
     },
     [checkFavorite, ENTITY_TO_FAVORITE_TYPE]
+  );
+
+  const getToggleFavoriteForEntity = useCallback(
+    (entityType: EntityType | 'conversations') => {
+      const favType = ENTITY_TO_FAVORITE_TYPE[entityType];
+      if (!favType) return undefined;
+      return (id: string) => toggleFavorite(favType, id);
+    },
+    [toggleFavorite, ENTITY_TO_FAVORITE_TYPE]
   );
   
   const [activeEntity, setActiveEntity] = useState<EntityType | null>(null);
@@ -338,7 +349,11 @@ export const Sidebar: FC = () => {
     
     try {
       const [convsList, appsList] = await Promise.all([
-        apiClient.listConversations(selectedTenant.id),
+        apiClient.listConversations(selectedTenant.id, {
+          limit: 999,
+          order_by: 'updated_at',
+          order_direction: 'desc',
+        }, { noCache: !useCache }) as Promise<ConversationResponse[]>,
         apiClient.listApplications(selectedTenant.id, undefined, { noCache: !useCache }) as Promise<ApplicationResponse[]>,
       ]);
       setConversations(convsList);
@@ -530,6 +545,7 @@ export const Sidebar: FC = () => {
           onRefresh={handleRefresh}
           isRefreshing={isRefreshing}
           isFavorite={getIsFavoriteForEntity(activeEntity)}
+          onToggleFavorite={getToggleFavoriteForEntity(activeEntity)}
         />
       )}
 
@@ -550,6 +566,7 @@ export const Sidebar: FC = () => {
           onRefresh={handleRefreshConversations}
           isRefreshing={conversationsRefreshing}
           isFavorite={getIsFavoriteForEntity('conversations')}
+          onToggleFavorite={getToggleFavoriteForEntity('conversations')}
         />
       )}
 

@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Stack,
@@ -66,6 +66,8 @@ interface GroupedConversations {
   conversations: ConversationResponse[];
 }
 
+const STORAGE_KEY_GROUP_MODE = 'chatSidebar.groupMode';
+
 export const ChatSidebar: FC<ChatSidebarProps> = ({
   conversations,
   applications,
@@ -87,7 +89,10 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
   const { t } = useTranslation();
-  const [groupMode, setGroupMode] = useState<GroupMode>('time');
+  const [groupMode, setGroupMode] = useState<GroupMode>(() => {
+    const stored = localStorage.getItem(STORAGE_KEY_GROUP_MODE);
+    return (stored === 'time' || stored === 'application') ? stored : 'time';
+  });
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -99,6 +104,10 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
     conversationName: string;
   }>({ open: false, conversationId: '', conversationName: '' });
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_GROUP_MODE, groupMode);
+  }, [groupMode]);
 
   const handleScrollPositionChange = useCallback(({ y }: { x: number; y: number }) => {
     if (!scrollAreaRef.current || !hasMore || !onLoadMore) return;
@@ -279,7 +288,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
           color="gray"
           onClick={() => onCollapsedChange(true)}
           aria-label="Collapse sidebar"
-          style={{ color: 'rgba(255,255,255,0.7)' }}
+          className={classes.headerButton}
         >
           <IconLayoutSidebarLeftCollapse size={20} />
         </ActionIcon>
@@ -288,7 +297,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
           color="gray"
           onClick={onSearchOpen}
           aria-label="Search"
-          style={{ color: 'rgba(255,255,255,0.7)' }}
+          className={classes.headerButton}
         >
           <IconSearch size={18} />
         </ActionIcon>
@@ -308,11 +317,10 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
           size="xs"
           value={groupMode}
           onChange={(value) => setGroupMode(value as GroupMode)}
-          color="dark"
           styles={{
-            root: { backgroundColor: 'rgba(255,255,255,0.06)' },
-            label: { color: 'rgba(255,255,255,0.7)' },
-            indicator: { backgroundColor: 'rgba(255,255,255,0.15)' },
+            root: { backgroundColor: 'var(--sidebar-segmented-bg)' },
+            label: { color: 'var(--sidebar-text-secondary)' },
+            indicator: { backgroundColor: 'var(--sidebar-segmented-indicator)' },
           }}
           data={[
             {
@@ -353,10 +361,10 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
           </Stack>
         ) : groupedConversations.length === 0 ? (
           <Box p="md" ta="center">
-            <Text c="rgba(255,255,255,0.5)" size="sm">
+            <Text className={classes.emptyStateText} size="sm">
               {searchQuery ? t('conversations:noConversationsFound') : t('conversations:noConversations')}
             </Text>
-            <Text c="rgba(255,255,255,0.35)" size="xs" mt="xs">
+            <Text className={classes.emptyStateSubtext} size="xs" mt="xs">
               {t('conversations:startNewChat')}
             </Text>
           </Box>
@@ -365,7 +373,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
             {groupedConversations.map((group) => (
               <div key={group.label} className={classes.group}>
                 <div className={classes.groupLabelWrapper}>
-                  <Text size="xs" fw={800} c="white" className={classes.groupLabel}>
+                  <Text size="xs" fw={800} className={classes.groupLabel}>
                     {group.label}
                   </Text>
                 </div>
@@ -458,7 +466,11 @@ const ConversationItem: FC<ConversationItemProps> = ({
       }}
     >
       <Group gap="sm" wrap="nowrap" className={classes.conversationContent}>
-        <IconMessage size={16} className={classes.conversationIcon} />
+        {isFavorite ? (
+          <IconPinned size={16} className={classes.pinnedIcon} />
+        ) : (
+          <IconMessage size={16} className={classes.conversationIcon} />
+        )}
         <div className={classes.conversationInfo}>
           {isEditing ? (
             <div className={classes.editingContainer}>
@@ -504,11 +516,10 @@ const ConversationItem: FC<ConversationItemProps> = ({
             </div>
           ) : (
             <Text size="sm" lineClamp={1} className={classes.conversationName}>
-              {isFavorite && <IconPinned size={12} className={classes.pinnedIcon} />}
               {conversation.name}
             </Text>
           )}
-          <Text size="xs" c="rgba(255,255,255,0.4)" lineClamp={1}>
+          <Text size="xs" className={classes.applicationName} lineClamp={1}>
             {applicationName}
           </Text>
         </div>

@@ -15,7 +15,9 @@ interface FavoritesContextType {
 const RESOURCE_TYPES: FavoriteResourceTypeEnum[] = [
   FavoriteResourceTypeEnum.APPLICATION,
   FavoriteResourceTypeEnum.AUTONOMOUS_AGENT,
+  FavoriteResourceTypeEnum.CHAT_WIDGET,
   FavoriteResourceTypeEnum.CONVERSATION,
+  FavoriteResourceTypeEnum.RE_ACT_AGENT,
 ];
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);

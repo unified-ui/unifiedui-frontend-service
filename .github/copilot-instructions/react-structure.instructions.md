@@ -217,7 +217,7 @@ See [components/tracing.instructions.md](./components/tracing.instructions.md) f
 | `TenantContext` | `useTenantContext()` → `{ tenants, selectedTenant, selectTenant, setTenants }` | Tenant selection + persistence |
 | `ApiClientContext` | `useApiClient()` → `UnifiedUIAPIClient` | API client instance |
 | `AICapabilitiesContext` | `useAICapabilities()` → `{ aiModels, isLoading }` | AI model data for current tenant |
-| `FavoritesContext` | `useFavorites()` → `{ favorites, toggleFavorite, isFavorite }` | User favorites management |
+| `FavoritesContext` | `useFavorites()` → `{ favorites, toggleFavorite, isFavorite }` | User favorites management (applications, autonomous-agents, chat-widgets, conversations, re-act-agents) |
 | `NotificationsContext` | `useNotifications()` → `{ notifications, unreadCount, markAsRead, markAllRead, deleteNotification }` | Notification polling + state |
 | `RecentVisitsContext` | `useRecentVisits()` → `{ recentVisits, trackVisit, syncVisits }` | Recent visit tracking |
 | `SidebarDataContext` | `useSidebarData()` → `{ applications, autonomousAgents, chatWidgets, fetch*, refresh* }` | Cached sidebar entity lists |

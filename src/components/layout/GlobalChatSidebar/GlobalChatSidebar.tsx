@@ -50,7 +50,7 @@ export const GlobalChatSidebar: FC = () => {
         setIsLoading(true);
         try {
           const [convsList, appsList] = await Promise.all([
-            apiClient.listConversations(selectedTenant.id),
+            apiClient.listConversations(selectedTenant.id) as Promise<ConversationResponse[]>,
             apiClient.listApplications(selectedTenant.id) as Promise<ApplicationResponse[]>,
           ]);
           setConversations(convsList.slice(0, 10)); // Show only recent 10

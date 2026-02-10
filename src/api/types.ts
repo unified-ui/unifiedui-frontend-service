@@ -69,7 +69,9 @@ export interface N8NAutonomousAgentConfig {
 export const FavoriteResourceTypeEnum = {
   APPLICATION: 'applications',
   AUTONOMOUS_AGENT: 'autonomous-agents',
+  CHAT_WIDGET: 'chat-widgets',
   CONVERSATION: 'conversations',
+  RE_ACT_AGENT: 're-act-agents',
 } as const;
 
 export type FavoriteResourceTypeEnum = typeof FavoriteResourceTypeEnum[keyof typeof FavoriteResourceTypeEnum];

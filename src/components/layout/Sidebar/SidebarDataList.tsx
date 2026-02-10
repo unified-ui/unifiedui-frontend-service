@@ -21,6 +21,7 @@ import {
   IconPlus,
   IconInbox,
   IconRefresh,
+  IconStar,
   IconStarFilled,
 } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -66,6 +67,8 @@ export interface SidebarDataListProps {
   isRefreshing?: boolean;
   /** Check if an item is a favorite */
   isFavorite?: (id: string) => boolean;
+  /** Callback when favorite is toggled */
+  onToggleFavorite?: (id: string) => void;
 }
 
 const ITEMS_PER_PAGE = 20;
@@ -86,6 +89,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
   onRefresh,
   isRefreshing = false,
   isFavorite,
+  onToggleFavorite,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -119,14 +123,20 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
 
   // Filter items based on search query
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return items;
+    let result = items;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter((item) =>
+        item.name.toLowerCase().includes(query)
+      );
     }
-    const query = searchQuery.toLowerCase().trim();
-    return items.filter((item) =>
-      item.name.toLowerCase().includes(query)
-    );
-  }, [items, searchQuery]);
+    if (isFavorite) {
+      const favorites = result.filter(item => isFavorite(item.id));
+      const nonFavorites = result.filter(item => !isFavorite(item.id));
+      return [...favorites, ...nonFavorites];
+    }
+    return result;
+  }, [items, searchQuery, isFavorite]);
 
   // Get visible items (pagination)
   const visibleItems = useMemo(() => {
@@ -322,8 +332,19 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
                         </Text>
                       )}
                     </Stack>
-                    {isFavorite?.(item.id) && (
-                      <IconStarFilled size={14} className={classes.favoriteIndicator} />
+                    {isFavorite && (
+                      <ActionIcon
+                        variant="subtle"
+                        color={isFavorite(item.id) ? 'yellow' : 'gray'}
+                        size="xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleFavorite?.(item.id);
+                        }}
+                        className={classes.favoriteIndicator}
+                      >
+                        {isFavorite(item.id) ? <IconStarFilled size={14} /> : <IconStar size={14} />}
+                      </ActionIcon>
                     )}
                   </Group>
                 </Box>

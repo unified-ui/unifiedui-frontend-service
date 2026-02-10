@@ -105,7 +105,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
       style={onRowClick ? { cursor: 'pointer' } : undefined}
     >
       <Group justify="space-between" wrap="nowrap" gap="lg">
-        <Group gap="md" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+        <Group gap="md" wrap="nowrap" style={{ minWidth: 0, maxWidth: 600 }}>
           {showCheckbox && onSelect && (
             <Checkbox
               checked={isSelected}
@@ -129,7 +129,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
             </ActionIcon>
           )}
           {icon && <Box className={classes.rowIcon}>{icon}</Box>}
-          <Stack gap={2} style={{ minWidth: 0, flex: 1 }}>
+          <Stack gap={2} className={classes.nameDescriptionColumn}>
             <Tooltip 
               label={item.name} 
               disabled={!item.name || item.name.length <= TOOLTIP_THRESHOLD_NAME}

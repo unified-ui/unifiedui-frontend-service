@@ -420,9 +420,9 @@ export class UnifiedUIAPIClient {
 
   // ========== Conversation Endpoints ==========
 
-  async listConversations(tenantId: string, params?: PaginationParams & OrderParams & { name?: string }): Promise<ConversationResponse[]> {
+  async listConversations(tenantId: string, params?: PaginationParams & OrderParams & { name?: string; view?: 'quick-list' }, options?: { noCache?: boolean }): Promise<ConversationResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
-    return this.request<ConversationResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/conversations${query}`);
+    return this.request<ConversationResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/conversations${query}`, undefined, undefined, options);
   }
 
   async getConversation(tenantId: string, conversationId: string): Promise<ConversationResponse> {

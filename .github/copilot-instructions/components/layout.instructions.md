@@ -96,15 +96,17 @@ Fixed left rail (`width: var(--sidebar-width)` [80px], `top: var(--header-height
 ### Navigation Structure
 
 ```
-Top section:
+Top section (mainNavItemsTop):
   Home (Dashboard)
-  Chats / Conversations (has data list)
-  Agents / Applications (has data list)
-  Auto / Autonomous Agents (has data list)
+  Chats / Conversations (data list, no entity type — special handling)
+  Agents / Applications (has data list, entityType: applications)
+  Auto / Autonomous Agents (has data list, entityType: autonomous-agents)
 ─── divider ───
-Bottom section:
-  Widgets / Chat Widgets (has data list)
+Middle section (mainNavItemsBottom):
+  ReACT / ReACT Agents (has data list, entityType: re-act-agents)
+  Widgets / Chat Widgets (has data list, entityType: chat-widgets)
 ─── spacer ───
+Bottom section (bottomNavItems):
   Settings (Tenant Settings)
 ```
 
@@ -132,6 +134,26 @@ interface EntityConfig {
 ### Data List Panel
 
 When clicking a nav item with `hasDataList: true`, an expandable `SidebarDataList` slides out showing entity items with search. State is persisted to `localStorage` via `SIDEBAR_EXPAND_KEY`.
+
+### Favorites in Data Lists
+
+`SidebarDataList` supports toggleable favorites via `onToggleFavorite` prop. Each item shows a star icon — filled for favorites, outline for non-favorites. Clicking the star toggles the favorite state (optimistic update via `FavoritesContext`). Favorites sort to the top within each data list.
+
+The `ENTITY_TO_FAVORITE_TYPE` mapping in `Sidebar.tsx` maps entity types to `FavoriteResourceTypeEnum` values:
+
+```typescript
+{
+  applications: FavoriteResourceTypeEnum.APPLICATION,
+  'autonomous-agents': FavoriteResourceTypeEnum.AUTONOMOUS_AGENT,
+  'chat-widgets': FavoriteResourceTypeEnum.CHAT_WIDGET,
+  conversations: FavoriteResourceTypeEnum.CONVERSATION,
+  're-act-agents': FavoriteResourceTypeEnum.RE_ACT_AGENT,
+}
+```
+
+### Conversations Data List
+
+Conversations use `order_by=updated_at, order_direction=desc` (most recently used first). Other entity types use `order_by=name, order_direction=asc`.
 
 ### Active Indicator
 

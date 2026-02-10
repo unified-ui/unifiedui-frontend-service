@@ -35,7 +35,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
   onCancel,
   isDisabled,
   isStreaming,
-  placeholder = 'Type a message...',
+  placeholder = 'Ask me something... 🚀',
   maxLength = 32000,
 }, ref) => {
   const [content, setContent] = useState('');
@@ -186,28 +186,17 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
 
         {/* Input area */}
         <Box className={classes.inputWrapper}>
-          <Box className={classes.inputContainer}>
-            {/* Attachment button */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/*,.pdf,.doc,.docx,.txt,.md"
-              onChange={handleFileSelect}
-              className={classes.fileInput}
-            />
-            <Tooltip label="Attach files">
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                className={classes.attachButton}
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isDisabled || isStreaming}
-              >
-                <IconPaperclip size={20} />
-              </ActionIcon>
-            </Tooltip>
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,.pdf,.doc,.docx,.txt,.md"
+            onChange={handleFileSelect}
+            className={classes.fileInput}
+          />
 
+          <Box className={classes.inputContainer}>
             {/* Textarea */}
             <textarea
               ref={textareaRef}
@@ -253,6 +242,19 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
               {content.length}/{maxLength}
             </Text>
           )}
+
+          {/* Tools row */}
+          <Box className={classes.toolsRow}>
+            <button
+              type="button"
+              className={classes.toolButton}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isDisabled || isStreaming}
+            >
+              <IconPaperclip size={16} />
+              <span>Add files</span>
+            </button>
+          </Box>
         </Box>
       </Box>
 

@@ -57,6 +57,12 @@
   max-width: 400px;
 }
 
+.nameDescriptionColumn {
+  min-width: 0;
+  flex: 1;
+  max-width: 500px;
+}
+
 .typeColumn {
   width: 180px;
   flex-shrink: 0;

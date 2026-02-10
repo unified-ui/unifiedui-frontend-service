@@ -181,13 +181,40 @@ Always call `e.stopPropagation()` on interactive elements nested inside clickabl
 
 ## Loading & Error States
 
-### Loading
+### Delayed Loading with Skeletons (CRITICAL)
 
-Use Mantine `Loader` or `Skeleton` components:
+To prevent loading indicator flashing on fast responses, **always** use the `useDelayedLoading` hook. The loading skeleton is only shown after a delay (default 500ms). If data loads faster, no loading indicator appears at all.
 
 ```tsx
-if (loading) return <Loader size="lg" />;
+import { useDelayedLoading } from '../../../hooks';
+
+const showLoadingSkeleton = useDelayedLoading(isLoading, 500);
+
+// In render:
+{showLoadingSkeleton ? (
+  <Stack gap="xs">
+    {Array.from({ length: 5 }).map((_, i) => (
+      <Group key={i} /* skeleton row styles */>
+        <Skeleton circle width={40} height={40} />
+        <Stack gap={6} style={{ flex: 1 }}>
+          <Skeleton height={14} width="40%" radius="sm" />
+          <Skeleton height={10} width="70%" radius="sm" />
+        </Stack>
+      </Group>
+    ))}
+  </Stack>
+) : (
+  /* actual content */
+)}
 ```
+
+### Rules for Loading in Tables
+
+1. **Use Skeleton placeholders** (not `Loader` spinner) — skeletons mimic the shape of the actual content
+2. **Always use `useDelayedLoading`** — show skeleton only after 500ms delay, never immediately
+3. **Never hide the table header** during loading — the `<Table.Thead>` must always remain visible
+4. Only the `<Table.Tbody>` content is replaced with skeleton rows
+5. For "load more" (infinite scroll), use a small `<Loader size="sm" />` at the bottom — this is acceptable since it indicates incremental loading, not initial load
 
 ### Empty State
 
