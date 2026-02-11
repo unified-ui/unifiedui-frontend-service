@@ -64,6 +64,7 @@ src/
 │   ├── useDelayedLoading.ts      # Delayed loading state (show skeleton only after N ms)
 │   ├── useEntityList.ts          # Shared list page logic (pagination, search, sort, filter, CRUD)
 │   ├── useEntityPermissions.ts   # Permission methods per entity type
+│   ├── usePermissions.ts         # Tenant-role + resource-permission checks (RBAC)
 │   ├── useFormDirtyGuard.ts      # beforeunload guard for Mantine useForm-based dialogs
 │   ├── useKeyboardShortcuts.ts   # Global keyboard shortcut bindings
 │   └── useUnsavedChanges.ts      # Dirty tracking + beforeunload for useState-based pages
@@ -131,6 +132,7 @@ src/
 | `MarkdownRenderer` | Renders markdown content with syntax highlighting |
 | `ChatPanel` | Dual-mode chat panel (conversation + playground) for pages |
 | `CommandPalette` | Global command palette (cmdk, `⌘K` shortcut) |
+| `PermissionGate` | Declarative permission-based rendering (hide/disable by role or resource permission) |
 | `SkeletonLoaders` | Skeleton loading placeholders for list/detail pages |
 
 ### `components/dialogs/`
@@ -212,7 +214,7 @@ See [components/tracing.instructions.md](./components/tracing.instructions.md) f
 
 | Context | Key Exports | Purpose |
 |---------|-------------|---------|
-| `IdentityContext` | `useIdentity()` → `{ user, tenants, selectedTenant, apiClient, refreshIdentity, selectTenant, getFoundryToken }` | Composite provider wrapping Auth + Tenant + ApiClient |
+| `IdentityContext` | `useIdentity()` → `{ user, tenants, selectedTenant, selectedTenantRoles, apiClient, refreshIdentity, selectTenant, getFoundryToken }` | Composite provider wrapping Auth + Tenant + ApiClient; exposes `selectedTenantRoles: TenantPermissionEnum[]` |
 | `AuthContext` | `useAuthContext()` → `{ user, isLoading, setUser, setIsLoading }` | User authentication state |
 | `TenantContext` | `useTenantContext()` → `{ tenants, selectedTenant, selectTenant, setTenants }` | Tenant selection + persistence |
 | `ApiClientContext` | `useApiClient()` → `UnifiedUIAPIClient` | API client instance |

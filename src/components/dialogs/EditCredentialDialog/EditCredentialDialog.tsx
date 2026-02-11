@@ -21,7 +21,7 @@ import { useForm } from '@mantine/form';
 import { IconAlertCircle, IconKey, IconInfoCircle, IconShieldLock } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
-import { useEntityPermissions } from '../../../hooks';
+import { useEntityPermissions, usePermissions } from '../../../hooks';
 import { useFormDirtyGuard } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
 import type { CredentialResponse, PrincipalTypeEnum } from '../../../api/types';
@@ -63,6 +63,8 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
   const { t } = useTranslation();
+  const { isGlobalAdmin } = usePermissions();
+  const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission === 'ADMIN';
   const [credential, setCredential] = useState<CredentialResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -297,6 +299,7 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
         )}
 
         {/* Tab Navigation */}
+        {showIamTab && (
         <Box className={classes.tabContainer}>
           <SegmentedControl
             value={activeTab}
@@ -325,6 +328,7 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
             className={classes.segmentedControl}
           />
         </Box>
+        )}
 
         {/* Tab Content */}
         {activeTab === 'details' ? (

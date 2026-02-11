@@ -17,6 +17,7 @@ export const TenantPermissionEnum = {
   CHAT_WIDGETS_CREATOR: 'CHAT_WIDGETS_CREATOR',
   REACT_AGENT_ADMIN: 'REACT_AGENT_ADMIN',
   REACT_AGENT_CREATOR: 'REACT_AGENT_CREATOR',
+  TENANT_AI_MODELS_ADMIN: 'TENANT_AI_MODELS_ADMIN',
 } as const;
 
 export type TenantPermissionEnum = typeof TenantPermissionEnum[keyof typeof TenantPermissionEnum];
@@ -715,6 +716,7 @@ export interface ApplicationResponse {
   updated_at: string;
   created_by?: string;
   updated_by?: string;
+  my_permission?: string;
 }
 
 export interface CreateApplicationRequest {
@@ -792,6 +794,7 @@ export interface AutonomousAgentResponse {
   updated_at: string;
   created_by?: string;
   updated_by?: string;
+  my_permission?: string;
 }
 
 export interface CreateAutonomousAgentRequest {
@@ -836,6 +839,7 @@ export interface ConversationResponse {
   updated_at: string;
   created_by?: string;
   updated_by?: string;
+  my_permission?: string;
 }
 
 export interface CreateConversationRequest {
@@ -873,6 +877,7 @@ export interface CredentialResponse {
   updated_at: string;
   created_by?: string;
   updated_by?: string;
+  my_permission?: string;
 }
 
 export interface CreateCredentialRequest {
@@ -920,6 +925,7 @@ export interface ChatWidgetResponse {
   updated_at: string;
   created_by?: string;
   updated_by?: string;
+  my_permission?: string;
 }
 
 export interface CreateChatWidgetRequest {
@@ -995,6 +1001,7 @@ export interface ToolResponse {
   updated_at: string;
   created_by?: string;
   updated_by?: string;
+  my_permission?: string;
 }
 
 export interface CreateToolRequest {
@@ -1114,6 +1121,7 @@ export interface ReActAgentResponse {
   updated_at: string;
   created_by?: string;
   updated_by?: string;
+  my_permission?: string;
 }
 
 export interface CreateReActAgentRequest {

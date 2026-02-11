@@ -361,18 +361,18 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
 
       <Divider className={classes.divider} />
 
-      {/* Footer with Add Button */}
-      <div className={classes.footer}>
-        <Button
-          leftSection={<IconPlus size={16} />}
-          variant="light"
-          fullWidth
-          onClick={onAdd}
-          disabled={!onAdd}
-        >
-          {addButtonLabel}
-        </Button>
-      </div>
+      {onAdd && (
+        <div className={classes.footer}>
+          <Button
+            leftSection={<IconPlus size={16} />}
+            variant="light"
+            fullWidth
+            onClick={onAdd}
+          >
+            {addButtonLabel}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

@@ -7,7 +7,7 @@ import { PageHeader, DataTable, ConfirmDeleteDialog, EntityAvatar } from '../../
 import type { DataTableItem } from '../../components/common';
 import { CreateChatWidgetDialog, EditChatWidgetDialog } from '../../components/dialogs';
 import { useIdentity } from '../../contexts';
-import { useEntityList } from '../../hooks';
+import { useEntityList, usePermissions } from '../../hooks';
 import type { ChatWidgetResponse } from '../../api/types';
 import { ChatWidgetTypeEnum } from '../../api/types';
 
@@ -23,6 +23,8 @@ const CHAT_WIDGET_TYPE_LABELS: Record<string, string> = {
 export const ChatWidgetsPage: FC = () => {
   const navigate = useNavigate();
   const { apiClient } = useIdentity();
+  const { canCreate } = usePermissions();
+  const canCreateWidget = canCreate('chat-widgets');
 
   const mapToTableItem = useCallback((widget: ChatWidgetResponse): DataTableItem => ({
     id: widget.id,
@@ -31,6 +33,7 @@ export const ChatWidgetsPage: FC = () => {
     type: CHAT_WIDGET_TYPE_LABELS[widget.type || ''] || widget.type || 'Chat',
     tags: widget.tags?.map(tag => tag.name) || [],
     isActive: widget.is_active,
+    my_permission: widget.my_permission,
   }), []);
 
   const listEntities = useCallback(
@@ -108,7 +111,7 @@ export const ChatWidgetsPage: FC = () => {
         title="Chat Widgets"
         description="Manage your chat widgets. Create embeddable chat interfaces for your applications."
         actionLabel="Create Chat Widget"
-        onAction={() => setIsCreateDialogOpen(true)}
+        onAction={canCreateWidget ? () => setIsCreateDialogOpen(true) : undefined}
       />
 
       <DataTable
@@ -121,7 +124,7 @@ export const ChatWidgetsPage: FC = () => {
         searchPlaceholder="Search chat widgets..."
         emptyMessage="No chat widgets found"
         emptyActionLabel="Create Chat Widget"
-        onEmptyAction={() => setIsCreateDialogOpen(true)}
+        onEmptyAction={canCreateWidget ? () => setIsCreateDialogOpen(true) : undefined}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         availableTags={availableTags}

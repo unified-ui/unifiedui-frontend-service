@@ -5,3 +5,5 @@ export { useKeyboardShortcuts } from './useKeyboardShortcuts';
 export { useDelayedLoading } from './useDelayedLoading';
 export { useUnsavedChanges } from './useUnsavedChanges';
 export { useFormDirtyGuard } from './useFormDirtyGuard';
+export { usePermissions } from './usePermissions';
+export type { ResourceType, UsePermissionsReturn } from './usePermissions';

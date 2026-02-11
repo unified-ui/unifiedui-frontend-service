@@ -51,7 +51,7 @@ import { TagInput, ManageAccessTable, AddPrincipalDialog } from '../../common';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
 import type { PrincipalPermission } from '../../common/ManageAccessTable/ManageAccessTable';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
-import { useFormDirtyGuard } from '../../../hooks';
+import { useFormDirtyGuard, usePermissions } from '../../../hooks';
 import classes from './EditApplicationDialog.module.css';
 
 const APPLICATION_TYPES = [
@@ -122,6 +122,8 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
   onSuccess,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { isGlobalAdmin } = usePermissions();
+  const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission === 'ADMIN';
   const [activeTab, setActiveTab] = useState<EditDialogTab>(initialTab);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -646,6 +648,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
         )}
 
         {/* Tab Navigation */}
+        {showIamTab && (
         <Box className={classes.tabContainer}>
           <SegmentedControl
             value={activeTab}
@@ -674,6 +677,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
             className={classes.segmentedControl}
           />
         </Box>
+        )}
 
         {/* Tab Content */}
         {activeTab === 'details' ? (

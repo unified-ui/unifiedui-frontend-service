@@ -65,7 +65,7 @@ import type {
   AIModelResponse,
 } from '../../api/types';
 import { ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum } from '../../api/types';
-import { useDelayedLoading } from '../../hooks';
+import { useDelayedLoading, usePermissions } from '../../hooks';
 import classes from './TenantSettingsPage.module.css';
 
 type TabValue = 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'ai-models' | 'billing-and-licence';
@@ -84,6 +84,7 @@ interface TenantSettingsFormValues {
 
 export const TenantSettingsPage: FC = () => {
   const { apiClient, selectedTenant, refreshIdentity } = useIdentity();
+  const { isGlobalAdmin, canCreate, hasRole } = usePermissions();
   const [searchParams, setSearchParams] = useSearchParams();
   
   // Read initial tab from URL, default to 'settings'
@@ -1019,9 +1020,11 @@ export const TenantSettingsPage: FC = () => {
             <Tabs.Tab value="settings" leftSection={<IconSettings size={18} />}>
               General
             </Tabs.Tab>
+            {isGlobalAdmin && (
             <Tabs.Tab value="iam" leftSection={<IconUsers size={18} />}>
               Access (IAM)
             </Tabs.Tab>
+            )}
             <Tabs.Tab value="custom-groups" leftSection={<IconUsersGroup size={18} />}>
               Groups
             </Tabs.Tab>
@@ -1050,14 +1053,17 @@ export const TenantSettingsPage: FC = () => {
                         label="Name"
                         placeholder="Enter tenant name"
                         required
+                        disabled={!isGlobalAdmin}
                         {...tenantForm.getInputProps('name')}
                       />
                       <Textarea
                         label="Description"
                         placeholder="Enter tenant description (optional)"
                         minRows={3}
+                        disabled={!isGlobalAdmin}
                         {...tenantForm.getInputProps('description')}
                       />
+                      {isGlobalAdmin && (
                       <Group justify="flex-end">
                         <Button
                           type="submit"
@@ -1067,10 +1073,12 @@ export const TenantSettingsPage: FC = () => {
                           Save Changes
                         </Button>
                       </Group>
+                      )}
                     </Stack>
                   </form>
                 </Paper>
 
+                {isGlobalAdmin && (
                 <Paper p="lg" withBorder className={classes.dangerZone}>
                   <Stack gap="md">
                     <Title order={4} c="red">
@@ -1090,6 +1098,7 @@ export const TenantSettingsPage: FC = () => {
                     </Button>
                   </Stack>
                 </Paper>
+                )}
               </Stack>
             </Tabs.Panel>
 
@@ -1142,12 +1151,14 @@ export const TenantSettingsPage: FC = () => {
                     onChange={(e) => setCustomGroupsSearch(e.currentTarget.value)}
                     style={{ flex: 1, maxWidth: 350 }}
                   />
+                  {canCreate('custom-groups') && (
                   <Button
                     leftSection={<IconUsersGroup size={16} />}
                     onClick={() => setCreateGroupDialogOpen(true)}
                   >
                     Create Group
                   </Button>
+                  )}
                 </Group>
 
                 {/* Table */}
@@ -1314,12 +1325,14 @@ export const TenantSettingsPage: FC = () => {
                       style={{ width: 220 }}
                     />
                   </Group>
+                  {canCreate('tools') && (
                   <Button
                     leftSection={<IconTool size={16} />}
                     onClick={() => setCreateToolDialogOpen(true)}
                   >
                     Create Tool
                   </Button>
+                  )}
                 </Group>
 
                 {/* Table */}
@@ -1405,6 +1418,7 @@ export const TenantSettingsPage: FC = () => {
                                       </ActionIcon>
                                     </Menu.Target>
                                     <Menu.Dropdown>
+                                      {(!tool.my_permission || tool.my_permission === 'ADMIN') && (
                                       <Menu.Item
                                         leftSection={<IconShieldLock size={14} />}
                                         onClick={(e) => {
@@ -1414,6 +1428,7 @@ export const TenantSettingsPage: FC = () => {
                                       >
                                         Manage Access
                                       </Menu.Item>
+                                      )}
                                       <Menu.Item
                                         leftSection={<IconEdit size={14} />}
                                         onClick={(e) => {
@@ -1423,6 +1438,8 @@ export const TenantSettingsPage: FC = () => {
                                       >
                                         Edit Details
                                       </Menu.Item>
+                                      {(!tool.my_permission || tool.my_permission === 'ADMIN') && (
+                                      <>
                                       <Menu.Divider />
                                       <Menu.Item
                                         color="red"
@@ -1438,6 +1455,8 @@ export const TenantSettingsPage: FC = () => {
                                       >
                                         Delete
                                       </Menu.Item>
+                                      </>
+                                      )}
                                     </Menu.Dropdown>
                                   </Menu>
                                 </Group>
@@ -1483,12 +1502,14 @@ export const TenantSettingsPage: FC = () => {
                     onChange={(e) => setCredentialsSearch(e.currentTarget.value)}
                     style={{ flex: 1, maxWidth: 350 }}
                   />
+                  {canCreate('credentials') && (
                   <Button
                     leftSection={<IconKey size={16} />}
                     onClick={() => setCreateCredentialDialogOpen(true)}
                   >
                     Create Credential
                   </Button>
+                  )}
                 </Group>
 
                 {/* Table */}
@@ -1574,6 +1595,7 @@ export const TenantSettingsPage: FC = () => {
                                       </ActionIcon>
                                     </Menu.Target>
                                     <Menu.Dropdown>
+                                      {(!credential.my_permission || credential.my_permission === 'ADMIN') && (
                                       <Menu.Item
                                         leftSection={<IconShieldLock size={14} />}
                                         onClick={(e) => {
@@ -1583,6 +1605,7 @@ export const TenantSettingsPage: FC = () => {
                                       >
                                         Manage Access
                                       </Menu.Item>
+                                      )}
                                       <Menu.Item
                                         leftSection={<IconEdit size={14} />}
                                         onClick={(e) => {
@@ -1592,6 +1615,8 @@ export const TenantSettingsPage: FC = () => {
                                       >
                                         Edit Details
                                       </Menu.Item>
+                                      {(!credential.my_permission || credential.my_permission === 'ADMIN') && (
+                                      <>
                                       <Menu.Divider />
                                       <Menu.Item
                                         color="red"
@@ -1607,6 +1632,8 @@ export const TenantSettingsPage: FC = () => {
                                       >
                                         Delete
                                       </Menu.Item>
+                                      </>
+                                      )}
                                     </Menu.Dropdown>
                                   </Menu>
                                 </Group>
@@ -1668,12 +1695,14 @@ export const TenantSettingsPage: FC = () => {
                       style={{ maxWidth: 200 }}
                     />
                   </Group>
+                  {(isGlobalAdmin || hasRole(TenantPermissionEnum.TENANT_AI_MODELS_ADMIN)) && (
                   <Button
                     leftSection={<IconBrain size={16} />}
                     onClick={() => setCreateAiModelDialogOpen(true)}
                   >
                     Create AI Model
                   </Button>
+                  )}
                 </Group>
 
                 <div className={classes.tableScrollWrapper}>

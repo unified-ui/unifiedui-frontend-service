@@ -125,6 +125,10 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
       label: app.name,
     }));
 
+  const perm = conversation?.my_permission;
+  const canAdminConv = !perm || perm === 'ADMIN';
+  const canWriteConv = !perm || perm === 'ADMIN' || perm === 'WRITE';
+
   return (
     <div className={classes.header}>
       <Group justify="space-between" align="center" wrap="nowrap" className={classes.headerContent}>
@@ -178,6 +182,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
                 </ActionIcon>
               </Tooltip>
 
+              {canAdminConv && (
               <Tooltip label={t('conversations:shareConversation')}>
                 <ActionIcon
                   variant="subtle"
@@ -188,6 +193,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
                   <IconShare size={18} />
                 </ActionIcon>
               </Tooltip>
+              )}
 
               <Menu position="bottom-end" shadow="md" withinPortal>
                 <Menu.Target>
@@ -226,6 +232,8 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
                   >
                     {t('conversations:exportJson')}
                   </Menu.Item>
+                  {canAdminConv && (
+                  <>
                   <Menu.Divider />
                   <Menu.Item
                     color="red"
@@ -235,6 +243,8 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
                   >
                     {t('conversations:deleteChat')}
                   </Menu.Item>
+                  </>
+                  )}
                 </Menu.Dropdown>
               </Menu>
             </>

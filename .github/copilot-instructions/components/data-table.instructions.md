@@ -31,6 +31,7 @@ interface DataTableItem {
   tags?: string[];
   isActive?: boolean;
   isPinned?: boolean;
+  my_permission?: string;
 }
 
 type SortOption = 'updated' | 'created' | 'name-asc' | 'name-desc';
@@ -136,6 +137,17 @@ Contains: Search `TextInput`, Sort `Select`, Filter `Popover` with `MultiSelect`
 The left group uses `flex: 1` to fill available space (capped at 600px). The right group uses `marginLeft: auto` to always pin status and action dots to the right edge.
 
 **Event propagation**: All interactive elements (switches, menu buttons) call `e.stopPropagation()` to prevent `onRowClick`.
+
+**Permission-aware actions**: When `my_permission` is set on the item, row actions are gated:
+
+| Action | Condition |
+|--------|----------|
+| Open / Pin | Always visible |
+| Edit / Duplicate | Hidden when `hasPermission && !canWriteItem` |
+| Status toggle | Disabled when `hasPermission && !canWriteItem` |
+| Manage Access / Delete | Hidden when `hasPermission && !canAdminItem` |
+
+When `my_permission` is `undefined`, all actions remain visible (backward compatibility).
 
 ---
 

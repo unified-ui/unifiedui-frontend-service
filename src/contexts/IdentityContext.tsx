@@ -3,7 +3,7 @@ import type { ReactNode, FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth';
 import { UnifiedUIAPIClient } from '../api/client';
-import type { TenantResponse, IdentityUser } from '../api/types';
+import type { TenantResponse, IdentityUser, TenantPermissionEnum } from '../api/types';
 import { notifications } from '@mantine/notifications';
 import { AuthProviderInternal, useAuthContext } from './AuthContext';
 import { TenantProvider, useTenantContext } from './TenantContext';
@@ -13,6 +13,7 @@ interface IdentityContextType {
   user: IdentityUser | null;
   tenants: TenantResponse[];
   selectedTenant: TenantResponse | null;
+  selectedTenantRoles: TenantPermissionEnum[];
   isLoading: boolean;
   apiClient: UnifiedUIAPIClient | null;
   refreshIdentity: (noCache?: boolean) => Promise<void>;
@@ -33,7 +34,7 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
   const { t } = useTranslation('common');
   const { isAuthenticated, getAccessToken, getFoundryToken } = useAuth();
   const { user, isLoading, setUser, setIsLoading } = useAuthContext();
-  const { tenants, selectedTenant, setTenants, selectTenant } = useTenantContext();
+  const { tenants, selectedTenant, selectedTenantRoles, setTenantsWithRoles, selectTenant } = useTenantContext();
   const { apiClient, setApiClient } = useApiClient();
 
   useEffect(() => {
@@ -67,7 +68,7 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
     } else {
       setApiClient(null);
       setUser(null);
-      setTenants([]);
+      setTenantsWithRoles([]);
     }
   }, [isAuthenticated, getAccessToken]);
 
@@ -94,19 +95,18 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
         mail: meResponse.mail,
       };
 
-      const tenantList = meResponse.tenants?.map(t => t.tenant) || [];
+      const tenantsWithRoles = meResponse.tenants || [];
 
-      if (tenantList.length === 0) {
+      if (tenantsWithRoles.length === 0) {
         await apiClient.createTenant({
           name: 'default',
           description: 'Default tenant created automatically',
         });
 
         meResponse = await apiClient.getMe({ noCache });
-        const updatedTenants = meResponse.tenants?.map(t => t.tenant) || [];
-        setTenants(updatedTenants);
+        setTenantsWithRoles(meResponse.tenants || []);
       } else {
-        setTenants(tenantList);
+        setTenantsWithRoles(tenantsWithRoles);
       }
 
       setUser(identityUser);
@@ -121,6 +121,7 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
     user,
     tenants,
     selectedTenant,
+    selectedTenantRoles,
     isLoading,
     apiClient,
     refreshIdentity,

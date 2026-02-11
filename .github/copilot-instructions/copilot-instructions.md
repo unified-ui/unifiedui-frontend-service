@@ -128,5 +128,6 @@ After completing work, evaluate whether documentation needs updating. Full rules
 - New UI pattern established → add to `ui-patterns.instructions.md`
 - New complex component → consider dedicated `components/*.instructions.md`
 - Folder structure changed → update `react-structure.instructions.md`
+- **New tenant role added** → update `usePermissions.ts` (CREATOR_ROLES, ADMIN_ROLES maps), `api/types.ts` (`TenantPermissionEnum`), RBAC section in `ui-patterns.instructions.md`, and notify platform-service to update `auth-permissions.instructions.md`
 
 **Never update docs for:** bug fixes, simple prop changes, one-off page-specific code.

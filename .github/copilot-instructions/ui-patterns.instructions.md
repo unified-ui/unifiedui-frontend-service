@@ -292,3 +292,122 @@ resetBaseline(config);
 2. **Every edit page** must use `useUnsavedChanges` + `disabled={!hasChanges}` on save button
 3. Always call `form.resetDirty()` / `resetBaseline()` **after loading data** and **after successful save**
 4. For create/edit dual-mode dialogs (e.g., AIModelDialog), only disable in edit mode: `disabled={isEdit && !form.isDirty()}`
+
+---
+
+## RBAC / Permission Gating
+
+### Overview
+
+The frontend enforces RBAC at two levels:
+
+1. **Tenant-level roles** — checked via `usePermissions()` hook (e.g., `isGlobalAdmin`, `canCreate('applications')`)
+2. **Resource-level permissions** — checked via `my_permission` field on API response objects (`'ADMIN'` | `'WRITE'` | `'READ'` | `undefined`)
+
+When `my_permission` is `undefined`/`null`, all actions remain visible (backward compatibility).
+
+### `usePermissions()` Hook
+
+```tsx
+import { usePermissions } from '../../hooks';
+
+const { isGlobalAdmin, canCreate, hasRole } = usePermissions();
+```
+
+| Method | Purpose |
+|--------|---------|
+| `isGlobalAdmin` | `true` if user has `GLOBAL_ADMIN` role |
+| `canCreate(resourceType)` | `true` if user can create entities of that type |
+| `canAdmin(resourceType)` | `true` if user has admin for that resource type |
+| `hasRole(role)` | `true` if user has a specific `TenantPermissionEnum` role |
+| `hasAnyRole(roles)` | `true` if user has at least one of the given roles |
+
+### List Pages — Gating Create Buttons
+
+```tsx
+const { canCreate } = usePermissions();
+const canCreateApp = canCreate('applications');
+
+<PageHeader onAction={canCreateApp ? handleCreate : undefined} />
+<DataTable onEmptyAction={canCreateApp ? handleCreate : undefined} />
+```
+
+Pass `undefined` instead of the callback to hide the button entirely.
+
+### DataTable — Row-Level Permission Gating
+
+`DataTableItem` includes `my_permission?: string`. DataTableRow derives:
+
+```tsx
+const perm = item.my_permission;
+const canWriteItem = perm === 'ADMIN' || perm === 'WRITE';
+const canAdminItem = perm === 'ADMIN';
+const hasPermission = perm != null;
+```
+
+| Action | Condition |
+|--------|-----------|
+| Open / Pin | Always visible |
+| Edit / Duplicate | Hidden when `hasPermission && !canWriteItem` |
+| Status toggle | Disabled when `hasPermission && !canWriteItem` |
+| Manage Access / Delete | Hidden when `hasPermission && !canAdminItem` |
+
+Map `my_permission` through in `mapToTableItem`:
+
+```tsx
+const mapToTableItem = (entity: EntityResponse): DataTableItem => ({
+  id: entity.id,
+  name: entity.name,
+  my_permission: entity.my_permission,
+  // ...
+});
+```
+
+### Edit Dialogs — IAM Tab Visibility
+
+```tsx
+const { isGlobalAdmin } = usePermissions();
+const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission === 'ADMIN';
+
+{showIamTab && (
+  <Box><SegmentedControl /* ... */ /></Box>
+)}
+```
+
+### Sidebar — Add Button Gating
+
+```tsx
+const { canCreate } = usePermissions();
+const canAddEntity = activeEntity ? canCreate(activeEntity) : false;
+
+<SidebarDataList onAdd={canAddEntity ? handleAddClick : undefined} />
+```
+
+When `onAdd` is `undefined`, the add button is hidden entirely.
+
+### TenantSettingsPage — Admin Gating
+
+- IAM tab, settings form fields, save button, danger zone: gated by `isGlobalAdmin`
+- Create buttons: gated by `canCreate(resourceType)` per entity
+- AI Models create: `isGlobalAdmin || hasRole(TenantPermissionEnum.TENANT_AI_MODELS_ADMIN)`
+
+### ConversationsPage — Resource Permission Gating
+
+```tsx
+const convPerm = conversation?.my_permission;
+const canWriteConversation = !convPerm || convPerm === 'ADMIN' || convPerm === 'WRITE';
+const canAdminConv = !convPerm || convPerm === 'ADMIN';
+```
+
+- Chat input disabled when `!canWriteConversation`
+- Edit/delete message callbacks set to `undefined` when `!canWriteConversation`
+- Share/delete conversation hidden when `!canAdminConv`
+
+### Rules
+
+1. **Backward compatibility** — when `my_permission` is `null`/`undefined`, all actions remain visible
+2. **Hide, don't disable** — prefer hiding inaccessible actions over disabling them (except status toggle)
+3. **Pass `undefined` to hide** — set callback props to `undefined` to hide associated UI elements
+4. **Tenant roles for create** — use `canCreate(resourceType)` from `usePermissions()`
+5. **Resource permissions for CRUD** — use `my_permission` from API response objects
+6. **When adding new tenant roles** — update `usePermissions.ts` (CREATOR_ROLES, ADMIN_ROLES maps), `api/types.ts` (`TenantPermissionEnum`), and document in these instruction files

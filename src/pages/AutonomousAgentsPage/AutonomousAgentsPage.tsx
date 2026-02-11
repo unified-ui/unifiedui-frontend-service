@@ -7,7 +7,7 @@ import { PageHeader, DataTable, ConfirmDeleteDialog, EntityAvatar } from '../../
 import type { DataTableItem } from '../../components/common';
 import { CreateAutonomousAgentDialog, EditAutonomousAgentDialog } from '../../components/dialogs';
 import { useIdentity, useSidebarData, useFavorites } from '../../contexts';
-import { useEntityList } from '../../hooks';
+import { useEntityList, usePermissions } from '../../hooks';
 import type { AutonomousAgentResponse } from '../../api/types';
 import { FavoriteResourceTypeEnum } from '../../api/types';
 
@@ -18,6 +18,8 @@ export const AutonomousAgentsPage: FC = () => {
   const { apiClient } = useIdentity();
   const { refreshAutonomousAgents } = useSidebarData();
   const { isFavorite: checkFavorite, toggleFavorite } = useFavorites();
+  const { canCreate } = usePermissions();
+  const canCreateAgent = canCreate('autonomous-agents');
 
   const isFavorite = useCallback(
     (id: string) => checkFavorite(FavoriteResourceTypeEnum.AUTONOMOUS_AGENT, id),
@@ -36,6 +38,7 @@ export const AutonomousAgentsPage: FC = () => {
     type: 'Autonomous',
     tags: agent.tags?.map(tag => tag.name) || [],
     isActive: agent.is_active,
+    my_permission: agent.my_permission,
   }), []);
 
   const listEntities = useCallback(
@@ -105,7 +108,7 @@ export const AutonomousAgentsPage: FC = () => {
         title="Autonomous Agents"
         description="Manage your autonomous AI agents. These agents can perform tasks independently without user interaction."
         actionLabel="Create Autonomous Agent"
-        onAction={() => setIsCreateDialogOpen(true)}
+        onAction={canCreateAgent ? () => setIsCreateDialogOpen(true) : undefined}
       />
 
       <DataTable
@@ -118,7 +121,7 @@ export const AutonomousAgentsPage: FC = () => {
         searchPlaceholder="Search autonomous agents..."
         emptyMessage="No autonomous agents found"
         emptyActionLabel="Create Autonomous Agent"
-        onEmptyAction={() => setIsCreateDialogOpen(true)}
+        onEmptyAction={canCreateAgent ? () => setIsCreateDialogOpen(true) : undefined}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         availableTags={availableTags}

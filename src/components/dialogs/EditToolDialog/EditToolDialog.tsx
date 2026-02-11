@@ -19,7 +19,7 @@ import { useForm } from '@mantine/form';
 import { IconAlertCircle, IconTool, IconInfoCircle, IconShieldLock } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
-import { useEntityPermissions } from '../../../hooks';
+import { useEntityPermissions, usePermissions } from '../../../hooks';
 import { useFormDirtyGuard } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
 import type { ToolResponse, PrincipalTypeEnum } from '../../../api/types';
@@ -56,6 +56,8 @@ export const EditToolDialog: FC<EditToolDialogProps> = ({
   onTabChange,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { isGlobalAdmin } = usePermissions();
+  const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission === 'ADMIN';
   const [tool, setTool] = useState<ToolResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -274,6 +276,7 @@ export const EditToolDialog: FC<EditToolDialogProps> = ({
         )}
 
         {/* Tab Navigation */}
+        {showIamTab && (
         <Box className={classes.tabContainer}>
           <SegmentedControl
             value={activeTab}
@@ -302,6 +305,7 @@ export const EditToolDialog: FC<EditToolDialogProps> = ({
             className={classes.segmentedControl}
           />
         </Box>
+        )}
 
         {/* Tab Content */}
         {activeTab === 'details' ? (

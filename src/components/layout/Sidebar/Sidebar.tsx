@@ -13,6 +13,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSidebarData, useIdentity, useFavorites, type EntityType } from '../../../contexts';
 import { EntityAvatar } from '../../common';
+import { usePermissions } from '../../../hooks';
 import { SidebarDataList, type DataListItem } from './SidebarDataList';
 import {
   CreateApplicationDialog,
@@ -81,6 +82,7 @@ export const Sidebar: FC = () => {
   const { apiClient, selectedTenant } = useIdentity();
 
   const { isFavorite: checkFavorite, toggleFavorite } = useFavorites();
+  const { canCreate } = usePermissions();
 
   const ENTITY_TO_FAVORITE_TYPE: Record<string, FavoriteResourceTypeEnum> = useMemo(() => ({
     applications: FavoriteResourceTypeEnum.APPLICATION,
@@ -109,6 +111,7 @@ export const Sidebar: FC = () => {
   );
   
   const [activeEntity, setActiveEntity] = useState<EntityType | null>(null);
+  const canAddEntity = activeEntity ? canCreate(activeEntity) : false;
   const [isDataListExpanded, setIsDataListExpanded] = useState(() => {
     try {
       const stored = localStorage.getItem(SIDEBAR_EXPAND_KEY);
@@ -541,7 +544,7 @@ export const Sidebar: FC = () => {
           onMouseEnter={handleDataListHoverEnter}
           onMouseLeave={handleDataListHoverLeave}
           addButtonLabel={activeConfig.addButtonLabel}
-          onAdd={handleAddClick}
+          onAdd={canAddEntity ? handleAddClick : undefined}
           onRefresh={handleRefresh}
           isRefreshing={isRefreshing}
           isFavorite={getIsFavoriteForEntity(activeEntity)}
@@ -562,7 +565,7 @@ export const Sidebar: FC = () => {
           onMouseEnter={handleConversationsSidebarHoverEnter}
           onMouseLeave={handleConversationsSidebarHoverLeave}
           addButtonLabel={t('newConversation')}
-          onAdd={() => navigate('/conversations')}
+          onAdd={canCreate('conversations') ? () => navigate('/conversations') : undefined}
           onRefresh={handleRefreshConversations}
           isRefreshing={conversationsRefreshing}
           isFavorite={getIsFavoriteForEntity('conversations')}

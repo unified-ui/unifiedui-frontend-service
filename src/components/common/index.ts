@@ -26,3 +26,5 @@ export type { TracesTableProps, TracesSortState, TraceSortField, TraceSortOrder,
 export { MarkdownRenderer } from './MarkdownRenderer';
 export { GenerateWithAIButton } from './GenerateWithAIButton';
 export { CommandPalette } from './CommandPalette';
+export { PermissionGate } from './PermissionGate';
+export type { PermissionGateProps } from './PermissionGate';

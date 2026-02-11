@@ -601,6 +601,7 @@ const ConversationItem: FC<ConversationItemProps> = ({
               >
                 {isFavorite ? t('conversations:unpin') : t('conversations:pin')}
               </Menu.Item>
+              {(!conversation.my_permission || conversation.my_permission === 'ADMIN' || conversation.my_permission === 'WRITE') && (
               <Menu.Item
                 leftSection={<IconEdit size={14} />}
                 onClick={(e) => {
@@ -610,6 +611,7 @@ const ConversationItem: FC<ConversationItemProps> = ({
               >
                 {t('conversations:rename')}
               </Menu.Item>
+              )}
               <CopyButton value={conversation.id}>
                 {({ copy }) => (
                   <Menu.Item
@@ -623,6 +625,8 @@ const ConversationItem: FC<ConversationItemProps> = ({
                   </Menu.Item>
                 )}
               </CopyButton>
+              {(!conversation.my_permission || conversation.my_permission === 'ADMIN') && (
+              <>
               <Menu.Divider />
               <Menu.Item
                 color="red"
@@ -634,6 +638,8 @@ const ConversationItem: FC<ConversationItemProps> = ({
               >
                 {t('conversations:deleteConversation')}
               </Menu.Item>
+              </>
+              )}
             </Menu.Dropdown>
           </Menu>
         )}

@@ -1,13 +1,14 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import type { ReactNode, FC } from 'react';
-import type { TenantResponse } from '../api/types';
+import type { TenantResponse, TenantWithRoles, TenantPermissionEnum } from '../api/types';
 
 const SELECTED_TENANT_KEY = 'unified-ui-selected-tenant-id';
 
 interface TenantContextType {
   tenants: TenantResponse[];
   selectedTenant: TenantResponse | null;
-  setTenants: (tenants: TenantResponse[]) => void;
+  selectedTenantRoles: TenantPermissionEnum[];
+  setTenantsWithRoles: (tenantsWithRoles: TenantWithRoles[]) => void;
   selectTenant: (tenantId: string) => void;
 }
 
@@ -18,33 +19,57 @@ interface TenantProviderProps {
 }
 
 export const TenantProvider: FC<TenantProviderProps> = ({ children }) => {
-  const [tenants, setTenantsState] = useState<TenantResponse[]>([]);
-  const [selectedTenant, setSelectedTenant] = useState<TenantResponse | null>(null);
+  const [tenantsWithRoles, setTenantsWithRolesState] = useState<TenantWithRoles[]>([]);
+  const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
 
-  const setTenants = useCallback((newTenants: TenantResponse[]) => {
-    setTenantsState(newTenants);
-    if (newTenants.length > 0) {
+  const tenants = useMemo(
+    () => tenantsWithRoles.map(t => t.tenant),
+    [tenantsWithRoles]
+  );
+
+  const selectedTenant = useMemo(
+    () => tenants.find(t => t.id === selectedTenantId) || null,
+    [tenants, selectedTenantId]
+  );
+
+  const selectedTenantRoles = useMemo(
+    () => {
+      const entry = tenantsWithRoles.find(t => t.tenant.id === selectedTenantId);
+      return (entry?.roles || []) as TenantPermissionEnum[];
+    },
+    [tenantsWithRoles, selectedTenantId]
+  );
+
+  const setTenantsWithRoles = useCallback((newTenantsWithRoles: TenantWithRoles[]) => {
+    setTenantsWithRolesState(newTenantsWithRoles);
+    if (newTenantsWithRoles.length > 0) {
       const savedTenantId = localStorage.getItem(SELECTED_TENANT_KEY);
       if (savedTenantId) {
-        const tenant = newTenants.find(t => t.id === savedTenantId);
-        if (tenant) {
-          setSelectedTenant(tenant);
+        const found = newTenantsWithRoles.find(t => t.tenant.id === savedTenantId);
+        if (found) {
+          setSelectedTenantId(savedTenantId);
           return;
         }
       }
-      setSelectedTenant(newTenants[0]);
+      setSelectedTenantId(newTenantsWithRoles[0].tenant.id);
     }
   }, []);
 
   const selectTenant = useCallback((tenantId: string) => {
-    const tenant = tenants.find(t => t.id === tenantId);
-    if (tenant && tenant.id !== selectedTenant?.id) {
+    const found = tenantsWithRoles.find(t => t.tenant.id === tenantId);
+    if (found && tenantId !== selectedTenantId) {
       localStorage.setItem(SELECTED_TENANT_KEY, tenantId);
-      setSelectedTenant(tenant);
+      setSelectedTenantId(tenantId);
     }
-  }, [tenants, selectedTenant?.id]);
+  }, [tenantsWithRoles, selectedTenantId]);
 
-  const value: TenantContextType = { tenants, selectedTenant, setTenants, selectTenant };
+  const value: TenantContextType = {
+    tenants,
+    selectedTenant,
+    selectedTenantRoles,
+    setTenantsWithRoles,
+    selectTenant,
+  };
 
   return (
     <TenantContext.Provider value={value}>

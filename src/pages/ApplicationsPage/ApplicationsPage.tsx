@@ -7,7 +7,7 @@ import { PageHeader, DataTable, ConfirmDeleteDialog, EntityAvatar } from '../../
 import type { DataTableItem } from '../../components/common';
 import { CreateApplicationDialog, EditApplicationDialog } from '../../components/dialogs';
 import { useIdentity, useSidebarData, useFavorites } from '../../contexts';
-import { useEntityList } from '../../hooks';
+import { useEntityList, usePermissions } from '../../hooks';
 import type { ApplicationResponse } from '../../api/types';
 import { FavoriteResourceTypeEnum } from '../../api/types';
 
@@ -18,6 +18,8 @@ export const ApplicationsPage: FC = () => {
   const { apiClient } = useIdentity();
   const { refreshApplications } = useSidebarData();
   const { isFavorite: checkFavorite, toggleFavorite } = useFavorites();
+  const { canCreate } = usePermissions();
+  const canCreateApp = canCreate('applications');
 
   const isFavorite = useCallback(
     (id: string) => checkFavorite(FavoriteResourceTypeEnum.APPLICATION, id),
@@ -36,6 +38,7 @@ export const ApplicationsPage: FC = () => {
     type: app.type.replace(/_/g, ' '),
     tags: app.tags?.map(tag => tag.name) || [],
     isActive: app.is_active,
+    my_permission: app.my_permission,
   }), []);
 
   const listEntities = useCallback(
@@ -96,7 +99,7 @@ export const ApplicationsPage: FC = () => {
         title="Chat Agents"
         description="Manage your AI chat agents. Create, configure, and deploy conversational agents for your applications."
         actionLabel="Create Chat Agent"
-        onAction={() => setIsCreateDialogOpen(true)}
+        onAction={canCreateApp ? () => setIsCreateDialogOpen(true) : undefined}
       />
 
       <DataTable
@@ -109,7 +112,7 @@ export const ApplicationsPage: FC = () => {
         searchPlaceholder="Search chat agents..."
         emptyMessage="No chat agents found"
         emptyActionLabel="Create Chat Agent"
-        onEmptyAction={() => setIsCreateDialogOpen(true)}
+        onEmptyAction={canCreateApp ? () => setIsCreateDialogOpen(true) : undefined}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         availableTags={availableTags}

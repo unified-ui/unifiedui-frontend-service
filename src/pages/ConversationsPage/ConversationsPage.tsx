@@ -90,6 +90,9 @@ export const ConversationsPage: FC = () => {
     }
   }, [convList.currentConversation?.id]);
 
+  const convPerm = convList.currentConversation?.my_permission;
+  const canWriteConversation = !convPerm || convPerm === 'ADMIN' || convPerm === 'WRITE';
+
   const handleNewChat = useCallback(() => {
     chat.resetStreamingState();
     convList.handleNewChat(chat.abortControllerRef);
@@ -284,8 +287,8 @@ export const ConversationsPage: FC = () => {
                       streamingMessageId={chat.streamingMessageId}
                       onViewTrace={tracing.handleViewTrace}
                       highlightedExtMessageId={tracing.highlightedMessageExtId}
-                      onEditMessage={chat.handleEditMessage}
-                      onDeleteMessage={chat.handleDeleteMessage}
+                      onEditMessage={canWriteConversation ? chat.handleEditMessage : undefined}
+                      onDeleteMessage={canWriteConversation ? chat.handleDeleteMessage : undefined}
                       onRetry={(content) => chat.handleSendMessage(content)}
                       onReaction={chat.handleReaction}
                       reactions={chat.reactions}
@@ -294,7 +297,7 @@ export const ConversationsPage: FC = () => {
                   <ChatInput
                     ref={fileUpload.chatInputRef}
                     onSend={chat.handleSendMessage}
-                    isDisabled={!convList.selectedApplicationId}
+                    isDisabled={!convList.selectedApplicationId || !canWriteConversation}
                     isStreaming={chat.isStreaming}
                     placeholder={
                       convList.selectedApplicationId

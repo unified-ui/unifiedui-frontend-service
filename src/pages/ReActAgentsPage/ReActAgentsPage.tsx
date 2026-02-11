@@ -8,7 +8,7 @@ import { PageHeader, DataTable, ConfirmDeleteDialog, EntityAvatar } from '../../
 import type { DataTableItem } from '../../components/common';
 import { EditReActAgentDialog } from '../../components/dialogs';
 import { useIdentity } from '../../contexts';
-import { useEntityList } from '../../hooks';
+import { useEntityList, usePermissions } from '../../hooks';
 import type { ReActAgentResponse } from '../../api/types';
 
 const SORT_STORAGE_KEY = 'unified-ui:sort:re-act-agents';
@@ -17,6 +17,8 @@ export const ReActAgentsPage: FC = () => {
   const { t } = useTranslation('reactAgent');
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
+  const { canCreate } = usePermissions();
+  const canCreateAgent = canCreate('re-act-agents');
 
   const mapToTableItem = useCallback((agent: ReActAgentResponse): DataTableItem => ({
     id: agent.id,
@@ -24,6 +26,7 @@ export const ReActAgentsPage: FC = () => {
     description: agent.description,
     tags: agent.tags?.map(tag => tag.name) || [],
     isActive: agent.is_active,
+    my_permission: agent.my_permission,
   }), []);
 
   const listEntities = useCallback(
@@ -99,7 +102,7 @@ export const ReActAgentsPage: FC = () => {
         title={t('listTitle')}
         description={t('listDescription')}
         actionLabel={t('createAgent')}
-        onAction={handleCreate}
+        onAction={canCreateAgent ? handleCreate : undefined}
       />
 
       <DataTable
@@ -112,7 +115,7 @@ export const ReActAgentsPage: FC = () => {
         searchPlaceholder={t('searchPlaceholder')}
         emptyMessage={t('emptyMessage')}
         emptyActionLabel={t('createAgent')}
-        onEmptyAction={handleCreate}
+        onEmptyAction={canCreateAgent ? handleCreate : undefined}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         availableTags={availableTags}

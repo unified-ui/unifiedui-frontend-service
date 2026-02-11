@@ -39,6 +39,7 @@ export interface DataTableItem {
   tags?: string[];
   isActive?: boolean;
   isPinned?: boolean;
+  my_permission?: string;
 }
 
 interface DataTableRowProps {
@@ -87,6 +88,11 @@ export const DataTableRow: FC<DataTableRowProps> = ({
   const hasHiddenTags = hiddenTags.length > 0;
   const [popoverOpened, setPopoverOpened] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const perm = item.my_permission;
+  const canWriteItem = perm === 'ADMIN' || perm === 'WRITE';
+  const canAdminItem = perm === 'ADMIN';
+  const hasPermission = perm != null;
 
   const handleDelete = () => {
     if (!onDelete) return;
@@ -213,6 +219,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
                 onChange={(e) => onStatusChange?.(item.id, e.currentTarget.checked)}
                 size="sm"
                 className={classes.statusSwitch}
+                disabled={hasPermission && !canWriteItem}
               />
             </div>
           )}
@@ -234,33 +241,39 @@ export const DataTableRow: FC<DataTableRowProps> = ({
             >
               Open
             </Menu.Item>
-            <Menu.Item
-              leftSection={<IconEdit size={14} />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit?.(item.id);
-              }}
-            >
-              Edit
-            </Menu.Item>
-            <Menu.Item
-              leftSection={<IconUserCog size={14} />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onManageAccess?.(item.id);
-              }}
-            >
-              Manage access
-            </Menu.Item>
-            <Menu.Item
-              leftSection={<IconCopy size={14} />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onDuplicate?.(item.id);
-              }}
-            >
-              Duplicate
-            </Menu.Item>
+            {(!hasPermission || canWriteItem) && (
+              <Menu.Item
+                leftSection={<IconEdit size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.(item.id);
+                }}
+              >
+                Edit
+              </Menu.Item>
+            )}
+            {(!hasPermission || canAdminItem) && (
+              <Menu.Item
+                leftSection={<IconUserCog size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onManageAccess?.(item.id);
+                }}
+              >
+                Manage access
+              </Menu.Item>
+            )}
+            {(!hasPermission || canWriteItem) && (
+              <Menu.Item
+                leftSection={<IconCopy size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDuplicate?.(item.id);
+                }}
+              >
+                Duplicate
+              </Menu.Item>
+            )}
             <Menu.Divider />
             <Menu.Item
               leftSection={item.isPinned ? <IconPinned size={14} /> : <IconPin size={14} />}
@@ -271,17 +284,21 @@ export const DataTableRow: FC<DataTableRowProps> = ({
             >
               {item.isPinned ? 'Unpin' : 'Pin'}
             </Menu.Item>
-            <Menu.Divider />
-            <Menu.Item
-              leftSection={<IconTrash size={14} />}
-              color="red"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete();
-              }}
-            >
-              Delete
-            </Menu.Item>
+            {(!hasPermission || canAdminItem) && (
+              <>
+                <Menu.Divider />
+                <Menu.Item
+                  leftSection={<IconTrash size={14} />}
+                  color="red"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete();
+                  }}
+                >
+                  Delete
+                </Menu.Item>
+              </>
+            )}
           </Menu.Dropdown>
         </Menu>
         </Group>

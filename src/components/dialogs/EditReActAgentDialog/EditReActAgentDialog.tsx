@@ -20,7 +20,7 @@ import { useForm } from '@mantine/form';
 import { IconAlertCircle, IconBrain, IconInfoCircle, IconShieldLock } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
-import { useEntityPermissions } from '../../../hooks';
+import { useEntityPermissions, usePermissions } from '../../../hooks';
 import { useFormDirtyGuard } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
 import type { ReActAgentResponse, PrincipalTypeEnum } from '../../../api/types';
@@ -57,6 +57,8 @@ export const EditReActAgentDialog: FC<EditReActAgentDialogProps> = ({
   onTabChange,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { isGlobalAdmin } = usePermissions();
+  const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission === 'ADMIN';
   const [agent, setAgent] = useState<ReActAgentResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -248,6 +250,7 @@ export const EditReActAgentDialog: FC<EditReActAgentDialogProps> = ({
           </Alert>
         )}
 
+        {showIamTab && (
         <Box className={classes.tabContainer}>
           <SegmentedControl
             value={activeTab}
@@ -276,6 +279,7 @@ export const EditReActAgentDialog: FC<EditReActAgentDialogProps> = ({
             className={classes.segmentedControl}
           />
         </Box>
+        )}
 
         {activeTab === 'details' ? (
           <form onSubmit={form.onSubmit(handleSubmit)}>

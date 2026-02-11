@@ -56,5 +56,6 @@
   "conversation": "Conversation",
   "missingAgentIdOrToken": "Missing agent ID or token",
   "embedChatAgent": "Embed Chat — Agent: {{agentId}}",
-  "tokenAuthComingSoon": "Token-based auth coming in a future phase."
+  "tokenAuthComingSoon": "Token-based auth coming in a future phase.",
+  "noPermission": "You don't have permission to perform this action"
 }
