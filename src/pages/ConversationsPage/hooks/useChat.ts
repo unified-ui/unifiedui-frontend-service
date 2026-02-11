@@ -358,6 +358,30 @@ export function useChat({
     let activeConversationId = conversationId;
     let activeExtConversationId = currentConversation?.ext_conversation_id;
 
+    const attachmentsMetadata = attachments?.map(file => ({
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      fileCategory: file.type.startsWith('image/') ? 'image' : file.type.startsWith('audio/') ? 'audio' : 'file',
+    }));
+
+    const optimisticUserMessage: MessageResponse = {
+      id: `temp-${Date.now()}`,
+      type: 'user',
+      conversationId: activeConversationId || 'pending',
+      applicationId: selectedApplicationId,
+      content,
+      status: 'pending',
+      attachmentsMetadata,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setMessages(prev => [...prev, optimisticUserMessage]);
+    setIsStreaming(true);
+    setStreamingContent('');
+    retryCountRef.current = 0;
+
     if (!activeConversationId) {
       try {
         const newConv = await apiClient.createConversation(
@@ -380,6 +404,9 @@ export function useChat({
         setConversations(prev => [newConv, ...prev]);
       } catch (error) {
         console.error('Failed to create conversation:', error);
+        setIsStreaming(false);
+        setStreamingContent('');
+        setMessages(prev => prev.filter(m => m.id !== optimisticUserMessage.id));
         notifications.show({
           title: 'Error',
           message: 'Failed to create conversation',
@@ -388,30 +415,6 @@ export function useChat({
         return;
       }
     }
-
-    const attachmentsMetadata = attachments?.map(file => ({
-      fileName: file.name,
-      fileType: file.type,
-      fileSize: file.size,
-      fileCategory: file.type.startsWith('image/') ? 'image' : file.type.startsWith('audio/') ? 'audio' : 'file',
-    }));
-
-    const optimisticUserMessage: MessageResponse = {
-      id: `temp-${Date.now()}`,
-      type: 'user',
-      conversationId: activeConversationId!,
-      applicationId: selectedApplicationId,
-      content,
-      status: 'pending',
-      attachmentsMetadata,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    setMessages(prev => [...prev, optimisticUserMessage]);
-    setIsStreaming(true);
-    setStreamingContent('');
-    retryCountRef.current = 0;
 
     let files: FileAttachment[] | undefined;
     if (attachments && attachments.length > 0) {

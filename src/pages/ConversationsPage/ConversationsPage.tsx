@@ -251,7 +251,7 @@ export const ConversationsPage: FC = () => {
                 onToggleTracingSidebar={tracing.handleToggleTracingSidebar}
               />
 
-              {convList.isNewChat && chat.messages.length === 0 ? (
+              {convList.isNewChat && chat.messages.length === 0 && !chat.isStreaming ? (
                 <>
                   <Box className={classes.contentArea}>
                     <Box className={classes.emptyState}>

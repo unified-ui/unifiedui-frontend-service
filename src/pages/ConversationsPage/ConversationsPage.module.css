@@ -13,7 +13,7 @@
 }
 
 .pageTitle {
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-2xl) !important;
   font-weight: var(--font-weight-bold);
   color: var(--text-primary);
   letter-spacing: 0.15em;

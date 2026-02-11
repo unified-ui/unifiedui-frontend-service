@@ -1,10 +1,10 @@
 .header {
-  height: 60px;
-  min-height: 60px;
+  height: 40px;
+  min-height: 40px;
   background-color: transparent;
   display: flex;
   align-items: flex-start;
-  padding: 0 var(--spacing-md);
+  padding: 0 var(--spacing-sm);
 }
 
 .headerContent {

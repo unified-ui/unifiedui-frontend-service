@@ -8,6 +8,7 @@ import type { MessageResponse, AttachmentMetadata, ReactionResponse } from '../.
 import { ConfirmDeleteDialog } from '../../../../components/common';
 import { FeedbackDialog } from '../FeedbackDialog';
 import classes from './ChatContent.module.css';
+import mdClasses from './Markdown.module.css';
 
 interface ChatContentProps {
   messages: MessageResponse[];
@@ -324,8 +325,8 @@ const MessageBubble: FC<MessageBubbleProps> = ({
               </Box>
             ) : (
               <>
-                <Paper className={classes.userBubble} shadow="xs">
-                  <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>{content}</Text>
+                <Paper className={classes.userBubble} shadow="xs" style={{ borderRadius: 'var(--mantine-radius-xl) var(--mantine-radius-xs) var(--mantine-radius-xl) var(--mantine-radius-xl)' }}>
+                  <Text size="lg" style={{ whiteSpace: 'pre-wrap' }}>{content}</Text>
                 </Paper>
                 <Avatar size="sm" radius="xl" className={classes.avatar} color="primary">
                   <IconUser size={16} />
@@ -341,23 +342,23 @@ const MessageBubble: FC<MessageBubbleProps> = ({
               <CopyButton value={content} timeout={2000}>
                 {({ copied, copy }) => (
                   <Tooltip label={copied ? 'Copied!' : 'Copy message'} withArrow position="bottom">
-                    <ActionIcon size="xs" variant="subtle" color={copied ? 'teal' : 'gray'} onClick={copy}>
-                      {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+                    <ActionIcon size="md" variant="subtle" color={copied ? 'teal' : 'gray'} onClick={copy}>
+                      {copied ? <IconCheck size={20} /> : <IconCopy size={20} />}
                     </ActionIcon>
                   </Tooltip>
                 )}
               </CopyButton>
               {isLastUserMessage && onEditMessage && (
                 <Tooltip label="Edit message" withArrow position="bottom">
-                  <ActionIcon size="xs" variant="subtle" color="gray" onClick={handleStartEdit}>
-                    <IconEdit size={14} />
+                  <ActionIcon size="md" variant="subtle" color="gray" onClick={handleStartEdit}>
+                    <IconEdit size={20} />
                   </ActionIcon>
                 </Tooltip>
               )}
               {onDeleteMessage && !message.id.startsWith('temp-') && (
                 <Tooltip label="Delete message" withArrow position="bottom">
-                  <ActionIcon size="xs" variant="subtle" color="red" onClick={() => setDeleteDialogOpen(true)}>
-                    <IconTrash size={14} />
+                  <ActionIcon size="md" variant="subtle" color="red" onClick={() => setDeleteDialogOpen(true)}>
+                    <IconTrash size={20} />
                   </ActionIcon>
                 </Tooltip>
               )}
@@ -390,7 +391,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
           <IconSparkles size={16} />
         </Avatar>
         <Box className={classes.assistantContent}>
-          <Box className={classes.markdownContent}>
+          <Box className={mdClasses.markdownContent}>
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
@@ -399,46 +400,46 @@ const MessageBubble: FC<MessageBubbleProps> = ({
                   const isInline = !match && !String(children).includes('\n');
 
                   if (isInline) {
-                    return <code className={classes.inlineCode} {...props}>{children}</code>;
+                    return <code className={mdClasses.inlineCode} {...props}>{children}</code>;
                   }
 
                   const codeString = String(children).replace(/\n$/, '');
 
                   return (
-                    <Box className={classes.codeBlock}>
-                      <Box className={classes.codeHeader}>
+                    <Box className={mdClasses.codeBlock}>
+                      <Box className={mdClasses.codeHeader}>
                         <Text size="xs" c="dimmed">{match ? match[1] : 'code'}</Text>
                         <CopyButton value={codeString} timeout={2000}>
                           {({ copied, copy }) => (
-                            <ActionIcon size="xs" variant="subtle" color={copied ? 'teal' : 'gray'} onClick={copy} className={classes.codeBlockCopyButton}>
+                            <ActionIcon size="xs" variant="subtle" color={copied ? 'teal' : 'gray'} onClick={copy} className={mdClasses.codeBlockCopyButton}>
                               {copied ? <IconCheck size={12} /> : <IconCopy size={12} />}
                             </ActionIcon>
                           )}
                         </CopyButton>
                       </Box>
-                      <pre className={classes.pre}>
+                      <pre className={mdClasses.pre}>
                         <code className={className} {...props}>{children}</code>
                       </pre>
                     </Box>
                   );
                 },
                 p: ({ children }: { children?: ReactNode }) => (
-                  <Text size="sm" component="p" className={classes.paragraph}>{children}</Text>
+                  <Text size="sm" component="p" className={mdClasses.paragraph}>{children}</Text>
                 ),
-                ul: ({ children }: { children?: ReactNode }) => <ul className={classes.list}>{children}</ul>,
-                ol: ({ children }: { children?: ReactNode }) => <ol className={classes.list}>{children}</ol>,
-                li: ({ children }: { children?: ReactNode }) => <li className={classes.listItem}>{children}</li>,
+                ul: ({ children }: { children?: ReactNode }) => <ul className={mdClasses.list}>{children}</ul>,
+                ol: ({ children }: { children?: ReactNode }) => <ol className={mdClasses.list}>{children}</ol>,
+                li: ({ children }: { children?: ReactNode }) => <li className={mdClasses.listItem}>{children}</li>,
                 a: ({ href, children }: { href?: string; children?: ReactNode }) => (
-                  <a href={href} target="_blank" rel="noopener noreferrer" className={classes.link}>{children}</a>
+                  <a href={href} target="_blank" rel="noopener noreferrer" className={mdClasses.link}>{children}</a>
                 ),
                 blockquote: ({ children }: { children?: ReactNode }) => (
-                  <blockquote className={classes.blockquote}>{children}</blockquote>
+                  <blockquote className={mdClasses.blockquote}>{children}</blockquote>
                 ),
                 table: ({ children }: { children?: ReactNode }) => (
-                  <Box className={classes.tableWrapper}><table className={classes.table}>{children}</table></Box>
+                  <Box className={mdClasses.tableWrapper}><table className={mdClasses.table}>{children}</table></Box>
                 ),
-                th: ({ children }: { children?: ReactNode }) => <th className={classes.tableHeader}>{children}</th>,
-                td: ({ children }: { children?: ReactNode }) => <td className={classes.tableCell}>{children}</td>,
+                th: ({ children }: { children?: ReactNode }) => <th className={mdClasses.tableHeader}>{children}</th>,
+                td: ({ children }: { children?: ReactNode }) => <td className={mdClasses.tableCell}>{children}</td>,
               }}
             >
               {content}
@@ -454,16 +455,16 @@ const MessageBubble: FC<MessageBubbleProps> = ({
               <CopyButton value={content} timeout={2000}>
                 {({ copied, copy }) => (
                   <Tooltip label={copied ? 'Copied!' : 'Copy message'} withArrow position="bottom">
-                    <ActionIcon size="xs" variant="subtle" color={copied ? 'teal' : 'gray'} onClick={copy}>
-                      {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+                    <ActionIcon size="md" variant="subtle" color={copied ? 'teal' : 'gray'} onClick={copy}>
+                      {copied ? <IconCheck size={20} /> : <IconCopy size={20} />}
                     </ActionIcon>
                   </Tooltip>
                 )}
               </CopyButton>
               {extMessageId && (
                 <Tooltip label="View trace" withArrow position="bottom">
-                  <ActionIcon size="xs" variant="subtle" color="gray" onClick={handleViewTrace}>
-                    <IconBinaryTree size={14} />
+                  <ActionIcon size="md" variant="subtle" color="gray" onClick={handleViewTrace}>
+                    <IconBinaryTree size={20} />
                   </ActionIcon>
                 </Tooltip>
               )}
@@ -471,17 +472,17 @@ const MessageBubble: FC<MessageBubbleProps> = ({
                 <>
                   <Tooltip label={activeReaction?.reaction === 'thumbs_up' ? 'Remove rating' : 'Good response'} withArrow position="bottom">
                     <ActionIcon
-                      size="xs"
+                      size="md"
                       variant="subtle"
                       color={activeReaction?.reaction === 'thumbs_up' ? 'teal' : 'gray'}
                       onClick={() => onReaction(message.id, 'thumbs_up')}
                     >
-                      {activeReaction?.reaction === 'thumbs_up' ? <IconThumbUpFilled size={14} /> : <IconThumbUp size={14} />}
+                      {activeReaction?.reaction === 'thumbs_up' ? <IconThumbUpFilled size={20} /> : <IconThumbUp size={20} />}
                     </ActionIcon>
                   </Tooltip>
                   <Tooltip label={activeReaction?.reaction === 'thumbs_down' ? 'Remove rating' : 'Bad response'} withArrow position="bottom">
                     <ActionIcon
-                      size="xs"
+                      size="md"
                       variant="subtle"
                       color={activeReaction?.reaction === 'thumbs_down' ? 'orange' : 'gray'}
                       onClick={() => {
@@ -492,7 +493,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
                         }
                       }}
                     >
-                      {activeReaction?.reaction === 'thumbs_down' ? <IconThumbDownFilled size={14} /> : <IconThumbDown size={14} />}
+                      {activeReaction?.reaction === 'thumbs_down' ? <IconThumbDownFilled size={20} /> : <IconThumbDown size={20} />}
                     </ActionIcon>
                   </Tooltip>
                 </>
@@ -525,7 +526,7 @@ const StreamingMessage: FC<StreamingMessageProps> = ({ content }) => {
           <IconSparkles size={16} />
         </Avatar>
         <Box className={classes.assistantContent}>
-          <Box className={classes.markdownContent}>
+          <Box className={mdClasses.markdownContent}>
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
           </Box>
           <Box className={classes.typingIndicator}>
