@@ -66,6 +66,10 @@ export const ConversationsPage: FC = () => {
   const fileUpload = useFileUpload();
 
   useEffect(() => {
+    tracing.setMessagesRef(chat.messages);
+  }, [chat.messages, tracing.setMessagesRef]);
+
+  useEffect(() => {
     if (!apiClient || !tenantId || !conversationId) {
       convList.setCurrentConversation(null);
       chat.setMessages([]);
@@ -287,9 +291,18 @@ export const ConversationsPage: FC = () => {
                       streamingMessageId={chat.streamingMessageId}
                       onViewTrace={tracing.handleViewTrace}
                       highlightedExtMessageId={tracing.highlightedMessageExtId}
+                      highlightedUserMessageId={tracing.highlightedUserMessageId}
                       onEditMessage={canWriteConversation ? chat.handleEditMessage : undefined}
                       onDeleteMessage={canWriteConversation ? chat.handleDeleteMessage : undefined}
-                      onRetry={(content) => chat.handleSendMessage(content)}
+                      onRetry={(failedMessageId) => {
+                        const failedMsg = chat.messages.find(m => m.id === failedMessageId);
+                        const userMsg = failedMsg?.userMessageId
+                          ? chat.messages.find(m => m.id === failedMsg.userMessageId)
+                          : undefined;
+                        if (userMsg?.content) {
+                          chat.handleSendMessage(userMsg.content);
+                        }
+                      }}
                       onReaction={chat.handleReaction}
                       reactions={chat.reactions}
                     />
@@ -313,7 +326,7 @@ export const ConversationsPage: FC = () => {
               <TracingProvider
                 traces={tracing.traces}
                 initialNodeReferenceId={tracing.selectedNodeReferenceId}
-                onNodeReferenceIdChange={tracing.setHighlightedMessageExtId}
+                onNodeReferenceIdChange={tracing.handleNodeReferenceIdChange}
               >
                 <Box className={classes.tracingSidebarWrapper}>
                   <TracingSidebar onOpenFullscreen={tracing.handleOpenTracingFullscreen} />

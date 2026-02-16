@@ -136,12 +136,14 @@
   border-radius: var(--radius-xl);
   z-index: 100;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity var(--transition-normal);
 }
 
 .dropZoneOverlay.active {
   opacity: 1;
+  visibility: visible;
+  transition: opacity var(--transition-normal);
   animation: dropZonePulse 2s ease-in-out infinite;
 }
 

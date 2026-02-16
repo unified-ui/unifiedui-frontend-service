@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
-import type { FullTraceResponse } from '../../../api/types';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import type { FullTraceResponse, TraceNodeResponse, MessageResponse } from '../../../api/types';
 import type { UnifiedUIAPIClient } from '../../../api/client';
 
 interface UseConversationTracingParams {
@@ -14,7 +14,10 @@ interface UseConversationTracingReturn {
   tracingDialogOpen: boolean;
   selectedNodeReferenceId: string | undefined;
   highlightedMessageExtId: string | null;
+  highlightedUserMessageId: string | null;
   setHighlightedMessageExtId: React.Dispatch<React.SetStateAction<string | null>>;
+  handleNodeReferenceIdChange: (referenceId: string | null) => void;
+  setMessagesRef: (messages: MessageResponse[]) => void;
   refreshTraces: () => Promise<void>;
   handleToggleTracingSidebar: () => void;
   handleViewTrace: (extMessageId: string) => Promise<void>;
@@ -35,6 +38,12 @@ export function useConversationTracing({
   const [tracingDialogOpen, setTracingDialogOpen] = useState(false);
   const [selectedNodeReferenceId, setSelectedNodeReferenceId] = useState<string | undefined>();
   const [highlightedMessageExtId, setHighlightedMessageExtId] = useState<string | null>(null);
+  const [highlightedUserMessageId, setHighlightedUserMessageId] = useState<string | null>(null);
+  const messagesRef = useRef<MessageResponse[]>([]);
+
+  const setMessagesRef = useCallback((messages: MessageResponse[]) => {
+    messagesRef.current = messages;
+  }, []);
 
   const refreshTraces = useCallback(async () => {
     if (!apiClient || !tenantId || !conversationId) return;
@@ -59,6 +68,7 @@ export function useConversationTracing({
       const newValue = !prev;
       if (!newValue) {
         setHighlightedMessageExtId(null);
+        setHighlightedUserMessageId(null);
       }
       return newValue;
     });
@@ -98,13 +108,72 @@ export function useConversationTracing({
     setTracingDialogOpen(true);
   }, []);
 
+  const findSiblingAssistantRefId = useCallback((
+    nodes: TraceNodeResponse[],
+    userRefId: string
+  ): string | null => {
+    for (let i = 0; i < nodes.length; i++) {
+      if (nodes[i].referenceId === userRefId) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          if (nodes[j].referenceId) return nodes[j].referenceId;
+        }
+        return null;
+      }
+      if (nodes[i].nodes && nodes[i].nodes!.length > 0) {
+        const result = findSiblingAssistantRefId(nodes[i].nodes!, userRefId);
+        if (result) return result;
+      }
+    }
+    return null;
+  }, []);
+
+  const handleNodeReferenceIdChange = useCallback((referenceId: string | null) => {
+    if (!referenceId) {
+      setHighlightedMessageExtId(null);
+      setHighlightedUserMessageId(null);
+      return;
+    }
+
+    const currentMessages = messagesRef.current;
+
+    const isAssistantMessage = currentMessages.some(
+      (m) => m.type !== 'user' && m.metadata?.extMessageId === referenceId
+    );
+
+    if (isAssistantMessage) {
+      setHighlightedMessageExtId(referenceId);
+      setHighlightedUserMessageId(null);
+      return;
+    }
+
+    setHighlightedMessageExtId(null);
+
+    for (const trace of traces) {
+      const assistantRefId = findSiblingAssistantRefId(trace.nodes, referenceId);
+      if (assistantRefId) {
+        const assistantMsg = currentMessages.find(
+          (m) => m.type !== 'user' && m.metadata?.extMessageId === assistantRefId
+        );
+        if (assistantMsg?.userMessageId) {
+          setHighlightedUserMessageId(assistantMsg.userMessageId);
+          return;
+        }
+      }
+    }
+
+    setHighlightedUserMessageId(null);
+  }, [traces, findSiblingAssistantRefId]);
+
   return {
     traces,
     tracingSidebarVisible,
     tracingDialogOpen,
     selectedNodeReferenceId,
     highlightedMessageExtId,
+    highlightedUserMessageId,
     setHighlightedMessageExtId,
+    handleNodeReferenceIdChange,
+    setMessagesRef,
     refreshTraces,
     handleToggleTracingSidebar,
     handleViewTrace,

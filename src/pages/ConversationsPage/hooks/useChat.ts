@@ -95,7 +95,6 @@ export function useChat({
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const justCreatedConversationRef = useRef<string | null>(null);
-  const retryCountRef = useRef(0);
 
   const resetStreamingState = useCallback(() => {
     setIsStreaming(false);
@@ -154,7 +153,6 @@ export function useChat({
     optimisticUserMessage: MessageResponse,
     foundryToken: string | undefined,
     isFoundryApp: boolean,
-    isRetry: boolean,
     files?: FileAttachment[],
   ) => {
     let accumulatedContent = '';
@@ -249,58 +247,35 @@ export function useChat({
 
         setStreamingContent('');
         setStreamingMessageId(undefined);
-        retryCountRef.current = 0;
       },
       async (code: string, message: string, details: string) => {
         console.error('Stream error:', { code, message, details });
 
-        if (!isRetry && retryCountRef.current === 0) {
-          retryCountRef.current = 1;
-          setMessages(prev => prev.filter(m => m.id !== currentStreamingMessageId));
-          setStreamingContent('');
-          setStreamingMessageId(undefined);
-
-          try {
-            await executeStream(
-              content,
-              activeConversationId,
-              activeExtConversationId,
-              optimisticUserMessage,
-              foundryToken,
-              isFoundryApp,
-              true,
-              files,
-            );
-            return;
-          } catch {
-            // Fall through to error display
-          }
-        }
-
         setIsStreaming(false);
         setStreamingContent('');
         setStreamingMessageId(undefined);
-        retryCountRef.current = 0;
-
-        setMessages(prev => {
-          const withoutStreaming = prev.filter(m => m.id !== currentStreamingMessageId);
-          const errorMessage: MessageResponse = {
-            id: `error-${Date.now()}`,
-            type: 'assistant',
-            conversationId: activeConversationId,
-            applicationId: selectedApplicationId!,
-            content: message || 'An error occurred while generating the response.',
-            status: 'failed',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
-          return [...withoutStreaming, errorMessage];
-        });
       },
       (completedMessage: MessageResponse) => {
-        setMessages(prev => prev.map(m =>
-          m.id === completedMessage.id ? completedMessage : m
-        ));
+        setMessages(prev => {
+          const existingIndex = prev.findIndex(m => m.id === completedMessage.id);
+
+          if (existingIndex >= 0) {
+            return prev.map(m => {
+              if (m.id === completedMessage.id) return completedMessage;
+              if (m.id === optimisticUserMessage.id && completedMessage.userMessageId) {
+                return { ...m, id: completedMessage.userMessageId, status: 'completed' as const };
+              }
+              return m;
+            });
+          }
+
+          return prev.map(m => {
+            if (m.id === optimisticUserMessage.id && completedMessage.userMessageId) {
+              return { ...m, id: completedMessage.userMessageId, status: 'completed' as const };
+            }
+            return m;
+          }).concat(completedMessage);
+        });
 
         setTimeout(() => {
           onRefreshTraces();
@@ -380,7 +355,6 @@ export function useChat({
     setMessages(prev => [...prev, optimisticUserMessage]);
     setIsStreaming(true);
     setStreamingContent('');
-    retryCountRef.current = 0;
 
     if (!activeConversationId) {
       try {
@@ -429,7 +403,6 @@ export function useChat({
         optimisticUserMessage,
         foundryToken,
         isFoundryApp,
-        false,
         files,
       );
     } catch (error) {

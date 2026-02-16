@@ -19,11 +19,12 @@ interface ChatContentProps {
   emptyStateMessage?: string;
   onViewTrace?: (extMessageId: string) => void;
   highlightedExtMessageId?: string | null;
+  highlightedUserMessageId?: string | null;
   onEditMessage?: (messageId: string, newContent: string) => Promise<void>;
   onDeleteMessage?: (messageId: string) => Promise<void>;
   onReaction?: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string) => Promise<void>;
   reactions?: Map<string, ReactionResponse>;
-  onRetry?: (content: string) => void;
+  onRetry?: (failedMessageId: string) => void;
 }
 
 export const ChatContent: FC<ChatContentProps> = ({
@@ -35,6 +36,7 @@ export const ChatContent: FC<ChatContentProps> = ({
   emptyStateMessage = 'Start a conversation by typing a message below.',
   onViewTrace,
   highlightedExtMessageId,
+  highlightedUserMessageId,
   onEditMessage,
   onDeleteMessage,
   onReaction,
@@ -44,7 +46,9 @@ export const ChatContent: FC<ChatContentProps> = ({
   const viewportRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const messageRefsMap = useRef<Map<string, HTMLDivElement>>(new Map());
+  const userMessageRefsMap = useRef<Map<string, HTMLDivElement>>(new Map());
   const [flashingExtId, setFlashingExtId] = useState<string | null>(null);
+  const [flashingUserMsgId, setFlashingUserMsgId] = useState<string | null>(null);
   const prevHighlightedRef = useRef<string | null>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const userScrolledUpRef = useRef(false);
@@ -54,6 +58,14 @@ export const ChatContent: FC<ChatContentProps> = ({
       messageRefsMap.current.set(extMessageId, element);
     } else {
       messageRefsMap.current.delete(extMessageId);
+    }
+  }, []);
+
+  const setUserMessageRef = useCallback((messageId: string, element: HTMLDivElement | null) => {
+    if (element) {
+      userMessageRefsMap.current.set(messageId, element);
+    } else {
+      userMessageRefsMap.current.delete(messageId);
     }
   }, []);
 
@@ -81,6 +93,8 @@ export const ChatContent: FC<ChatContentProps> = ({
     }
   }, [isNearBottom]);
 
+  const prevHighlightedUserRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (highlightedExtMessageId && highlightedExtMessageId !== prevHighlightedRef.current) {
       const element = messageRefsMap.current.get(highlightedExtMessageId);
@@ -93,6 +107,19 @@ export const ChatContent: FC<ChatContentProps> = ({
     }
     prevHighlightedRef.current = highlightedExtMessageId || null;
   }, [highlightedExtMessageId]);
+
+  useEffect(() => {
+    if (highlightedUserMessageId && highlightedUserMessageId !== prevHighlightedUserRef.current) {
+      const element = userMessageRefsMap.current.get(highlightedUserMessageId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setFlashingUserMsgId(highlightedUserMessageId);
+        const timer = setTimeout(() => setFlashingUserMsgId(null), 600);
+        return () => clearTimeout(timer);
+      }
+    }
+    prevHighlightedUserRef.current = highlightedUserMessageId || null;
+  }, [highlightedUserMessageId]);
 
   useEffect(() => {
     if (!userScrolledUpRef.current) {
@@ -145,8 +172,13 @@ export const ChatContent: FC<ChatContentProps> = ({
         <Stack gap="lg" className={classes.messagesContainer}>
           {messages.map((message) => {
             const messageExtId = message.type !== 'user' ? message.metadata?.extMessageId : undefined;
-            const isHighlighted = !!(messageExtId && highlightedExtMessageId === messageExtId);
-            const isFlashing = !!(messageExtId && flashingExtId === messageExtId);
+            const isUser = message.type === 'user';
+            const isHighlighted = isUser
+              ? !!(highlightedUserMessageId && highlightedUserMessageId === message.id)
+              : !!(messageExtId && highlightedExtMessageId === messageExtId);
+            const isFlashing = isUser
+              ? !!(flashingUserMsgId === message.id)
+              : !!(messageExtId && flashingExtId === messageExtId);
             const isLastUserMessage = message.id === lastUserMessageId;
             const isError = message.status === 'failed';
 
@@ -160,6 +192,10 @@ export const ChatContent: FC<ChatContentProps> = ({
               );
             }
 
+            const refSetter = isUser
+              ? (el: HTMLDivElement | null) => setUserMessageRef(message.id, el)
+              : messageExtId ? (el: HTMLDivElement | null) => setMessageRef(messageExtId, el) : undefined;
+
             return (
               <MessageBubble
                 key={message.id}
@@ -169,7 +205,7 @@ export const ChatContent: FC<ChatContentProps> = ({
                 onViewTrace={onViewTrace}
                 isHighlighted={isHighlighted}
                 isFlashing={isFlashing}
-                onRefSet={messageExtId ? (el) => setMessageRef(messageExtId, el) : undefined}
+                onRefSet={refSetter}
                 isLastUserMessage={isLastUserMessage}
                 onEditMessage={onEditMessage}
                 onDeleteMessage={onDeleteMessage}
@@ -209,12 +245,11 @@ export const ChatContent: FC<ChatContentProps> = ({
 
 interface ErrorBubbleProps {
   message: MessageResponse;
-  onRetry?: (content: string) => void;
+  onRetry?: (failedMessageId: string) => void;
 }
 
 const ErrorBubble: FC<ErrorBubbleProps> = ({ message, onRetry }) => {
-  const userMessages = message.conversationId ? undefined : undefined;
-  void userMessages;
+  const errorText = message.errorMessage || message.content || 'An error occurred while generating the response.';
 
   return (
     <Box className={classes.messageWrapper}>
@@ -224,7 +259,7 @@ const ErrorBubble: FC<ErrorBubbleProps> = ({ message, onRetry }) => {
         </Avatar>
         <Box className={classes.assistantContent}>
           <Paper className={classes.errorBubble} shadow="xs">
-            <Text size="sm" c="red">{message.content}</Text>
+            <Text size="sm" c="red">{errorText}</Text>
           </Paper>
           {onRetry && (
             <Button
@@ -233,7 +268,7 @@ const ErrorBubble: FC<ErrorBubbleProps> = ({ message, onRetry }) => {
               color="red"
               leftSection={<IconRefresh size={14} />}
               mt="xs"
-              onClick={() => onRetry(message.content)}
+              onClick={() => onRetry(message.id)}
             >
               Retry
             </Button>
@@ -304,8 +339,14 @@ const MessageBubble: FC<MessageBubbleProps> = ({
   }, [onEditMessage, editContent, message.id]);
 
   if (isUser) {
+    const userWrapperClassName = [
+      classes.messageWrapper,
+      isHighlighted ? classes.highlighted : '',
+      isFlashing ? classes.flash : '',
+    ].filter(Boolean).join(' ');
+
     return (
-      <Box className={classes.messageWrapper}>
+      <Box ref={onRefSet} className={userWrapperClassName}>
         <Box className={classes.userMessageContainer}>
           <Box className={classes.userMessage}>
             {isEditing ? (

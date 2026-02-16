@@ -73,6 +73,18 @@ type TabValue = 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' |
 const TAB_VALUES: TabValue[] = ['settings', 'iam', 'custom-groups', 'tools', 'credentials', 'ai-models', 'billing-and-licence'];
 const DEFAULT_TAB: TabValue = 'settings';
 
+const PURPOSE_GROUP_COLORS: Record<string, string> = {
+  REACT_AGENT: 'violet',
+  CONVERSATION_TITLE_GENERATION: 'blue',
+  CONVERSATION_SUMMARIZATION: 'teal',
+  DESCRIPTION_GENERATION: 'orange',
+  TRACE_ANALYSIS: 'pink',
+  GENERAL: 'gray',
+};
+
+const purposeGroupColor = (group: string): string =>
+  PURPOSE_GROUP_COLORS[group] || 'gray';
+
 const isValidTab = (value: string | null): value is TabValue => {
   return value !== null && TAB_VALUES.includes(value as TabValue);
 };
@@ -1788,7 +1800,7 @@ export const TenantSettingsPage: FC = () => {
                               <Table.Td>
                                 <Group gap={4} wrap="wrap">
                                   {model.purpose_groups.length > 0 ? model.purpose_groups.map((pg) => (
-                                    <Badge key={pg} size="xs" variant="light" color="violet">
+                                    <Badge key={pg} size="xs" variant="light" color={purposeGroupColor(pg)}>
                                       {pg.replace(/_/g, ' ')}
                                     </Badge>
                                   )) : (
