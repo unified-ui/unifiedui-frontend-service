@@ -63,6 +63,7 @@ interface UseChatReturn {
   handleEditMessage: (messageId: string, newContent: string) => Promise<void>;
   handleDeleteMessage: (messageId: string) => Promise<void>;
   handleReaction: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string) => Promise<void>;
+  handleCancelStream: () => void;
   resetStreamingState: () => void;
   loadConversationMessages: (convId: string) => Promise<void>;
 }
@@ -102,6 +103,27 @@ export function useChat({
     setStreamingMessageId(undefined);
     setMessages([]);
   }, []);
+
+  const handleCancelStream = useCallback(() => {
+    if (!abortControllerRef.current) return;
+    abortControllerRef.current.abort();
+
+    setIsStreaming(false);
+    const finalContent = streamingContent;
+    const finalMessageId = streamingMessageId;
+    setStreamingContent('');
+    setStreamingMessageId(undefined);
+
+    if (finalMessageId && finalContent) {
+      setMessages(prev => prev.map(m =>
+        m.id === finalMessageId
+          ? { ...m, content: finalContent, status: 'cancelled' as const }
+          : m
+      ));
+    } else if (finalMessageId) {
+      setMessages(prev => prev.filter(m => m.id !== finalMessageId));
+    }
+  }, [streamingContent, streamingMessageId]);
 
   const loadConversationMessages = useCallback(async (convId: string) => {
     if (!apiClient || !tenantId) return;
@@ -297,7 +319,8 @@ export function useChat({
           }
         }, 30);
       },
-      foundryToken
+      foundryToken,
+      abortControllerRef.current?.signal
     );
 
     for await (const _event of stream) {
@@ -527,6 +550,7 @@ export function useChat({
     handleEditMessage,
     handleDeleteMessage,
     handleReaction,
+    handleCancelStream,
     reactions,
     resetStreamingState,
     loadConversationMessages,

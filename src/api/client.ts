@@ -1082,7 +1082,8 @@ export class UnifiedUIAPIClient {
     onError?: (code: string, message: string, details: string) => void,
     onMessageComplete?: (message: MessageResponse) => void,
     onTitleGeneration?: (title: string) => void,
-    foundryToken?: string
+    foundryToken?: string,
+    signal?: AbortSignal
   ): AsyncGenerator<SSEEvent, void, unknown> {
     const token = await this.getAccessToken();
     const headers: Record<string, string> = {
@@ -1114,6 +1115,7 @@ export class UnifiedUIAPIClient {
         method: 'POST',
         headers,
         body: JSON.stringify(requestBody),
+        signal,
       }
     );
 

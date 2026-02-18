@@ -271,6 +271,7 @@ export const ConversationsPage: FC = () => {
                   <ChatInput
                     ref={fileUpload.chatInputRef}
                     onSend={chat.handleSendMessage}
+                    onCancel={chat.handleCancelStream}
                     isDisabled={!convList.selectedApplicationId}
                     isStreaming={chat.isStreaming}
                     placeholder={
@@ -310,6 +311,7 @@ export const ConversationsPage: FC = () => {
                   <ChatInput
                     ref={fileUpload.chatInputRef}
                     onSend={chat.handleSendMessage}
+                    onCancel={chat.handleCancelStream}
                     isDisabled={!convList.selectedApplicationId || !canWriteConversation}
                     isStreaming={chat.isStreaming}
                     placeholder={

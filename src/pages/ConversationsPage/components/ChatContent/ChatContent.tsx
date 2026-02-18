@@ -181,6 +181,7 @@ export const ChatContent: FC<ChatContentProps> = ({
               : !!(messageExtId && flashingExtId === messageExtId);
             const isLastUserMessage = message.id === lastUserMessageId;
             const isError = message.status === 'failed';
+            const isCancelled = message.status === 'cancelled';
 
             if (isError) {
               return (
@@ -202,6 +203,7 @@ export const ChatContent: FC<ChatContentProps> = ({
                 message={message}
                 isStreaming={isStreaming && message.id === streamingMessageId}
                 streamingContent={message.id === streamingMessageId ? streamingContent : undefined}
+                isCancelled={isCancelled}
                 onViewTrace={onViewTrace}
                 isHighlighted={isHighlighted}
                 isFlashing={isFlashing}
@@ -283,6 +285,7 @@ interface MessageBubbleProps {
   message: MessageResponse;
   isStreaming?: boolean;
   streamingContent?: string;
+  isCancelled?: boolean;
   onViewTrace?: (extMessageId: string) => void;
   isHighlighted?: boolean;
   isFlashing?: boolean;
@@ -298,6 +301,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
   message,
   isStreaming,
   streamingContent,
+  isCancelled,
   onViewTrace,
   isHighlighted,
   isFlashing,
@@ -490,6 +494,14 @@ const MessageBubble: FC<MessageBubbleProps> = ({
             <Box className={classes.typingIndicator}>
               <span></span><span></span><span></span>
             </Box>
+          )}
+          {isCancelled && (
+            <Paper className={classes.cancelledBanner} shadow="none">
+              <Group gap="xs">
+                <IconAlertTriangle size={14} />
+                <Text size="xs">Response generation was stopped</Text>
+              </Group>
+            </Paper>
           )}
           {!isStreaming && (
             <Group gap="xs" className={classes.messageActionsLeft}>

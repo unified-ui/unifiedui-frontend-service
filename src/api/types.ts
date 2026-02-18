@@ -158,6 +158,7 @@ export const MessageStatus = {
   PROCESSING: 'processing',
   COMPLETED: 'completed',
   FAILED: 'failed',
+  CANCELLED: 'cancelled',
 } as const;
 
 export type MessageStatus = typeof MessageStatus[keyof typeof MessageStatus];
