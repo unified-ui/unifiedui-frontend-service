@@ -35,7 +35,7 @@ import {
   IconFileExport,
   IconChevronDown,
 } from '@tabler/icons-react';
-import { ConfirmDeleteDialog } from '../../../../components/common';
+import { ConfirmDeleteDialog, DelayedTooltip } from '../../../../components/common';
 import { ApplicationSelectDialog } from '../../../../components/dialogs/ApplicationSelectDialog';
 import { useIdentity } from '../../../../contexts';
 import type { ConversationResponse, ApplicationResponse, QuickListItemResponse } from '../../../../api/types';
@@ -571,13 +571,17 @@ const ConversationItem: FC<ConversationItemProps> = ({
               </ActionIcon>
             </div>
           ) : (
-            <Text size="sm" lineClamp={1} className={classes.conversationName}>
-              {conversation.name}
-            </Text>
+            <DelayedTooltip label={conversation.name}>
+              <Text size="sm" lineClamp={1} className={classes.conversationName}>
+                {conversation.name}
+              </Text>
+            </DelayedTooltip>
           )}
-          <Text size="xs" className={classes.applicationName} lineClamp={1}>
-            {applicationName}
-          </Text>
+          <DelayedTooltip label={applicationName}>
+            <Text size="xs" className={classes.applicationName} lineClamp={1}>
+              {applicationName}
+            </Text>
+          </DelayedTooltip>
         </div>
         {!isEditing && (
           <Menu position="right-start" withinPortal shadow="md">

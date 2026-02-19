@@ -207,11 +207,59 @@
   --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.7);
 }
 
-/* ===== SKELETON DARK MODE FIX ===== */
-[data-mantine-color-scheme='dark'] .mantine-Skeleton-root,
-[data-mantine-color-scheme='dark'] [class*='mantine-Skeleton'] {
-  --mantine-color-dark-4: #2a2a2a;
-  --mantine-color-dark-3: #333333;
+/* ===== SKELETON SHIMMER ===== */
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.mantine-Skeleton-root::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.08) 80%,
+    transparent 100%
+  );
+}
+
+[data-mantine-color-scheme='light'] .mantine-Skeleton-root {
+  background-color: #e9ecef;
+}
+
+[data-mantine-color-scheme='light'] .mantine-Skeleton-root::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 20%,
+    rgba(255, 255, 255, 0.6) 50%,
+    rgba(255, 255, 255, 0.3) 80%,
+    transparent 100%
+  );
+}
+
+[data-mantine-color-scheme='dark'] .mantine-Skeleton-root {
+  background-color: #2a2a2a;
+}
+
+[data-mantine-color-scheme='dark'] .mantine-Skeleton-root::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 20%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 80%,
+    transparent 100%
+  );
 }
 
 /* ===== UTILITY CLASSES ===== */

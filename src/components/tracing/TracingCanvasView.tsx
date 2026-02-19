@@ -28,6 +28,7 @@ import {
 } from '@xyflow/react';
 import type { Node, Edge, ReactFlowInstance, EdgeProps } from '@xyflow/react';
 import { ActionIcon, Group, Tooltip } from '@mantine/core';
+import { DelayedTooltip } from '../common/DelayedTooltip';
 import {
   IconArrowsHorizontal,
   IconArrowsVertical,
@@ -197,9 +198,11 @@ const TraceCustomNode: FC<{ data: TraceNodeData }> = ({ data }) => {
         <div className={classes.nodeIcon}>
           {getTypeIcon(type, 28)}
         </div>
-        <div className={classes.nodeLabel} title={label}>
-          {label.length > 18 ? `${label.slice(0, 16)}...` : label}
-        </div>
+        <DelayedTooltip label={label}>
+          <div className={classes.nodeLabel}>
+            {label.length > 18 ? `${label.slice(0, 16)}...` : label}
+          </div>
+        </DelayedTooltip>
         <div className={classes.nodeStatus}>
           {getStatusIcon(status, 16)}
         </div>

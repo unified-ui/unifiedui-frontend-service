@@ -15,6 +15,7 @@ import {
   IconFile,
   IconPlayerStop,
 } from '@tabler/icons-react';
+import { DelayedTooltip } from '../../../../components/common';
 import classes from './ChatInput.module.css';
 
 interface ChatInputProps {
@@ -306,7 +307,9 @@ const AttachmentPreview: FC<AttachmentPreviewProps> = ({ file, onRemove }) => {
         </Box>
       )}
       <Box className={classes.attachmentInfo}>
-        <Text size="xs" lineClamp={1} fw={500}>{file.name}</Text>
+        <DelayedTooltip label={file.name}>
+          <Text size="xs" lineClamp={1} fw={500}>{file.name}</Text>
+        </DelayedTooltip>
         <Text size="xs" c="dimmed">{formatFileSize(file.size)}</Text>
       </Box>
       <CloseButton size="xs" onClick={onRemove} className={classes.removeButton} />

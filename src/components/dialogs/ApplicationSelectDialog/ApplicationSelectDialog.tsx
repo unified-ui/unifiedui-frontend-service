@@ -18,7 +18,7 @@ import { useDebouncedValue } from '@mantine/hooks';
 import { IconSearch, IconRefresh, IconApps } from '@tabler/icons-react';
 import type { QuickListItemResponse } from '../../../api/types';
 import { useSidebarData } from '../../../contexts/SidebarDataContext';
-import { EntityAvatar } from '../../common';
+import { DelayedTooltip, EntityAvatar } from '../../common';
 import classes from './ApplicationSelectDialog.module.css';
 
 interface ApplicationSelectDialogProps {
@@ -128,9 +128,11 @@ export const ApplicationSelectDialog: FC<ApplicationSelectDialogProps> = ({
                     <Paper className={classes.applicationPaper} p="sm" radius="md" withBorder>
                       <Group gap="sm" wrap="nowrap">
                         <EntityAvatar entityType="application" size="sm" />
-                        <Text size="sm" fw={500} lineClamp={1} style={{ flex: 1 }}>
-                          {app.name}
-                        </Text>
+                        <DelayedTooltip label={app.name}>
+                          <Text size="sm" fw={500} lineClamp={1} style={{ flex: 1 }}>
+                            {app.name}
+                          </Text>
+                        </DelayedTooltip>
                       </Group>
                     </Paper>
                   </UnstyledButton>

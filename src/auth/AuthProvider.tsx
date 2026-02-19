@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
 import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import type { AccountInfo } from '@azure/msal-browser';
+import { loginRequest } from './authConfig';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -35,7 +36,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async () => {
     try {
       await instance.loginRedirect({
-        scopes: ['User.Read', 'User.ReadBasic.All', 'GroupMember.Read.All', 'Group.Read.All'],
+        scopes: loginRequest.scopes,
       });
     } catch (error) {
       console.error('Login failed:', error);
@@ -57,7 +58,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     try {
       const response = await instance.acquireTokenSilent({
-        scopes: ['User.Read', 'User.ReadBasic.All', 'GroupMember.Read.All', 'Group.Read.All'],
+        scopes: loginRequest.scopes,
         account: accounts[0],
       });
       return response.accessToken;
@@ -80,7 +81,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       return response.accessToken;
     } catch (error) {
       console.error('Foundry token acquisition failed:', error);
-      // Fallback to interactive if silent fails
       try {
         const response = await instance.acquireTokenPopup({
           scopes: ['https://ai.azure.com/.default'],

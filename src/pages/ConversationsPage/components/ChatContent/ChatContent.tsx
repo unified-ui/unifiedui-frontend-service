@@ -661,6 +661,7 @@ const FileAttachmentChips: FC<FileAttachmentChipsProps> = ({ attachments }) => {
           label={`${attachment.fileName} (${formatFileSize(attachment.fileSize)})`}
           withArrow
           position="bottom"
+          openDelay={1000}
         >
           <Box className={classes.attachmentChip}>
             {getFileIcon(attachment)}

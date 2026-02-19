@@ -11,9 +11,9 @@ import {
   Stack,
   Paper,
   Box,
-  Tooltip,
   Checkbox,
 } from '@mantine/core';
+import { DelayedTooltip } from '../DelayedTooltip';
 import {
   IconDots,
   IconExternalLink,
@@ -27,9 +27,6 @@ import {
   IconStarFilled,
 } from '@tabler/icons-react';
 import classes from './DataTable.module.css';
-
-const TOOLTIP_THRESHOLD_NAME = 25;
-const TOOLTIP_THRESHOLD_DESC = 50;
 
 export interface DataTableItem {
   id: string;
@@ -136,29 +133,17 @@ export const DataTableRow: FC<DataTableRowProps> = ({
           )}
           {icon && <Box className={classes.rowIcon}>{icon}</Box>}
           <Stack gap={2} className={classes.nameDescriptionColumn}>
-            <Tooltip 
-              label={item.name} 
-              disabled={!item.name || item.name.length <= TOOLTIP_THRESHOLD_NAME}
-              multiline
-              maw={300}
-              position="top-start"
-            >
+            <DelayedTooltip label={item.name} position="top-start">
               <Text fw={600} size="md" truncate className={classes.itemName}>
                 {item.name}
               </Text>
-            </Tooltip>
+            </DelayedTooltip>
             {item.description && (
-              <Tooltip 
-                label={item.description} 
-                disabled={!item.description || item.description.length <= TOOLTIP_THRESHOLD_DESC}
-                multiline
-                maw={400}
-                position="top-start"
-              >
+              <DelayedTooltip label={item.description} position="top-start">
                 <Text size="sm" c="dimmed" truncate className={classes.itemDescription}>
                   {item.description}
                 </Text>
-              </Tooltip>
+              </DelayedTooltip>
             )}
           </Stack>
         </Group>

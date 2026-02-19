@@ -17,6 +17,7 @@ import {
   Divider,
   LoadingOverlay,
 } from '@mantine/core';
+import { DelayedTooltip } from '../../components/common';
 import {
   IconPlus,
   IconX,
@@ -109,7 +110,9 @@ const AIModelsSection: FC<{
         {selectedModels.map(model => (
           <Group key={model.id} gap="xs" wrap="nowrap">
             <IconBrain size={14} />
-            <Text size="sm" style={{ flex: 1 }} truncate>{model.name}</Text>
+            <DelayedTooltip label={model.name}>
+              <Text size="sm" style={{ flex: 1 }} truncate>{model.name}</Text>
+            </DelayedTooltip>
             <ActionIcon size="xs" variant="subtle" color="red" onClick={() => onRemove(model.id)}>
               <IconX size={12} />
             </ActionIcon>
@@ -159,7 +162,9 @@ const ToolsSection: FC<{
         {selectedTools.map(tool => (
           <Group key={tool.id} gap="xs" wrap="nowrap">
             <IconTool size={14} />
-            <Text size="sm" style={{ flex: 1 }} truncate>{tool.name}</Text>
+            <DelayedTooltip label={tool.name}>
+              <Text size="sm" style={{ flex: 1 }} truncate>{tool.name}</Text>
+            </DelayedTooltip>
             <Badge size="xs" variant="light">{tool.type}</Badge>
             <ActionIcon size="xs" variant="subtle" color="red" onClick={() => onRemove(tool.id)}>
               <IconX size={12} />

@@ -1,14 +1,16 @@
 import type { PopupRequest } from "@azure/msal-browser";
 
-// MSAL Konfiguration
+const MSAL_CLIENT_ID = import.meta.env.VITE_MSAL_CLIENT_ID || "20b38def-1f7e-4f0f-9e30-1b09dd1c8108";
+const MSAL_AUTHORITY = import.meta.env.VITE_MSAL_AUTHORITY || "https://login.microsoftonline.com/common";
+
 export const msalConfig = {
   auth: {
-    clientId: "20b38def-1f7e-4f0f-9e30-1b09dd1c8108",
-    authority: "https://login.microsoftonline.com/common",
+    clientId: MSAL_CLIENT_ID,
+    authority: MSAL_AUTHORITY,
     redirectUri: window.location.origin,
   },
   cache: {
-    cacheLocation: "localStorage" as const,
+    cacheLocation: "sessionStorage" as const,
     storeAuthStateInCookie: false,
   },
   system: {
@@ -19,7 +21,6 @@ export const msalConfig = {
   },
 };
 
-// Scopes für die Authentifizierung
 export const loginRequest: PopupRequest = {
   scopes: [
     "User.Read",
@@ -28,3 +29,4 @@ export const loginRequest: PopupRequest = {
     "Group.Read.All",
   ],
 };
+

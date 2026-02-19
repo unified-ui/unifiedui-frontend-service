@@ -25,6 +25,7 @@ import {
 } from '@tabler/icons-react';
 import type { FullTraceResponse } from '../../../api/types';
 import { useDelayedLoading } from '../../../hooks';
+import { DelayedTooltip } from '../DelayedTooltip';
 import classes from './TracesTable.module.css';
 
 // ============================================================================
@@ -281,15 +282,19 @@ export const TracesTable: FC<TracesTableProps> = ({
                         <div className={classes.traceIcon}>
                           <IconGitBranch size={16} />
                         </div>
-                        <Text size="sm" ff="monospace" truncate>
-                          {trace.referenceId || '—'}
-                        </Text>
+                        <DelayedTooltip label={trace.referenceId || '—'}>
+                          <Text size="sm" ff="monospace" truncate>
+                            {trace.referenceId || '—'}
+                          </Text>
+                        </DelayedTooltip>
                       </Group>
                     </Table.Td>
                     <Table.Td className={classes.colRefName}>
-                      <Text size="sm" truncate>
-                        {trace.referenceName || '—'}
-                      </Text>
+                      <DelayedTooltip label={trace.referenceName || '—'}>
+                        <Text size="sm" truncate>
+                          {trace.referenceName || '—'}
+                        </Text>
+                      </DelayedTooltip>
                     </Table.Td>
                     <Table.Td className={classes.colCreated}>
                       <Tooltip label={new Date(trace.createdAt).toLocaleString()}>

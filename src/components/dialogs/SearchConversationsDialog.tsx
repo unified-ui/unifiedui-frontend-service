@@ -13,6 +13,7 @@ import {
   UnstyledButton,
   ActionIcon,
 } from '@mantine/core';
+import { DelayedTooltip } from '../common';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconSearch, IconMessage, IconX, IconClock } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
@@ -181,13 +182,17 @@ export const SearchConversationsDialog: FC<SearchConversationsDialogProps> = ({
                       <Group gap="md" style={{ flex: 1, minWidth: 0 }}>
                         <IconMessage size={20} className={classes.resultIcon} />
                         <Box style={{ flex: 1, minWidth: 0 }}>
-                          <Text size="sm" fw={500} lineClamp={1}>
-                            {result.conversation.name}
-                          </Text>
-                          {result.conversation.description && (
-                            <Text size="xs" c="dimmed" lineClamp={1}>
-                              {result.conversation.description}
+                          <DelayedTooltip label={result.conversation.name}>
+                            <Text size="sm" fw={500} lineClamp={1}>
+                              {result.conversation.name}
                             </Text>
+                          </DelayedTooltip>
+                          {result.conversation.description && (
+                            <DelayedTooltip label={result.conversation.description}>
+                              <Text size="xs" c="dimmed" lineClamp={1}>
+                                {result.conversation.description}
+                              </Text>
+                            </DelayedTooltip>
                           )}
                           <Group gap="xs" mt={4}>
                             <Badge size="xs" variant="light">

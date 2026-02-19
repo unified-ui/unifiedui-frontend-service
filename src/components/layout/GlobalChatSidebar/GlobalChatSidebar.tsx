@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Stack, Text, ScrollArea, Loader, Center, ActionIcon, Group } from '@mantine/core';
 import { IconMessages, IconPlus, IconChevronRight } from '@tabler/icons-react';
 import { useIdentity, useChatSidebar } from '../../../contexts';
+import { DelayedTooltip } from '../../common/DelayedTooltip';
 import type { ConversationResponse, ApplicationResponse } from '../../../api/types';
 import classes from './GlobalChatSidebar.module.css';
 
@@ -20,12 +21,16 @@ const ConversationPreviewItem: FC<ConversationPreviewItemProps> = ({
 }) => {
   return (
     <Box className={classes.conversationItem} onClick={onClick}>
-      <Text size="sm" lineClamp={1} fw={500}>
-        {conversation.name}
-      </Text>
-      <Text size="xs" c="dimmed" lineClamp={1}>
-        {applicationName}
-      </Text>
+      <DelayedTooltip label={conversation.name}>
+        <Text size="sm" lineClamp={1} fw={500}>
+          {conversation.name}
+        </Text>
+      </DelayedTooltip>
+      <DelayedTooltip label={applicationName}>
+        <Text size="xs" c="dimmed" lineClamp={1}>
+          {applicationName}
+        </Text>
+      </DelayedTooltip>
     </Box>
   );
 };

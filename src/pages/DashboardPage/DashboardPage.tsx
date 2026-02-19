@@ -10,6 +10,7 @@ import type { EntityAvatarType } from '../../components/common';
 import { useIdentity, useFavorites, useRecentVisits, useSidebarData } from '../../contexts';
 import { FavoriteResourceTypeEnum } from '../../api/types';
 import type { DashboardStatsResponse } from '../../api/types';
+import { DelayedTooltip } from '../../components/common';
 import classes from './DashboardPage.module.css';
 
 const STAT_CARDS = [
@@ -204,7 +205,9 @@ export const DashboardPage: FC = () => {
                 >
                   <EntityAvatar entityType={FAVORITE_TYPE_TO_ENTITY[item.type] || 'application'} size="sm" />
                   <div className={classes.entityCardContent}>
-                    <div className={classes.entityCardName}>{item.name}</div>
+                    <DelayedTooltip label={item.name}>
+                      <div className={classes.entityCardName}>{item.name}</div>
+                    </DelayedTooltip>
                     <div className={classes.entityCardType}>
                       {tCommon(FAVORITE_TYPE_LABEL_KEYS[item.type])}
                     </div>
@@ -253,7 +256,9 @@ export const DashboardPage: FC = () => {
                 >
                   <EntityAvatar entityType={RESOURCE_TYPE_TO_ENTITY[item.resource_type] || 'application'} size="sm" />
                   <div className={classes.entityCardContent}>
-                    <div className={classes.entityCardName}>{item.resource_name}</div>
+                    <DelayedTooltip label={item.resource_name}>
+                      <div className={classes.entityCardName}>{item.resource_name}</div>
+                    </DelayedTooltip>
                     <div className={classes.entityCardType}>{item.resource_type}</div>
                   </div>
                 </div>

@@ -19,6 +19,7 @@ import {
 } from '@tabler/icons-react';
 import { useMantineColorScheme } from '@mantine/core';
 import { useIdentity } from '../../../contexts';
+import { DelayedTooltip } from '../DelayedTooltip';
 import type { SearchResultItem } from '../../../api/types';
 import classes from './CommandPalette.module.css';
 
@@ -189,9 +190,13 @@ export const CommandPalette: FC<CommandPaletteProps> = ({ open, onOpenChange }) 
                         <Icon size={16} />
                       </div>
                       <div className={classes.itemContent}>
-                        <div className={classes.itemName}>{item.name}</div>
+                        <DelayedTooltip label={item.name}>
+                          <div className={classes.itemName}>{item.name}</div>
+                        </DelayedTooltip>
                         {item.description && (
-                          <div className={classes.itemDescription}>{item.description}</div>
+                          <DelayedTooltip label={item.description}>
+                            <div className={classes.itemDescription}>{item.description}</div>
+                          </DelayedTooltip>
                         )}
                       </div>
                       <span className={classes.itemBadge}>

@@ -20,6 +20,7 @@ import { useCallback, useMemo, useState, useRef } from 'react';
 import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, ScrollArea, Badge, UnstyledButton, ActionIcon, Tooltip, Code, Collapse } from '@mantine/core';
+import { DelayedTooltip } from '../common/DelayedTooltip';
 import {
   IconChevronDown,
   IconChevronRight,
@@ -520,9 +521,11 @@ const TreeItem: FC<TreeItemProps> = ({
         </Badge>
 
         {/* Name */}
-        <Text size="xs" className={classes.nodeName} title={node.name}>
-          {truncatedName}
-        </Text>
+        <DelayedTooltip label={node.name}>
+          <Text size="xs" className={classes.nodeName}>
+            {truncatedName}
+          </Text>
+        </DelayedTooltip>
 
         {/* Status Icon */}
         <span className={classes.statusIcon}>
@@ -643,9 +646,11 @@ const TraceRootItem: FC<TraceRootItemProps> = ({
         </Badge>
 
         {/* Name */}
-        <Text size="xs" className={classes.nodeName} title={trace.referenceName || 'Trace'}>
-          {truncatedName}
-        </Text>
+        <DelayedTooltip label={trace.referenceName || 'Trace'}>
+          <Text size="xs" className={classes.nodeName}>
+            {truncatedName}
+          </Text>
+        </DelayedTooltip>
 
         {/* Status based on first node or default */}
         <span className={classes.statusIcon}>

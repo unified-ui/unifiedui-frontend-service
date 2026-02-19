@@ -25,6 +25,7 @@ import {
   IconShieldLock,
 } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
+import { DelayedTooltip } from '../DelayedTooltip';
 import type {
   IdentityUser,
   IdentityGroup,
@@ -534,9 +535,11 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
                                 <Box>
                                   <Text size="sm">{customGroup.name}</Text>
                                   {customGroup.description && (
-                                    <Text size="xs" c="dimmed" lineClamp={1}>
-                                      {customGroup.description}
-                                    </Text>
+                                    <DelayedTooltip label={customGroup.description}>
+                                      <Text size="xs" c="dimmed" lineClamp={1}>
+                                        {customGroup.description}
+                                      </Text>
+                                    </DelayedTooltip>
                                   )}
                                 </Box>
                               </Group>

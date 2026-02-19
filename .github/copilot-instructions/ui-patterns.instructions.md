@@ -236,6 +236,39 @@ Errors from `apiClient` trigger the `onError` callback in IdentityContext, which
 
 ---
 
+## Truncated Text Tooltips (CRITICAL)
+
+Whenever text may be truncated (via `truncate`, `lineClamp={1}`, `text-overflow: ellipsis`, or CSS line-clamp), **always** wrap it in a `DelayedTooltip` so users can read the full text on hover.
+
+```tsx
+import { DelayedTooltip } from '../DelayedTooltip'; // or from '../../components/common'
+
+<DelayedTooltip label={item.name}>
+  <Text size="sm" truncate>{item.name}</Text>
+</DelayedTooltip>
+```
+
+### Rules
+
+1. **Always use `DelayedTooltip`** (not plain `Tooltip`) — it has `openDelay={1000}` (1s), `multiline`, `maw={400}`, and `withArrow` built in
+2. The `label` prop must contain the **full untruncated text**
+3. Apply to: names, titles, descriptions, emails, IDs — anywhere text is clipped
+4. **Exception: Tag tooltips** — tag badges with `+N more` popover keep their own pattern, do not wrap in `DelayedTooltip`
+5. If `DelayedTooltip` cannot be imported (e.g., non-React context), use `<Tooltip openDelay={1000} multiline maw={400} withArrow>` directly
+
+### Where to apply
+
+- **DataTable rows**: name, description columns (done via `DataTableRow`)
+- **Sidebar lists**: item name, subtitle
+- **Entity cards**: name fields (Dashboard favorites, recent visits)
+- **Chat sidebars**: conversation name, application name
+- **Chat header**: app name, app description
+- **Trace views**: node names, trace IDs, reference names
+- **Dialog lists**: names, descriptions in search results and selection dialogs
+- **Access tables**: principal names, emails
+
+---
+
 ## Dirty Tracking & Unsaved Changes
 
 ### Two Hook Approach

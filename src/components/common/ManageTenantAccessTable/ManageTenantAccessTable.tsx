@@ -22,6 +22,7 @@ import { IconSearch, IconPlus, IconUser, IconUsers, IconUsersGroup, IconTrash } 
 import type { TenantPermissionEnum, PrincipalTypeEnum } from '../../../api/types';
 import { useIdentity } from '../../../contexts';
 import { ConfirmDeleteDialog } from '../ConfirmDeleteDialog';
+import { DelayedTooltip } from '../DelayedTooltip';
 import classes from './ManageTenantAccessTable.module.css';
 
 // Tenant roles with labels and descriptions
@@ -478,9 +479,11 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
                         </Box>
                         <Stack gap={2}>
                           <Group gap="xs">
-                            <Text size="sm" fw={500} lineClamp={1}>
-                              {principal.displayName || principal.principalId}
-                            </Text>
+                            <DelayedTooltip label={principal.displayName || principal.principalId}>
+                              <Text size="sm" fw={500} lineClamp={1}>
+                                {principal.displayName || principal.principalId}
+                              </Text>
+                            </DelayedTooltip>
                             {isCurrentUser && (
                               <Badge size="xs" variant="light" color="blue">
                                 You
@@ -488,9 +491,11 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
                             )}
                           </Group>
                           {(principal.mail || principal.principalName) && (
-                            <Text size="xs" c="dimmed" lineClamp={1}>
-                              {principal.mail || principal.principalName}
-                            </Text>
+                            <DelayedTooltip label={principal.mail || principal.principalName || ''}>
+                              <Text size="xs" c="dimmed" lineClamp={1}>
+                                {principal.mail || principal.principalName}
+                              </Text>
+                            </DelayedTooltip>
                           )}
                         </Stack>
                       </Group>

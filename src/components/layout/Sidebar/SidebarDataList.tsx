@@ -13,6 +13,7 @@ import {
   ScrollArea,
   Box,
 } from '@mantine/core';
+import { DelayedTooltip } from '../../common/DelayedTooltip';
 import {
   IconSearch,
   IconSquareArrowRight,
@@ -323,13 +324,17 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
                       <span className={classes.itemIcon}>{item.icon}</span>
                     )}
                     <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
-                      <Text size="sm" truncate className={classes.itemName}>
-                        {item.name}
-                      </Text>
-                      {item.subtitle && (
-                        <Text size="xs" c="dimmed" truncate className={classes.itemSubtitle}>
-                          {item.subtitle}
+                      <DelayedTooltip label={item.name}>
+                        <Text size="sm" truncate className={classes.itemName}>
+                          {item.name}
                         </Text>
+                      </DelayedTooltip>
+                      {item.subtitle && (
+                        <DelayedTooltip label={item.subtitle}>
+                          <Text size="xs" c="dimmed" truncate className={classes.itemSubtitle}>
+                            {item.subtitle}
+                          </Text>
+                        </DelayedTooltip>
                       )}
                     </Stack>
                     {isFavorite && (

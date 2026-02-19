@@ -14,6 +14,7 @@ import {
   LoadingOverlay,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { DelayedTooltip } from '../../common';
 import {
   IconInfoCircle,
   IconUsersGroup,
@@ -300,9 +301,11 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
               <Text fw={600} size="lg">
                 {customGroup?.name || 'Custom Group'}
               </Text>
-              <Text size="xs" c="dimmed" lineClamp={1}>
-                {customGroup?.description || 'No description'}
-              </Text>
+              <DelayedTooltip label={customGroup?.description || 'No description'}>
+                <Text size="xs" c="dimmed" lineClamp={1}>
+                  {customGroup?.description || 'No description'}
+                </Text>
+              </DelayedTooltip>
             </Stack>
           </Group>
         }

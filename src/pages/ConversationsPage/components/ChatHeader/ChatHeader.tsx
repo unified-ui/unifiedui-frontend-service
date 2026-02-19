@@ -23,6 +23,7 @@ import {
   IconFileTypePdf,
   IconFileTypeJs,
 } from '@tabler/icons-react';
+import { DelayedTooltip } from '../../../../components/common';
 import { ConfirmDeleteDialog } from '../../../../components/common';
 import type { ApplicationResponse, ConversationResponse, MessageResponse } from '../../../../api/types';
 import classes from './ChatHeader.module.css';
@@ -152,13 +153,17 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
               <Group gap="xs" wrap="nowrap">
                 <IconSparkles size={20} className={classes.applicationIcon} />
                 <Stack gap={0}>
-                  <Text size="sm" fw={600} lineClamp={1}>
-                    {selectedApp?.name || t('conversations:unknownAgent')}
-                  </Text>
-                  {selectedApp?.description && (
-                    <Text size="xs" c="dimmed" lineClamp={1}>
-                      {selectedApp.description}
+                  <DelayedTooltip label={selectedApp?.name || t('conversations:unknownAgent')}>
+                    <Text size="sm" fw={600} lineClamp={1}>
+                      {selectedApp?.name || t('conversations:unknownAgent')}
                     </Text>
+                  </DelayedTooltip>
+                  {selectedApp?.description && (
+                    <DelayedTooltip label={selectedApp.description}>
+                      <Text size="xs" c="dimmed" lineClamp={1}>
+                        {selectedApp.description}
+                      </Text>
+                    </DelayedTooltip>
                   )}
                 </Stack>
               </Group>
