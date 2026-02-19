@@ -4,7 +4,7 @@ import { Modal, Textarea, Group, Button, Stack, Text, ThemeIcon } from '@mantine
 import { IconThumbDown } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
-interface FeedbackDialogProps {
+export interface FeedbackDialogProps {
   opened: boolean;
   onClose: () => void;
   onSubmit: (feedbackText?: string) => void;

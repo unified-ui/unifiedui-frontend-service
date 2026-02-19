@@ -4,13 +4,13 @@ import { ScrollArea, Box, Text, Avatar, Stack, Loader, Paper, Tooltip, ActionIco
 import { IconUser, IconSparkles, IconCopy, IconCheck, IconBinaryTree, IconThumbUp, IconThumbDown, IconThumbUpFilled, IconThumbDownFilled, IconArrowDown, IconEdit, IconTrash, IconAlertTriangle, IconRefresh, IconFile, IconPhoto, IconFileTypePdf, IconFileTypeDoc, IconFileTypeXls, IconFileTypePpt, IconFileText, IconMusic, IconFileCode } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { MessageResponse, AttachmentMetadata, ReactionResponse } from '../../../../api/types';
-import { ConfirmDeleteDialog } from '../../../../components/common';
+import type { MessageResponse, AttachmentMetadata, ReactionResponse } from '../../../api/types';
+import { ConfirmDeleteDialog } from '../../common';
 import { FeedbackDialog } from '../FeedbackDialog';
 import classes from './ChatContent.module.css';
 import mdClasses from './Markdown.module.css';
 
-interface ChatContentProps {
+export interface ChatContentProps {
   messages: MessageResponse[];
   isLoading?: boolean;
   isStreaming?: boolean;
@@ -556,7 +556,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
           <FeedbackDialog
             opened={feedbackDialogOpen}
             onClose={() => setFeedbackDialogOpen(false)}
-            onSubmit={(feedbackText) => {
+            onSubmit={(feedbackText: string | undefined) => {
               onReaction?.(message.id, 'thumbs_down', feedbackText);
               setFeedbackDialogOpen(false);
             }}

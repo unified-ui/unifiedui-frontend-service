@@ -61,6 +61,12 @@ src/
 │   └── index.ts
 │
 ├── hooks/                      # Custom hooks
+│   ├── chat/                     # Chat-specific hooks
+│   │   ├── useChat.ts            # SSE streaming, send, edit, delete, reactions
+│   │   └── useFileUpload.ts      # Drag-and-drop file upload handling
+│   ├── conversation/             # Conversation management hooks
+│   │   ├── useConversationList.ts  # List, CRUD, sidebar, favorites, pagination
+│   │   └── useConversationTracing.ts # Trace management, node highlighting
 │   ├── useDelayedLoading.ts      # Delayed loading state (show skeleton only after N ms)
 │   ├── useEntityList.ts          # Shared list page logic (pagination, search, sort, filter, CRUD)
 │   ├── useEntityPermissions.ts   # Permission methods per entity type
@@ -91,7 +97,9 @@ src/
 │   └── NotFoundPage/           # 404
 │
 ├── components/
+│   ├── chat/                   # Reusable chat components (ChatView, ChatContent, ChatInput, ...)
 │   ├── common/                 # Reusable generic components
+│   ├── conversation/           # Conversation management components (ConversationSidebar)
 │   ├── dialogs/                # Modal dialogs (create/edit/share)
 │   ├── layout/                 # App shell (MainLayout, Sidebar, Header)
 │   └── tracing/                # Trace visualization system
@@ -130,7 +138,7 @@ src/
 | `EntityDetailsForm` | Generic entity detail form |
 | `GenerateWithAIButton` | Button that triggers AI-powered content generation |
 | `MarkdownRenderer` | Renders markdown content with syntax highlighting |
-| `ChatPanel` | Dual-mode chat panel (conversation + playground) for pages |
+
 | `CommandPalette` | Global command palette (cmdk, `⌘K` shortcut) |
 | `PermissionGate` | Declarative permission-based rendering (hide/disable by role or resource permission) |
 | `SkeletonLoaders` | Skeleton loading placeholders for list/detail pages |
@@ -170,6 +178,30 @@ See [components/layout.instructions.md](./components/layout.instructions.md) for
 | `GlobalChatSidebar` | Right hover panel for recent conversations |
 | `NotificationPanel` | Right slide-out drawer for notifications (Mantine Drawer) |
 
+### `components/chat/`
+
+Reusable chat components — can be composed into any page that needs chat functionality (ConversationsPage, ReActAgentDeveloperPage, EmbedChatPage, external widgets).
+
+| Component | Purpose |
+|-----------|--------|
+| `ChatView` | Composite chat container: orchestrates ChatContent + ChatInput + drag-drop + optional `headerSlot`, `tracingSlot`, `emptyStateSlot` |
+| `ChatContent` | Message list with auto-scroll, streaming, markdown rendering, reactions, edit/delete |
+| `ChatInput` | Input with file attachments, drag-drop, auto-resize textarea |
+| `ChatHeader` | Chat header with app selector, tracing toggle, export, share, delete |
+| `ChatEmptyState` | Reusable empty state with icon, title, description |
+| `FeedbackDialog` | Thumbs-down feedback text dialog |
+
+**Architecture**: 3-layer pattern:
+1. **Atomic components** — ChatContent, ChatInput, ChatHeader, ChatEmptyState, FeedbackDialog
+2. **Composite** — ChatView (assembles atomics + slots for header/tracing/empty state)
+3. **Pages** — Wire hooks + pass props to ChatView
+
+### `components/conversation/`
+
+| Component | Purpose |
+|-----------|--------|
+| `ConversationSidebar` | Conversation list sidebar with search, grouping (time/application), favorites, rename, delete |
+
 ### `components/tracing/`
 
 See [components/tracing.instructions.md](./components/tracing.instructions.md) for details.
@@ -199,6 +231,10 @@ See [components/tracing.instructions.md](./components/tracing.instructions.md) f
 | `/applications` | ApplicationsPage | Protected |
 | `/conversations` | ConversationsPage | Protected |
 | `/conversations/:conversationId` | ConversationsPage | Protected |
+
+> **ConversationsPage** uses `ChatView` from `components/chat/`, `ConversationSidebar` from `components/conversation/`, and hooks from `hooks/chat/` + `hooks/conversation/`. It owns no sub-components or hooks itself — only wiring.
+>
+> **ReActAgentDeveloperPage** uses `ChatView` from `components/chat/` for its playground panel.
 | `/autonomous-agents` | AutonomousAgentsPage | Protected |
 | `/autonomous-agents/:agentId` | AutonomousAgentDetailsPage | Protected |
 | `/chat-widgets` | ChatWidgetsPage | Protected |

@@ -2,21 +2,18 @@ import type { FC } from 'react';
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { Box, Text, Drawer, Loader, Center, Title } from '@mantine/core';
+import { Box, Drawer, Loader, Center, Title } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { IconUpload, IconMessageCircle } from '@tabler/icons-react';
+import { IconMessageCircle } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { useIdentity } from '../../contexts';
 import { useRecentVisits } from '../../contexts';
 import { ShareConversationDialog } from '../../components/dialogs/ShareConversationDialog';
 import { SearchConversationsDialog } from '../../components/dialogs/SearchConversationsDialog';
 import { TracingProvider, TracingSidebar, TracingVisualDialog } from '../../components/tracing';
-import { ChatSidebar } from './components/ChatSidebar';
-import { ChatHeader } from './components/ChatHeader';
-import { ChatContent } from './components/ChatContent';
-import { ChatInput } from './components/ChatInput';
-import { useConversationList, useChat, useConversationTracing, useFileUpload } from './hooks';
-import { useDelayedLoading } from '../../hooks';
+import { ConversationSidebar } from '../../components/conversation';
+import { ChatView, ChatHeader, ChatEmptyState } from '../../components/chat';
+import { useConversationList, useChat, useConversationTracing, useDelayedLoading } from '../../hooks';
 import classes from './ConversationsPage.module.css';
 
 /**
@@ -62,8 +59,6 @@ export const ConversationsPage: FC = () => {
     setSelectedApplicationId: convList.setSelectedApplicationId,
     onRefreshTraces: tracing.refreshTraces,
   });
-
-  const fileUpload = useFileUpload();
 
   useEffect(() => {
     tracing.setMessagesRef(chat.messages);
@@ -131,25 +126,65 @@ export const ConversationsPage: FC = () => {
               )}
             </Box>
             <Box className={classes.mainArea}>
-              <Box className={classes.chatTracingLayout}>
-                <Box className={classes.chatSection}>
-                  <Box className={classes.contentArea}>
-                    <Box className={classes.emptyState}>
-                      <IconMessageCircle size={64} className={classes.emptyStateIcon} />
-                      <Text className={classes.emptyStateTitle}>{t('conversations:startNewConversation')}</Text>
-                      <Text className={classes.emptyStateDescription}>
-                        {t('conversations:selectAgentToStart')}
-                      </Text>
-                    </Box>
-                  </Box>
-                </Box>
-              </Box>
+              <ChatEmptyState
+                icon={<IconMessageCircle size={64} />}
+                title={t('conversations:startNewConversation')}
+                description={t('conversations:selectAgentToStart')}
+              />
             </Box>
           </Box>
         </Box>
       </MainLayout>
     );
   }
+
+  const tracingSlot = tracing.tracingSidebarVisible && tracing.traces.length > 0 ? (
+    <TracingProvider
+      traces={tracing.traces}
+      initialNodeReferenceId={tracing.selectedNodeReferenceId}
+      onNodeReferenceIdChange={tracing.handleNodeReferenceIdChange}
+    >
+      <TracingSidebar onOpenFullscreen={tracing.handleOpenTracingFullscreen} />
+    </TracingProvider>
+  ) : undefined;
+
+  const headerSlot = (
+    <ChatHeader
+      conversation={convList.currentConversation}
+      applications={convList.applications}
+      selectedApplicationId={convList.selectedApplicationId}
+      isNewChat={convList.isNewChat}
+      isFavorite={convList.currentConversation ? convList.favoriteIds.has(convList.currentConversation.id) : false}
+      tracingSidebarVisible={tracing.tracingSidebarVisible}
+      hasTraces={tracing.traces.length > 0}
+      messages={chat.messages}
+      onApplicationChange={convList.handleApplicationChange}
+      onShare={handleShare}
+      onToggleFavorite={() => {
+        if (convList.currentConversation) {
+          convList.handleToggleFavorite(convList.currentConversation.id);
+        }
+      }}
+      onDelete={() => {
+        if (convList.currentConversation) {
+          convList.handleDeleteConversation(convList.currentConversation.id);
+        }
+      }}
+      onToggleTracingSidebar={tracing.handleToggleTracingSidebar}
+    />
+  );
+
+  const emptyStateSlot = convList.isNewChat ? (
+    <ChatEmptyState
+      icon={<IconMessageCircle size={64} />}
+      title={t('conversations:startNewConversation')}
+      description={
+        convList.selectedApplicationId
+          ? t('conversations:typeToStart')
+          : t('conversations:selectAgentToStart')
+      }
+    />
+  ) : undefined;
 
   return (
     <MainLayout noPadding>
@@ -167,7 +202,7 @@ export const ConversationsPage: FC = () => {
             withCloseButton={false}
             overlayProps={{ backgroundOpacity: 0.3 }}
           >
-            <ChatSidebar
+            <ConversationSidebar
               conversations={convList.conversations}
               applications={convList.applications}
               selectedConversationId={conversationId}
@@ -178,7 +213,7 @@ export const ConversationsPage: FC = () => {
               searchQuery={convList.sidebarSearchQuery}
               onCollapsedChange={() => setMobileSidebarOpen(false)}
               onNewChat={() => { handleNewChat(); setMobileSidebarOpen(false); }}
-              onSelectConversation={(id) => { handleSelectConversation(id); setMobileSidebarOpen(false); }}
+              onSelectConversation={(id: string) => { handleSelectConversation(id); setMobileSidebarOpen(false); }}
               onToggleFavorite={convList.handleToggleFavorite}
               onRenameConversation={convList.handleRenameConversation}
               onDeleteConversation={convList.handleDeleteConversation}
@@ -189,7 +224,7 @@ export const ConversationsPage: FC = () => {
           </Drawer>
         ) : (
           <Box className={`${classes.chatSidebarWrapper} ${convList.sidebarCollapsed ? classes.collapsed : ''}`}>
-            <ChatSidebar
+            <ConversationSidebar
               conversations={convList.conversations}
               applications={convList.applications}
               selectedConversationId={conversationId}
@@ -213,129 +248,41 @@ export const ConversationsPage: FC = () => {
 
         <Box
           className={`${classes.mainArea} ${!isMobile && convList.sidebarCollapsed ? classes.sidebarCollapsed : ''} ${isMobile ? classes.sidebarHidden : ''}`}
-          style={{ position: 'relative' }}
         >
-          <Box className={classes.chatTracingLayout}>
-            <Box
-              className={`${classes.chatSection} ${tracing.tracingSidebarVisible && tracing.traces.length > 0 ? classes.withTracingSidebar : ''}`}
-              onDragEnter={fileUpload.handleDragEnter}
-              onDragLeave={fileUpload.handleDragLeave}
-              onDragOver={fileUpload.handleDragOver}
-              onDrop={fileUpload.handleDrop}
-            >
-              <Box className={`${classes.dropZoneOverlay} ${fileUpload.isDragOver ? classes.active : ''}`}>
-                <Box className={classes.dropZoneContent}>
-                  <IconUpload size={48} stroke={1.5} />
-                  <Text size="lg" fw={500}>{t('conversations:dropFilesHere')}</Text>
-                  <Text size="sm" c="dimmed">{t('conversations:filesAttached')}</Text>
-                </Box>
-              </Box>
-
-              <ChatHeader
-                conversation={convList.currentConversation}
-                applications={convList.applications}
-                selectedApplicationId={convList.selectedApplicationId}
-                isNewChat={convList.isNewChat}
-                isFavorite={convList.currentConversation ? convList.favoriteIds.has(convList.currentConversation.id) : false}
-                tracingSidebarVisible={tracing.tracingSidebarVisible}
-                hasTraces={tracing.traces.length > 0}
-                messages={chat.messages}
-                onApplicationChange={convList.handleApplicationChange}
-                onShare={handleShare}
-                onToggleFavorite={() => {
-                  if (convList.currentConversation) {
-                    convList.handleToggleFavorite(convList.currentConversation.id);
-                  }
-                }}
-                onDelete={() => {
-                  if (convList.currentConversation) {
-                    convList.handleDeleteConversation(convList.currentConversation.id);
-                  }
-                }}
-                onToggleTracingSidebar={tracing.handleToggleTracingSidebar}
-              />
-
-              {convList.isNewChat && chat.messages.length === 0 && !chat.isStreaming ? (
-                <>
-                  <Box className={classes.contentArea}>
-                    <Box className={classes.emptyState}>
-                      <IconMessageCircle size={64} className={classes.emptyStateIcon} />
-                      <Text className={classes.emptyStateTitle}>{t('conversations:startNewConversation')}</Text>
-                      <Text className={classes.emptyStateDescription}>
-                        {convList.selectedApplicationId
-                          ? t('conversations:typeToStart')
-                          : t('conversations:selectAgentToStart')}
-                      </Text>
-                    </Box>
-                  </Box>
-                  <ChatInput
-                    ref={fileUpload.chatInputRef}
-                    onSend={chat.handleSendMessage}
-                    onCancel={chat.handleCancelStream}
-                    isDisabled={!convList.selectedApplicationId}
-                    isStreaming={chat.isStreaming}
-                    placeholder={
-                      convList.selectedApplicationId
-                        ? t('conversations:typeToStart')
-                        : t('conversations:selectAgentToStart')
-                    }
-                  />
-                </>
-              ) : (
-                <>
-                  <Box className={classes.contentArea}>
-                    <ChatContent
-                      messages={chat.messages}
-                      isLoading={chat.isLoadingMessages}
-                      isStreaming={chat.isStreaming}
-                      streamingContent={chat.streamingContent}
-                      streamingMessageId={chat.streamingMessageId}
-                      onViewTrace={tracing.handleViewTrace}
-                      highlightedExtMessageId={tracing.highlightedMessageExtId}
-                      highlightedUserMessageId={tracing.highlightedUserMessageId}
-                      onEditMessage={canWriteConversation ? chat.handleEditMessage : undefined}
-                      onDeleteMessage={canWriteConversation ? chat.handleDeleteMessage : undefined}
-                      onRetry={(failedMessageId) => {
-                        const failedMsg = chat.messages.find(m => m.id === failedMessageId);
-                        const userMsg = failedMsg?.userMessageId
-                          ? chat.messages.find(m => m.id === failedMsg.userMessageId)
-                          : undefined;
-                        if (userMsg?.content) {
-                          chat.handleSendMessage(userMsg.content);
-                        }
-                      }}
-                      onReaction={chat.handleReaction}
-                      reactions={chat.reactions}
-                    />
-                  </Box>
-                  <ChatInput
-                    ref={fileUpload.chatInputRef}
-                    onSend={chat.handleSendMessage}
-                    onCancel={chat.handleCancelStream}
-                    isDisabled={!convList.selectedApplicationId || !canWriteConversation}
-                    isStreaming={chat.isStreaming}
-                    placeholder={
-                      convList.selectedApplicationId
-                        ? t('conversations:messageInput')
-                        : t('conversations:selectAgentToStart')
-                    }
-                  />
-                </>
-              )}
-            </Box>
-
-            {tracing.tracingSidebarVisible && tracing.traces.length > 0 && (
-              <TracingProvider
-                traces={tracing.traces}
-                initialNodeReferenceId={tracing.selectedNodeReferenceId}
-                onNodeReferenceIdChange={tracing.handleNodeReferenceIdChange}
-              >
-                <Box className={classes.tracingSidebarWrapper}>
-                  <TracingSidebar onOpenFullscreen={tracing.handleOpenTracingFullscreen} />
-                </Box>
-              </TracingProvider>
-            )}
-          </Box>
+          <ChatView
+            messages={chat.messages}
+            isLoading={chat.isLoadingMessages}
+            isStreaming={chat.isStreaming}
+            streamingContent={chat.streamingContent}
+            streamingMessageId={chat.streamingMessageId}
+            onSendMessage={chat.handleSendMessage}
+            onCancelStream={chat.handleCancelStream}
+            onEditMessage={canWriteConversation ? chat.handleEditMessage : undefined}
+            onDeleteMessage={canWriteConversation ? chat.handleDeleteMessage : undefined}
+            onReaction={chat.handleReaction}
+            onRetry={(failedMessageId) => {
+              const failedMsg = chat.messages.find(m => m.id === failedMessageId);
+              const userMsg = failedMsg?.userMessageId
+                ? chat.messages.find(m => m.id === failedMsg.userMessageId)
+                : undefined;
+              if (userMsg?.content) {
+                chat.handleSendMessage(userMsg.content);
+              }
+            }}
+            onViewTrace={tracing.handleViewTrace}
+            reactions={chat.reactions}
+            highlightedExtMessageId={tracing.highlightedMessageExtId}
+            highlightedUserMessageId={tracing.highlightedUserMessageId}
+            inputDisabled={!convList.selectedApplicationId || !canWriteConversation}
+            inputPlaceholder={
+              convList.selectedApplicationId
+                ? (convList.isNewChat ? t('conversations:typeToStart') : t('conversations:messageInput'))
+                : t('conversations:selectAgentToStart')
+            }
+            headerSlot={headerSlot}
+            tracingSlot={tracingSlot}
+            emptyStateSlot={emptyStateSlot}
+          />
         </Box>
         </Box>
       </Box>

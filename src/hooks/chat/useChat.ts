@@ -8,16 +8,12 @@ import {
   type MessageResponse,
   type FileAttachment,
   type ReactionResponse,
-} from '../../../api/types';
-import { filesToAttachments } from '../../../utils/fileUtils';
-import type { UnifiedUIAPIClient } from '../../../api/client';
+} from '../../api/types';
+import { filesToAttachments } from '../../utils/fileUtils';
+import type { UnifiedUIAPIClient } from '../../api/client';
 
 const CONTEXT_DATA_PREFIX = 'ctx_';
 
-/**
- * Extracts context data from URL search parameters.
- * Query params with 'ctx_' prefix are extracted and the prefix is removed from keys.
- */
 function extractContextDataFromSearchParams(
   searchParams: URLSearchParams
 ): Record<string, string> | undefined {
@@ -68,9 +64,6 @@ interface UseChatReturn {
   loadConversationMessages: (convId: string) => Promise<void>;
 }
 
-/**
- * Hook for chat messaging: SSE streaming, send, edit, delete, error handling with auto-retry.
- */
 export function useChat({
   apiClient,
   tenantId,

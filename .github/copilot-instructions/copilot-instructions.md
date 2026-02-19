@@ -113,7 +113,10 @@ export const MyComponent: FC<Props> = ({ ... }) => {
 - **i18n config**: `src/i18n/index.ts` (production), `src/i18n/i18nForTests.ts` (test)
 - **Locales**: `src/i18n/locales/en-US/` (11 namespaces: common, dashboard, login, header, conversations, settings, tracing, credentials, token, widgetDesigner, reactAgent)
 - **Command Palette**: `src/components/common/CommandPalette/` (cmdk library, `⌘K` shortcut)
-- **Chat Panel**: `src/components/common/ChatPanel/` (dual-mode: conversation + playground)
+- **Chat Components**: `src/components/chat/` (ChatView, ChatContent, ChatInput, ChatHeader, ChatEmptyState, FeedbackDialog)
+- **Conversation Components**: `src/components/conversation/` (ConversationSidebar)
+- **Chat Hooks**: `src/hooks/chat/` (useChat, useFileUpload)
+- **Conversation Hooks**: `src/hooks/conversation/` (useConversationList, useConversationTracing)
 - **Test setup**: `src/test/setup.ts` (MSW lifecycle, mocks)
 - **Test utils**: `src/test/utils.tsx` (`renderWithProviders()`)
 

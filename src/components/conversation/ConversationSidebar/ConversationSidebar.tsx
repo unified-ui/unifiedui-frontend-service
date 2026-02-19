@@ -32,16 +32,15 @@ import {
   IconCheck,
   IconX,
   IconCopy,
-  IconFileExport,
   IconChevronDown,
 } from '@tabler/icons-react';
-import { ConfirmDeleteDialog, DelayedTooltip } from '../../../../components/common';
-import { ApplicationSelectDialog } from '../../../../components/dialogs/ApplicationSelectDialog';
-import { useIdentity } from '../../../../contexts';
-import type { ConversationResponse, ApplicationResponse, QuickListItemResponse } from '../../../../api/types';
-import classes from './ChatSidebar.module.css';
+import { ConfirmDeleteDialog, DelayedTooltip } from '../../common';
+import { ApplicationSelectDialog } from '../../dialogs/ApplicationSelectDialog';
+import { useIdentity } from '../../../contexts';
+import type { ConversationResponse, ApplicationResponse, QuickListItemResponse } from '../../../api/types';
+import classes from './ConversationSidebar.module.css';
 
-interface ChatSidebarProps {
+export interface ConversationSidebarProps {
   conversations: ConversationResponse[];
   applications: ApplicationResponse[];
   selectedConversationId?: string;
@@ -70,7 +69,7 @@ interface GroupedConversations {
 
 const STORAGE_KEY_GROUP_MODE = 'chatSidebar.groupMode';
 
-export const ChatSidebar: FC<ChatSidebarProps> = ({
+export const ConversationSidebar: FC<ConversationSidebarProps> = ({
   conversations,
   applications,
   selectedConversationId,
@@ -86,7 +85,7 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
   onRenameConversation,
   onDeleteConversation,
   onSearchOpen,
-  onSearchChange,
+  onSearchChange: _onSearchChange,
   onLoadMore,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
@@ -149,7 +148,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
     }
   }, [hasMore, onLoadMore]);
 
-  // Rename handlers
   const handleRenameStart = (id: string, currentName: string) => {
     setEditingId(id);
     setEditingName(currentName);
@@ -163,7 +161,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
         name: editingName,
       });
       
-      // Update parent state immediately
       onRenameConversation?.(editingId, editingName);
       
       setEditingId(null);
@@ -178,7 +175,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
     setEditingName('');
   };
 
-  // Delete handlers
   const handleDeleteClick = (id: string, name: string) => {
     setDeleteDialog({ open: true, conversationId: id, conversationName: name });
   };
@@ -210,7 +206,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
     const unpinned = filteredConversations.filter(c => !favoriteIds.has(c.id));
 
     if (effectiveGroupMode === 'application') {
-      // Group by application
       const appGroups = new Map<string, ConversationResponse[]>();
       
       unpinned.forEach(conv => {
@@ -227,7 +222,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
         result.push({ label: t('conversations:pinned'), conversations: pinned });
       }
       
-      // Sort groups by most recent conversation
       const sortedGroups = Array.from(appGroups.entries()).sort((a, b) => {
         const aLatest = Math.max(...a[1].map(c => new Date(c.updated_at).getTime()));
         const bLatest = Math.max(...b[1].map(c => new Date(c.updated_at).getTime()));
@@ -245,7 +239,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
 
       return result;
     } else {
-      // Group by time
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const yesterday = new Date(today.getTime() - 86400000);
@@ -278,7 +271,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
         }
       });
 
-      // Sort each group by updated_at descending
       Object.values(groups).forEach(group => {
         group.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
       });
@@ -317,7 +309,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
 
   return (
     <div className={classes.sidebar}>
-      {/* Header: sidebar toggle + search */}
       <div className={classes.header}>
         <ActionIcon
           variant="subtle"
@@ -339,7 +330,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
         </ActionIcon>
       </div>
 
-      {/* New Chat Button */}
       <div className={classes.actions}>
         <UnstyledButton className={classes.newChatButton} onClick={onNewChat}>
           <IconPlus size={18} />
@@ -347,7 +337,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
         </UnstyledButton>
       </div>
 
-      {/* Group Mode Toggle */}
       <div className={classes.groupToggle}>
         <div className={classes.customSegmentedControl}>
           <UnstyledButton
@@ -395,7 +384,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
         </div>
       </div>
 
-      {/* Conversation List */}
       <ScrollArea
         className={classes.conversationList}
         scrollbarSize={6}
@@ -455,7 +443,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
         )}
       </ScrollArea>
 
-      {/* Delete Confirmation Dialog */}
       <ConfirmDeleteDialog
         opened={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false, conversationId: '', conversationName: '' })}
@@ -465,7 +452,6 @@ export const ChatSidebar: FC<ChatSidebarProps> = ({
         isLoading={isDeleting}
       />
 
-      {/* Application Select Dialog */}
       <ApplicationSelectDialog
         opened={applicationSelectDialogOpen}
         onClose={() => setApplicationSelectDialogOpen(false)}

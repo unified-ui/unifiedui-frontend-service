@@ -5,8 +5,8 @@ import {
   FavoriteResourceTypeEnum,
   type ConversationResponse,
   type ApplicationResponse,
-} from '../../../api/types';
-import type { UnifiedUIAPIClient } from '../../../api/client';
+} from '../../api/types';
+import type { UnifiedUIAPIClient } from '../../api/client';
 
 const STORAGE_KEY_LAST_APP = 'unified-ui-last-application-id';
 const STORAGE_KEY_SIDEBAR_COLLAPSED = 'unified-ui-sidebar-collapsed';
@@ -45,9 +45,6 @@ interface UseConversationListReturn {
   resetStreamingState: () => void;
 }
 
-/**
- * Hook for managing the conversation list, sidebar state, favorites, and CRUD operations.
- */
 export function useConversationList({
   apiClient,
   tenantId,
@@ -90,7 +87,7 @@ export function useConversationList({
     if (nameFilter) {
       params.name = nameFilter;
     }
-    return apiClient.listConversations(tenantId, params as never);
+    return apiClient.listConversations(tenantId, params as never) as Promise<ConversationResponse[]>;
   }, [apiClient, tenantId]);
 
   useEffect(() => {
@@ -151,8 +148,6 @@ export function useConversationList({
   }, [searchParams, selectedApplicationId]);
 
   const resetStreamingState = useCallback(() => {
-    // Intentionally empty — caller handles streaming state reset
-    // This is a coordination point for handleNewChat/handleSelectConversation
   }, []);
 
   const handleApplicationChange = useCallback((applicationId: string) => {

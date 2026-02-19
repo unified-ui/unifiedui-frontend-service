@@ -15,10 +15,10 @@ import {
   IconFile,
   IconPlayerStop,
 } from '@tabler/icons-react';
-import { DelayedTooltip } from '../../../../components/common';
+import { DelayedTooltip } from '../../common';
 import classes from './ChatInput.module.css';
 
-interface ChatInputProps {
+export interface ChatInputProps {
   onSend: (content: string, attachments?: File[]) => void;
   onCancel?: () => void;
   isDisabled?: boolean;
@@ -45,7 +45,6 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-resize textarea
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -55,7 +54,6 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
     }
   }, [content]);
 
-  // Focus textarea on mount
   useEffect(() => {
     textareaRef.current?.focus();
   }, []);
@@ -68,15 +66,13 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
     onSend(trimmedContent, attachments.length > 0 ? attachments : undefined);
     setContent('');
     setAttachments([]);
-    
-    // Reset textarea height
+
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
   }, [content, attachments, isDisabled, isStreaming, onSend]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    // Send on Enter (without Shift)
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -93,20 +89,17 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     addFiles(files);
-    // Reset input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
   const addFiles = (files: File[]) => {
-    // Limit total attachments
     const maxAttachments = 5;
     const newAttachments = [...attachments, ...files].slice(0, maxAttachments);
     setAttachments(newAttachments);
   };
 
-  // Expose handleFileDrop method to parent via ref
   useImperativeHandle(ref, () => ({
     handleFileDrop: (files: File[]) => {
       addFiles(files);
@@ -117,7 +110,6 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
     setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Drag and drop handlers
   const handleDragEnter = (e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -127,7 +119,6 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
   const handleDragLeave = (e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Only set dragging to false if we're leaving the container
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const x = e.clientX;
     const y = e.clientY;
@@ -162,7 +153,6 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      {/* Drag overlay */}
       {isDragging && (
         <Box className={classes.dragOverlay}>
           <IconPhoto size={32} />
@@ -170,9 +160,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
         </Box>
       )}
 
-      {/* Centered input wrapper */}
       <Box className={classes.inputOuterWrapper}>
-        {/* Attachments preview */}
         {attachments.length > 0 && (
           <Box className={classes.attachmentsContainer}>
             {attachments.map((file, index) => (
@@ -185,9 +173,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
           </Box>
         )}
 
-        {/* Input area */}
         <Box className={classes.inputWrapper}>
-          {/* Hidden file input */}
           <input
             ref={fileInputRef}
             type="file"
@@ -198,7 +184,6 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
           />
 
           <Box className={classes.inputContainer}>
-            {/* Textarea */}
             <textarea
               ref={textareaRef}
               className={classes.textarea}
@@ -210,7 +195,6 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
               rows={1}
             />
 
-            {/* Send/Cancel button */}
             {isStreaming ? (
               <Tooltip label="Stop generating">
                 <ActionIcon
@@ -237,14 +221,12 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
             )}
           </Box>
 
-          {/* Character count */}
           {content.length > maxLength * 0.8 && (
             <Text size="xs" c={content.length >= maxLength ? 'red' : 'dimmed'} className={classes.charCount}>
               {content.length}/{maxLength}
             </Text>
           )}
 
-          {/* Tools row */}
           <Box className={classes.toolsRow}>
             <button
               type="button"
@@ -259,7 +241,6 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
         </Box>
       </Box>
 
-      {/* Hint text */}
       <Text size="xs" c="dimmed" ta="center" className={classes.hint}>
         Press Enter to send, Shift+Enter for new line
       </Text>

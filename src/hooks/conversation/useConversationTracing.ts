@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { FullTraceResponse, TraceNodeResponse, MessageResponse } from '../../../api/types';
-import type { UnifiedUIAPIClient } from '../../../api/client';
+import type { FullTraceResponse, TraceNodeResponse, MessageResponse } from '../../api/types';
+import type { UnifiedUIAPIClient } from '../../api/client';
 
 interface UseConversationTracingParams {
   apiClient: UnifiedUIAPIClient | null;
@@ -25,9 +25,6 @@ interface UseConversationTracingReturn {
   setTracingDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-/**
- * Hook for managing conversation tracing state: traces, sidebar, node highlighting.
- */
 export function useConversationTracing({
   apiClient,
   tenantId,
@@ -115,7 +112,7 @@ export function useConversationTracing({
     for (let i = 0; i < nodes.length; i++) {
       if (nodes[i].referenceId === userRefId) {
         for (let j = i + 1; j < nodes.length; j++) {
-          if (nodes[j].referenceId) return nodes[j].referenceId;
+          if (nodes[j].referenceId) return nodes[j].referenceId ?? null;
         }
         return null;
       }

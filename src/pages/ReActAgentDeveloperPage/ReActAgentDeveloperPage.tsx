@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   Title,
   Stack,
@@ -31,8 +31,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { ChatPanel } from '../../components/common/ChatPanel';
-import type { AIModelResponse, ToolResponse } from '../../api/types';
+import { ChatView } from '../../components/chat';
+import type { AIModelResponse, ToolResponse, MessageResponse } from '../../api/types';
 import { AIModelPurposeGroupEnum } from '../../api/types';
 import { useIdentity } from '../../contexts';
 import { useUnsavedChanges } from '../../hooks';
@@ -246,6 +246,8 @@ export const ReActAgentDeveloperPage: FC = () => {
   const [toolsLoaded, setToolsLoaded] = useState(false);
   const [chatKey, setChatKey] = useState(0);
   const [isLoadingAgent, setIsLoadingAgent] = useState(false);
+  const [playgroundMessages, setPlaygroundMessages] = useState<MessageResponse[]>([]);
+  const messageIdCounter = useRef(0);
 
   const { hasChanges, resetBaseline } = useUnsavedChanges(config, savedConfig);
 
@@ -346,6 +348,22 @@ export const ReActAgentDeveloperPage: FC = () => {
 
   const handleClearChat = useCallback(() => {
     setChatKey(prev => prev + 1);
+    setPlaygroundMessages([]);
+    messageIdCounter.current = 0;
+  }, []);
+
+  const handlePlaygroundSend = useCallback((content: string) => {
+    const userMessage: MessageResponse = {
+      id: `local-${++messageIdCounter.current}`,
+      type: 'user',
+      conversationId: 'playground',
+      applicationId: 'playground',
+      content,
+      status: 'completed',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setPlaygroundMessages(prev => [...prev, userMessage]);
   }, []);
 
   return (
@@ -568,20 +586,14 @@ export const ReActAgentDeveloperPage: FC = () => {
               <Group justify="space-between" p="sm" className={classes.chatHeader}>
                 <Text fw={600} size="sm">{t('playground')}</Text>
               </Group>
-              <ChatPanel
+              <ChatView
                 key={chatKey}
-                mode="playground"
-                agentConfig={{
-                  agentId: 'playground',
-                  agentName: config.name || t('title'),
-                  systemPrompt: config.system_prompt,
-                  aiModelIds: config.ai_model_ids,
-                  toolIds: config.tool_ids,
-                }}
-                persistMessages={false}
+                messages={playgroundMessages}
+                onSendMessage={handlePlaygroundSend}
                 showTracing={false}
-                showExport={false}
                 showReactions={false}
+                enableFileDrop={false}
+                emptyStateMessage="Send a message to test your agent"
               />
             </Stack>
           </Paper>

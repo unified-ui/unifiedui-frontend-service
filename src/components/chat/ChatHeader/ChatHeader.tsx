@@ -23,12 +23,12 @@ import {
   IconFileTypePdf,
   IconFileTypeJs,
 } from '@tabler/icons-react';
-import { DelayedTooltip } from '../../../../components/common';
-import { ConfirmDeleteDialog } from '../../../../components/common';
-import type { ApplicationResponse, ConversationResponse, MessageResponse } from '../../../../api/types';
+import { DelayedTooltip } from '../../common';
+import { ConfirmDeleteDialog } from '../../common';
+import type { ApplicationResponse, ConversationResponse, MessageResponse } from '../../../api/types';
 import classes from './ChatHeader.module.css';
 
-interface ChatHeaderProps {
+export interface ChatHeaderProps {
   conversation?: ConversationResponse | null;
   applications: ApplicationResponse[];
   selectedApplicationId?: string;
@@ -68,7 +68,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
     const title = conversation?.name || 'Conversation';
     const lines = [`# ${title}\n`];
     for (const msg of messages) {
-      const role = msg.role === 'user' ? 'User' : 'Assistant';
+      const role = msg.type === 'user' ? 'User' : 'Assistant';
       lines.push(`## ${role}\n`);
       lines.push(`${msg.content}\n`);
     }
@@ -81,9 +81,9 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
       conversation: { id: conversation?.id, name: title },
       messages: messages.map(m => ({
         id: m.id,
-        role: m.role,
+        type: m.type,
         content: m.content,
-        created_at: m.created_at,
+        createdAt: m.createdAt,
       })),
       exported_at: new Date().toISOString(),
     };
@@ -117,8 +117,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
       setIsDeleting(false);
     }
   };
-  
-  // Prepare application options for select
+
   const applicationOptions = applications
     .filter(app => app.is_active)
     .map(app => ({
@@ -128,12 +127,10 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
 
   const perm = conversation?.my_permission;
   const canAdminConv = !perm || perm === 'ADMIN';
-  const canWriteConv = !perm || perm === 'ADMIN' || perm === 'WRITE';
 
   return (
     <div className={classes.header}>
       <Group justify="space-between" align="center" wrap="nowrap" className={classes.headerContent}>
-        {/* Left side - Application selector */}
         <Box className={classes.leftSection}>
           {isNewChat ? (
             <Select
@@ -171,7 +168,6 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
           )}
         </Box>
 
-        {/* Right side - Actions */}
         <Group gap="xs" className={classes.rightSection}>
           {selectedApplicationId && (
             <>
@@ -257,7 +253,6 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
         </Group>
       </Group>
 
-      {/* Delete Confirmation Dialog */}
       <ConfirmDeleteDialog
         opened={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}

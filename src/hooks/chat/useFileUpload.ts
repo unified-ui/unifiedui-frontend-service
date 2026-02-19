@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import type { ChatInputRef } from '../components/ChatInput';
+import type { ChatInputRef } from '../../components/chat/ChatInput';
 
 interface UseFileUploadReturn {
   isDragOver: boolean;
@@ -10,9 +10,6 @@ interface UseFileUploadReturn {
   handleDrop: (e: React.DragEvent) => void;
 }
 
-/**
- * Hook for managing drag-and-drop file uploads in the chat area.
- */
 export function useFileUpload(): UseFileUploadReturn {
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounterRef = useRef(0);
