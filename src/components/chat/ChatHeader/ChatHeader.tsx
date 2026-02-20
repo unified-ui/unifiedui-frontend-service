@@ -22,6 +22,7 @@ import {
   IconFileText,
   IconFileTypePdf,
   IconFileTypeJs,
+  IconCode,
 } from '@tabler/icons-react';
 import { DelayedTooltip } from '../../common';
 import { ConfirmDeleteDialog } from '../../common';
@@ -42,6 +43,7 @@ export interface ChatHeaderProps {
   onToggleFavorite?: () => void;
   onDelete?: () => void;
   onToggleTracingSidebar?: () => void;
+  onEmbedSetup?: () => void;
 }
 
 export const ChatHeader: FC<ChatHeaderProps> = ({
@@ -58,6 +60,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
   onToggleFavorite,
   onDelete,
   onToggleTracingSidebar,
+  onEmbedSetup,
 }) => {
   const selectedApp = applications.find(a => a.id === selectedApplicationId);
   const { t } = useTranslation();
@@ -210,6 +213,14 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
                   >
                     {isFavorite ? t('conversations:unpinChat') : t('conversations:pinChat')}
                   </Menu.Item>
+                  {onEmbedSetup && (
+                    <Menu.Item
+                      leftSection={<IconCode size={16} />}
+                      onClick={onEmbedSetup}
+                    >
+                      {t('common:embedSetup')}
+                    </Menu.Item>
+                  )}
                   <Menu.Divider />
                   <Menu.Label>{t('conversations:export')}</Menu.Label>
                   <Menu.Item

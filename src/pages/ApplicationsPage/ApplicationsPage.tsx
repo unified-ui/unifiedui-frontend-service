@@ -42,13 +42,13 @@ export const ApplicationsPage: FC = () => {
   }), []);
 
   const listEntities = useCallback(
-    (tenantId: string, params: Parameters<typeof apiClient.listApplications>[1]) =>
+    (tenantId: string, params: Parameters<NonNullable<typeof apiClient>['listApplications']>[1]) =>
       apiClient!.listApplications(tenantId, params) as Promise<ApplicationResponse[]>,
     [apiClient]
   );
 
   const listTags = useCallback(
-    (tenantId: string, params: Parameters<typeof apiClient.listApplicationTypeTags>[1]) =>
+    (tenantId: string, params: Parameters<NonNullable<typeof apiClient>['listApplicationTypeTags']>[1]) =>
       apiClient!.listApplicationTypeTags(tenantId, params),
     [apiClient]
   );
@@ -89,6 +89,10 @@ export const ApplicationsPage: FC = () => {
     navigate(`/conversations?chat-agent=${id}&selected-applicationId=${id}`);
   }, [navigate]);
 
+  const handleEmbedSetup = useCallback((id: string) => {
+    navigate(`/applications/${id}/embed-chat`);
+  }, [navigate]);
+
   const renderIcon = useCallback(() => (
     <EntityAvatar entityType="application" size="sm" />
   ), []);
@@ -125,6 +129,7 @@ export const ApplicationsPage: FC = () => {
         onEdit={handleEdit}
         onShare={handleManageAccess}
         onDuplicate={handleDuplicate}
+        onEmbedSetup={handleEmbedSetup}
         onDelete={handleDeleteClick}
         renderIcon={renderIcon}
         sortBy={sortBy}

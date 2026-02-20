@@ -67,5 +67,30 @@
   "embedLoginRequired": "Login required to use this chat.",
   "embedLogin": "Login",
   "newChat": "New Chat",
-  "toggleColorScheme": "Toggle light/dark mode"
+  "toggleColorScheme": "Toggle light/dark mode",
+  "embedSetup": "Embed Agent",
+  "howEmbedChat": {
+    "title": "Embed Chat",
+    "description": "Configure and embed the chat for \"{{name}}\" into your website using an iframe.",
+    "configuration": "Configuration",
+    "baseUrl": "Base URL",
+    "tenantId": "Tenant ID",
+    "theme": "Theme",
+    "themeAuto": "Auto (inherit)",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "language": "Language",
+    "contextParams": "Context Parameters",
+    "contextParamsHint": "Add custom ctx_ parameters that will be passed to the agent as context.",
+    "addParam": "Add Parameter",
+    "paramKey": "Key (without ctx_ prefix)",
+    "paramValue": "Value",
+    "embedCode": "Embed Code",
+    "copyCode": "Copy code",
+    "generatedUrl": "Generated URL",
+    "copyUrl": "Copy URL",
+    "preview": "Chat Preview",
+    "width": "Width",
+    "height": "Height"
+  }
 }

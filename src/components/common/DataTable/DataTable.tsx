@@ -24,6 +24,7 @@ interface DataTableProps {
   onShare?: (id: string) => void;
   onManageAccess?: (id: string) => void;
   onDuplicate?: (id: string) => void;
+  onEmbedSetup?: (id: string) => void;
   onPin?: (id: string, isPinned: boolean) => void;
   onDelete?: (id: string) => void;
   onRowClick?: (id: string) => void;
@@ -61,6 +62,7 @@ export const DataTable: FC<DataTableProps> = ({
   onShare,
   onManageAccess,
   onDuplicate,
+  onEmbedSetup,
   onPin,
   onDelete,
   onRowClick,
@@ -374,6 +376,7 @@ export const DataTable: FC<DataTableProps> = ({
                     onShare={onShare}
                     onManageAccess={onManageAccess}
                     onDuplicate={onDuplicate}
+                    onEmbedSetup={onEmbedSetup}
                     onPin={onPin}
                     onDelete={onDelete}
                     onRowClick={onRowClick}

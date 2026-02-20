@@ -25,6 +25,7 @@ import {
   IconTrash,
   IconStar,
   IconStarFilled,
+  IconCode,
 } from '@tabler/icons-react';
 import classes from './DataTable.module.css';
 
@@ -48,6 +49,7 @@ interface DataTableRowProps {
   onShare?: (id: string) => void;
   onManageAccess?: (id: string) => void;
   onDuplicate?: (id: string) => void;
+  onEmbedSetup?: (id: string) => void;
   onPin?: (id: string, isPinned: boolean) => void;
   onDelete?: (id: string) => void;
   onRowClick?: (id: string) => void;
@@ -70,6 +72,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
   onShare: _onShare,
   onManageAccess,
   onDuplicate,
+  onEmbedSetup,
   onPin,
   onDelete,
   onRowClick,
@@ -258,8 +261,17 @@ export const DataTableRow: FC<DataTableRowProps> = ({
               >
                 Duplicate
               </Menu.Item>
-            )}
-            <Menu.Divider />
+            )}            {onEmbedSetup && (!hasPermission || canWriteItem) && (
+              <Menu.Item
+                leftSection={<IconCode size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEmbedSetup(item.id);
+                }}
+              >
+                Embed Agent
+              </Menu.Item>
+            )}            <Menu.Divider />
             <Menu.Item
               leftSection={item.isPinned ? <IconPinned size={14} /> : <IconPin size={14} />}
               onClick={(e) => {

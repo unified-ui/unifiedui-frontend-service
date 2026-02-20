@@ -570,6 +570,7 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
               label={t('embedAllowedOrigins')}
               placeholder={t('embedAllowedOriginsPlaceholder')}
               description={t('embedAllowedOriginsDescription')}
+              splitChars={[',', ' ']}
               value={form.values.embed_allowed_origins}
               onChange={(origins) => form.setFieldValue('embed_allowed_origins', origins)}
             />

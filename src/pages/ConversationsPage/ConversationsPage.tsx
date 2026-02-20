@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Drawer, Loader, Center, Title } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { IconMessageCircle } from '@tabler/icons-react';
@@ -21,6 +21,7 @@ import classes from './ConversationsPage.module.css';
  */
 export const ConversationsPage: FC = () => {
   const { conversationId } = useParams<{ conversationId?: string }>();
+  const navigate = useNavigate();
   const { apiClient, selectedTenant, user, getFoundryToken } = useIdentity();
   const { trackVisit } = useRecentVisits();
   const { t } = useTranslation();
@@ -105,6 +106,12 @@ export const ConversationsPage: FC = () => {
   const handleShare = useCallback(() => setShareDialogOpen(true), []);
   const handleSearchOpen = useCallback(() => setSearchDialogOpen(true), []);
 
+  const handleEmbedSetup = useCallback(() => {
+    if (convList.selectedApplicationId) {
+      navigate(`/applications/${convList.selectedApplicationId}/embed-chat`);
+    }
+  }, [convList.selectedApplicationId, navigate]);
+
   const showInitialLoading = useDelayedLoading(
     convList.isLoadingConversations && !convList.conversations.length,
     1000,
@@ -171,6 +178,7 @@ export const ConversationsPage: FC = () => {
         }
       }}
       onToggleTracingSidebar={tracing.handleToggleTracingSidebar}
+      onEmbedSetup={handleEmbedSetup}
     />
   );
 

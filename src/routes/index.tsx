@@ -15,6 +15,7 @@ import { IframeWidgetPreviewPage } from '../pages/IframeWidgetPreviewPage';
 import { ReActAgentsPage } from '../pages/ReActAgentsPage';
 import { ReActAgentDeveloperPage } from '../pages/ReActAgentDeveloperPage';
 import { EmbedChatPage } from '../pages/EmbedChatPage';
+import { HowEmbedChatPage } from '../pages/HowEmbedChatPage';
 import { TracingDialogDevelopmentPage } from '../pages/TracingDialogDevelopmentPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 
@@ -30,6 +31,7 @@ export const AppRoutes = () => {
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/tenant-settings" element={<ProtectedRoute><TenantSettingsPage /></ProtectedRoute>} />
         <Route path="/applications" element={<ProtectedRoute><ApplicationsPage /></ProtectedRoute>} />
+        <Route path="/applications/:id/embed-chat" element={<ProtectedRoute><HowEmbedChatPage /></ProtectedRoute>} />
         <Route path="/conversations/:conversationId?" element={<ProtectedRoute><ConversationsPage /></ProtectedRoute>} />
         <Route path="/autonomous-agents" element={<ProtectedRoute><AutonomousAgentsPage /></ProtectedRoute>} />
         <Route path="/autonomous-agents/:agentId" element={<ProtectedRoute><AutonomousAgentDetailsPage /></ProtectedRoute>} />
