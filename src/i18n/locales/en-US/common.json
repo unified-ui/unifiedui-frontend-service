@@ -57,5 +57,15 @@
   "missingAgentIdOrToken": "Missing agent ID or token",
   "embedChatAgent": "Embed Chat — Agent: {{agentId}}",
   "tokenAuthComingSoon": "Token-based auth coming in a future phase.",
-  "noPermission": "You don't have permission to perform this action"
+  "noPermission": "You don't have permission to perform this action",
+  "embedAllowedOrigins": "Allowed Embed Origins",
+  "embedAllowedOriginsPlaceholder": "e.g. https://example.com",
+  "embedAllowedOriginsDescription": "Origins allowed to embed this application in an iframe. Press Enter to add.",
+  "embedAuthenticating": "Authenticating...",
+  "embedMissingAgentId": "Missing agent ID",
+  "embedAuthFailed": "Authentication failed. Please try again.",
+  "embedLoginRequired": "Login required to use this chat.",
+  "embedLogin": "Login",
+  "newChat": "New Chat",
+  "toggleColorScheme": "Toggle light/dark mode"
 }

@@ -20,6 +20,7 @@ import {
   ActionIcon,
   Tooltip,
   Loader,
+  TagsInput,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -31,6 +32,7 @@ import {
   IconPlus,
 } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
+import { useTranslation } from 'react-i18next';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import {
   ApplicationTypeEnum,
@@ -95,6 +97,7 @@ interface FormValues {
   type: string;
   description: string;
   tags: string[];
+  embed_allowed_origins: string[];
   is_active: boolean;
   // N8N Config
   n8n_api_version: string;
@@ -122,6 +125,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
   onSuccess,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { t } = useTranslation('common');
   const { isGlobalAdmin } = usePermissions();
   const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission === 'ADMIN';
   const [activeTab, setActiveTab] = useState<EditDialogTab>(initialTab);
@@ -151,6 +155,7 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       type: '',
       description: '',
       tags: [],
+      embed_allowed_origins: [],
       is_active: true,
       // N8N Config defaults
       n8n_api_version: N8NApiVersionEnum.V1,
@@ -317,6 +322,9 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
       type: data.type,
       description: data.description || '',
       tags: data.tags?.map((t) => t.name) || [],
+      embed_allowed_origins: data.embed_allowed_origins
+        ? data.embed_allowed_origins.split(';').filter(Boolean)
+        : [],
       is_active: data.is_active,
       // N8N Config from data
       n8n_api_version: n8nConfig?.api_version || N8NApiVersionEnum.V1,
@@ -465,6 +473,9 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
         description: values.description?.trim() || undefined,
         is_active: values.is_active,
         config: config as Record<string, unknown> | undefined,
+        embed_allowed_origins: values.embed_allowed_origins.length > 0
+          ? values.embed_allowed_origins.join(';')
+          : undefined,
       });
 
       // Update tags if changed
@@ -876,6 +887,14 @@ export const EditApplicationDialog: FC<EditApplicationDialogProps> = ({
                 placeholder="Enter a tag and press Space to add..."
                 value={form.values.tags}
                 onChange={(tags) => form.setFieldValue('tags', tags)}
+              />
+
+              <TagsInput
+                label={t('embedAllowedOrigins')}
+                placeholder={t('embedAllowedOriginsPlaceholder')}
+                description={t('embedAllowedOriginsDescription')}
+                value={form.values.embed_allowed_origins}
+                onChange={(origins) => form.setFieldValue('embed_allowed_origins', origins)}
               />
 
               <Box pos="relative">

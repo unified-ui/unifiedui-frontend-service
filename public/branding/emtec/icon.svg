@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <!-- emtec e.V. Hero Icon: Medical Device Management / Knowledge Platform -->
+
+  <!-- Subtle circle background -->
+  <circle cx="200" cy="200" r="170" fill="rgba(0,56,147,0.15)"/>
+
+  <g transform="translate(200, 200)" opacity="0.55">
+    <!-- Monitor / Screen outline (medical device display) -->
+    <rect x="-80" y="-90" width="160" height="120" rx="8" stroke="white" stroke-width="6" fill="none"/>
+    <!-- Screen stand -->
+    <line x1="0" y1="30" x2="0" y2="55" stroke="white" stroke-width="6" stroke-linecap="round"/>
+    <line x1="-35" y1="55" x2="35" y2="55" stroke="white" stroke-width="6" stroke-linecap="round"/>
+
+    <!-- Medical cross on screen -->
+    <rect x="-12" y="-55" width="24" height="50" rx="3" fill="white" opacity="0.6"/>
+    <rect x="-25" y="-42" width="50" height="24" rx="3" fill="white" opacity="0.6"/>
+
+    <!-- Document / Catalog lines (IFU library reference) -->
+    <line x1="-55" y1="-10" x2="-25" y2="-10" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+    <line x1="-55" y1="0" x2="-30" y2="0" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+    <line x1="-55" y1="10" x2="-20" y2="10" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+
+    <!-- Small gear (technology/IT) -->
+    <g transform="translate(55, -55)" opacity="0.5">
+      <circle cx="0" cy="0" r="12" stroke="white" stroke-width="3" fill="none"/>
+      <circle cx="0" cy="0" r="5" fill="white"/>
+      <line x1="0" y1="-15" x2="0" y2="-10" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <line x1="0" y1="10" x2="0" y2="15" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <line x1="-15" y1="0" x2="-10" y2="0" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <line x1="10" y1="0" x2="15" y2="0" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <line x1="-10" y1="-10" x2="-7" y2="-7" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <line x1="7" y1="7" x2="10" y2="10" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <line x1="10" y1="-10" x2="7" y2="-7" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <line x1="-7" y1="7" x2="-10" y2="10" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    </g>
+
+    <!-- Decorative dots (data/network nodes) -->
+    <circle cx="-90" cy="-60" r="4" fill="white" opacity="0.25"/>
+    <circle cx="90" cy="40" r="3" fill="white" opacity="0.2"/>
+    <circle cx="-70" cy="70" r="5" fill="white" opacity="0.15"/>
+    <circle cx="80" cy="-80" r="3.5" fill="white" opacity="0.2"/>
+
+    <!-- Connecting lines (network) -->
+    <line x1="-90" y1="-60" x2="-80" y2="-90" stroke="white" stroke-width="1.5" opacity="0.15"/>
+    <line x1="80" y1="-80" x2="55" y2="-55" stroke="white" stroke-width="1.5" opacity="0.15"/>
+  </g>
+</svg>

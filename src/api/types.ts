@@ -712,6 +712,7 @@ export interface ApplicationResponse {
   type: ApplicationTypeEnum;
   config: Record<string, unknown>;
   is_active: boolean;
+  embed_allowed_origins?: string;
   tags: TagSummary[];
   created_at: string;
   updated_at: string;
@@ -726,6 +727,7 @@ export interface CreateApplicationRequest {
   type: ApplicationTypeEnum;
   config?: Record<string, unknown>;
   is_active?: boolean;
+  embed_allowed_origins?: string;
 }
 
 export interface UpdateApplicationRequest {
@@ -734,6 +736,7 @@ export interface UpdateApplicationRequest {
   type?: ApplicationTypeEnum;
   config?: Record<string, unknown>;
   is_active?: boolean;
+  embed_allowed_origins?: string;
 }
 
 export interface SetApplicationPermissionRequest {

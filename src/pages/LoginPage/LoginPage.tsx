@@ -1,14 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Container, Title, Text, Button, Paper, Stack, Group, Grid, Loader } from '@mantine/core';
-import { IconLogin, IconLogout, IconRobot, IconBrain, IconNetwork, IconShield, IconUsers, IconSparkles } from '@tabler/icons-react';
+import { Button, Loader, Stack, Text, Paper, Grid } from '@mantine/core';
+import { IconBrain, IconLogout } from '@tabler/icons-react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../../auth';
 import { useIdentity } from '../../contexts';
+import { useBranding } from '../../hooks/useBranding';
 import classes from './LoginPage.module.css';
+
+/* ── Microsoft Icon (inline SVG for the login button) ─────── */
+const MicrosoftIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+    <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+    <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+    <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+  </svg>
+);
 
 export const LoginPage = () => {
   const { t } = useTranslation('login');
+  const branding = useBranding();
   const { isAuthenticated, login, logout, account } = useAuth();
   const { user, tenants, selectedTenant, isLoading: identityLoading } = useIdentity();
   const [isLoading, setIsLoading] = useState(false);
@@ -16,6 +28,7 @@ export const LoginPage = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
 
+  // Auto-redirect when authenticated
   useEffect(() => {
     if (isAuthenticated && !identityLoading && user && location.pathname === '/login') {
       const redirectUrl = searchParams.get('redirect') || '/dashboard';
@@ -43,126 +56,64 @@ export const LoginPage = () => {
     }
   };
 
-  const features = [
-    { icon: IconRobot, title: t('featureMultiAgent'), description: t('featureMultiAgentDesc') },
-    { icon: IconUsers, title: t('featureMultiTenant'), description: t('featureMultiTenantDesc') },
-    { icon: IconShield, title: t('featureSecure'), description: t('featureSecureDesc') },
-    { icon: IconNetwork, title: t('featureScalable'), description: t('featureScalableDesc') },
-  ];
+  const heading = branding.login.heading ?? t('loginHeading', 'Sign in to access the app');
 
-  return (
-    <div className={classes.pageWrapper}>
-      {/* Header */}
-      <header className={classes.header}>
-        <Container fluid px="xl">
-          <Group gap="md" justify="flex-start">
-            <div className={classes.logoWrapper}>
-              <IconBrain size={32} stroke={2} />
-            </div>
-            <Title order={2} className={classes.headerTitle}>
-              unified-ui
-            </Title>
-          </Group>
-        </Container>
-      </header>
-
-      {/* Animated Background */}
-      <div className={classes.animatedBackground}>
-        <div className={classes.gradientOrb1}></div>
-        <div className={classes.gradientOrb2}></div>
-        <div className={classes.gradientOrb3}></div>
-      </div>
-
-      {/* Floating AI Icons */}
-      <div className={classes.floatingIcons}>
-        <IconBrain className={`${classes.floatingIcon} ${classes.icon1}`} size={40} stroke={1} />
-        <IconRobot className={`${classes.floatingIcon} ${classes.icon2}`} size={50} stroke={1} />
-        <IconNetwork className={`${classes.floatingIcon} ${classes.icon3}`} size={35} stroke={1} />
-        <IconSparkles className={`${classes.floatingIcon} ${classes.icon4}`} size={45} stroke={1} />
-        <IconShield className={`${classes.floatingIcon} ${classes.icon5}`} size={38} stroke={1} />
-      </div>
-
-      <Container size="lg" className={classes.container}>
-        {!isAuthenticated ? (
-          <Stack gap="xl" align="center" className={classes.landingContent}>
-            {/* Hero Section */}
-            <Stack gap="md" align="center" ta="center">
-              <Title order={1} className={classes.heroTitle}>
-                {t('heroTitle')}
-              </Title>
-              <Text size="xl" c="dimmed" className={classes.heroSubtitle}>
-                {t('heroSubtitle')}
-              </Text>
-              <Text size="md" c="dimmed" className={classes.heroDescription}>
-                {t('heroDescription')}
-              </Text>
-            </Stack>
-
-            {/* Features Grid */}
-            <Grid gutter="lg" className={classes.featuresGrid}>
-              {features.map((feature, index) => (
-                <Grid.Col span={{ base: 12, sm: 6 }} key={index}>
-                  <Paper p="lg" radius="md" className={classes.featureCard}>
-                    <Group gap="md">
-                      <div className={classes.featureIconWrapper}>
-                        <feature.icon size={28} stroke={1.5} />
-                      </div>
-                      <div>
-                        <Text fw={600} size="md">{feature.title}</Text>
-                        <Text size="sm" c="dimmed">{feature.description}</Text>
-                      </div>
-                    </Group>
-                  </Paper>
-                </Grid.Col>
-              ))}
-            </Grid>
-
-            {/* Login Card */}
-            <Paper shadow="xl" radius="lg" p="xl" className={classes.loginCard}>
-              <Stack gap="lg">
-                <Stack gap="xs" ta="center">
-                  <Title order={3}>{t('welcome')}</Title>
-                  <Text size="sm" c="dimmed">
-                    {t('signInPrompt')}
-                  </Text>
-                </Stack>
-                <Button
-                  leftSection={<IconLogin size={20} />}
-                  size="lg"
-                  onClick={handleLogin}
-                  loading={isLoading}
-                  fullWidth
-                  variant="gradient"
-                  gradient={{ from: 'primary.6', to: 'secondary.6', deg: 45 }}
-                >
-                  {t('signInWithMicrosoft')}
-                </Button>
-              </Stack>
-            </Paper>
-          </Stack>
-        ) : (
-          <Stack gap="lg" w="100%" className={classes.authenticatedContent}>
-            {identityLoading ? (
-              <Paper shadow="md" radius="md" p="xl" className={classes.successCard}>
-                <Stack gap="md" align="center">
-                  <Loader size="lg" />
-                  <Text size="md" c="dimmed">
-                    {t('loadingIdentity')}
-                  </Text>
-                </Stack>
-              </Paper>
+  // ── Authenticated state ────────────────────────────────────
+  if (isAuthenticated) {
+    return (
+      <div className={classes.container}>
+        <div
+          className={classes.leftPanel}
+          style={{
+            background: branding.login.bgLeft,
+            color: branding.login.textColor,
+          }}
+        >
+          {/* Brand header */}
+          <div className={classes.brandHeader}>
+            {branding.logoUrl ? (
+              <img src={branding.logoUrl} alt={branding.displayName} className={classes.logo} />
             ) : (
-              <Paper shadow="md" radius="md" p="xl" className={classes.successCard}>
+              <div className={classes.defaultLogoWrapper}>
+                <IconBrain size={24} color="#fff" />
+              </div>
+            )}
+            <span className={classes.brandName} style={{ color: branding.login.textColor }}>
+              {branding.displayName}
+            </span>
+          </div>
+
+          {/* Authenticated content */}
+          <div className={classes.loginContent}>
+            {identityLoading ? (
+              <Stack gap="md" align="center">
+                <Loader size="lg" color={branding.login.textColor} />
+                <Text size="md" style={{ color: branding.login.textColor, opacity: 0.7 }}>
+                  {t('loadingIdentity')}
+                </Text>
+              </Stack>
+            ) : (
+              <Paper
+                shadow="md"
+                radius="md"
+                p="xl"
+                className={classes.successCard}
+                style={{
+                  borderColor: branding.login.buttonBorderColor,
+                }}
+              >
                 <Stack gap="md">
                   <div>
                     <Text size="lg" fw={500} c="green">
                       ✓ {t('successfullyLoggedIn')}
                     </Text>
-                    <Text size="sm" c="dimmed">
-                      {t('loggedInAs', { email: user?.mail || user?.display_name || account?.username || 'Unknown' })}
+                    <Text size="sm" style={{ color: branding.login.textColor, opacity: 0.7 }}>
+                      {t('loggedInAs', {
+                        email: user?.mail || user?.display_name || account?.username || 'Unknown',
+                      })}
                     </Text>
                     {selectedTenant && (
-                      <Text size="sm" c="dimmed">
+                      <Text size="sm" style={{ color: branding.login.textColor, opacity: 0.7 }}>
                         {t('currentTenant', { name: selectedTenant.name })}
                       </Text>
                     )}
@@ -179,15 +130,15 @@ export const LoginPage = () => {
 
                   {tenants.length > 0 && (
                     <Stack gap="xs">
-                      <Text size="sm" fw={500}>
+                      <Text size="sm" fw={500} style={{ color: branding.login.textColor }}>
                         {t('availableTenants', { count: tenants.length })}
                       </Text>
                       <Grid gutter="xs">
                         {tenants.map((tenant) => (
                           <Grid.Col span={{ base: 12, sm: 6 }} key={tenant.id}>
-                            <Paper p="xs" withBorder>
+                            <Paper p="xs" className={classes.tenantCard}>
                               <Text size="xs" fw={500}>{tenant.name}</Text>
-                              <Text size="xs" c="dimmed">
+                              <Text size="xs" style={{ opacity: 0.6 }}>
                                 {tenant.id ? `${tenant.id.substring(0, 8)}...` : t('noId')}
                               </Text>
                             </Paper>
@@ -199,9 +150,105 @@ export const LoginPage = () => {
                 </Stack>
               </Paper>
             )}
-          </Stack>
-        )}
-      </Container>
+          </div>
+        </div>
+
+        {/* Right panel */}
+        <div
+          className={classes.rightPanel}
+          style={{ background: branding.login.bgRight }}
+        >
+          <div className={classes.iconWrapper}>
+            {branding.iconUrl ? (
+              <img src={branding.iconUrl} alt="" className={classes.heroIcon} />
+            ) : (
+              <img src="/branding/default/icon.svg" alt="" className={classes.heroIcon} />
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Unauthenticated state (main login view) ───────────────
+  return (
+    <div className={classes.container}>
+      {/* ═══════ Left Panel ═══════ */}
+      <div
+        className={classes.leftPanel}
+        style={{
+          background: branding.login.bgLeft,
+          color: branding.login.textColor,
+          fontFamily: branding.typography.fontFamily,
+        }}
+      >
+        {/* Brand header — top left */}
+        <div className={classes.brandHeader}>
+          {branding.logoUrl ? (
+            <img src={branding.logoUrl} alt={branding.displayName} className={classes.logo} />
+          ) : (
+            <div className={classes.defaultLogoWrapper}>
+              <IconBrain size={24} color="#fff" />
+            </div>
+          )}
+          <span className={classes.brandName} style={{ color: branding.login.textColor }}>
+            {branding.displayName}
+          </span>
+        </div>
+
+        {/* Login content — centered */}
+        <div className={classes.loginContent}>
+          <h1
+            className={classes.heading}
+            style={{
+              color: branding.login.textColor,
+              fontFamily: branding.typography.headingFontFamily || branding.typography.fontFamily,
+            }}
+          >
+            {heading}
+          </h1>
+
+          <div className={classes.authButtons}>
+            <button
+              className={classes.authButton}
+              onClick={handleLogin}
+              disabled={isLoading}
+              style={{
+                borderColor: branding.login.buttonBorderColor,
+                color: branding.login.textColor,
+                ['--hover-bg' as string]: branding.login.buttonHoverBg,
+              }}
+            >
+              {isLoading ? (
+                <Loader size={20} color={branding.login.textColor} />
+              ) : (
+                <MicrosoftIcon />
+              )}
+              <span>{t('continueWithMicrosoft', 'Continue with Microsoft')}</span>
+            </button>
+
+            {/* Future: Google, SAML, etc. */}
+            {/* <button className={classes.authButton}>
+              <GoogleIcon />
+              <span>{t('continueWithGoogle', 'Continue with Google')}</span>
+            </button> */}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════ Right Panel ═══════ */}
+      <div
+        className={classes.rightPanel}
+        style={{ background: branding.login.bgRight }}
+      >
+        <div className={classes.iconWrapper}>
+          {branding.iconUrl ? (
+            <img src={branding.iconUrl} alt="" className={classes.heroIcon} />
+          ) : (
+            <img src="/branding/default/icon.svg" alt="" className={classes.heroIcon} />
+          )}
+        </div>
+      </div>
     </div>
   );
 };

@@ -16,11 +16,13 @@ import {
   Alert,
   Loader,
   Box,
+  TagsInput,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconSparkles, IconPlus, IconAlertCircle } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
+import { useTranslation } from 'react-i18next';
 import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
 import {
   ApplicationTypeEnum,
@@ -70,6 +72,7 @@ interface FormValues {
   type: string;
   description: string;
   tags: string[];
+  embed_allowed_origins: string[];
   // N8N Config
   n8n_api_version: string;
   n8n_workflow_type: string;
@@ -92,6 +95,7 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
   onSuccess,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { t } = useTranslation('common');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
@@ -108,6 +112,7 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
       type: '',
       description: '',
       tags: [],
+      embed_allowed_origins: [],
       // N8N Config defaults
       n8n_api_version: N8NApiVersionEnum.V1,
       n8n_workflow_type: N8NWorkflowTypeEnum.N8N_CHAT_AGENT_WORKFLOW,
@@ -297,6 +302,9 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
         type: values.type as ApplicationTypeEnum,
         description: values.description?.trim() || undefined,
         config: config as Record<string, unknown> | undefined,
+        embed_allowed_origins: values.embed_allowed_origins.length > 0
+          ? values.embed_allowed_origins.join(';')
+          : undefined,
       });
 
       // If tags were added, save them to the application
@@ -556,6 +564,14 @@ export const CreateApplicationDialog: FC<CreateApplicationDialogProps> = ({
               placeholder="Enter tag and press Space to confirm..."
               value={form.values.tags}
               onChange={(tags) => form.setFieldValue('tags', tags)}
+            />
+
+            <TagsInput
+              label={t('embedAllowedOrigins')}
+              placeholder={t('embedAllowedOriginsPlaceholder')}
+              description={t('embedAllowedOriginsDescription')}
+              value={form.values.embed_allowed_origins}
+              onChange={(origins) => form.setFieldValue('embed_allowed_origins', origins)}
             />
 
             <Box pos="relative">

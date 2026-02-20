@@ -26,6 +26,7 @@ Read the relevant instruction file **before** working in that area.
 | [components/layout.instructions.md](./components/layout.instructions.md) | Touching MainLayout, Sidebar, Header, or page shells |
 | [components/data-table.instructions.md](./components/data-table.instructions.md) | Working with DataTable, list pages, infinite scroll, or search/filter |
 | [components/tracing.instructions.md](./components/tracing.instructions.md) | Working with trace visualization, TracingVisualDialog, or canvas |
+| [branding.instructions.md](./branding.instructions.md) | Adding/changing tenant branding, login page customization, assets |
 | [testing.instructions.md](./testing.instructions.md) | Writing tests, running tests, understanding test patterns |
 
 ---
@@ -109,6 +110,7 @@ export const MyComponent: FC<Props> = ({ ... }) => {
 - **Types**: `src/api/types.ts` (~1370 lines, all enums + interfaces)
 - **Design tokens**: `src/styles/variables.css`
 - **Theme config**: `src/theme/theme.ts`
+- **Branding config**: `src/config/branding.config.ts` (tenant login page + app-wide branding)
 - **Contexts**: `src/contexts/` — IdentityContext (wraps AuthContext, TenantContext, ApiClientContext), SidebarDataContext, ChatSidebarContext, AICapabilitiesContext, FavoritesContext, RecentVisitsContext
 - **i18n config**: `src/i18n/index.ts` (production), `src/i18n/i18nForTests.ts` (test)
 - **Locales**: `src/i18n/locales/en-US/` (11 namespaces: common, dashboard, login, header, conversations, settings, tracing, credentials, token, widgetDesigner, reactAgent)

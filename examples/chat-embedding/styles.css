@@ -1,0 +1,224 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: #f5f5f5;
+  color: #1a1a1a;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+  background: linear-gradient(135deg, #228be6, #7950f2);
+  color: #fff;
+  padding: 2rem 2rem 1.5rem;
+}
+.header h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+.header p  { opacity: 0.85; font-size: 0.95rem; }
+
+/* ── Content ── */
+.content {
+  max-width: 860px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+/* ── Config Section ── */
+.config-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  margin-bottom: 1.5rem;
+}
+.config-section h2 { font-size: 1.15rem; margin-bottom: 0.25rem; }
+.hint { font-size: 0.85rem; color: #666; margin-bottom: 1rem; }
+
+.config-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+.config-row label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 4px;
+}
+.config-row input {
+  flex: 1;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: monospace;
+}
+.config-row input:focus {
+  outline: none;
+  border-color: #228be6;
+  box-shadow: 0 0 0 2px rgba(34,139,230,0.2);
+}
+.config-row button {
+  padding: 0.55rem 1.25rem;
+  background: #228be6;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.config-row button:hover { background: #1c7ed6; }
+
+/* ── Examples ── */
+.example-details {
+  margin-top: 1rem;
+}
+.example-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #228be6;
+}
+.example-block {
+  margin-top: 0.75rem;
+}
+.example-block h3 {
+  font-size: 0.85rem;
+  margin: 0.75rem 0 0.35rem;
+  color: #444;
+}
+.example-block pre {
+  background: #1e1e2e;
+  color: #cdd6f4;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.param-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+.param-table th,
+.param-table td {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid #eee;
+}
+.param-table th {
+  font-weight: 600;
+  color: #555;
+}
+.param-table code {
+  background: #f0f0f0;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+}
+
+/* ── Demo Section ── */
+.demo-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.demo-section h2 { font-size: 1.15rem; margin-bottom: 0.5rem; }
+.demo-section p  { font-size: 0.95rem; color: #444; line-height: 1.6; margin-bottom: 0.75rem; }
+
+/* ── Chat Widget ── */
+.chat-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.chat-bubble {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #228be6, #7950f2);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.chat-bubble:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+/* ── Chat Window ── */
+.chat-window {
+  width: 550px;
+  height: 680px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.chat-window.hidden {
+  display: none;
+}
+
+.chat-window-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1rem;
+  background: linear-gradient(135deg, #228be6, #7950f2);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.close-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+  opacity: 0.8;
+}
+.close-btn:hover { opacity: 1; }
+
+.chat-iframe {
+  flex: 1;
+  width: 100%;
+  border: none;
+}
+
+/* ── Responsive ── */
+@media (max-width: 500px) {
+  .chat-window {
+    width: calc(100vw - 32px);
+    height: calc(100vh - 120px);
+    border-radius: 12px;
+  }
+  .config-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

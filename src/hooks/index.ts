@@ -9,3 +9,4 @@ export { usePermissions } from './usePermissions';
 export type { ResourceType, UsePermissionsReturn } from './usePermissions';
 export { useChat, useFileUpload } from './chat';
 export { useConversationList, useConversationTracing } from './conversation';
+export { useBranding } from './useBranding';

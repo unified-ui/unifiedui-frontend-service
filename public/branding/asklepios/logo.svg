@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40" fill="none">
+  <!-- Asklepios Logo: Icon + Text (teal branding) -->
+
+  <!-- Rounded rect background for icon part -->
+  <rect x="0" y="0" width="40" height="40" rx="8" fill="#008B8B"/>
+
+  <!-- Small Rod of Asclepius inside icon -->
+  <g transform="translate(20, 20)">
+    <line x1="0" y1="-12" x2="0" y2="12" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M0 9 C 6 7, 8 3, 5 0 C 2 -3, -2 -3, -5 -6 C -8 -9, -8 -10, -4 -11" 
+          stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <circle cx="-4" cy="-11" r="2" fill="white" opacity="0.8"/>
+  </g>
+
+  <!-- ASKLEPIOS text -->
+  <text x="50" y="26" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="700" font-size="16" fill="white" letter-spacing="1.5">ASKLEPIOS</text>
+</svg>

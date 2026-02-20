@@ -18,6 +18,11 @@ src/
 │   ├── AuthProvider.tsx         # MSAL context wrapper
 │   └── index.ts
 │
+├── config/                     # App configuration
+│   ├── branding.types.ts       # BrandingConfig, LoginBranding, AppBranding, BrandingTypography
+│   ├── branding.config.ts      # DEFAULT_BRANDING + TENANT_BRANDINGS + getBranding()
+│   └── index.ts
+│
 ├── i18n/                       # Internationalization
 │   ├── index.ts                # Production i18n config (LanguageDetector, 12 namespaces)
 │   ├── i18nForTests.ts         # Test i18n config (no detection, hardcoded en-US)
@@ -71,6 +76,7 @@ src/
 │   ├── useEntityList.ts          # Shared list page logic (pagination, search, sort, filter, CRUD)
 │   ├── useEntityPermissions.ts   # Permission methods per entity type
 │   ├── usePermissions.ts         # Tenant-role + resource-permission checks (RBAC)
+│   ├── useBranding.ts            # Reads ?tenant= query param → returns full BrandingConfig
 │   ├── useFormDirtyGuard.ts      # beforeunload guard for Mantine useForm-based dialogs
 │   ├── useKeyboardShortcuts.ts   # Global keyboard shortcut bindings
 │   └── useUnsavedChanges.ts      # Dirty tracking + beforeunload for useState-based pages

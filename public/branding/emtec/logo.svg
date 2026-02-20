@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 40" fill="none">
+  <!-- emtec e.V. Logo: Icon + Text (deep blue branding #003893) -->
+
+  <!-- Rounded rect background for icon part -->
+  <rect x="0" y="0" width="40" height="40" rx="8" fill="#003893"/>
+
+  <!-- Stylised "e" letter inside icon -->
+  <g transform="translate(20, 20)">
+    <circle cx="0" cy="0" r="10" stroke="white" stroke-width="2.5" fill="none"/>
+    <line x1="-10" y1="0" x2="10" y2="0" stroke="white" stroke-width="2.5"/>
+    <line x1="4" y1="6" x2="10" y2="4" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- emtec text -->
+  <text x="50" y="26" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="700" font-size="16" fill="white" letter-spacing="0.8">emtec</text>
+  <!-- e.V. suffix -->
+  <text x="116" y="26" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="400" font-size="11" fill="rgba(255,255,255,0.7)" letter-spacing="0.4">e.V.</text>
+</svg>

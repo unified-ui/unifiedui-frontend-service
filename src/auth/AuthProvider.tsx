@@ -63,8 +63,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
       return response.accessToken;
     } catch (error) {
-      console.error('Token acquisition failed:', error);
-      return null;
+      console.error('Token acquisition failed, trying popup:', error);
+      try {
+        const response = await instance.acquireTokenPopup({
+          scopes: loginRequest.scopes,
+          account: accounts[0],
+        });
+        return response.accessToken;
+      } catch (popupError) {
+        console.error('Token popup failed:', popupError);
+        return null;
+      }
     }
   };
 

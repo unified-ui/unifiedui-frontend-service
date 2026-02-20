@@ -43,6 +43,7 @@ interface UseChatParams {
   setConversations: React.Dispatch<React.SetStateAction<ConversationResponse[]>>;
   setSelectedApplicationId: React.Dispatch<React.SetStateAction<string | undefined>>;
   onRefreshTraces: () => Promise<void>;
+  onNavigate?: (path: string, options?: { replace?: boolean }) => void;
 }
 
 interface UseChatReturn {
@@ -76,8 +77,10 @@ export function useChat({
   setConversations,
   setSelectedApplicationId,
   onRefreshTraces,
+  onNavigate,
 }: UseChatParams): UseChatReturn {
-  const navigate = useNavigate();
+  const routerNavigate = useNavigate();
+  const nav = onNavigate ?? routerNavigate;
   const [searchParams] = useSearchParams();
 
   const [messages, setMessages] = useState<MessageResponse[]>([]);
@@ -155,11 +158,11 @@ export function useChat({
         message: 'Failed to load conversation',
         color: 'red',
       });
-      navigate('/conversations');
+      nav('/conversations');
     } finally {
       setIsLoadingMessages(false);
     }
-  }, [apiClient, tenantId, navigate, setCurrentConversation, setSelectedApplicationId]);
+  }, [apiClient, tenantId, nav, setCurrentConversation, setSelectedApplicationId]);
 
   const executeStream = useCallback(async (
     content: string,
@@ -388,7 +391,7 @@ export function useChat({
 
         justCreatedConversationRef.current = newConv.id;
 
-        navigate(`/conversations/${newConv.id}`, { replace: true });
+        nav(`/conversations/${newConv.id}`, { replace: true });
 
         setCurrentConversation(newConv);
         setConversations(prev => [newConv, ...prev]);
@@ -437,7 +440,7 @@ export function useChat({
         });
       }
     }
-  }, [apiClient, tenantId, selectedApplicationId, conversationId, applications, currentConversation, getFoundryToken, navigate, setCurrentConversation, setConversations, executeStream]);
+  }, [apiClient, tenantId, selectedApplicationId, conversationId, applications, currentConversation, getFoundryToken, nav, setCurrentConversation, setConversations, executeStream]);
 
   const handleEditMessage = useCallback(async (messageId: string, newContent: string) => {
     if (!apiClient || !tenantId || !conversationId) return;

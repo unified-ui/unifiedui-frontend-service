@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat Embed Example</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="header">
+    <h1>🚀 My Application</h1>
+    <p>Chat Embedding Demo</p>
+  </header>
+
+  <main class="content">
+    <section class="config-section">
+      <h2>Embed Configuration</h2>
+      <p class="hint">Configure the embed URL below and click <strong>Apply</strong> to update the chat iframe source.</p>
+
+      <div class="config-row">
+        <label for="embedUrl">Embed URL</label>
+        <input
+          id="embedUrl"
+          type="text"
+          placeholder="http://localhost:5173/embed/chat/{applicationId}?tenantId={tenantId}"
+          value="http://localhost:5173/embed/chat/bea874f6-b4c8-424d-b79c-d8d799f1428b?tenantId=01fadbf4-b9e2-43ae-8197-152596547ef6"
+        />
+        <button id="applyBtn">Apply</button>
+      </div>
+
+      <details class="example-details">
+        <summary>Usage Examples</summary>
+        <div class="example-block">
+          <h3>Minimal</h3>
+          <pre><code>&lt;iframe
+  src="http://localhost:5173/embed/chat/abc-123?tenantId=tenant-456"
+  style="width:400px; height:600px; border:none; border-radius:12px;"
+  allow="clipboard-write"
+&gt;&lt;/iframe&gt;</code></pre>
+
+          <h3>With theme &amp; context data</h3>
+          <pre><code>&lt;iframe
+  src="http://localhost:5173/embed/chat/abc-123?tenantId=tenant-456&amp;theme=dark&amp;ctx_userId=user-789"
+  style="width:100%; height:600px; border:none;"
+  allow="clipboard-write"
+&gt;&lt;/iframe&gt;</code></pre>
+
+          <h3>URL parameters</h3>
+          <table class="param-table">
+            <thead>
+              <tr><th>Param</th><th>Required</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>tenantId</code></td><td>Yes</td><td>Tenant the application belongs to</td></tr>
+              <tr><td><code>theme</code></td><td>No</td><td><code>light</code> or <code>dark</code> (default: auto)</td></tr>
+              <tr><td><code>lang</code></td><td>No</td><td>UI language, e.g. <code>en-US</code></td></tr>
+              <tr><td><code>ctx_*</code></td><td>No</td><td>Context data forwarded to the agent</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section class="demo-section">
+      <h2>Page Content</h2>
+      <p>This is a regular website. The chat widget floats in the bottom-right corner. Click the bubble to open it.</p>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
+    </section>
+  </main>
+
+  <!-- Chat Widget -->
+  <div id="chatWidget" class="chat-widget">
+    <div id="chatWindow" class="chat-window hidden">
+      <div class="chat-window-header">
+        <span>Chat</span>
+        <button id="closeChat" class="close-btn" title="Close">&times;</button>
+      </div>
+      <iframe id="chatIframe" class="chat-iframe" allow="clipboard-write"></iframe>
+    </div>
+    <button id="chatBubble" class="chat-bubble" title="Open Chat">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    </button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
