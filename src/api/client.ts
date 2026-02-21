@@ -22,11 +22,11 @@ import type {
   TenantPrincipalsQueryParams,
   SetPrincipalRequest,
   DeletePrincipalRequest,
-  // Application Types
-  ApplicationResponse,
-  CreateApplicationRequest,
-  UpdateApplicationRequest,
-  SetApplicationPermissionRequest,
+  // Chat Agent Types
+  ChatAgentResponse,
+  CreateChatAgentRequest,
+  UpdateChatAgentRequest,
+  SetChatAgentPermissionRequest,
   // Autonomous Agent Types
   AutonomousAgentResponse,
   CreateAutonomousAgentRequest,
@@ -292,53 +292,53 @@ export class UnifiedUIAPIClient {
     return this.request<void>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/principals/${principalId}/status`, { principal_type: principalType, is_active: isActive }, isActive ? 'Principal activated' : 'Principal deactivated');
   }
 
-  // ========== Application Endpoints ==========
+  // ========== Chat Agent Endpoints ==========
 
-  async listApplications(
+  async listChatAgents(
     tenantId: string, 
     params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' }, 
     options?: { noCache?: boolean }
-  ): Promise<ApplicationResponse[] | QuickListItemResponse[]> {
+  ): Promise<ChatAgentResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
-    return this.request<ApplicationResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/applications${query}`, undefined, undefined, options);
+    return this.request<ChatAgentResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents${query}`, undefined, undefined, options);
   }
 
-  async getApplication(tenantId: string, applicationId: string): Promise<ApplicationResponse> {
-    return this.request<ApplicationResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/applications/${applicationId}`);
+  async getChatAgent(tenantId: string, chatAgentId: string): Promise<ChatAgentResponse> {
+    return this.request<ChatAgentResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}`);
   }
 
-  async createApplication(tenantId: string, data: CreateApplicationRequest): Promise<ApplicationResponse> {
-    return this.request<ApplicationResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/applications`, data, 'Application created successfully');
+  async createChatAgent(tenantId: string, data: CreateChatAgentRequest): Promise<ChatAgentResponse> {
+    return this.request<ChatAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/chat-agents`, data, 'Chat agent created successfully');
   }
 
-  async updateApplication(tenantId: string, applicationId: string, data: UpdateApplicationRequest): Promise<ApplicationResponse> {
-    return this.request<ApplicationResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/applications/${applicationId}`, data, 'Application updated successfully');
+  async updateChatAgent(tenantId: string, chatAgentId: string, data: UpdateChatAgentRequest): Promise<ChatAgentResponse> {
+    return this.request<ChatAgentResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}`, data, 'Chat agent updated successfully');
   }
 
-  async deleteApplication(tenantId: string, applicationId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/applications/${applicationId}`, undefined, 'Application deleted successfully');
+  async deleteChatAgent(tenantId: string, chatAgentId: string): Promise<void> {
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}`, undefined, 'Chat agent deleted successfully');
   }
 
-  // ========== Application Permissions ==========
+  // ========== Chat Agent Permissions ==========
 
-  async getApplicationPrincipals(tenantId: string, applicationId: string): Promise<ResourcePrincipalsResponse> {
-    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/applications/${applicationId}/principals`);
+  async getChatAgentPrincipals(tenantId: string, chatAgentId: string): Promise<ResourcePrincipalsResponse> {
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/principals`);
   }
 
-  async setApplicationPermission(tenantId: string, applicationId: string, data: SetApplicationPermissionRequest): Promise<PrincipalWithRolesResponse> {
-    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/applications/${applicationId}/principals`, data, 'Permission updated successfully');
+  async setChatAgentPermission(tenantId: string, chatAgentId: string, data: SetChatAgentPermissionRequest): Promise<PrincipalWithRolesResponse> {
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/principals`, data, 'Permission updated successfully');
   }
 
-  async deleteApplicationPermission(
+  async deleteChatAgentPermission(
     tenantId: string,
-    applicationId: string,
+    chatAgentId: string,
     principalId: string,
     principalType: PrincipalTypeEnum,
     role: PermissionActionEnum
   ): Promise<void> {
     return this.request<void>(
       'DELETE',
-      `/api/v1/platform-service/tenants/${tenantId}/applications/${applicationId}/principals`,
+      `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/principals`,
       { principal_id: principalId, principal_type: principalType, role },
       'Permission removed successfully'
     );
@@ -775,8 +775,8 @@ export class UnifiedUIAPIClient {
     return this.request<ResourceTypeTagsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/${resourceType}/tags${query}`);
   }
 
-  async listApplicationTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
-    return this.listResourceTypeTags(tenantId, 'applications', params);
+  async listChatAgentTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
+    return this.listResourceTypeTags(tenantId, 'chat-agents', params);
   }
 
   async listAutonomousAgentTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
@@ -803,12 +803,12 @@ export class UnifiedUIAPIClient {
 
   // ========== Convenience Methods for Resource Tags ==========
 
-  async getApplicationTags(tenantId: string, applicationId: string): Promise<ResourceTagsResponse> {
-    return this.getResourceTags(tenantId, 'applications', applicationId);
+  async getChatAgentTags(tenantId: string, chatAgentId: string): Promise<ResourceTagsResponse> {
+    return this.getResourceTags(tenantId, 'chat-agents', chatAgentId);
   }
 
-  async setApplicationTags(tenantId: string, applicationId: string, tags: string[]): Promise<ResourceTagsResponse> {
-    return this.setResourceTags(tenantId, 'applications', applicationId, { tags });
+  async setChatAgentTags(tenantId: string, chatAgentId: string, tags: string[]): Promise<ResourceTagsResponse> {
+    return this.setResourceTags(tenantId, 'chat-agents', chatAgentId, { tags });
   }
 
   async getAutonomousAgentTags(tenantId: string, agentId: string): Promise<ResourceTagsResponse> {
@@ -855,8 +855,8 @@ export class UnifiedUIAPIClient {
 
   // ========== Convenience Methods for Favorites ==========
 
-  async listApplicationFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
-    return this.listUserFavorites(tenantId, userId, FavoriteResourceTypeEnum.APPLICATION);
+  async listChatAgentFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
+    return this.listUserFavorites(tenantId, userId, FavoriteResourceTypeEnum.CHAT_AGENT);
   }
 
   async listAutonomousAgentFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
@@ -1103,7 +1103,7 @@ export class UnifiedUIAPIClient {
     // Build request body with camelCase field names (matching Go backend)
     const requestBody = {
       conversationId: data.conversationId,
-      applicationId: data.applicationId,
+      chatAgentId: data.chatAgentId,
       message: data.message,
       invokeConfig: data.invokeConfig,
       extConversationId: data.extConversationId,

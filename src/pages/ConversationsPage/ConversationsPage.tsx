@@ -50,14 +50,14 @@ export const ConversationsPage: FC = () => {
   const chat = useChat({
     apiClient,
     tenantId,
-    selectedApplicationId: convList.selectedApplicationId,
+    selectedChatAgentId: convList.selectedChatAgentId,
     conversationId,
-    applications: convList.applications,
+    chatAgents: convList.chatAgents,
     currentConversation: convList.currentConversation,
     getFoundryToken,
     setCurrentConversation: convList.setCurrentConversation,
     setConversations: convList.setConversations,
-    setSelectedApplicationId: convList.setSelectedApplicationId,
+    setSelectedChatAgentId: convList.setSelectedChatAgentId,
     onRefreshTraces: tracing.refreshTraces,
   });
 
@@ -73,6 +73,7 @@ export const ConversationsPage: FC = () => {
     }
 
     if (chat.justCreatedConversationRef.current === conversationId) {
+      // eslint-disable-next-line react-hooks/immutability
       chat.justCreatedConversationRef.current = null;
       return;
     }
@@ -107,10 +108,10 @@ export const ConversationsPage: FC = () => {
   const handleSearchOpen = useCallback(() => setSearchDialogOpen(true), []);
 
   const handleEmbedSetup = useCallback(() => {
-    if (convList.selectedApplicationId) {
-      navigate(`/applications/${convList.selectedApplicationId}/embed-chat`);
+    if (convList.selectedChatAgentId) {
+      navigate(`/chat-agents/${convList.selectedChatAgentId}/embed-chat`);
     }
-  }, [convList.selectedApplicationId, navigate]);
+  }, [convList.selectedChatAgentId, navigate]);
 
   const showInitialLoading = useDelayedLoading(
     convList.isLoadingConversations && !convList.conversations.length,
@@ -158,14 +159,14 @@ export const ConversationsPage: FC = () => {
   const headerSlot = (
     <ChatHeader
       conversation={convList.currentConversation}
-      applications={convList.applications}
-      selectedApplicationId={convList.selectedApplicationId}
+      chatAgents={convList.chatAgents}
+      selectedChatAgentId={convList.selectedChatAgentId}
       isNewChat={convList.isNewChat}
       isFavorite={convList.currentConversation ? convList.favoriteIds.has(convList.currentConversation.id) : false}
       tracingSidebarVisible={tracing.tracingSidebarVisible}
       hasTraces={tracing.traces.length > 0}
       messages={chat.messages}
-      onApplicationChange={convList.handleApplicationChange}
+      onChatAgentChange={convList.handleChatAgentChange}
       onShare={handleShare}
       onToggleFavorite={() => {
         if (convList.currentConversation) {
@@ -187,7 +188,7 @@ export const ConversationsPage: FC = () => {
       icon={<IconMessageCircle size={64} />}
       title={t('conversations:startNewConversation')}
       description={
-        convList.selectedApplicationId
+        convList.selectedChatAgentId
           ? t('conversations:typeToStart')
           : t('conversations:selectAgentToStart')
       }
@@ -212,7 +213,7 @@ export const ConversationsPage: FC = () => {
           >
             <ConversationSidebar
               conversations={convList.conversations}
-              applications={convList.applications}
+              chatAgents={convList.chatAgents}
               selectedConversationId={conversationId}
               favoriteIds={convList.favoriteIds}
               isLoading={convList.isLoadingConversations}
@@ -234,7 +235,7 @@ export const ConversationsPage: FC = () => {
           <Box className={`${classes.chatSidebarWrapper} ${convList.sidebarCollapsed ? classes.collapsed : ''}`}>
             <ConversationSidebar
               conversations={convList.conversations}
-              applications={convList.applications}
+              chatAgents={convList.chatAgents}
               selectedConversationId={conversationId}
               favoriteIds={convList.favoriteIds}
               isLoading={convList.isLoadingConversations}
@@ -281,9 +282,9 @@ export const ConversationsPage: FC = () => {
             reactions={chat.reactions}
             highlightedExtMessageId={tracing.highlightedMessageExtId}
             highlightedUserMessageId={tracing.highlightedUserMessageId}
-            inputDisabled={!convList.selectedApplicationId || !canWriteConversation}
+            inputDisabled={!convList.selectedChatAgentId || !canWriteConversation}
             inputPlaceholder={
-              convList.selectedApplicationId
+              convList.selectedChatAgentId
                 ? (convList.isNewChat ? t('conversations:typeToStart') : t('conversations:messageInput'))
                 : t('conversations:selectAgentToStart')
             }
@@ -305,7 +306,7 @@ export const ConversationsPage: FC = () => {
         opened={searchDialogOpen}
         onClose={() => setSearchDialogOpen(false)}
         conversations={convList.conversations}
-        applications={convList.applications}
+        chatAgents={convList.chatAgents}
       />
 
       {tracing.tracingDialogOpen && tracing.traces.length > 0 && (

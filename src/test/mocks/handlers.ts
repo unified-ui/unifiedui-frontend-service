@@ -36,7 +36,7 @@ export const handlers = [
     });
   }),
 
-  http.get(`${API_BASE_URL}/v1/tenants/:tenantId/applications`, () => {
+  http.get(`${API_BASE_URL}/v1/tenants/:tenantId/chat-agents`, () => {
     return HttpResponse.json([]);
   }),
 

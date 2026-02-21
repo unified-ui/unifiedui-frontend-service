@@ -16,11 +16,11 @@ import { EntityAvatar } from '../../common';
 import { usePermissions } from '../../../hooks';
 import { SidebarDataList, type DataListItem } from './SidebarDataList';
 import {
-  CreateApplicationDialog,
+  CreateChatAgentDialog,
   CreateAutonomousAgentDialog,
   CreateChatWidgetDialog,
 } from '../../dialogs';
-import type { ConversationResponse, ApplicationResponse } from '../../../api/types';
+import type { ConversationResponse, ChatAgentResponse } from '../../../api/types';
 import { FavoriteResourceTypeEnum } from '../../../api/types';
 import classes from './Sidebar.module.css';
 
@@ -36,7 +36,7 @@ interface NavItem {
 const mainNavItemsTop: NavItem[] = [
   { icon: IconHome, iconFilled: IconHomeFilled, labelKey: 'home', path: '/dashboard' },
   { icon: IconMessages, iconFilled: IconMessageFilled, labelKey: 'chats', path: '/conversations' },
-  { icon: IconSparkles, labelKey: 'agents', path: '/applications', hasDataList: true, entityType: 'applications' },
+  { icon: IconSparkles, labelKey: 'agents', path: '/chat-agents', hasDataList: true, entityType: 'chat-agents' },
   { icon: IconRobot, labelKey: 'auto', path: '/autonomous-agents', hasDataList: true, entityType: 'autonomous-agents' },
 ];
 
@@ -65,7 +65,7 @@ export const Sidebar: FC = () => {
   const location = useLocation();
   
   const {
-    applications,
+    chatAgents,
     autonomousAgents,
     chatWidgets,
     reActAgents,
@@ -73,7 +73,7 @@ export const Sidebar: FC = () => {
     errorStates,
     fetchEntityData,
     refreshEntityData,
-    refreshApplications,
+    refreshChatAgents,
     refreshAutonomousAgents,
     refreshChatWidgets,
     refreshReActAgents,
@@ -85,7 +85,7 @@ export const Sidebar: FC = () => {
   const { canCreate } = usePermissions();
 
   const ENTITY_TO_FAVORITE_TYPE: Record<string, FavoriteResourceTypeEnum> = useMemo(() => ({
-    applications: FavoriteResourceTypeEnum.APPLICATION,
+    'chat-agents': FavoriteResourceTypeEnum.CHAT_AGENT,
     'autonomous-agents': FavoriteResourceTypeEnum.AUTONOMOUS_AGENT,
     'chat-widgets': FavoriteResourceTypeEnum.CHAT_WIDGET,
     conversations: FavoriteResourceTypeEnum.CONVERSATION,
@@ -128,7 +128,7 @@ export const Sidebar: FC = () => {
   const [isHoveringConversationsNav, setIsHoveringConversationsNav] = useState(false);
   const [isHoveringConversationsSidebar, setIsHoveringConversationsSidebar] = useState(false);
   const [conversations, setConversations] = useState<ConversationResponse[]>([]);
-  const [conversationApplications, setConversationApplications] = useState<ApplicationResponse[]>([]);
+  const [conversationChatAgents, setConversationChatAgents] = useState<ChatAgentResponse[]>([]);
   const [conversationsLoading, setConversationsLoading] = useState(false);
   const [conversationsError, setConversationsError] = useState<string | null>(null);
   const [conversationsRefreshing, setConversationsRefreshing] = useState(false);
@@ -139,16 +139,16 @@ export const Sidebar: FC = () => {
   const conversationsHoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const conversationsCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [isApplicationDialogOpen, setIsApplicationDialogOpen] = useState(false);
+  const [isChatAgentDialogOpen, setIsChatAgentDialogOpen] = useState(false);
   const [isAutonomousAgentDialogOpen, setIsAutonomousAgentDialogOpen] = useState(false);
   const [isChatWidgetDialogOpen, setIsChatWidgetDialogOpen] = useState(false);
 
   const entityConfigs: Record<EntityType, EntityConfig> = useMemo(() => ({
-    applications: {
+    'chat-agents': {
       title: t('chatAgents'),
       icon: <IconSparkles size={24} />,
       addButtonLabel: t('addChatAgent'),
-      fetchData: () => fetchEntityData('applications'),
+      fetchData: () => fetchEntityData('chat-agents'),
       getLink: (id) => `/conversations?chat-agent=${id}`,
     },
     'autonomous-agents': {
@@ -178,12 +178,12 @@ export const Sidebar: FC = () => {
     if (!activeEntity) return [];
     
     switch (activeEntity) {
-      case 'applications':
-        return applications.map(app => ({
+      case 'chat-agents':
+        return chatAgents.map(app => ({
           id: app.id,
           name: app.name,
-          link: entityConfigs.applications.getLink(app.id),
-          icon: <EntityAvatar entityType="application" size="xs" />,
+          link: entityConfigs['chat-agents'].getLink(app.id),
+          icon: <EntityAvatar entityType="chat-agent" size="xs" />,
         }));
       case 'autonomous-agents':
         return autonomousAgents.map(agent => ({
@@ -209,11 +209,11 @@ export const Sidebar: FC = () => {
       default:
         return [];
     }
-  }, [activeEntity, applications, autonomousAgents, chatWidgets, reActAgents, entityConfigs]);
+  }, [activeEntity, chatAgents, autonomousAgents, chatWidgets, reActAgents, entityConfigs]);
 
   const isOnEntityListPage = useCallback((entityType: EntityType) => {
     const entityPaths: Record<EntityType, string> = {
-      applications: '/applications',
+      'chat-agents': '/chat-agents',
       'autonomous-agents': '/autonomous-agents',
       'chat-widgets': '/chat-widgets',
       're-act-agents': '/re-act-agents',
@@ -357,10 +357,10 @@ export const Sidebar: FC = () => {
           order_by: 'updated_at',
           order_direction: 'desc',
         }, { noCache: !useCache }) as Promise<ConversationResponse[]>,
-        apiClient.listApplications(selectedTenant.id, undefined, { noCache: !useCache }) as Promise<ApplicationResponse[]>,
+        apiClient.listChatAgents(selectedTenant.id, undefined, { noCache: !useCache }) as Promise<ChatAgentResponse[]>,
       ]);
       setConversations(convsList);
-      setConversationApplications(appsList);
+      setConversationChatAgents(appsList);
     } catch (error) {
       console.error('Failed to load conversations:', error);
       setConversationsError(t('failedToLoadConversations'));
@@ -380,20 +380,20 @@ export const Sidebar: FC = () => {
     await loadConversations(false);
   }, [loadConversations]);
 
-  const getApplicationName = useCallback((applicationId: string): string => {
-    const app = conversationApplications.find(a => a.id === applicationId);
-    return app?.name || 'Unknown Application';
-  }, [conversationApplications]);
+  const getChatAgentName = useCallback((chatAgentId: string): string => {
+    const app = conversationChatAgents.find(a => a.id === chatAgentId);
+    return app?.name || 'Unknown Chat Agent';
+  }, [conversationChatAgents]);
 
   const conversationItems: DataListItem[] = useMemo(() => {
     return conversations.map(conv => ({
       id: conv.id,
       name: conv.name,
-      subtitle: getApplicationName(conv.application_id),
+      subtitle: getChatAgentName(conv.chat_agent_id),
       link: `/conversations/${conv.id}`,
       icon: <IconMessages size={16} />,
     }));
-  }, [conversations, getApplicationName]);
+  }, [conversations, getChatAgentName]);
 
   const handleCloseDataList = useCallback(() => {
     setActiveEntity(null);
@@ -406,6 +406,7 @@ export const Sidebar: FC = () => {
       try {
         localStorage.setItem(SIDEBAR_EXPAND_KEY, String(newValue));
       } catch {
+        /* ignore */
       }
       return newValue;
     });
@@ -415,8 +416,8 @@ export const Sidebar: FC = () => {
     if (!activeEntity) return;
     
     switch (activeEntity) {
-      case 'applications':
-        setIsApplicationDialogOpen(true);
+      case 'chat-agents':
+        setIsChatAgentDialogOpen(true);
         break;
       case 'autonomous-agents':
         setIsAutonomousAgentDialogOpen(true);
@@ -437,9 +438,9 @@ export const Sidebar: FC = () => {
     }
   }, [activeEntity, apiClient, selectedTenant, navigate, t, refreshReActAgents]);
 
-  const handleApplicationCreated = useCallback(() => {
-    refreshApplications();
-  }, [refreshApplications]);
+  const handleChatAgentCreated = useCallback(() => {
+    refreshChatAgents();
+  }, [refreshChatAgents]);
 
   const handleAutonomousAgentCreated = useCallback(() => {
     refreshAutonomousAgents();
@@ -573,10 +574,10 @@ export const Sidebar: FC = () => {
         />
       )}
 
-      <CreateApplicationDialog
-        opened={isApplicationDialogOpen}
-        onClose={() => setIsApplicationDialogOpen(false)}
-        onSuccess={handleApplicationCreated}
+      <CreateChatAgentDialog
+        opened={isChatAgentDialogOpen}
+        onClose={() => setIsChatAgentDialogOpen(false)}
+        onSuccess={handleChatAgentCreated}
       />
       <CreateAutonomousAgentDialog
         opened={isAutonomousAgentDialogOpen}

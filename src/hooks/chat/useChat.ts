@@ -2,9 +2,9 @@ import { useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { notifications } from '@mantine/notifications';
 import {
-  ApplicationTypeEnum,
+  ChatAgentTypeEnum,
   type ConversationResponse,
-  type ApplicationResponse,
+  type ChatAgentResponse,
   type MessageResponse,
   type FileAttachment,
   type ReactionResponse,
@@ -34,14 +34,14 @@ function extractContextDataFromSearchParams(
 interface UseChatParams {
   apiClient: UnifiedUIAPIClient | null;
   tenantId: string | undefined;
-  selectedApplicationId: string | undefined;
+  selectedChatAgentId: string | undefined;
   conversationId: string | undefined;
-  applications: ApplicationResponse[];
+  chatAgents: ChatAgentResponse[];
   currentConversation: ConversationResponse | null;
   getFoundryToken: () => Promise<string | null>;
   setCurrentConversation: React.Dispatch<React.SetStateAction<ConversationResponse | null>>;
   setConversations: React.Dispatch<React.SetStateAction<ConversationResponse[]>>;
-  setSelectedApplicationId: React.Dispatch<React.SetStateAction<string | undefined>>;
+  setSelectedChatAgentId: React.Dispatch<React.SetStateAction<string | undefined>>;
   onRefreshTraces: () => Promise<void>;
   onNavigate?: (path: string, options?: { replace?: boolean }) => void;
 }
@@ -68,14 +68,14 @@ interface UseChatReturn {
 export function useChat({
   apiClient,
   tenantId,
-  selectedApplicationId,
+  selectedChatAgentId,
   conversationId,
-  applications,
+  chatAgents,
   currentConversation,
   getFoundryToken,
   setCurrentConversation,
   setConversations,
-  setSelectedApplicationId,
+  setSelectedChatAgentId,
   onRefreshTraces,
   onNavigate,
 }: UseChatParams): UseChatReturn {
@@ -134,7 +134,7 @@ export function useChat({
       setCurrentConversation(convData);
       const loadedMessages = [...messagesData.messages].reverse();
       setMessages(loadedMessages);
-      setSelectedApplicationId(convData.application_id);
+      setSelectedChatAgentId(convData.chat_agent_id);
 
       const assistantMessages = loadedMessages.filter(m => m.type === 'assistant' && !m.id.startsWith('temp-'));
       const reactionsMap = new Map<string, ReactionResponse>();
@@ -162,7 +162,7 @@ export function useChat({
     } finally {
       setIsLoadingMessages(false);
     }
-  }, [apiClient, tenantId, nav, setCurrentConversation, setSelectedApplicationId]);
+  }, [apiClient, tenantId, nav, setCurrentConversation, setSelectedChatAgentId]);
 
   const executeStream = useCallback(async (
     content: string,
@@ -182,7 +182,7 @@ export function useChat({
       tenantId!,
       {
         conversationId: activeConversationId,
-        applicationId: selectedApplicationId!,
+        chatAgentId: selectedChatAgentId!,
         message: {
           content,
           attachments: undefined,
@@ -200,7 +200,7 @@ export function useChat({
             id: messageId,
             type: 'assistant',
             conversationId: activeConversationId,
-            applicationId: selectedApplicationId!,
+            chatAgentId: selectedChatAgentId!,
             content: '',
             status: 'pending',
             createdAt: new Date().toISOString(),
@@ -216,7 +216,7 @@ export function useChat({
             id: messageId,
             type: 'assistant',
             conversationId: activeConversationId,
-            applicationId: selectedApplicationId!,
+            chatAgentId: selectedChatAgentId!,
             content: '',
             status: 'pending',
             createdAt: new Date().toISOString(),
@@ -324,10 +324,10 @@ export function useChat({
         break;
       }
     }
-  }, [apiClient, tenantId, selectedApplicationId, searchParams, setConversations, setCurrentConversation, onRefreshTraces]);
+  }, [apiClient, tenantId, selectedChatAgentId, searchParams, setConversations, setCurrentConversation, onRefreshTraces]);
 
   const handleSendMessage = useCallback(async (content: string, attachments?: File[]) => {
-    if (!apiClient || !tenantId || !selectedApplicationId) {
+    if (!apiClient || !tenantId || !selectedChatAgentId) {
       notifications.show({
         title: 'Error',
         message: 'Please select a chat agent first',
@@ -341,8 +341,8 @@ export function useChat({
     }
     abortControllerRef.current = new AbortController();
 
-    const selectedApp = applications.find(app => app.id === selectedApplicationId);
-    const isFoundryApp = selectedApp?.type === ApplicationTypeEnum.MICROSOFT_FOUNDRY;
+    const selectedApp = chatAgents.find(app => app.id === selectedChatAgentId);
+    const isFoundryApp = selectedApp?.type === ChatAgentTypeEnum.MICROSOFT_FOUNDRY;
     let foundryToken: string | undefined;
     if (isFoundryApp) {
       const token = await getFoundryToken();
@@ -363,7 +363,7 @@ export function useChat({
       id: `temp-${Date.now()}`,
       type: 'user',
       conversationId: activeConversationId || 'pending',
-      applicationId: selectedApplicationId,
+      chatAgentId: selectedChatAgentId,
       content,
       status: 'pending',
       attachmentsMetadata,
@@ -380,7 +380,7 @@ export function useChat({
         const newConv = await apiClient.createConversation(
           tenantId,
           {
-            application_id: selectedApplicationId,
+            chat_agent_id: selectedChatAgentId,
             name: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
           },
           foundryToken
@@ -440,7 +440,7 @@ export function useChat({
         });
       }
     }
-  }, [apiClient, tenantId, selectedApplicationId, conversationId, applications, currentConversation, getFoundryToken, nav, setCurrentConversation, setConversations, executeStream]);
+  }, [apiClient, tenantId, selectedChatAgentId, conversationId, chatAgents, currentConversation, getFoundryToken, nav, setCurrentConversation, setConversations, executeStream]);
 
   const handleEditMessage = useCallback(async (messageId: string, newContent: string) => {
     if (!apiClient || !tenantId || !conversationId) return;

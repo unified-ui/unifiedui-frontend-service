@@ -112,6 +112,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
         clearTimeout(loadingTimeoutRef.current);
         loadingTimeoutRef.current = null;
       }
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowLoading(false);
     }
 
@@ -149,6 +150,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
 
   // Reset visible count when search changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisibleCount(ITEMS_PER_PAGE);
   }, [searchQuery]);
 

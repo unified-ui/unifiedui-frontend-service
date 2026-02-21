@@ -71,7 +71,7 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
       await refreshIdentity();
       onSuccess?.();
       onClose();
-    } catch (error) {
+    } catch {
       // Error handling is done by the API client
     } finally {
       setIsSubmitting(false);

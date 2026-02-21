@@ -1097,7 +1097,7 @@ export const TenantSettingsPage: FC = () => {
                       Danger Zone
                     </Title>
                     <Text size="sm" c="dimmed">
-                      Deleting a tenant will permanently remove all data including applications,
+                      Deleting a tenant will permanently remove all data including chat agents,
                       credentials, conversations, and custom groups. This action cannot be undone.
                     </Text>
                     <Button
@@ -1915,7 +1915,7 @@ export const TenantSettingsPage: FC = () => {
         itemName={selectedTenant.name}
         itemType="Tenant"
         title="Delete Tenant (Step 1 of 2)"
-        message="Are you sure you want to delete this tenant? This will permanently remove all data including applications, credentials, conversations, and custom groups."
+        message="Are you sure you want to delete this tenant? This will permanently remove all data including chat agents, credentials, conversations, and custom groups."
       />
 
       {/* Delete Tenant - Second Confirmation */}

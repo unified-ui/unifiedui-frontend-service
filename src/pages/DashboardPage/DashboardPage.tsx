@@ -14,37 +14,37 @@ import { DelayedTooltip } from '../../components/common';
 import classes from './DashboardPage.module.css';
 
 const STAT_CARDS = [
-  { key: 'applications' as const, icon: IconSparkles, color: 'var(--color-primary-100)', iconColor: 'var(--color-primary-600)', route: '/applications' },
+  { key: 'chat_agents' as const, icon: IconSparkles, color: 'var(--color-primary-100)', iconColor: 'var(--color-primary-600)', route: '/chat-agents' },
   { key: 'autonomous_agents' as const, icon: IconRobot, color: 'var(--color-secondary-100)', iconColor: 'var(--color-secondary-600)', route: '/autonomous-agents' },
   { key: 'conversations' as const, icon: IconMessages, color: 'var(--color-accent-100)', iconColor: 'var(--color-accent-600)', route: '/conversations' },
 ] as const;
 
 const FAVORITE_ROUTE_MAP: Record<string, string> = {
-  [FavoriteResourceTypeEnum.APPLICATION]: '/applications',
+  [FavoriteResourceTypeEnum.CHAT_AGENT]: '/chat-agents',
   [FavoriteResourceTypeEnum.AUTONOMOUS_AGENT]: '/autonomous-agents',
   [FavoriteResourceTypeEnum.CONVERSATION]: '/conversations',
 };
 
 const FAVORITE_TYPE_LABEL_KEYS: Record<string, string> = {
-  [FavoriteResourceTypeEnum.APPLICATION]: 'application',
+  [FavoriteResourceTypeEnum.CHAT_AGENT]: 'chatAgent',
   [FavoriteResourceTypeEnum.AUTONOMOUS_AGENT]: 'autonomousAgent',
   [FavoriteResourceTypeEnum.CONVERSATION]: 'conversation',
 };
 
 const FAVORITE_TYPE_TO_ENTITY: Record<string, EntityAvatarType> = {
-  [FavoriteResourceTypeEnum.APPLICATION]: 'application',
+  [FavoriteResourceTypeEnum.CHAT_AGENT]: 'chat-agent',
   [FavoriteResourceTypeEnum.AUTONOMOUS_AGENT]: 'autonomous-agent',
   [FavoriteResourceTypeEnum.CONVERSATION]: 'conversation',
 };
 
 const RESOURCE_ROUTE_MAP: Record<string, string> = {
-  application: '/applications',
+  chat_agent: '/chat-agents',
   autonomous_agent: '/autonomous-agents',
   conversation: '/conversations',
 };
 
 const RESOURCE_TYPE_TO_ENTITY: Record<string, EntityAvatarType> = {
-  application: 'application',
+  chat_agent: 'chat-agent',
   autonomous_agent: 'autonomous-agent',
   conversation: 'conversation',
 };
@@ -56,7 +56,7 @@ export const DashboardPage: FC = () => {
   const { user, selectedTenant, apiClient, isLoading: isIdentityLoading } = useIdentity();
   const { favorites } = useFavorites();
   const { recentVisits } = useRecentVisits();
-  const { applications, autonomousAgents } = useSidebarData();
+  const { chatAgents, autonomousAgents } = useSidebarData();
 
   const [stats, setStats] = useState<DashboardStatsResponse | null>(null);
   const [isStatsLoading, setIsStatsLoading] = useState(true);
@@ -92,7 +92,7 @@ export const DashboardPage: FC = () => {
     const items: Array<{ id: string; name: string; type: FavoriteResourceTypeEnum }> = [];
     const entityMap = new Map<string, string>();
 
-    applications.forEach(app => entityMap.set(app.id, app.name));
+    chatAgents.forEach(app => entityMap.set(app.id, app.name));
     autonomousAgents.forEach(agent => entityMap.set(agent.id, agent.name));
 
     for (const [type, ids] of favorites.entries()) {
@@ -103,7 +103,7 @@ export const DashboardPage: FC = () => {
     }
 
     return items.slice(0, 6);
-  }, [favorites, applications, autonomousAgents]);
+  }, [favorites, chatAgents, autonomousAgents]);
 
   const recentItems = useMemo(() => recentVisits.slice(0, 6), [recentVisits]);
 
@@ -111,7 +111,7 @@ export const DashboardPage: FC = () => {
   const isLoading = showSkeleton && !isDataReady;
 
   const statLabels: Record<string, string> = {
-    applications: t('applications'),
+    chat_agents: t('chatAgents'),
     autonomous_agents: t('autonomousAgents'),
     conversations: t('conversations'),
   };
@@ -203,7 +203,7 @@ export const DashboardPage: FC = () => {
                   className={classes.entityCard}
                   onClick={() => navigate(`${FAVORITE_ROUTE_MAP[item.type]}/${item.id}`)}
                 >
-                  <EntityAvatar entityType={FAVORITE_TYPE_TO_ENTITY[item.type] || 'application'} size="sm" />
+                  <EntityAvatar entityType={FAVORITE_TYPE_TO_ENTITY[item.type] || 'chat-agent'} size="sm" />
                   <div className={classes.entityCardContent}>
                     <DelayedTooltip label={item.name}>
                       <div className={classes.entityCardName}>{item.name}</div>
@@ -254,7 +254,7 @@ export const DashboardPage: FC = () => {
                   className={classes.entityCard}
                   onClick={() => navigate(`${RESOURCE_ROUTE_MAP[item.resource_type] || '/'}/${item.resource_id}`)}
                 >
-                  <EntityAvatar entityType={RESOURCE_TYPE_TO_ENTITY[item.resource_type] || 'application'} size="sm" />
+                  <EntityAvatar entityType={RESOURCE_TYPE_TO_ENTITY[item.resource_type] || 'chat-agent'} size="sm" />
                   <div className={classes.entityCardContent}>
                     <DelayedTooltip label={item.resource_name}>
                       <div className={classes.entityCardName}>{item.resource_name}</div>

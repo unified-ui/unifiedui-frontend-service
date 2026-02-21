@@ -8,7 +8,7 @@ interface PageHeaderProps {
   title: string;
   /** Page description */
   description?: string;
-  /** Action button label (e.g., "Create Application") */
+  /** Action button label (e.g., "Create Chat Agent") */
   actionLabel?: string;
   /** Action button click handler */
   onAction?: () => void;

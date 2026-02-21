@@ -99,7 +99,7 @@ Fixed left rail (`width: var(--sidebar-width)` [80px], `top: var(--header-height
 Top section (mainNavItemsTop):
   Home (Dashboard)
   Chats / Conversations (data list, no entity type — special handling)
-  Agents / Applications (has data list, entityType: applications)
+  Agents / Chat Agents (has data list, entityType: chat-agents)
   Auto / Autonomous Agents (has data list, entityType: autonomous-agents)
 ─── divider ───
 Middle section (mainNavItemsBottom):
@@ -143,7 +143,7 @@ The `ENTITY_TO_FAVORITE_TYPE` mapping in `Sidebar.tsx` maps entity types to `Fav
 
 ```typescript
 {
-  applications: FavoriteResourceTypeEnum.APPLICATION,
+  'chat-agents': FavoriteResourceTypeEnum.CHAT_AGENT,
   'autonomous-agents': FavoriteResourceTypeEnum.AUTONOMOUS_AGENT,
   'chat-widgets': FavoriteResourceTypeEnum.CHAT_WIDGET,
   conversations: FavoriteResourceTypeEnum.CONVERSATION,

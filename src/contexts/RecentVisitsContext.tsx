@@ -148,6 +148,7 @@ export const RecentVisitsProvider: FC<RecentVisitsProviderProps> = ({ children }
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useRecentVisits = (): RecentVisitsContextType => {
   const context = useContext(RecentVisitsContext);
   if (context === undefined) {

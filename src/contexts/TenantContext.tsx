@@ -78,6 +78,7 @@ export const TenantProvider: FC<TenantProviderProps> = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTenantContext = (): TenantContextType => {
   const context = useContext(TenantContext);
   if (context === undefined) {

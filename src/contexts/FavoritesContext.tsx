@@ -13,7 +13,7 @@ interface FavoritesContextType {
 }
 
 const RESOURCE_TYPES: FavoriteResourceTypeEnum[] = [
-  FavoriteResourceTypeEnum.APPLICATION,
+  FavoriteResourceTypeEnum.CHAT_AGENT,
   FavoriteResourceTypeEnum.AUTONOMOUS_AGENT,
   FavoriteResourceTypeEnum.CHAT_WIDGET,
   FavoriteResourceTypeEnum.CONVERSATION,
@@ -126,6 +126,7 @@ export const FavoritesProvider: FC<FavoritesProviderProps> = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useFavorites = (): FavoritesContextType => {
   const context = useContext(FavoritesContext);
   if (context === undefined) {

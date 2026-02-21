@@ -1,5 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 
+/* eslint-disable react-hooks/refs */
+
 /**
  * Hook that tracks unsaved changes and prevents accidental navigation.
  *

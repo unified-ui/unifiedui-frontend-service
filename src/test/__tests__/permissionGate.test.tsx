@@ -32,9 +32,9 @@ describe('PermissionGate', () => {
 
   describe('mode="hide" (default)', () => {
     it('renders children when user has required role', () => {
-      setupRoles([TenantPermissionEnum.APPLICATIONS_CREATOR]);
+      setupRoles([TenantPermissionEnum.CHAT_AGENTS_CREATOR]);
       renderWithProviders(
-        <PermissionGate requiredRole={TenantPermissionEnum.APPLICATIONS_CREATOR}>
+        <PermissionGate requiredRole={TenantPermissionEnum.CHAT_AGENTS_CREATOR}>
           <button>Create</button>
         </PermissionGate>
       );
@@ -44,7 +44,7 @@ describe('PermissionGate', () => {
     it('hides children when user lacks required role', () => {
       setupRoles([TenantPermissionEnum.READER]);
       renderWithProviders(
-        <PermissionGate requiredRole={TenantPermissionEnum.APPLICATIONS_CREATOR}>
+        <PermissionGate requiredRole={TenantPermissionEnum.CHAT_AGENTS_CREATOR}>
           <button>Create</button>
         </PermissionGate>
       );
@@ -115,7 +115,7 @@ describe('PermissionGate', () => {
       setupRoles([TenantPermissionEnum.CREDENTIALS_CREATOR]);
       renderWithProviders(
         <PermissionGate requiredRoles={[
-          TenantPermissionEnum.APPLICATIONS_CREATOR,
+          TenantPermissionEnum.CHAT_AGENTS_CREATOR,
           TenantPermissionEnum.CREDENTIALS_CREATOR,
         ]}>
           <button>Create</button>
@@ -128,7 +128,7 @@ describe('PermissionGate', () => {
       setupRoles([TenantPermissionEnum.READER]);
       renderWithProviders(
         <PermissionGate requiredRoles={[
-          TenantPermissionEnum.APPLICATIONS_CREATOR,
+          TenantPermissionEnum.CHAT_AGENTS_CREATOR,
           TenantPermissionEnum.CREDENTIALS_CREATOR,
         ]}>
           <button>Create</button>
@@ -172,10 +172,10 @@ describe('PermissionGate', () => {
 
   describe('combined role + permission', () => {
     it('hides when role matches but permission fails', () => {
-      setupRoles([TenantPermissionEnum.APPLICATIONS_CREATOR]);
+      setupRoles([TenantPermissionEnum.CHAT_AGENTS_CREATOR]);
       renderWithProviders(
         <PermissionGate
-          requiredRole={TenantPermissionEnum.APPLICATIONS_CREATOR}
+          requiredRole={TenantPermissionEnum.CHAT_AGENTS_CREATOR}
           permission={PermissionActionEnum.READ}
           requiredAction="ADMIN"
         >
@@ -186,10 +186,10 @@ describe('PermissionGate', () => {
     });
 
     it('renders when both role and permission match', () => {
-      setupRoles([TenantPermissionEnum.APPLICATIONS_CREATOR]);
+      setupRoles([TenantPermissionEnum.CHAT_AGENTS_CREATOR]);
       renderWithProviders(
         <PermissionGate
-          requiredRole={TenantPermissionEnum.APPLICATIONS_CREATOR}
+          requiredRole={TenantPermissionEnum.CHAT_AGENTS_CREATOR}
           permission={PermissionActionEnum.ADMIN}
           requiredAction="ADMIN"
         >

@@ -3,7 +3,7 @@ import { useIdentity } from '../contexts';
 import { TenantPermissionEnum, PermissionActionEnum } from '../api/types';
 
 export type ResourceType =
-  | 'applications'
+  | 'chat-agents'
   | 'autonomous-agents'
   | 'chat-widgets'
   | 're-act-agents'
@@ -14,7 +14,7 @@ export type ResourceType =
   | 'tenant-ai-models';
 
 const CREATOR_ROLES: Record<ResourceType, TenantPermissionEnum> = {
-  'applications': TenantPermissionEnum.APPLICATIONS_CREATOR,
+  'chat-agents': TenantPermissionEnum.CHAT_AGENTS_CREATOR,
   'autonomous-agents': TenantPermissionEnum.AUTONOMOUS_AGENTS_CREATOR,
   'chat-widgets': TenantPermissionEnum.CHAT_WIDGETS_CREATOR,
   're-act-agents': TenantPermissionEnum.REACT_AGENT_CREATOR,
@@ -26,7 +26,7 @@ const CREATOR_ROLES: Record<ResourceType, TenantPermissionEnum> = {
 };
 
 const ADMIN_ROLES: Record<ResourceType, TenantPermissionEnum> = {
-  'applications': TenantPermissionEnum.APPLICATIONS_ADMIN,
+  'chat-agents': TenantPermissionEnum.CHAT_AGENTS_ADMIN,
   'autonomous-agents': TenantPermissionEnum.AUTONOMOUS_AGENTS_ADMIN,
   'chat-widgets': TenantPermissionEnum.CHAT_WIDGETS_ADMIN,
   're-act-agents': TenantPermissionEnum.REACT_AGENT_ADMIN,

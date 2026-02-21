@@ -96,6 +96,9 @@ export const ReActAgentsPage: FC = () => {
     <EntityAvatar entityType="re-act-agent" size="sm" />
   ), []);
 
+  // eslint-disable-next-line react-hooks/refs
+  const editInitialData = editItemId ? rawDataRef.current.get(editItemId) || null : null;
+
   return (
     <MainLayout>
       <PageHeader
@@ -139,7 +142,7 @@ export const ReActAgentsPage: FC = () => {
       <EditReActAgentDialog
         opened={!!editItemId}
         agentId={editItemId}
-        initialData={editItemId ? rawDataRef.current.get(editItemId) || null : null}
+        initialData={editInitialData}
         activeTab={editTab}
         onClose={handleEditClose}
         onSuccess={handleEditSuccess}

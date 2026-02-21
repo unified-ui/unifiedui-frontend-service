@@ -51,7 +51,7 @@ interface ManageAccessTableProps {
   onDeletePrincipal?: (principalId: string, principalType: PrincipalTypeEnum, displayName?: string | null) => Promise<void>;
   /** Handler to open add principal dialog */
   onAddPrincipal: () => void;
-  /** Entity name for labels (e.g., "application", "credential") */
+  /** Entity name for labels (e.g., "chat-agent", "credential") */
   entityName?: string;
   /** Custom label for the add button */
   addButtonLabel?: string;

@@ -97,7 +97,7 @@ export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
       form.reset();
       onSuccess?.(widget as ChatWidgetResponse);
       onClose();
-    } catch (error) {
+    } catch {
       // Error handling is done by the API client
     } finally {
       setIsSubmitting(false);

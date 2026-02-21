@@ -357,7 +357,7 @@ export const ReActAgentDeveloperPage: FC = () => {
       id: `local-${++messageIdCounter.current}`,
       type: 'user',
       conversationId: 'playground',
-      applicationId: 'playground',
+      chatAgentId: 'playground',
       content,
       status: 'completed',
       createdAt: new Date().toISOString(),

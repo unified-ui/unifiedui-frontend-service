@@ -26,6 +26,7 @@ import { DelayedTooltip } from '../DelayedTooltip';
 import classes from './ManageTenantAccessTable.module.css';
 
 // Tenant roles with labels and descriptions
+// eslint-disable-next-line react-refresh/only-export-components
 export const TENANT_ROLE_OPTIONS: { value: TenantPermissionEnum; label: string; description: string; category: string }[] = [
   // Global
   { value: 'READER', label: 'Reader', description: 'Can access the tenant', category: 'General' },
@@ -33,9 +34,9 @@ export const TENANT_ROLE_OPTIONS: { value: TenantPermissionEnum; label: string; 
   // Custom Groups
   { value: 'CUSTOM_GROUPS_ADMIN', label: 'Custom Groups Admin', description: 'Manage all custom groups', category: 'Custom Groups' },
   { value: 'CUSTOM_GROUP_CREATOR', label: 'Custom Group Creator', description: 'Create new custom groups', category: 'Custom Groups' },
-  // Applications
-  { value: 'APPLICATIONS_ADMIN', label: 'Applications Admin', description: 'Manage all applications', category: 'Applications' },
-  { value: 'APPLICATIONS_CREATOR', label: 'Applications Creator', description: 'Create new applications', category: 'Applications' },
+  // Chat Agents
+  { value: 'CHAT_AGENTS_ADMIN', label: 'Chat Agents Admin', description: 'Manage all chat agents', category: 'Chat Agents' },
+  { value: 'CHAT_AGENTS_CREATOR', label: 'Chat Agents Creator', description: 'Create new chat agents', category: 'Chat Agents' },
   // Credentials
   { value: 'CREDENTIALS_ADMIN', label: 'Credentials Admin', description: 'Manage all credentials', category: 'Credentials' },
   { value: 'CREDENTIALS_CREATOR', label: 'Credentials Creator', description: 'Create new credentials', category: 'Credentials' },
@@ -54,14 +55,14 @@ export const TENANT_ROLE_OPTIONS: { value: TenantPermissionEnum; label: string; 
 const ROLE_PRIORITY: Record<string, number> = {
   GLOBAL_ADMIN: 100,
   // Admins
-  APPLICATIONS_ADMIN: 50,
+  CHAT_AGENTS_ADMIN: 50,
   AUTONOMOUS_AGENTS_ADMIN: 50,
   CONVERSATIONS_ADMIN: 50,
   CREDENTIALS_ADMIN: 50,
   CUSTOM_GROUPS_ADMIN: 50,
   CHAT_WIDGETS_ADMIN: 50,
   // Creators
-  APPLICATIONS_CREATOR: 25,
+  CHAT_AGENTS_CREATOR: 25,
   AUTONOMOUS_AGENTS_CREATOR: 25,
   CONVERSATIONS_CREATOR: 25,
   CREDENTIALS_CREATOR: 25,

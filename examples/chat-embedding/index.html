@@ -23,7 +23,7 @@
         <input
           id="embedUrl"
           type="text"
-          placeholder="http://localhost:5173/embed/chat/{applicationId}?tenantId={tenantId}"
+          placeholder="http://localhost:5173/embed/chat/{chatAgentId}?tenantId={tenantId}"
           value="http://localhost:5173/embed/chat/bea874f6-b4c8-424d-b79c-d8d799f1428b?tenantId=01fadbf4-b9e2-43ae-8197-152596547ef6"
         />
         <button id="applyBtn">Apply</button>
@@ -52,7 +52,7 @@
               <tr><th>Param</th><th>Required</th><th>Description</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>tenantId</code></td><td>Yes</td><td>Tenant the application belongs to</td></tr>
+              <tr><td><code>tenantId</code></td><td>Yes</td><td>Tenant the chat agent belongs to</td></tr>
               <tr><td><code>theme</code></td><td>No</td><td><code>light</code> or <code>dark</code> (default: auto)</td></tr>
               <tr><td><code>lang</code></td><td>No</td><td>UI language, e.g. <code>en-US</code></td></tr>
               <tr><td><code>ctx_*</code></td><td>No</td><td>Context data forwarded to the agent</td></tr>

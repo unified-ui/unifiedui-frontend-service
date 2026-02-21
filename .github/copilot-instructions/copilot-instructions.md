@@ -28,6 +28,7 @@ Read the relevant instruction file **before** working in that area.
 | [components/tracing.instructions.md](./components/tracing.instructions.md) | Working with trace visualization, TracingVisualDialog, or canvas |
 | [branding.instructions.md](./branding.instructions.md) | Adding/changing tenant branding, login page customization, assets |
 | [testing.instructions.md](./testing.instructions.md) | Writing tests, running tests, understanding test patterns |
+| [github-pipelines.instructions.md](./github-pipelines.instructions.md) | Working with CI/CD workflows, adding pipelines, coverage thresholds |
 
 ---
 
@@ -44,7 +45,7 @@ Read the relevant instruction file **before** working in that area.
 9. **Dark mode aware** — Use semantic CSS variables. Test both modes.
 10. **Keep files under 400 lines** — Split into sub-components if exceeding.
 11. **i18n for all UI strings** — Never hardcode user-visible strings. Use `useTranslation()` from `react-i18next`. Keys in `src/i18n/locales/en-US/{namespace}.json`. Outside React components (callbacks, contexts), use `i18next.t('namespace:key')`.
-12. **Run tests after changes** — After significant changes: `npx vitest run`. Write tests for new components/features using Vitest + RTL.
+12. **Run tests after changes** — After significant changes: `npx vitest run`. Write tests for new components/features using Vitest + RTL. Run `npm run lint` to verify ESLint passes.
 
 ---
 
@@ -52,7 +53,7 @@ Read the relevant instruction file **before** working in that area.
 
 | What | Pattern | Example |
 |------|---------|---------|
-| Page component | `{Name}Page/` | `ApplicationsPage/` |
+| Page component | `{Name}Page/` | `ChatAgentsPage/` |
 | Detail page | `{Name}DetailsPage/` | `AutonomousAgentDetailsPage/` |
 | Common component | `{Name}/` in `components/common/` | `DataTable/`, `SecretField/` |
 | Dialog component | `{Name}Dialog` in `components/dialogs/` | `IntegrationDialog/` |

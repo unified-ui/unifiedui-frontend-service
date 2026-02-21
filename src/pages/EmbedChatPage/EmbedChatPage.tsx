@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Center, Stack, Text, Loader, Button, Box, ActionIcon, useMantineColorScheme } from '@mantine/core';
+import { Center, Text, Loader, Button, Box, ActionIcon, useMantineColorScheme } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useMsal } from '@azure/msal-react';
 import { IconMessageCircle, IconPlus, IconSun, IconMoon } from '@tabler/icons-react';
@@ -11,7 +11,7 @@ import { useIdentity } from '../../contexts';
 import { ChatView, ChatHeader, ChatEmptyState } from '../../components/chat';
 import { TracingProvider, TracingSidebar, TracingVisualDialog } from '../../components/tracing';
 import { useChat, useConversationTracing } from '../../hooks';
-import type { ApplicationResponse, ConversationResponse } from '../../api/types';
+import type { ChatAgentResponse, ConversationResponse } from '../../api/types';
 import classes from './EmbedChatPage.module.css';
 
 export const EmbedChatPage: FC = () => {
@@ -27,10 +27,10 @@ export const EmbedChatPage: FC = () => {
   const { apiClient, selectedTenant, selectTenant, getFoundryToken, isLoading: isIdentityLoading } = useIdentity();
   const { colorScheme, setColorScheme } = useMantineColorScheme();
 
-  const [application, setApplication] = useState<ApplicationResponse | null>(null);
+  const [chatAgent, setChatAgent] = useState<ChatAgentResponse | null>(null);
   const [currentConversation, setCurrentConversation] = useState<ConversationResponse | null>(null);
-  const [conversations, setConversations] = useState<ConversationResponse[]>([]);
-  const [selectedApplicationId, setSelectedApplicationId] = useState<string | undefined>(agentId);
+  const [_conversations, setConversations] = useState<ConversationResponse[]>([]);
+  const [selectedChatAgentId, setSelectedChatAgentId] = useState<string | undefined>(agentId);
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [appError, setAppError] = useState<string | null>(null);
   const [isLoadingApp, setIsLoadingApp] = useState(false);
@@ -54,17 +54,18 @@ export const EmbedChatPage: FC = () => {
     if (!apiClient || !selectedTenant || !agentId || hasFetched.current) return;
 
     hasFetched.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoadingApp(true);
     setAppError(null);
 
-    apiClient.getApplication(selectedTenant.id, agentId)
+    apiClient.getChatAgent(selectedTenant.id, agentId)
       .then((app) => {
-        setApplication(app);
-        setSelectedApplicationId(app.id);
+        setChatAgent(app);
+        setSelectedChatAgentId(app.id);
       })
       .catch((err) => {
-        console.error('Failed to load application:', err);
-        setAppError('Failed to load application');
+        console.error('Failed to load chat agent:', err);
+        setAppError('Failed to load chat agent');
       })
       .finally(() => setIsLoadingApp(false));
   }, [apiClient, selectedTenant, agentId]);
@@ -97,14 +98,14 @@ export const EmbedChatPage: FC = () => {
   const chat = useChat({
     apiClient,
     tenantId: selectedTenant?.id,
-    selectedApplicationId,
+    selectedChatAgentId,
     conversationId,
-    applications: application ? [application] : [],
+    chatAgents: chatAgent ? [chatAgent] : [],
     currentConversation,
     getFoundryToken,
     setCurrentConversation,
     setConversations,
-    setSelectedApplicationId,
+    setSelectedChatAgentId,
     onRefreshTraces: tracing.refreshTraces,
     onNavigate: handleNavigate,
   });
@@ -167,8 +168,8 @@ export const EmbedChatPage: FC = () => {
   const emptyStateSlot = !conversationId ? (
     <ChatEmptyState
       icon={<IconMessageCircle size={64} />}
-      title={application?.name || t('embedChatAgent', { agentId })}
-      description={application?.description || ''}
+      title={chatAgent?.name || t('embedChatAgent', { agentId })}
+      description={chatAgent?.description || ''}
     />
   ) : undefined;
 
@@ -191,13 +192,13 @@ export const EmbedChatPage: FC = () => {
       </ActionIcon>
       <ChatHeader
         conversation={currentConversation}
-        applications={application ? [application] : []}
-        selectedApplicationId={selectedApplicationId}
+        chatAgents={chatAgent ? [chatAgent] : []}
+        selectedChatAgentId={selectedChatAgentId}
         isNewChat={isNewChat}
         tracingSidebarVisible={tracing.tracingSidebarVisible}
         hasTraces={tracing.traces.length > 0}
         messages={chat.messages}
-        onApplicationChange={() => {}}
+        onChatAgentChange={() => {}}
         onToggleTracingSidebar={tracing.handleToggleTracingSidebar}
       />
       <Box className={classes.toolbarSpacer} />
@@ -222,7 +223,7 @@ export const EmbedChatPage: FC = () => {
         reactions={chat.reactions}
         highlightedExtMessageId={tracing.highlightedMessageExtId}
         highlightedUserMessageId={tracing.highlightedUserMessageId}
-        inputDisabled={!selectedApplicationId}
+        inputDisabled={!selectedChatAgentId}
         headerSlot={headerSlot}
         emptyStateSlot={emptyStateSlot}
         tracingSlot={tracingSlot}

@@ -17,19 +17,19 @@ import { DelayedTooltip } from '../common';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconSearch, IconMessage, IconX, IconClock } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
-import type { ConversationResponse, ApplicationResponse } from '../../api/types';
+import type { ConversationResponse, ChatAgentResponse } from '../../api/types';
 import classes from './SearchConversationsDialog.module.css';
 
 interface SearchConversationsDialogProps {
   opened: boolean;
   onClose: () => void;
   conversations: ConversationResponse[];
-  applications: ApplicationResponse[];
+  chatAgents: ChatAgentResponse[];
 }
 
 interface SearchResult {
   conversation: ConversationResponse;
-  applicationName: string;
+  chatAgentName: string;
   matchReason: string;
 }
 
@@ -37,7 +37,7 @@ export const SearchConversationsDialog: FC<SearchConversationsDialogProps> = ({
   opened,
   onClose,
   conversations,
-  applications,
+  chatAgents,
 }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,17 +46,19 @@ export const SearchConversationsDialog: FC<SearchConversationsDialogProps> = ({
   // Reset search when dialog closes
   useEffect(() => {
     if (!opened) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchQuery('');
     }
   }, [opened]);
 
-  // Get application name helper
-  const getApplicationName = (applicationId: string): string => {
-    const app = applications.find(a => a.id === applicationId);
-    return app?.name || 'Unknown Application';
+  // Get chat agent name helper
+  const getChatAgentName = (chatAgentId: string): string => {
+    const app = chatAgents.find(a => a.id === chatAgentId);
+    return app?.name || 'Unknown Chat Agent';
   };
 
   // Search logic
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const searchResults = useMemo((): SearchResult[] => {
     if (!debouncedQuery.trim()) return [];
 
@@ -76,17 +78,17 @@ export const SearchConversationsDialog: FC<SearchConversationsDialogProps> = ({
         matchReasons.push('description');
       }
 
-      // Check application name
-      const appName = getApplicationName(conv.application_id);
+      // Check chat agent name
+      const appName = getChatAgentName(conv.chat_agent_id);
       if (appName.toLowerCase().includes(query)) {
-        matchReasons.push('application');
+        matchReasons.push('chat agent');
       }
 
       // If any match, add to results
       if (matchReasons.length > 0) {
         results.push({
           conversation: conv,
-          applicationName: appName,
+          chatAgentName: appName,
           matchReason: matchReasons.join(', '),
         });
       }
@@ -98,7 +100,7 @@ export const SearchConversationsDialog: FC<SearchConversationsDialogProps> = ({
     );
 
     return results;
-  }, [debouncedQuery, conversations, applications]);
+  }, [debouncedQuery, conversations, chatAgents]);
 
   const handleSelectConversation = (conversationId: string) => {
     navigate(`/conversations/${conversationId}`);
@@ -131,7 +133,7 @@ export const SearchConversationsDialog: FC<SearchConversationsDialogProps> = ({
       <Stack gap="md">
         {/* Search Input */}
         <TextInput
-          placeholder="Search by name, description, or application..."
+          placeholder="Search by name, description, or chat agent..."
           size="md"
           leftSection={<IconSearch size={20} />}
           rightSection={
@@ -196,7 +198,7 @@ export const SearchConversationsDialog: FC<SearchConversationsDialogProps> = ({
                           )}
                           <Group gap="xs" mt={4}>
                             <Badge size="xs" variant="light">
-                              {result.applicationName}
+                              {result.chatAgentName}
                             </Badge>
                             <Group gap={4}>
                               <IconClock size={12} />

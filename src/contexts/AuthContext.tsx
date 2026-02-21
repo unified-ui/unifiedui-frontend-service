@@ -36,6 +36,7 @@ export const AuthProviderInternal: FC<AuthProviderInternalProps> = ({ children }
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuthContext = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {

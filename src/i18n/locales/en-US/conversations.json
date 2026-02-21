@@ -69,10 +69,10 @@
   "feedbackDescription": "Help us improve by describing what was wrong with this response.",
   "feedbackPlaceholder": "Describe what was not helpful or incorrect...",
   "submitFeedback": "Submit Feedback",
-  "selectApplication": "Select Application",
-  "searchApplications": "Search applications...",
-  "noApplicationsFound": "No applications found",
-  "noApplicationsAvailable": "No applications available",
+  "selectChatAgent": "Select Chat Agent",
+  "searchChatAgents": "Search chat agents...",
+  "noChatAgentsFound": "No chat agents found",
+  "noChatAgentsAvailable": "No chat agents available",
   "clearFilter": "Clear filter",
-  "filteredByApplication": "Filtered by application"
+  "filteredByChatAgent": "Filtered by chat agent"
 }

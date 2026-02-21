@@ -4,11 +4,11 @@ import { notifications } from '@mantine/notifications';
 import {
   FavoriteResourceTypeEnum,
   type ConversationResponse,
-  type ApplicationResponse,
+  type ChatAgentResponse,
 } from '../../api/types';
 import type { UnifiedUIAPIClient } from '../../api/client';
 
-const STORAGE_KEY_LAST_APP = 'unified-ui-last-application-id';
+const STORAGE_KEY_LAST_APP = 'unified-ui-last-chat-agent-id';
 const STORAGE_KEY_SIDEBAR_COLLAPSED = 'unified-ui-sidebar-collapsed';
 const PAGE_SIZE = 30;
 
@@ -22,8 +22,8 @@ interface UseConversationListParams {
 interface UseConversationListReturn {
   conversations: ConversationResponse[];
   setConversations: React.Dispatch<React.SetStateAction<ConversationResponse[]>>;
-  applications: ApplicationResponse[];
-  selectedApplicationId: string | undefined;
+  chatAgents: ChatAgentResponse[];
+  selectedChatAgentId: string | undefined;
   favoriteIds: Set<string>;
   isLoadingConversations: boolean;
   sidebarCollapsed: boolean;
@@ -32,7 +32,7 @@ interface UseConversationListReturn {
   setCurrentConversation: React.Dispatch<React.SetStateAction<ConversationResponse | null>>;
   hasMoreConversations: boolean;
   sidebarSearchQuery: string;
-  handleApplicationChange: (applicationId: string) => void;
+  handleChatAgentChange: (chatAgentId: string) => void;
   handleSidebarCollapse: (collapsed: boolean) => void;
   handleNewChat: (abortController: React.RefObject<AbortController | null>) => void;
   handleSelectConversation: (id: string, abortController: React.RefObject<AbortController | null>) => void;
@@ -41,7 +41,7 @@ interface UseConversationListReturn {
   handleDeleteConversation: (id: string) => Promise<void>;
   handleSidebarSearch: (query: string) => void;
   handleLoadMoreConversations: () => void;
-  setSelectedApplicationId: React.Dispatch<React.SetStateAction<string | undefined>>;
+  setSelectedChatAgentId: React.Dispatch<React.SetStateAction<string | undefined>>;
   resetStreamingState: () => void;
 }
 
@@ -55,8 +55,8 @@ export function useConversationList({
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [conversations, setConversations] = useState<ConversationResponse[]>([]);
-  const [applications, setApplications] = useState<ApplicationResponse[]>([]);
-  const [selectedApplicationId, setSelectedApplicationId] = useState<string | undefined>();
+  const [chatAgents, setChatAgents] = useState<ChatAgentResponse[]>([]);
+  const [selectedChatAgentId, setSelectedChatAgentId] = useState<string | undefined>();
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [currentConversation, setCurrentConversation] = useState<ConversationResponse | null>(null);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
@@ -98,30 +98,30 @@ export function useConversationList({
       try {
         const [convsData, appsData, favoritesData] = await Promise.all([
           fetchConversations(0),
-          apiClient.listApplications(tenantId, {
+          apiClient.listChatAgents(tenantId, {
             limit: 100,
             order_by: 'name',
             order_direction: 'asc',
-          }) as Promise<ApplicationResponse[]>,
+          }) as Promise<ChatAgentResponse[]>,
           apiClient.listConversationFavorites(tenantId, userId),
         ]);
 
         setConversations(convsData);
         setHasMoreConversations(convsData.length >= PAGE_SIZE);
-        setApplications(appsData);
+        setChatAgents(appsData);
         setFavoriteIds(new Set(favoritesData.favorites.map(f => f.resource_id)));
 
         const queryAppId = searchParams.get('chat-agent');
         const storedAppId = localStorage.getItem(STORAGE_KEY_LAST_APP);
 
         if (queryAppId) {
-          setSelectedApplicationId(queryAppId);
+          setSelectedChatAgentId(queryAppId);
         } else if (storedAppId && appsData.some(a => a.id === storedAppId)) {
-          setSelectedApplicationId(storedAppId);
+          setSelectedChatAgentId(storedAppId);
         } else if (appsData.length > 0) {
           const firstActive = appsData.find(a => a.is_active);
           if (firstActive) {
-            setSelectedApplicationId(firstActive.id);
+            setSelectedChatAgentId(firstActive.id);
           }
         }
       } catch (error) {
@@ -141,19 +141,19 @@ export function useConversationList({
 
   useEffect(() => {
     const queryAppId = searchParams.get('chat-agent');
-    if (queryAppId && queryAppId !== selectedApplicationId) {
-      setSelectedApplicationId(queryAppId);
+    if (queryAppId && queryAppId !== selectedChatAgentId) {
+      setSelectedChatAgentId(queryAppId);
       localStorage.setItem(STORAGE_KEY_LAST_APP, queryAppId);
     }
-  }, [searchParams, selectedApplicationId]);
+  }, [searchParams, selectedChatAgentId]);
 
   const resetStreamingState = useCallback(() => {
   }, []);
 
-  const handleApplicationChange = useCallback((applicationId: string) => {
-    setSelectedApplicationId(applicationId);
-    localStorage.setItem(STORAGE_KEY_LAST_APP, applicationId);
-    setSearchParams({ 'chat-agent': applicationId });
+  const handleChatAgentChange = useCallback((chatAgentId: string) => {
+    setSelectedChatAgentId(chatAgentId);
+    localStorage.setItem(STORAGE_KEY_LAST_APP, chatAgentId);
+    setSearchParams({ 'chat-agent': chatAgentId });
   }, [setSearchParams]);
 
   const handleSidebarCollapse = useCallback((collapsed: boolean) => {
@@ -167,12 +167,12 @@ export function useConversationList({
     }
     setCurrentConversation(null);
 
-    if (selectedApplicationId) {
-      navigate(`/conversations?chat-agent=${selectedApplicationId}`);
+    if (selectedChatAgentId) {
+      navigate(`/conversations?chat-agent=${selectedChatAgentId}`);
     } else {
       navigate('/conversations');
     }
-  }, [navigate, selectedApplicationId]);
+  }, [navigate, selectedChatAgentId]);
 
   const handleSelectConversation = useCallback((id: string, abortController: React.RefObject<AbortController | null>) => {
     if (abortController.current) {
@@ -233,8 +233,8 @@ export function useConversationList({
 
       if (currentConversation?.id === id) {
         setCurrentConversation(null);
-        if (selectedApplicationId) {
-          navigate(`/conversations?chat-agent=${selectedApplicationId}`);
+        if (selectedChatAgentId) {
+          navigate(`/conversations?chat-agent=${selectedChatAgentId}`);
         } else {
           navigate('/conversations');
         }
@@ -247,7 +247,7 @@ export function useConversationList({
         color: 'red',
       });
     }
-  }, [apiClient, tenantId, currentConversation?.id, selectedApplicationId, navigate]);
+  }, [apiClient, tenantId, currentConversation?.id, selectedChatAgentId, navigate]);
 
   const handleSidebarSearch = useCallback((query: string) => {
     setSidebarSearchQuery(query);
@@ -295,8 +295,8 @@ export function useConversationList({
   return {
     conversations,
     setConversations,
-    applications,
-    selectedApplicationId,
+    chatAgents,
+    selectedChatAgentId,
     favoriteIds,
     isLoadingConversations,
     sidebarCollapsed,
@@ -305,7 +305,7 @@ export function useConversationList({
     setCurrentConversation,
     hasMoreConversations,
     sidebarSearchQuery,
-    handleApplicationChange,
+    handleChatAgentChange,
     handleSidebarCollapse,
     handleNewChat,
     handleSelectConversation,
@@ -314,7 +314,7 @@ export function useConversationList({
     handleDeleteConversation,
     handleSidebarSearch,
     handleLoadMoreConversations,
-    setSelectedApplicationId,
+    setSelectedChatAgentId,
     resetStreamingState,
   };
 }

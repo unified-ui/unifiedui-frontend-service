@@ -5,7 +5,7 @@ import { LoginPage } from '../pages/LoginPage';
 import { LoginTokenPage } from '../pages/LoginTokenPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { TenantSettingsPage } from '../pages/TenantSettingsPage';
-import { ApplicationsPage } from '../pages/ApplicationsPage';
+import { ChatAgentsPage } from '../pages/ChatAgentsPage';
 import { ConversationsPage } from '../pages/ConversationsPage';
 import { AutonomousAgentsPage } from '../pages/AutonomousAgentsPage';
 import { AutonomousAgentDetailsPage } from '../pages/AutonomousAgentDetailsPage';
@@ -30,8 +30,8 @@ export const AppRoutes = () => {
         
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/tenant-settings" element={<ProtectedRoute><TenantSettingsPage /></ProtectedRoute>} />
-        <Route path="/applications" element={<ProtectedRoute><ApplicationsPage /></ProtectedRoute>} />
-        <Route path="/applications/:id/embed-chat" element={<ProtectedRoute><HowEmbedChatPage /></ProtectedRoute>} />
+        <Route path="/chat-agents" element={<ProtectedRoute><ChatAgentsPage /></ProtectedRoute>} />
+        <Route path="/chat-agents/:id/embed-chat" element={<ProtectedRoute><HowEmbedChatPage /></ProtectedRoute>} />
         <Route path="/conversations/:conversationId?" element={<ProtectedRoute><ConversationsPage /></ProtectedRoute>} />
         <Route path="/autonomous-agents" element={<ProtectedRoute><AutonomousAgentsPage /></ProtectedRoute>} />
         <Route path="/autonomous-agents/:agentId" element={<ProtectedRoute><AutonomousAgentDetailsPage /></ProtectedRoute>} />

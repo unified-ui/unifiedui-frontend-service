@@ -5,18 +5,18 @@ import { Box, Stack, Text, ScrollArea, Loader, Center, ActionIcon, Group } from 
 import { IconMessages, IconPlus, IconChevronRight } from '@tabler/icons-react';
 import { useIdentity, useChatSidebar } from '../../../contexts';
 import { DelayedTooltip } from '../../common/DelayedTooltip';
-import type { ConversationResponse, ApplicationResponse } from '../../../api/types';
+import type { ConversationResponse, ChatAgentResponse } from '../../../api/types';
 import classes from './GlobalChatSidebar.module.css';
 
 interface ConversationPreviewItemProps {
   conversation: ConversationResponse;
-  applicationName: string;
+  chatAgentName: string;
   onClick: () => void;
 }
 
 const ConversationPreviewItem: FC<ConversationPreviewItemProps> = ({
   conversation,
-  applicationName,
+  chatAgentName,
   onClick,
 }) => {
   return (
@@ -26,9 +26,9 @@ const ConversationPreviewItem: FC<ConversationPreviewItemProps> = ({
           {conversation.name}
         </Text>
       </DelayedTooltip>
-      <DelayedTooltip label={applicationName}>
+      <DelayedTooltip label={chatAgentName}>
         <Text size="xs" c="dimmed" lineClamp={1}>
-          {applicationName}
+          {chatAgentName}
         </Text>
       </DelayedTooltip>
     </Box>
@@ -42,7 +42,7 @@ export const GlobalChatSidebar: FC = () => {
   const { isVisible, onSidebarHoverEnter, onSidebarHoverLeave } = useChatSidebar();
   
   const [conversations, setConversations] = useState<ConversationResponse[]>([]);
-  const [applications, setApplications] = useState<ApplicationResponse[]>([]);
+  const [chatAgents, setChatAgents] = useState<ChatAgentResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Don't render on conversations page - that page has its own sidebar
@@ -56,10 +56,10 @@ export const GlobalChatSidebar: FC = () => {
         try {
           const [convsList, appsList] = await Promise.all([
             apiClient.listConversations(selectedTenant.id) as Promise<ConversationResponse[]>,
-            apiClient.listApplications(selectedTenant.id) as Promise<ApplicationResponse[]>,
+            apiClient.listChatAgents(selectedTenant.id) as Promise<ChatAgentResponse[]>,
           ]);
           setConversations(convsList.slice(0, 10)); // Show only recent 10
-          setApplications(appsList);
+          setChatAgents(appsList);
         } catch (error) {
           console.error('Failed to load conversations:', error);
         } finally {
@@ -70,10 +70,10 @@ export const GlobalChatSidebar: FC = () => {
     }
   }, [isVisible, isOnConversationsPage, selectedTenant, apiClient]);
 
-  // Get application name by ID
-  const getApplicationName = (applicationId: string): string => {
-    const app = applications.find(a => a.id === applicationId);
-    return app?.name || 'Unknown Application';
+  // Get chat agent name by ID
+  const getChatAgentName = (chatAgentId: string): string => {
+    const app = chatAgents.find(a => a.id === chatAgentId);
+    return app?.name || 'Unknown Chat Agent';
   };
 
   // Handle conversation click - navigate to it
@@ -124,7 +124,7 @@ export const GlobalChatSidebar: FC = () => {
               <ConversationPreviewItem
                 key={conv.id}
                 conversation={conv}
-                applicationName={getApplicationName(conv.application_id)}
+                  chatAgentName={getChatAgentName(conv.chat_agent_id)}
                 onClick={() => handleConversationClick(conv.id)}
               />
             ))}

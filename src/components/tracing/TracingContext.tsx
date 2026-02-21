@@ -169,6 +169,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
       if (updatedTrace) {
         // Only update if the trace data actually changed (avoid infinite loops)
         if (JSON.stringify(updatedTrace) !== JSON.stringify(selectedTrace)) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setSelectedTrace(updatedTrace);
         }
       }
@@ -183,6 +184,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
     if (initialNodeReferenceId && selectedTrace) {
       const node = findNodeByReferenceId(selectedTrace.nodes, initialNodeReferenceId);
       if (node) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelectedNode(node);
       }
     }
@@ -362,6 +364,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
 // Hook
 // ============================================================================
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTracing = (): TracingContextState => {
   const context = useContext(TracingContext);
   if (!context) {

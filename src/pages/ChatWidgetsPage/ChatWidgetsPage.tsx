@@ -97,7 +97,8 @@ export const ChatWidgetsPage: FC = () => {
   const renderIcon = useCallback(() => (
     <EntityAvatar entityType="chat-widget" size="sm" />
   ), []);
-
+  // eslint-disable-next-line react-hooks/refs
+  const editInitialData = editItemId ? rawDataRef.current.get(editItemId) || null : null;
   const handleWidgetCreated = useCallback((widget?: ChatWidgetResponse) => {
     handleCreateSuccess();
     if (widget?.type === ChatWidgetTypeEnum.FORM) {
@@ -109,7 +110,7 @@ export const ChatWidgetsPage: FC = () => {
     <MainLayout>
       <PageHeader
         title="Chat Widgets"
-        description="Manage your chat widgets. Create embeddable chat interfaces for your applications."
+        description="Manage your chat widgets. Create embeddable chat interfaces for your chat agents."
         actionLabel="Create Chat Widget"
         onAction={canCreateWidget ? () => setIsCreateDialogOpen(true) : undefined}
       />
@@ -154,7 +155,7 @@ export const ChatWidgetsPage: FC = () => {
       <EditChatWidgetDialog
         opened={!!editItemId}
         chatWidgetId={editItemId}
-        initialData={editItemId ? rawDataRef.current.get(editItemId) || null : null}
+        initialData={editInitialData}
         activeTab={editTab}
         onClose={handleEditClose}
         onSuccess={handleEditSuccess}

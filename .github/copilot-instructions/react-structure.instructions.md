@@ -86,7 +86,7 @@ src/
 │   └── ProtectedRoute.tsx      # Auth guard wrapper
 │
 ├── pages/                      # Page-level components
-│   ├── ApplicationsPage/       # Chat agents list
+│   ├── ChatAgentsPage/         # Chat agents list
 │   ├── AutonomousAgentsPage/   # Autonomous agents list
 │   ├── AutonomousAgentDetailsPage/  # Agent detail (tabs: traces + details)
 │   ├── ConversationsPage/      # Conversations list + chat
@@ -153,8 +153,8 @@ src/
 
 | Dialog | Purpose |
 |--------|---------|
-| `CreateApplicationDialog` | Create new chat agent |
-| `EditApplicationDialog/` | Edit chat agent |
+| `CreateChatAgentDialog` | Create new chat agent |
+| `EditChatAgentDialog/` | Edit chat agent |
 | `CreateAutonomousAgentDialog` | Create autonomous agent |
 | `EditAutonomousAgentDialog/` | Edit autonomous agent |
 | `CreateChatWidgetDialog` | Create chat widget |
@@ -206,7 +206,7 @@ Reusable chat components — can be composed into any page that needs chat funct
 
 | Component | Purpose |
 |-----------|--------|
-| `ConversationSidebar` | Conversation list sidebar with search, grouping (time/application), favorites, rename, delete |
+| `ConversationSidebar` | Conversation list sidebar with search, grouping (time/chat agent), favorites, rename, delete |
 
 ### `components/tracing/`
 
@@ -234,7 +234,7 @@ See [components/tracing.instructions.md](./components/tracing.instructions.md) f
 | `/login/token` | LoginTokenPage | Public |
 | `/dashboard` | DashboardPage | Protected |
 | `/tenant-settings` | TenantSettingsPage | Protected |
-| `/applications` | ApplicationsPage | Protected |
+| `/chat-agents` | ChatAgentsPage | Protected |
 | `/conversations` | ConversationsPage | Protected |
 | `/conversations/:conversationId` | ConversationsPage | Protected |
 
@@ -261,10 +261,10 @@ See [components/tracing.instructions.md](./components/tracing.instructions.md) f
 | `TenantContext` | `useTenantContext()` → `{ tenants, selectedTenant, selectTenant, setTenants }` | Tenant selection + persistence |
 | `ApiClientContext` | `useApiClient()` → `UnifiedUIAPIClient` | API client instance |
 | `AICapabilitiesContext` | `useAICapabilities()` → `{ aiModels, isLoading }` | AI model data for current tenant |
-| `FavoritesContext` | `useFavorites()` → `{ favorites, toggleFavorite, isFavorite }` | User favorites management (applications, autonomous-agents, chat-widgets, conversations, re-act-agents) |
+| `FavoritesContext` | `useFavorites()` → `{ favorites, toggleFavorite, isFavorite }` | User favorites management (chat-agents, autonomous-agents, chat-widgets, conversations, re-act-agents) |
 | `NotificationsContext` | `useNotifications()` → `{ notifications, unreadCount, markAsRead, markAllRead, deleteNotification }` | Notification polling + state |
 | `RecentVisitsContext` | `useRecentVisits()` → `{ recentVisits, trackVisit, syncVisits }` | Recent visit tracking |
-| `SidebarDataContext` | `useSidebarData()` → `{ applications, autonomousAgents, chatWidgets, fetch*, refresh* }` | Cached sidebar entity lists |
+| `SidebarDataContext` | `useSidebarData()` → `{ chatAgents, autonomousAgents, chatWidgets, fetch*, refresh* }` | Cached sidebar entity lists |
 | `ChatSidebarContext` | `useChatSidebar()` → `{ isVisible, onSidebarHoverEnter, onSidebarHoverLeave }` | Right chat sidebar visibility |
 
 ---

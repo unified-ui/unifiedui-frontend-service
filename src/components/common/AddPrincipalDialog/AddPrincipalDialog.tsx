@@ -56,7 +56,7 @@ interface AddPrincipalDialogProps {
   onClose: () => void;
   /** Submit handler with selected principals and selected roles */
   onSubmit: (principals: SelectedPrincipal[], roles: string[]) => Promise<void>;
-  /** Entity name for labels (e.g., "application", "credential") */
+  /** Entity name for labels (e.g., "chat-agent", "credential") */
   entityName?: string;
   /** IDs of principals that already have access (to filter them out) */
   existingPrincipalIds?: string[];

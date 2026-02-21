@@ -261,7 +261,7 @@ import { DelayedTooltip } from '../DelayedTooltip'; // or from '../../components
 - **DataTable rows**: name, description columns (done via `DataTableRow`)
 - **Sidebar lists**: item name, subtitle
 - **Entity cards**: name fields (Dashboard favorites, recent visits)
-- **Chat sidebars**: conversation name, application name
+- **Chat sidebars**: conversation name, chat agent name
 - **Chat header**: app name, app description
 - **Trace views**: node names, trace IDs, reference names
 - **Dialog lists**: names, descriptions in search results and selection dialogs
@@ -278,7 +278,7 @@ import { DelayedTooltip } from '../DelayedTooltip'; // or from '../../components
 | `useFormDirtyGuard(form.isDirty())` | Mantine `useForm`-based dialogs — registers `beforeunload` handler |
 | `useUnsavedChanges(currentValue, baselineValue)` | `useState`-based pages — deep comparison + `beforeunload` |
 
-### useForm-Based Dialogs (EditApplicationDialog, EditToolDialog, etc.)
+### useForm-Based Dialogs (EditChatAgentDialog, EditToolDialog, etc.)
 
 ```tsx
 import { useFormDirtyGuard } from '../../../hooks';
@@ -334,7 +334,7 @@ resetBaseline(config);
 
 The frontend enforces RBAC at two levels:
 
-1. **Tenant-level roles** — checked via `usePermissions()` hook (e.g., `isGlobalAdmin`, `canCreate('applications')`)
+1. **Tenant-level roles** — checked via `usePermissions()` hook (e.g., `isGlobalAdmin`, `canCreate('chat-agents')`)
 2. **Resource-level permissions** — checked via `my_permission` field on API response objects (`'ADMIN'` | `'WRITE'` | `'READ'` | `undefined`)
 
 When `my_permission` is `undefined`/`null`, all actions remain visible (backward compatibility).
@@ -359,7 +359,7 @@ const { isGlobalAdmin, canCreate, hasRole } = usePermissions();
 
 ```tsx
 const { canCreate } = usePermissions();
-const canCreateApp = canCreate('applications');
+const canCreateApp = canCreate('chat-agents');
 
 <PageHeader onAction={canCreateApp ? handleCreate : undefined} />
 <DataTable onEmptyAction={canCreateApp ? handleCreate : undefined} />

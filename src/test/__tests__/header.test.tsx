@@ -41,18 +41,18 @@ describe('Header', () => {
     vi.clearAllMocks();
 
     mockUseSidebarData.mockReturnValue({
-      applications: [],
+      chatAgents: [],
       autonomousAgents: [],
       chatWidgets: [],
       reActAgents: [],
-      loadingStates: { applications: false, 'autonomous-agents': false, 'chat-widgets': false, 're-act-agents': false },
-      errorStates: { applications: null, 'autonomous-agents': null, 'chat-widgets': null, 're-act-agents': null },
-      fetchApplications: vi.fn(),
+      loadingStates: { 'chat-agents': false, 'autonomous-agents': false, 'chat-widgets': false, 're-act-agents': false },
+      errorStates: { 'chat-agents': null, 'autonomous-agents': null, 'chat-widgets': null, 're-act-agents': null },
+      fetchChatAgents: vi.fn(),
       fetchAutonomousAgents: vi.fn(),
       fetchChatWidgets: vi.fn(),
       fetchReActAgents: vi.fn(),
       fetchEntityData: vi.fn(),
-      refreshApplications: vi.fn(),
+      refreshChatAgents: vi.fn(),
       refreshAutonomousAgents: vi.fn(),
       refreshChatWidgets: vi.fn(),
       refreshReActAgents: vi.fn(),

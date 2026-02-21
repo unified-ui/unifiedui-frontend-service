@@ -10,7 +10,7 @@ The client talks to **two backend services**:
 
 | Service | Purpose | Base URL Source |
 |---------|---------|----------------|
-| Platform Service | CRUD for tenants, applications, credentials, permissions, etc. | Constructor `baseURL` param |
+| Platform Service | CRUD for tenants, chat agents, credentials, permissions, etc. | Constructor `baseURL` param |
 | Agent Service | Chat messages, SSE streaming, traces | `setAgentServiceBaseURL()` — set dynamically |
 
 Platform Service endpoints use `this.baseURL` directly. Agent Service endpoints call `this.getAgentServiceURL()` which throws if not yet configured.
@@ -30,7 +30,7 @@ The API client is instantiated once in `IdentityContext` and accessed via hook:
 
 ```typescript
 const { apiClient } = useIdentity();
-const apps = await apiClient.listApplications(tenantId, { skip: 0, limit: 50 });
+const apps = await apiClient.listChatAgents(tenantId, { skip: 0, limit: 50 });
 ```
 
 Never create a new `UnifiedUIAPIClient` instance — always use the one from context.
@@ -115,7 +115,7 @@ Methods are grouped by resource with comment headers:
 // ========== Health Check ==========
 // ========== Identity Endpoints ==========
 // ========== Tenant Endpoints ==========
-// ========== Application Endpoints ==========
+// ========== Chat Agent Endpoints ==========
 // ========== Autonomous Agent Endpoints ==========
 // ========== Conversation Endpoints ==========
 // ========== Credential Endpoints ==========
@@ -193,8 +193,8 @@ The `onTitleGeneration` callback receives title text that can be displayed with 
 `src/api/types.ts` contains all interfaces and enums (~1370 lines). Key patterns:
 
 - **Enums**: Defined as `const` objects with a derived type (not TypeScript `enum`)
-- **Responses**: Suffixed with `Response` (e.g., `ApplicationResponse`)
-- **Requests**: Suffixed with `Request` (e.g., `CreateApplicationRequest`)
+- **Responses**: Suffixed with `Response` (e.g., `ChatAgentResponse`)
+- **Requests**: Suffixed with `Request` (e.g., `CreateChatAgentRequest`)
 - **Params**: Suffixed with `Params` (e.g., `PaginationParams`)
 
 ```typescript

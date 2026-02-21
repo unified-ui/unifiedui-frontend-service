@@ -61,6 +61,7 @@ export const AICapabilitiesProvider: FC<AICapabilitiesProviderProps> = ({ childr
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAICapabilities = (): AICapabilitiesContextType => {
   const context = useContext(AICapabilitiesContext);
   if (!context) {

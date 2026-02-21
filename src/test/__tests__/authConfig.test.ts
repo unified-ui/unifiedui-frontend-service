@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 
 describe('authConfig', () => {
-  const originalEnv = { ...import.meta.env };
+  const _originalEnv = { ...import.meta.env };
 
   afterEach(() => {
     vi.unstubAllEnvs();

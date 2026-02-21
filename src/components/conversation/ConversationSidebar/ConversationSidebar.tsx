@@ -35,14 +35,14 @@ import {
   IconChevronDown,
 } from '@tabler/icons-react';
 import { ConfirmDeleteDialog, DelayedTooltip } from '../../common';
-import { ApplicationSelectDialog } from '../../dialogs/ApplicationSelectDialog';
+import { ChatAgentSelectDialog } from '../../dialogs/ChatAgentSelectDialog';
 import { useIdentity } from '../../../contexts';
-import type { ConversationResponse, ApplicationResponse, QuickListItemResponse } from '../../../api/types';
+import type { ConversationResponse, ChatAgentResponse, QuickListItemResponse } from '../../../api/types';
 import classes from './ConversationSidebar.module.css';
 
 export interface ConversationSidebarProps {
   conversations: ConversationResponse[];
-  applications: ApplicationResponse[];
+  chatAgents: ChatAgentResponse[];
   selectedConversationId?: string;
   favoriteIds: Set<string>;
   isLoading?: boolean;
@@ -60,7 +60,7 @@ export interface ConversationSidebarProps {
   onLoadMore?: () => void;
 }
 
-type GroupMode = 'time' | 'application';
+type GroupMode = 'time' | 'chat-agent';
 
 interface GroupedConversations {
   label: string;
@@ -71,7 +71,7 @@ const STORAGE_KEY_GROUP_MODE = 'chatSidebar.groupMode';
 
 export const ConversationSidebar: FC<ConversationSidebarProps> = ({
   conversations,
-  applications,
+  chatAgents,
   selectedConversationId,
   favoriteIds,
   isLoading,
@@ -94,7 +94,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
   
   const [groupMode, setGroupMode] = useState<GroupMode>(() => {
     const stored = localStorage.getItem(STORAGE_KEY_GROUP_MODE);
-    return (stored === 'time' || stored === 'application') ? stored : 'time';
+    return (stored === 'time' || stored === 'chat-agent') ? stored : 'time';
   });
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -108,16 +108,16 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
   }>({ open: false, conversationId: '', conversationName: '' });
   const [isDeleting, setIsDeleting] = useState(false);
   
-  const [applicationSelectDialogOpen, setApplicationSelectDialogOpen] = useState(false);
+  const [chatAgentSelectDialogOpen, setChatAgentSelectDialogOpen] = useState(false);
 
-  const selectedApplicationId = searchParams.get('selected-applicationId');
+  const selectedChatAgentId = searchParams.get('selected-chatAgentId');
   
-  const selectedApplication = useMemo(() => {
-    if (!selectedApplicationId) return null;
-    return applications.find(app => app.id === selectedApplicationId) || null;
-  }, [selectedApplicationId, applications]);
+  const selectedChatAgent = useMemo(() => {
+    if (!selectedChatAgentId) return null;
+    return chatAgents.find(app => app.id === selectedChatAgentId) || null;
+  }, [selectedChatAgentId, chatAgents]);
 
-  const isFilterActive = !!selectedApplicationId;
+  const isFilterActive = !!selectedChatAgentId;
 
   const effectiveGroupMode: GroupMode = isFilterActive ? 'time' : groupMode;
 
@@ -127,14 +127,14 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
 
   const handleClearFilter = useCallback(() => {
     const newParams = new URLSearchParams(searchParams);
-    newParams.delete('selected-applicationId');
+    newParams.delete('selected-chatAgentId');
     setSearchParams(newParams, { replace: true });
   }, [searchParams, setSearchParams]);
 
-  const handleSelectApplication = useCallback((app: QuickListItemResponse) => {
+  const handleSelectChatAgent = useCallback((app: QuickListItemResponse) => {
     const newParams = new URLSearchParams(searchParams);
-    newParams.set('selected-applicationId', app.id);
-    newParams.set('applicationId', app.id);
+    newParams.set('selected-chatAgentId', app.id);
+    newParams.set('chatAgentId', app.id);
     newParams.set('chat-agent', app.id);
     setSearchParams(newParams, { replace: true });
   }, [searchParams, setSearchParams]);
@@ -191,25 +191,25 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
     }
   };
 
-  const getApplicationName = (applicationId: string): string => {
-    const app = applications.find(a => a.id === applicationId);
-    return app?.name || 'Unknown Application';
+  const getChatAgentName = (chatAgentId: string): string => {
+    const app = chatAgents.find(a => a.id === chatAgentId);
+    return app?.name || 'Unknown Chat Agent';
   };
 
   const filteredConversations = useMemo(() => {
-    if (!selectedApplicationId) return conversations;
-    return conversations.filter(c => c.application_id === selectedApplicationId);
-  }, [conversations, selectedApplicationId]);
+    if (!selectedChatAgentId) return conversations;
+    return conversations.filter(c => c.chat_agent_id === selectedChatAgentId);
+  }, [conversations, selectedChatAgentId]);
 
   const groupedConversations = useMemo((): GroupedConversations[] => {
     const pinned = filteredConversations.filter(c => favoriteIds.has(c.id));
     const unpinned = filteredConversations.filter(c => !favoriteIds.has(c.id));
 
-    if (effectiveGroupMode === 'application') {
+    if (effectiveGroupMode === 'chat-agent') {
       const appGroups = new Map<string, ConversationResponse[]>();
       
       unpinned.forEach(conv => {
-        const appId = conv.application_id;
+        const appId = conv.chat_agent_id;
         if (!appGroups.has(appId)) {
           appGroups.set(appId, []);
         }
@@ -230,7 +230,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
 
       sortedGroups.forEach(([appId, convs]) => {
         result.push({
-          label: getApplicationName(appId),
+          label: getChatAgentName(appId),
           conversations: convs.sort((a, b) => 
             new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
           ),
@@ -279,7 +279,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
         .filter(([, convs]) => convs.length > 0)
         .map(([label, convs]) => ({ label, conversations: convs }));
     }
-  }, [filteredConversations, effectiveGroupMode, applications, favoriteIds]);
+  }, [filteredConversations, effectiveGroupMode, chatAgents, favoriteIds]);
 
   if (isCollapsed) {
     return (
@@ -351,7 +351,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
             <div className={classes.segmentedTabFilter}>
               <IconApps size={14} style={{ flexShrink: 0 }} />
               <Text size="xs" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>
-                {selectedApplication?.name || t('conversations:unknownAgent')}
+                {selectedChatAgent?.name || t('conversations:unknownAgent')}
               </Text>
               <ActionIcon
                 size="xs"
@@ -364,8 +364,8 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
             </div>
           ) : (
             <UnstyledButton
-              className={`${classes.segmentedTab} ${groupMode === 'application' ? classes.segmentedTabActive : ''}`}
-              onClick={() => setGroupMode('application')}
+              className={`${classes.segmentedTab} ${groupMode === 'chat-agent' ? classes.segmentedTabActive : ''}`}
+              onClick={() => setGroupMode('chat-agent')}
             >
               <IconApps size={14} />
               <span style={{ flex: 1 }}>{t('conversations:groupByAgent')}</span>
@@ -374,7 +374,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
                 className={classes.dropdownArrow}
                 onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
-                  setApplicationSelectDialogOpen(true);
+                  setChatAgentSelectDialogOpen(true);
                 }}
               >
                 <IconChevronDown size={12} />
@@ -420,7 +420,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
                     conversation={conversation}
                     isSelected={conversation.id === selectedConversationId}
                     isFavorite={favoriteIds.has(conversation.id)}
-                    applicationName={getApplicationName(conversation.application_id)}
+                    chatAgentName={getChatAgentName(conversation.chat_agent_id)}
                     onClick={() => onSelectConversation(conversation.id)}
                     onToggleFavorite={() => onToggleFavorite?.(conversation.id)}
                     onRename={(id) => handleRenameStart(id, conversation.name)}
@@ -452,10 +452,10 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
         isLoading={isDeleting}
       />
 
-      <ApplicationSelectDialog
-        opened={applicationSelectDialogOpen}
-        onClose={() => setApplicationSelectDialogOpen(false)}
-        onSelect={handleSelectApplication}
+      <ChatAgentSelectDialog
+        opened={chatAgentSelectDialogOpen}
+        onClose={() => setChatAgentSelectDialogOpen(false)}
+        onSelect={handleSelectChatAgent}
       />
     </div>
   );
@@ -465,7 +465,7 @@ interface ConversationItemProps {
   conversation: ConversationResponse;
   isSelected: boolean;
   isFavorite: boolean;
-  applicationName: string;
+  chatAgentName: string;
   onClick: () => void;
   onToggleFavorite?: () => void;
   onRename?: (id: string) => void;
@@ -481,7 +481,7 @@ const ConversationItem: FC<ConversationItemProps> = ({
   conversation,
   isSelected,
   isFavorite,
-  applicationName,
+  chatAgentName,
   onClick,
   onToggleFavorite,
   onRename,
@@ -563,9 +563,9 @@ const ConversationItem: FC<ConversationItemProps> = ({
               </Text>
             </DelayedTooltip>
           )}
-          <DelayedTooltip label={applicationName}>
-            <Text size="xs" className={classes.applicationName} lineClamp={1}>
-              {applicationName}
+          <DelayedTooltip label={chatAgentName}>
+            <Text size="xs" className={classes.chatAgentName} lineClamp={1}>
+              {chatAgentName}
             </Text>
           </DelayedTooltip>
         </div>

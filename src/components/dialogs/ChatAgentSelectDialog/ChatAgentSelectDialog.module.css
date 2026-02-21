@@ -1,0 +1,49 @@
+.listContainer {
+  min-height: 300px;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-sunken);
+  padding: var(--spacing-xs);
+  margin-right: calc(-1 * var(--spacing-md));
+  overflow: hidden;
+}
+
+.scrollArea {
+  max-height: 300px;
+  min-height: 300px;
+  overflow-y: auto;
+  padding-right: var(--spacing-md);
+}
+
+.chatAgentItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  transition: transform var(--transition-fast);
+}
+
+.chatAgentItem:hover {
+  transform: translateX(4px);
+}
+
+.chatAgentPaper {
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.chatAgentPaper:hover {
+  border-color: var(--color-primary-400);
+  background-color: var(--bg-elevated);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.emptyIcon {
+  color: var(--color-gray-400);
+  opacity: 0.5;
+}

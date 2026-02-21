@@ -40,6 +40,7 @@ export const WidgetDesignerPage: FC = () => {
 
   useEffect(() => {
     if (!widgetId || !apiClient || !selectedTenant) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true);
     apiClient.getChatWidget(selectedTenant.id, widgetId)
       .then(widget => {

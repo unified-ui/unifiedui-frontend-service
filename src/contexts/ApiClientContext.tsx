@@ -28,6 +28,7 @@ export const ApiClientProvider: FC<ApiClientProviderProps> = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useApiClient = (): ApiClientContextType => {
   const context = useContext(ApiClientContext);
   if (context === undefined) {

@@ -3,8 +3,8 @@
 export const TenantPermissionEnum = {
   READER: 'READER',
   GLOBAL_ADMIN: 'GLOBAL_ADMIN',
-  APPLICATIONS_ADMIN: 'APPLICATIONS_ADMIN',
-  APPLICATIONS_CREATOR: 'APPLICATIONS_CREATOR',
+  CHAT_AGENTS_ADMIN: 'CHAT_AGENTS_ADMIN',
+  CHAT_AGENTS_CREATOR: 'CHAT_AGENTS_CREATOR',
   AUTONOMOUS_AGENTS_ADMIN: 'AUTONOMOUS_AGENTS_ADMIN',
   AUTONOMOUS_AGENTS_CREATOR: 'AUTONOMOUS_AGENTS_CREATOR',
   CONVERSATIONS_ADMIN: 'CONVERSATIONS_ADMIN',
@@ -38,13 +38,13 @@ export const PrincipalTypeEnum = {
 
 export type PrincipalTypeEnum = typeof PrincipalTypeEnum[keyof typeof PrincipalTypeEnum];
 
-export const ApplicationTypeEnum = {
+export const ChatAgentTypeEnum = {
   N8N: 'N8N',
   MICROSOFT_FOUNDRY: 'MICROSOFT_FOUNDRY',
   REST_API: 'REST_API',
 } as const;
 
-export type ApplicationTypeEnum = typeof ApplicationTypeEnum[keyof typeof ApplicationTypeEnum];
+export type ChatAgentTypeEnum = typeof ChatAgentTypeEnum[keyof typeof ChatAgentTypeEnum];
 
 export const ChatWidgetTypeEnum = {
   IFRAME: 'IFRAME',
@@ -68,7 +68,7 @@ export interface N8NAutonomousAgentConfig {
 }
 
 export const FavoriteResourceTypeEnum = {
-  APPLICATION: 'applications',
+  CHAT_AGENT: 'chat-agents',
   AUTONOMOUS_AGENT: 'autonomous-agents',
   CHAT_WIDGET: 'chat-widgets',
   CONVERSATION: 'conversations',
@@ -96,7 +96,7 @@ export const ToolTypeEnum = {
 
 export type ToolTypeEnum = typeof ToolTypeEnum[keyof typeof ToolTypeEnum];
 
-// ========== N8N Application Config Types ==========
+// ========== N8N Chat Agent Config Types ==========
 
 export const N8NApiVersionEnum = {
   V1: 'v1',
@@ -110,7 +110,7 @@ export const N8NWorkflowTypeEnum = {
 
 export type N8NWorkflowTypeEnum = typeof N8NWorkflowTypeEnum[keyof typeof N8NWorkflowTypeEnum];
 
-export interface N8NApplicationConfig {
+export interface N8NChatAgentConfig {
   api_version: N8NApiVersionEnum;
   workflow_type: N8NWorkflowTypeEnum;
   use_unified_chat_history: boolean;
@@ -121,7 +121,7 @@ export interface N8NApplicationConfig {
   chat_auth_credential_id?: string;
 }
 
-// ========== Microsoft Foundry Application Config Types ==========
+// ========== Microsoft Foundry Chat Agent Config Types ==========
 
 export const FoundryAgentTypeEnum = {
   AGENT: 'AGENT',
@@ -136,7 +136,7 @@ export const FoundryApiVersionEnum = {
 
 export type FoundryApiVersionEnum = typeof FoundryApiVersionEnum[keyof typeof FoundryApiVersionEnum];
 
-export interface FoundryApplicationConfig {
+export interface FoundryChatAgentConfig {
   agent_type: FoundryAgentTypeEnum;
   api_version: FoundryApiVersionEnum;
   project_endpoint: string;
@@ -184,7 +184,7 @@ export interface MessageResponse {
   id: string;
   type: MessageType;
   conversationId: string;
-  applicationId: string;
+  chatAgentId: string;
   content: string;
   userId?: string;
   userMessageId?: string;
@@ -230,7 +230,7 @@ export interface InvokeConfig {
 
 export interface SendMessageRequest {
   conversationId?: string;
-  applicationId: string;
+  chatAgentId: string;
   message: MessageContent;
   invokeConfig?: InvokeConfig;
   extConversationId?: string; // External conversation ID for Foundry
@@ -354,7 +354,7 @@ export interface TraceNodeResponse {
 export interface FullTraceResponse {
   id: string;
   tenantId: string;
-  applicationId?: string;
+  chatAgentId?: string;
   conversationId?: string;
   autonomousAgentId?: string;
   contextType: TraceContextType | string;
@@ -519,7 +519,7 @@ export interface TagListResponse {
   total: number;
 }
 
-/** Response type for resource-specific tag endpoints (e.g., /applications/tags) */
+/** Response type for resource-specific tag endpoints (e.g., /chat-agents/tags) */
 export type ResourceTypeTagsResponse = TagSummary[];
 
 export interface ResourceTagsResponse {
@@ -553,7 +553,7 @@ export interface QuickListItemResponse {
 export interface ConversationQuickListItemResponse {
   id: string;
   name: string;
-  application_id: string;
+  chat_agent_id: string;
 }
 
 // ========== Principal Types ==========
@@ -702,14 +702,14 @@ export interface TenantPrincipalsResponse {
   principals: TenantPrincipalDetail[];
 }
 
-// ========== Application Types ==========
+// ========== Chat Agent Types ==========
 
-export interface ApplicationResponse {
+export interface ChatAgentResponse {
   id: string;
   tenant_id: string;
   name: string;
   description?: string;
-  type: ApplicationTypeEnum;
+  type: ChatAgentTypeEnum;
   config: Record<string, unknown>;
   is_active: boolean;
   embed_allowed_origins?: string;
@@ -721,25 +721,25 @@ export interface ApplicationResponse {
   my_permission?: string;
 }
 
-export interface CreateApplicationRequest {
+export interface CreateChatAgentRequest {
   name: string;
   description?: string;
-  type: ApplicationTypeEnum;
+  type: ChatAgentTypeEnum;
   config?: Record<string, unknown>;
   is_active?: boolean;
   embed_allowed_origins?: string;
 }
 
-export interface UpdateApplicationRequest {
+export interface UpdateChatAgentRequest {
   name?: string;
   description?: string;
-  type?: ApplicationTypeEnum;
+  type?: ChatAgentTypeEnum;
   config?: Record<string, unknown>;
   is_active?: boolean;
   embed_allowed_origins?: string;
 }
 
-export interface SetApplicationPermissionRequest {
+export interface SetChatAgentPermissionRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
   role: PermissionActionEnum;
@@ -749,7 +749,7 @@ export interface SetApplicationPermissionRequest {
 
 /**
  * Unified response for a principal with their roles on a resource.
- * Used by all resource types (application, autonomous_agent, chat_widget, 
+ * Used by all resource types (chat_agent, autonomous_agent, chat_widget, 
  * conversation, credential, custom_group).
  */
 export interface PrincipalWithRolesResponse {
@@ -774,7 +774,7 @@ export interface ResourcePrincipalsResponse {
 }
 
 // Legacy type aliases for backward compatibility
-export type ApplicationPrincipalsResponse = ResourcePrincipalsResponse;
+export type ChatAgentPrincipalsResponse = ResourcePrincipalsResponse;
 export type AutonomousAgentPrincipalsResponse = ResourcePrincipalsResponse;
 export type ChatWidgetPrincipalsResponse = ResourcePrincipalsResponse;
 export type ConversationPrincipalsResponse = ResourcePrincipalsResponse;
@@ -834,7 +834,7 @@ export interface AutonomousAgentKeyResponse {
 export interface ConversationResponse {
   id: string;
   tenant_id: string;
-  application_id: string;
+  chat_agent_id: string;
   name: string;
   description?: string;
   is_active: boolean;
@@ -847,7 +847,7 @@ export interface ConversationResponse {
 }
 
 export interface CreateConversationRequest {
-  application_id: string;
+  chat_agent_id: string;
   name: string;
   description?: string;
   is_active?: boolean;
@@ -1269,7 +1269,7 @@ export interface EntityStatsResponse {
 }
 
 export interface DashboardStatsResponse {
-  applications: EntityStatsResponse;
+  chat_agents: EntityStatsResponse;
   autonomous_agents: EntityStatsResponse;
   conversations: EntityStatsResponse;
 }

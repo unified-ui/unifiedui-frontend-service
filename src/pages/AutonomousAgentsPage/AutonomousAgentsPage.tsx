@@ -102,6 +102,9 @@ export const AutonomousAgentsPage: FC = () => {
     <EntityAvatar entityType="autonomous-agent" size="sm" />
   ), []);
 
+  // eslint-disable-next-line react-hooks/refs
+  const editInitialData = editItemId ? rawDataRef.current.get(editItemId) || null : null;
+
   return (
     <MainLayout>
       <PageHeader
@@ -154,7 +157,7 @@ export const AutonomousAgentsPage: FC = () => {
       <EditAutonomousAgentDialog
         opened={!!editItemId}
         autonomousAgentId={editItemId}
-        initialData={editItemId ? rawDataRef.current.get(editItemId) || null : null}
+        initialData={editInitialData}
         activeTab={editTab}
         onClose={handleEditClose}
         onSuccess={handleEditSuccess}

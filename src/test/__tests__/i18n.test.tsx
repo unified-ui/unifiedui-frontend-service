@@ -65,7 +65,7 @@ describe('i18n Configuration', () => {
   });
 
   it('has common error handling keys', () => {
-    expect(i18n.t('common:errorLoadingApplications')).toBe('Failed to load applications');
+    expect(i18n.t('common:errorLoadingChatAgents')).toBe('Failed to load chat agents');
     expect(i18n.t('common:errorLoadingAutonomousAgents')).toBe('Failed to load autonomous agents');
     expect(i18n.t('common:errorLoadingChatWidgets')).toBe('Failed to load chat widgets');
     expect(i18n.t('common:networkError')).toBe('Network error. Check your connection.');

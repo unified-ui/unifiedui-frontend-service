@@ -29,7 +29,7 @@ import { useTranslation } from 'react-i18next';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { Breadcrumbs } from '../../components/common';
 import { useIdentity } from '../../contexts';
-import type { ApplicationResponse } from '../../api/types';
+import type { ChatAgentResponse } from '../../api/types';
 import classes from './HowEmbedChatPage.module.css';
 
 interface ContextParam {
@@ -43,7 +43,7 @@ export const HowEmbedChatPage: FC = () => {
   const { t } = useTranslation('common');
   const { apiClient, selectedTenant } = useIdentity();
 
-  const [application, setApplication] = useState<ApplicationResponse | null>(null);
+  const [chatAgent, setChatAgent] = useState<ChatAgentResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,9 +62,9 @@ export const HowEmbedChatPage: FC = () => {
     if (!apiClient || !selectedTenant?.id || !id) return;
 
     setIsLoading(true);
-    apiClient.getApplication(selectedTenant.id, id)
+    apiClient.getChatAgent(selectedTenant.id, id)
       .then((app) => {
-        setApplication(app);
+        setChatAgent(app);
         setAllowedOrigins(
           app.embed_allowed_origins
             ? app.embed_allowed_origins.split(';').filter(Boolean)
@@ -127,7 +127,7 @@ export const HowEmbedChatPage: FC = () => {
     if (!apiClient || !selectedTenant?.id || !id) return;
     setIsSavingOrigins(true);
     try {
-      await apiClient.updateApplication(selectedTenant.id, id, {
+      await apiClient.updateChatAgent(selectedTenant.id, id, {
         embed_allowed_origins: allowedOrigins.join(';'),
       });
     } catch {
@@ -147,13 +147,13 @@ export const HowEmbedChatPage: FC = () => {
     );
   }
 
-  if (error || !application) {
+  if (error || !chatAgent) {
     return (
       <MainLayout>
         <Center style={{ height: '60vh' }}>
           <Stack align="center" gap="md">
             <Text c="red">{error || t('loadFailed')}</Text>
-            <Button variant="light" onClick={() => navigate('/applications')}>
+            <Button variant="light" onClick={() => navigate('/chat-agents')}>
               {t('back')}
             </Button>
           </Stack>
@@ -166,8 +166,8 @@ export const HowEmbedChatPage: FC = () => {
     <MainLayout>
       <Breadcrumbs
         items={[
-          { label: t('applications'), path: '/applications' },
-          { label: application.name },
+          { label: t('chatAgents'), path: '/chat-agents' },
+          { label: chatAgent.name },
           { label: t('howEmbedChat.title') },
         ]}
       />
@@ -176,7 +176,7 @@ export const HowEmbedChatPage: FC = () => {
         {t('howEmbedChat.title')}
       </Text>
       <Text size="sm" c="dimmed" mb="lg">
-        {t('howEmbedChat.description', { name: application.name })}
+        {t('howEmbedChat.description', { name: chatAgent.name })}
       </Text>
 
       <div className={classes.scrollWrapper}>

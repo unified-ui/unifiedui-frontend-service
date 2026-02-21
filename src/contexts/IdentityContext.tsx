@@ -150,6 +150,7 @@ export const IdentityProvider: FC<IdentityProviderProps> = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useIdentity = (): IdentityContextType => {
   const context = useContext(IdentityContext);
   if (context === undefined) {

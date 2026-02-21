@@ -17,6 +17,7 @@ export function useDelayedLoading(isLoading: boolean, delay = 500): boolean {
       const timer = setTimeout(() => setShowLoading(true), delay);
       return () => clearTimeout(timer);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowLoading(false);
     }
   }, [isLoading, delay]);

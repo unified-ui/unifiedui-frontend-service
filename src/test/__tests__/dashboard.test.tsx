@@ -5,16 +5,16 @@ import { DashboardPage } from '../../pages/DashboardPage';
 vi.mock('../../contexts', () => ({
   useIdentity: vi.fn(),
   useSidebarData: vi.fn().mockReturnValue({
-    applications: [],
+    chatAgents: [],
     autonomousAgents: [],
     chatWidgets: [],
-    loadingStates: { applications: false, 'autonomous-agents': false, 'chat-widgets': false },
-    errorStates: { applications: null, 'autonomous-agents': null, 'chat-widgets': null },
-    fetchApplications: vi.fn(),
+    loadingStates: { 'chat-agents': false, 'autonomous-agents': false, 'chat-widgets': false },
+    errorStates: { 'chat-agents': null, 'autonomous-agents': null, 'chat-widgets': null },
+    fetchChatAgents: vi.fn(),
     fetchAutonomousAgents: vi.fn(),
     fetchChatWidgets: vi.fn(),
     fetchEntityData: vi.fn(),
-    refreshApplications: vi.fn(),
+    refreshChatAgents: vi.fn(),
     refreshAutonomousAgents: vi.fn(),
     refreshChatWidgets: vi.fn(),
     refreshEntityData: vi.fn(),
@@ -132,7 +132,7 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Here\'s what\'s happening in "Tenant One"')).toBeInTheDocument();
   });
 
-  it('displays stat cards for applications, agents, and conversations', () => {
+  it('displays stat cards for chat agents, agents, and conversations', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
       tenants: mockTenants,
@@ -146,7 +146,7 @@ describe('DashboardPage', () => {
     });
 
     renderWithProviders(<DashboardPage />);
-    expect(screen.getByText('Applications')).toBeInTheDocument();
+    expect(screen.getByText('Chat Agents')).toBeInTheDocument();
     expect(screen.getByText('Autonomous Agents')).toBeInTheDocument();
     expect(screen.getByText('Conversations')).toBeInTheDocument();
   });

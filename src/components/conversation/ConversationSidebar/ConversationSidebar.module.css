@@ -319,8 +319,8 @@
   opacity: 0.7;
 }
 
-/* Application name subtext */
-.applicationName {
+/* Chat agent name subtext */
+.chatAgentName {
   color: var(--sidebar-text-disabled);
 }
 

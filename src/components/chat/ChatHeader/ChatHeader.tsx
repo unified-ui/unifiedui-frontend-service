@@ -26,19 +26,19 @@ import {
 } from '@tabler/icons-react';
 import { DelayedTooltip } from '../../common';
 import { ConfirmDeleteDialog } from '../../common';
-import type { ApplicationResponse, ConversationResponse, MessageResponse } from '../../../api/types';
+import type { ChatAgentResponse, ConversationResponse, MessageResponse } from '../../../api/types';
 import classes from './ChatHeader.module.css';
 
 export interface ChatHeaderProps {
   conversation?: ConversationResponse | null;
-  applications: ApplicationResponse[];
-  selectedApplicationId?: string;
+  chatAgents: ChatAgentResponse[];
+  selectedChatAgentId?: string;
   isNewChat: boolean;
   isFavorite?: boolean;
   tracingSidebarVisible?: boolean;
   hasTraces?: boolean;
   messages?: MessageResponse[];
-  onApplicationChange: (applicationId: string) => void;
+  onChatAgentChange: (chatAgentId: string) => void;
   onShare?: () => void;
   onToggleFavorite?: () => void;
   onDelete?: () => void;
@@ -48,21 +48,21 @@ export interface ChatHeaderProps {
 
 export const ChatHeader: FC<ChatHeaderProps> = ({
   conversation,
-  applications,
-  selectedApplicationId,
+  chatAgents,
+  selectedChatAgentId,
   isNewChat,
   isFavorite = false,
   tracingSidebarVisible = false,
   hasTraces = false,
   messages = [],
-  onApplicationChange,
+  onChatAgentChange,
   onShare,
   onToggleFavorite,
   onDelete,
   onToggleTracingSidebar,
   onEmbedSetup,
 }) => {
-  const selectedApp = applications.find(a => a.id === selectedApplicationId);
+  const selectedApp = chatAgents.find(a => a.id === selectedChatAgentId);
   const { t } = useTranslation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -121,7 +121,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
     }
   };
 
-  const applicationOptions = applications
+  const chatAgentOptions = chatAgents
     .filter(app => app.is_active)
     .map(app => ({
       value: app.id,
@@ -138,20 +138,20 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
           {isNewChat ? (
             <Select
               placeholder={t('conversations:selectAgent')}
-              data={applicationOptions}
-              value={selectedApplicationId}
-              onChange={(value) => value && onApplicationChange(value)}
+              data={chatAgentOptions}
+              value={selectedChatAgentId}
+              onChange={(value) => value && onChatAgentChange(value)}
               leftSection={<IconSparkles size={18} />}
               rightSection={<IconChevronDown size={16} />}
-              className={classes.applicationSelect}
+              className={classes.chatAgentSelect}
               searchable
               nothingFoundMessage={t('conversations:noAgentsFound')}
               comboboxProps={{ position: 'bottom-start', shadow: 'md' }}
             />
           ) : (
-            <Box className={classes.applicationInfo}>
+            <Box className={classes.chatAgentInfo}>
               <Group gap="xs" wrap="nowrap">
-                <IconSparkles size={20} className={classes.applicationIcon} />
+                <IconSparkles size={20} className={classes.chatAgentIcon} />
                 <Stack gap={0}>
                   <DelayedTooltip label={selectedApp?.name || t('conversations:unknownAgent')}>
                     <Text size="sm" fw={600} lineClamp={1}>
@@ -172,7 +172,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
         </Box>
 
         <Group gap="xs" className={classes.rightSection}>
-          {selectedApplicationId && (
+          {selectedChatAgentId && (
             <>
               <Tooltip label={tracingSidebarVisible ? t('tracing:hideTracing') : t('tracing:showTracing')}>
                 <ActionIcon

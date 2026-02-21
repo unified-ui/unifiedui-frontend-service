@@ -148,7 +148,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
       form.reset();
       onSuccess?.({ id: credential.id, name: credential.name });
       onClose();
-    } catch (error) {
+    } catch {
       // Error handling is done by the API client
     } finally {
       setIsSubmitting(false);

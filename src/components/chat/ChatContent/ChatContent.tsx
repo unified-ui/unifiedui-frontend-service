@@ -100,6 +100,7 @@ export const ChatContent: FC<ChatContentProps> = ({
       const element = messageRefsMap.current.get(highlightedExtMessageId);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setFlashingExtId(highlightedExtMessageId);
         const timer = setTimeout(() => setFlashingExtId(null), 600);
         return () => clearTimeout(timer);
@@ -113,6 +114,7 @@ export const ChatContent: FC<ChatContentProps> = ({
       const element = userMessageRefsMap.current.get(highlightedUserMessageId);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setFlashingUserMsgId(highlightedUserMessageId);
         const timer = setTimeout(() => setFlashingUserMsgId(null), 600);
         return () => clearTimeout(timer);
@@ -130,6 +132,7 @@ export const ChatContent: FC<ChatContentProps> = ({
   useEffect(() => {
     if (isStreaming) {
       userScrolledUpRef.current = false;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowScrollButton(false);
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }

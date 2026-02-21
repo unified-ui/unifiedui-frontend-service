@@ -32,15 +32,15 @@ describe('usePermissions', () => {
 
   describe('hasRole', () => {
     it('returns true when user has the role', () => {
-      setupRoles([TenantPermissionEnum.APPLICATIONS_CREATOR]);
+      setupRoles([TenantPermissionEnum.CHAT_AGENTS_CREATOR]);
       const { result } = renderHook(() => usePermissions());
-      expect(result.current.hasRole(TenantPermissionEnum.APPLICATIONS_CREATOR)).toBe(true);
+      expect(result.current.hasRole(TenantPermissionEnum.CHAT_AGENTS_CREATOR)).toBe(true);
     });
 
     it('returns false when user lacks the role', () => {
       setupRoles([TenantPermissionEnum.READER]);
       const { result } = renderHook(() => usePermissions());
-      expect(result.current.hasRole(TenantPermissionEnum.APPLICATIONS_CREATOR)).toBe(false);
+      expect(result.current.hasRole(TenantPermissionEnum.CHAT_AGENTS_CREATOR)).toBe(false);
     });
   });
 
@@ -49,7 +49,7 @@ describe('usePermissions', () => {
       setupRoles([TenantPermissionEnum.CREDENTIALS_CREATOR]);
       const { result } = renderHook(() => usePermissions());
       expect(result.current.hasAnyRole([
-        TenantPermissionEnum.APPLICATIONS_CREATOR,
+        TenantPermissionEnum.CHAT_AGENTS_CREATOR,
         TenantPermissionEnum.CREDENTIALS_CREATOR,
       ])).toBe(true);
     });
@@ -58,7 +58,7 @@ describe('usePermissions', () => {
       setupRoles([TenantPermissionEnum.READER]);
       const { result } = renderHook(() => usePermissions());
       expect(result.current.hasAnyRole([
-        TenantPermissionEnum.APPLICATIONS_CREATOR,
+        TenantPermissionEnum.CHAT_AGENTS_CREATOR,
         TenantPermissionEnum.CREDENTIALS_CREATOR,
       ])).toBe(false);
     });
@@ -80,7 +80,7 @@ describe('usePermissions', () => {
 
   describe('canCreate', () => {
     const resourceTypes: Array<{ type: ResourceType; creatorRole: TenantPermissionEnum; adminRole: TenantPermissionEnum }> = [
-      { type: 'applications', creatorRole: TenantPermissionEnum.APPLICATIONS_CREATOR, adminRole: TenantPermissionEnum.APPLICATIONS_ADMIN },
+      { type: 'chat-agents', creatorRole: TenantPermissionEnum.CHAT_AGENTS_CREATOR, adminRole: TenantPermissionEnum.CHAT_AGENTS_ADMIN },
       { type: 'autonomous-agents', creatorRole: TenantPermissionEnum.AUTONOMOUS_AGENTS_CREATOR, adminRole: TenantPermissionEnum.AUTONOMOUS_AGENTS_ADMIN },
       { type: 'chat-widgets', creatorRole: TenantPermissionEnum.CHAT_WIDGETS_CREATOR, adminRole: TenantPermissionEnum.CHAT_WIDGETS_ADMIN },
       { type: 're-act-agents', creatorRole: TenantPermissionEnum.REACT_AGENT_CREATOR, adminRole: TenantPermissionEnum.REACT_AGENT_ADMIN },
@@ -109,10 +109,10 @@ describe('usePermissions', () => {
       expect(result.current.canCreate(type)).toBe(true);
     });
 
-    it('returns false for READER on applications', () => {
+    it('returns false for READER on chat agents', () => {
       setupRoles([TenantPermissionEnum.READER]);
       const { result } = renderHook(() => usePermissions());
-      expect(result.current.canCreate('applications')).toBe(false);
+      expect(result.current.canCreate('chat-agents')).toBe(false);
     });
   });
 
@@ -120,19 +120,19 @@ describe('usePermissions', () => {
     it('returns true for GLOBAL_ADMIN', () => {
       setupRoles([TenantPermissionEnum.GLOBAL_ADMIN]);
       const { result } = renderHook(() => usePermissions());
-      expect(result.current.isResourceAdmin('applications')).toBe(true);
+      expect(result.current.isResourceAdmin('chat-agents')).toBe(true);
     });
 
     it('returns true with matching admin role', () => {
-      setupRoles([TenantPermissionEnum.APPLICATIONS_ADMIN]);
+      setupRoles([TenantPermissionEnum.CHAT_AGENTS_ADMIN]);
       const { result } = renderHook(() => usePermissions());
-      expect(result.current.isResourceAdmin('applications')).toBe(true);
+      expect(result.current.isResourceAdmin('chat-agents')).toBe(true);
     });
 
     it('returns false with only creator role', () => {
-      setupRoles([TenantPermissionEnum.APPLICATIONS_CREATOR]);
+      setupRoles([TenantPermissionEnum.CHAT_AGENTS_CREATOR]);
       const { result } = renderHook(() => usePermissions());
-      expect(result.current.isResourceAdmin('applications')).toBe(false);
+      expect(result.current.isResourceAdmin('chat-agents')).toBe(false);
     });
   });
 

@@ -106,6 +106,7 @@ export const ChatSidebarProvider: FC<ChatSidebarProviderProps> = ({ children }) 
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useChatSidebar = (): ChatSidebarContextType => {
   const context = useContext(ChatSidebarContext);
   if (!context) {

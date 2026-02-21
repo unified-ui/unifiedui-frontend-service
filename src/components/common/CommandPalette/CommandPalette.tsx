@@ -33,13 +33,13 @@ interface CommandPaletteProps {
 }
 
 const ENTITY_ICONS: Record<string, FC<{ size?: number }>> = {
-  application: IconSparkles,
+  chat_agent: IconSparkles,
   autonomous_agent: IconRobot,
   conversation: IconMessages,
 };
 
 const ENTITY_ROUTES: Record<string, string> = {
-  application: '/applications',
+  chat_agent: '/chat-agents',
   autonomous_agent: '/autonomous-agents',
   conversation: '/conversations',
 };
@@ -232,13 +232,13 @@ export const CommandPalette: FC<CommandPaletteProps> = ({ open, onOpenChange }) 
                 <Command.Group heading={t('commands')} className={classes.groupHeading}>
                   <Command.Item
                     className={classes.item}
-                    onSelect={() => handleNavigate('/applications/new')}
+                    onSelect={() => handleNavigate('/chat-agents/new')}
                   >
                     <div className={classes.itemIcon}>
                       <IconPlus size={16} />
                     </div>
                     <div className={classes.itemContent}>
-                      <div className={classes.itemName}>{t('createApplication')}</div>
+                      <div className={classes.itemName}>{t('createChatAgent')}</div>
                     </div>
                   </Command.Item>
                   <Command.Item
@@ -293,13 +293,13 @@ export const CommandPalette: FC<CommandPaletteProps> = ({ open, onOpenChange }) 
                   </Command.Item>
                   <Command.Item
                     className={classes.item}
-                    onSelect={() => handleNavigate('/applications')}
+                    onSelect={() => handleNavigate('/chat-agents')}
                   >
                     <div className={classes.itemIcon}>
                       <IconSparkles size={16} />
                     </div>
                     <div className={classes.itemContent}>
-                      <div className={classes.itemName}>{tCommon('applications')}</div>
+                      <div className={classes.itemName}>{tCommon('chatAgents')}</div>
                     </div>
                   </Command.Item>
                   <Command.Item

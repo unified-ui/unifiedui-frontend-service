@@ -13,7 +13,6 @@ import classes from './Header.module.css';
 
 export const Header: FC = () => {
   const { t } = useTranslation('header');
-  const { t: tCommon } = useTranslation('common');
   const navigate = useNavigate();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const { account, logout } = useAuth();

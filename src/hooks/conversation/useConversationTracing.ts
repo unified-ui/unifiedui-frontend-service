@@ -78,6 +78,7 @@ export function useConversationTracing({
     for (const node of nodes) {
       if (node.referenceId === referenceId) return true;
       if (node.nodes && node.nodes.length > 0) {
+        // eslint-disable-next-line react-hooks/immutability
         if (findNodeByReferenceId(node.nodes, referenceId)) return true;
       }
     }
@@ -117,6 +118,7 @@ export function useConversationTracing({
         return null;
       }
       if (nodes[i].nodes && nodes[i].nodes!.length > 0) {
+        // eslint-disable-next-line react-hooks/immutability
         const result = findSiblingAssistantRefId(nodes[i].nodes!, userRefId);
         if (result) return result;
       }
