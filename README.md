@@ -19,14 +19,14 @@
 
 ## Tech Stack
 
-| Category | Technology |
-|----------|------------|
-| **Framework** | React 19 |
-| **Language** | TypeScript 5.9 |
-| **Build Tool** | Vite 7 |
-| **UI Library** | Mantine 8 |
-| **Icons** | Tabler Icons |
-| **Routing** | React Router 7 |
+| Category           | Technology      |
+| ------------------ | --------------- |
+| **Framework**      | React 19        |
+| **Language**       | TypeScript 5.9  |
+| **Build Tool**     | Vite 7          |
+| **UI Library**     | Mantine 8       |
+| **Icons**          | Tabler Icons    |
+| **Routing**        | React Router 7  |
 | **Authentication** | MSAL (Azure AD) |
 
 ---
@@ -57,12 +57,16 @@ The app runs at `http://localhost:5173`
 
 ### Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server with HMR |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
-| `npm run lint` | Run ESLint |
+| Command            | Description                       |
+| ------------------ | --------------------------------- |
+| `npm run dev`      | Start development server with HMR |
+| `npm run build`    | Build for production              |
+| `npm run preview`  | Preview production build          |
+| `npm run lint`     | Run ESLint                        |
+| `npx vitest run`   | Run tests                         |
+| `npx tsc --noEmit` | Type check                        |
+
+> **See [TOOLING.md](TOOLING.md)** for detailed tooling documentation, pre-commit hooks, and code quality guidelines.
 
 ---
 
