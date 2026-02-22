@@ -298,6 +298,16 @@ export const TraceNodeType = {
   CONDITIONAL: 'conditional',
   LOOP: 'loop',
   CUSTOM: 'custom',
+  MEMORY: 'memory',
+  VECTOR_STORE: 'vector_store',
+  EMBEDDING: 'embedding',
+  OUTPUT_PARSER: 'output_parser',
+  DOCUMENT: 'document',
+  TEXT_SPLITTER: 'text_splitter',
+  APP: 'app',
+  DATA_TRANSFORM: 'data_transform',
+  QUEUE: 'queue',
+  DATABASE: 'database',
 } as const;
 
 export type TraceNodeType = typeof TraceNodeType[keyof typeof TraceNodeType];
@@ -749,7 +759,7 @@ export interface SetChatAgentPermissionRequest {
 
 /**
  * Unified response for a principal with their roles on a resource.
- * Used by all resource types (chat_agent, autonomous_agent, chat_widget, 
+ * Used by all resource types (chat_agent, autonomous_agent, chat_widget,
  * conversation, credential, custom_group).
  */
 export interface PrincipalWithRolesResponse {

@@ -1,6 +1,6 @@
 /**
  * TracingHierarchyView - Tree Sidebar für Navigation
- * 
+ *
  * Features:
  * - Baum-Struktur mit curved Verbindungslinien (VSCode-Style)
  * - Type Badge + Name + Status Icon
@@ -8,7 +8,7 @@
  * - Klick = Selektion → Canvas + DataSection update
  * - variant: 'full' | 'compact' - Für Dialog vs Sidebar
  * - showDataPanels: VS Code-style resizable Panels (Logs, Input, Output, Metadata)
- * 
+ *
  * Data Panels (VS Code Style):
  * - Jedes Panel ist individuell expand/collapse
  * - Jedes expandierte Panel hat eigenen Resize-Handle
@@ -74,6 +74,26 @@ const getTypeBadgeColor = (type: string): string => {
       return 'yellow';
     case 'loop':
       return 'lime';
+    case 'app':
+      return 'violet';
+    case 'database':
+      return 'green';
+    case 'data_transform':
+      return 'pink';
+    case 'queue':
+      return 'yellow';
+    case 'memory':
+      return 'red';
+    case 'vector_store':
+      return 'grape';
+    case 'embedding':
+      return 'cyan';
+    case 'output_parser':
+      return 'orange';
+    case 'document':
+      return 'lime';
+    case 'text_splitter':
+      return 'yellow';
     case 'conversation':
       return 'blue';
     case 'autonomous_agent':
@@ -188,17 +208,17 @@ const ResizablePanel: FC<ResizablePanelProps> = ({
     e.preventDefault();
     e.stopPropagation();
     isResizing.current = true;
-    
+
     const startY = e.clientY;
     const startHeight = height;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       if (!isResizing.current) return;
-      
+
       // Bewegung nach oben = Panel wird größer (deltaY negativ)
       const deltaY = startY - moveEvent.clientY;
       const newHeight = Math.max(PANEL_MIN_HEIGHT, startHeight + deltaY);
-      
+
       // Direkte Höhenänderung ohne requestAnimationFrame für responsive resize
       onHeightChange(newHeight);
     };
@@ -220,19 +240,19 @@ const ResizablePanel: FC<ResizablePanelProps> = ({
   const panelHeight = isExpanded ? height : PANEL_HEADER_HEIGHT;
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={`${classes.resizablePanel} ${isExpanded ? classes.panelExpanded : classes.panelCollapsed}`}
       style={{ height: panelHeight }}
     >
       {/* Resize Handle - nur wenn expanded */}
       {isExpanded && (
-        <div 
+        <div
           className={classes.panelResizeHandle}
           onMouseDown={handleResizeStart}
         />
       )}
-      
+
       {/* Panel Header */}
       <UnstyledButton
         className={classes.panelHeader}
@@ -250,12 +270,12 @@ const ResizablePanel: FC<ResizablePanelProps> = ({
           <Text size="xs" c="dimmed" className={classes.panelNoContent}>–</Text>
         )}
       </UnstyledButton>
-      
+
       {/* Panel Content mit eigener ScrollArea */}
       {isExpanded && (
-        <ScrollArea 
-          className={classes.panelScrollArea} 
-          type="auto" 
+        <ScrollArea
+          className={classes.panelScrollArea}
+          type="auto"
           offsetScrollbars
           style={{ height: height - PANEL_HEADER_HEIGHT }}
         >
@@ -281,23 +301,23 @@ interface DataPanelsContainerProps {
 const DataPanelsContainer: FC<DataPanelsContainerProps> = ({ maxHeight: _maxHeight = 600 }) => {
   const { selectedTrace, selectedNode } = useTracing();
   const { t } = useTranslation();
-  
+
   const [activeHeight, setActiveHeight] = useState(PANEL_DEFAULT_HEIGHT);
-  
+
   // Panel states - alle initial collapsed, teilen sich activeHeight
   const [expandedPanel, setExpandedPanel] = useState<PanelId | null>(null);
 
   const isRoot = selectedNode === null;
-  
+
   // Data extraction
   const logs = useMemo(() => {
     if (isRoot) return selectedTrace?.logs;
     return selectedNode?.logs;
   }, [isRoot, selectedTrace, selectedNode]);
-  
+
   const inputData = selectedNode?.data?.input;
   const outputData = selectedNode?.data?.output;
-  
+
   const metadata = useMemo(() => {
     if (isRoot) return selectedTrace?.referenceMetadata;
     return selectedNode?.metadata;
@@ -318,14 +338,14 @@ const DataPanelsContainer: FC<DataPanelsContainerProps> = ({ maxHeight: _maxHeig
     if (!data) {
       return <Text size="xs" c="dimmed" fs="italic">{t('tracing:noData', { title })}</Text>;
     }
-    
+
     const { text, arguments: args, extraData, metadata: dataMeta, ...rest } = data;
     const hasContent = text || args || dataMeta || extraData || Object.keys(rest).length > 0;
-    
+
     if (!hasContent) {
       return <Text size="xs" c="dimmed" fs="italic">{t('tracing:noData', { title })}</Text>;
     }
-    
+
     return (
       <div className={classes.dataContent}>
         {text && (
@@ -725,7 +745,7 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
   const isChatSidebar = theme === 'chatSidebar';
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={`${classes.container} ${isCompact ? classes.containerCompact : ''} ${isChatSidebar ? classes.containerChatSidebar : ''} ${showDataPanels ? classes.containerWithPanels : ''}`}
     >
@@ -747,10 +767,10 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
           )}
         </div>
       )}
-      
+
       {/* Tree Area - flexibles Wachstum */}
-      <ScrollArea 
-        className={classes.scrollArea} 
+      <ScrollArea
+        className={classes.scrollArea}
         type="auto"
         style={showDataPanels ? { flex: 1, minHeight: TREE_MIN_HEIGHT } : undefined}
       >
@@ -779,7 +799,7 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
           })}
         </div>
       </ScrollArea>
-      
+
       {/* Data Panels (VS Code Style - NEW) */}
       {showDataPanels && <DataPanelsContainer />}
     </div>
