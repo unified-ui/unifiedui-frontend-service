@@ -180,7 +180,7 @@ const getRoleBadgeColor = (role: TenantPermissionEnum, roleOptions?: RoleOption[
     const option = roleOptions.find((o) => o.value === role);
     if (option && 'color' in option && typeof option.color === 'string') return option.color;
   }
-  if (role === 'TENANT_GLOBAL_ADMIN' || role === 'ORGANISATION_GLOBAL_ADMIN') return 'red';
+  if (role === 'TENANT_GLOBAL_ADMIN' || (role as string) === 'ORGANISATION_GLOBAL_ADMIN') return 'red';
   if (role.endsWith('_ADMIN')) return 'orange';
   if (role.endsWith('_CREATOR')) return 'blue';
   return 'gray';

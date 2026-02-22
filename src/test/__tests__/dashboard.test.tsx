@@ -77,6 +77,7 @@ describe('DashboardPage', () => {
     mockUseIdentity.mockReturnValue({
       user: null,
       organization: null,
+      isSystemAdmin: false,
       tenants: [],
       selectedTenant: null,
       selectedTenantRoles: [],
@@ -103,6 +104,7 @@ describe('DashboardPage', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
       organization: null,
+      isSystemAdmin: false,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
@@ -121,6 +123,7 @@ describe('DashboardPage', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
       organization: null,
+      isSystemAdmin: false,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
@@ -139,6 +142,7 @@ describe('DashboardPage', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
       organization: null,
+      isSystemAdmin: false,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
@@ -159,6 +163,7 @@ describe('DashboardPage', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
       organization: null,
+      isSystemAdmin: false,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
@@ -177,6 +182,7 @@ describe('DashboardPage', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
       organization: null,
+      isSystemAdmin: false,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
@@ -195,6 +201,7 @@ describe('DashboardPage', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
       organization: null,
+      isSystemAdmin: false,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
@@ -214,6 +221,7 @@ describe('DashboardPage', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
       organization: null,
+      isSystemAdmin: false,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],

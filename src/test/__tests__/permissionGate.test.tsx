@@ -15,6 +15,7 @@ function setupRoles(roles: string[]) {
   mockUseIdentity.mockReturnValue({
     user: null,
     organization: null,
+    isSystemAdmin: false,
     tenants: [],
     selectedTenant: null,
     selectedTenantRoles: roles as TenantPermissionEnum[],
