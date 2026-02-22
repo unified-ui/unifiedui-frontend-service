@@ -72,32 +72,34 @@ The app runs at `http://localhost:5173`
 
 ## Configuration
 
-### Azure AD Setup
-
-1. Register an app in [Azure Portal](https://portal.azure.com) → **Azure Active Directory** → **App registrations**
-2. Set **Redirect URI** to `http://localhost:5173` (SPA)
-3. Copy the **Application (client) ID**
-4. Configure in `src/authConfig.ts`:
-
-```typescript
-export const msalConfig: Configuration = {
-  auth: {
-    clientId: "YOUR_CLIENT_ID",
-    authority: "https://login.microsoftonline.com/YOUR_TENANT_ID",
-    redirectUri: window.location.origin,
-  },
-};
-```
-
 ### Environment Variables
 
-Create a `.env` file for environment-specific configuration:
+Copy `.env.example` to `.env` and configure:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8000/api/v1
-VITE_AZURE_CLIENT_ID=your-client-id
-VITE_AZURE_TENANT_ID=your-tenant-id
+# API endpoints
+VITE_API_BASE_URL=http://localhost:8000
+VITE_AGENT_SERVICE_URL=http://localhost:8085
+
+# Azure AD / MSAL — from the App Registration (see platform service SETUP.md)
+VITE_MSAL_CLIENT_ID=your-app-registration-client-id
+VITE_MSAL_AUTHORITY=https://login.microsoftonline.com/your-tenant-id
+VITE_MSAL_API_SCOPE=api://your-client-id/access_as_user
 ```
+
+| Variable                 | Description                                               |
+| ------------------------ | --------------------------------------------------------- |
+| `VITE_API_BASE_URL`      | Platform service URL                                      |
+| `VITE_AGENT_SERVICE_URL` | Agent service URL                                         |
+| `VITE_MSAL_CLIENT_ID`    | Azure App Registration client ID                          |
+| `VITE_MSAL_AUTHORITY`    | Azure AD authority URL (with tenant ID for single-tenant) |
+| `VITE_MSAL_API_SCOPE`    | API scope from App Registration → "Expose an API"         |
+
+### Authentication (OBO Flow)
+
+The frontend uses MSAL to authenticate users via Microsoft Entra ID. Instead of requesting Graph API permissions directly, it requests an API-scoped token (`api://{client_id}/access_as_user`). The platform service then exchanges this token for a Graph token using the OAuth 2.0 On-Behalf-Of (OBO) flow.
+
+For full App Registration setup instructions, see the **platform service** [SETUP.md](../unified-ui-platform-service/SETUP.md).
 
 ---
 

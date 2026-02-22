@@ -37,12 +37,16 @@ describe('authConfig', () => {
     expect(msalConfig.auth.authority).toBe('https://login.microsoftonline.com/my-tenant');
   });
 
-  it('exports loginRequest with required scopes', async () => {
+  it('exports loginRequest with API scope', async () => {
     const { loginRequest } = await import('../../auth/authConfig');
-    expect(loginRequest.scopes).toContain('User.Read');
-    expect(loginRequest.scopes).toContain('User.ReadBasic.All');
-    expect(loginRequest.scopes).toContain('GroupMember.Read.All');
-    expect(loginRequest.scopes).toContain('Group.Read.All');
+    expect(loginRequest.scopes).toHaveLength(1);
+    expect(loginRequest.scopes[0]).toContain('access_as_user');
+  });
+
+  it('uses env variable for API scope when set', async () => {
+    vi.stubEnv('VITE_MSAL_API_SCOPE', 'api://custom-id/access_as_user');
+    const { loginRequest } = await import('../../auth/authConfig');
+    expect(loginRequest.scopes).toContain('api://custom-id/access_as_user');
   });
 
   it('sets storeAuthStateInCookie to false', async () => {

@@ -70,4 +70,6 @@ export interface BrandingConfig {
   app: AppBranding;
   /** Typography settings */
   typography: BrandingTypography;
+  /** Identity providers shown on the login page */
+  enabledIdps: string[];
 }

@@ -2,7 +2,9 @@ import { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
 import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import type { AccountInfo } from '@azure/msal-browser';
-import { loginRequest } from './authConfig';
+import { authConfig, loginRequest } from './authConfig';
+import { useGoogleAuth } from './GoogleAuthProvider';
+import { useCognitoAuth } from './CognitoAuthProvider';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -29,7 +31,7 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+const MsalAuthProviderInner = ({ children }: AuthProviderProps) => {
   const { instance, accounts, inProgress } = useMsal();
   const isAuthenticated = useIsAuthenticated();
   const isLoading = inProgress !== 'none';
@@ -115,4 +117,48 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+const GoogleAuthProviderInner = ({ children }: AuthProviderProps) => {
+  const googleAuth = useGoogleAuth();
+
+  const value: AuthContextType = {
+    isAuthenticated: googleAuth.isAuthenticated,
+    isLoading: googleAuth.isLoading,
+    account: googleAuth.account,
+    login: googleAuth.login,
+    logout: googleAuth.logout,
+    getAccessToken: googleAuth.getAccessToken,
+    getFoundryToken: googleAuth.getFoundryToken,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+const CognitoAuthProviderInner = ({ children }: AuthProviderProps) => {
+  const cognitoAuth = useCognitoAuth();
+
+  const value: AuthContextType = {
+    isAuthenticated: cognitoAuth.isAuthenticated,
+    isLoading: cognitoAuth.isLoading,
+    account: cognitoAuth.account,
+    login: cognitoAuth.login,
+    logout: cognitoAuth.logout,
+    getAccessToken: cognitoAuth.getAccessToken,
+    getFoundryToken: cognitoAuth.getFoundryToken,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  switch (authConfig.provider) {
+    case 'google':
+      return <GoogleAuthProviderInner>{children}</GoogleAuthProviderInner>;
+    case 'aws_cognito':
+      return <CognitoAuthProviderInner>{children}</CognitoAuthProviderInner>;
+    case 'microsoft':
+    default:
+      return <MsalAuthProviderInner>{children}</MsalAuthProviderInner>;
+  }
 };

@@ -38,6 +38,8 @@ const DEFAULT_BRANDING: BrandingConfig = {
     headingFontFamily: null,
     baseFontSize: 16,
   },
+
+  enabledIdps: ['microsoft', 'google', 'aws_cognito', 'ldap', 'kerberos', 'saml', 'okta', 'oidc'],
 };
 
 // ─── Customer Brandings (Overrides) ──────────────────────────

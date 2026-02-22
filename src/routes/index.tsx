@@ -26,8 +26,9 @@ export const AppRoutes = () => {
         <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login/token" element={<LoginTokenPage />} />
+        <Route path="/auth/callback/cognito" element={<LoginPage />} />
         <Route path="/embed/chat/:agentId" element={<EmbedChatPage />} />
-        
+
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/tenant-settings" element={<ProtectedRoute><TenantSettingsPage /></ProtectedRoute>} />
         <Route path="/chat-agents" element={<ProtectedRoute><ChatAgentsPage /></ProtectedRoute>} />
@@ -40,9 +41,9 @@ export const AppRoutes = () => {
         <Route path="/widget-designer/:widgetId" element={<ProtectedRoute><WidgetDesignerPage /></ProtectedRoute>} />
         <Route path="/re-act-agents" element={<ProtectedRoute><ReActAgentsPage /></ProtectedRoute>} />
         <Route path="/re-act-agents/:agentId" element={<ProtectedRoute><ReActAgentDeveloperPage /></ProtectedRoute>} />
-        
+
         <Route path="/dev/tracing" element={<ProtectedRoute><TracingDialogDevelopmentPage /></ProtectedRoute>} />
-        
+
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
