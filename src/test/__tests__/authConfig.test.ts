@@ -37,7 +37,14 @@ describe('authConfig', () => {
     expect(msalConfig.auth.authority).toBe('https://login.microsoftonline.com/my-tenant');
   });
 
-  it('exports loginRequest with API scope', async () => {
+  it('exports loginRequest with empty scopes when no API scope configured', async () => {
+    vi.stubEnv('VITE_MSAL_API_SCOPE', '');
+    const { loginRequest } = await import('../../auth/authConfig');
+    expect(loginRequest.scopes).toHaveLength(0);
+  });
+
+  it('exports loginRequest with API scope when configured', async () => {
+    vi.stubEnv('VITE_MSAL_API_SCOPE', 'api://test-id/access_as_user');
     const { loginRequest } = await import('../../auth/authConfig');
     expect(loginRequest.scopes).toHaveLength(1);
     expect(loginRequest.scopes[0]).toContain('access_as_user');
