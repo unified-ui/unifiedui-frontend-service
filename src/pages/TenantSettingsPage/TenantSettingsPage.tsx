@@ -64,7 +64,7 @@ import type {
   ToolResponse,
   AIModelResponse,
 } from '../../api/types';
-import { TenantPermissionEnum, ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum, OrganizationRoleEnum } from '../../api/types';
+import { TenantPermissionEnum, ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum } from '../../api/types';
 import { useDelayedLoading, usePermissions } from '../../hooks';
 import classes from './TenantSettingsPage.module.css';
 
@@ -95,13 +95,9 @@ interface TenantSettingsFormValues {
 }
 
 export const TenantSettingsPage: FC = () => {
-  const { apiClient, selectedTenant, organization, refreshIdentity } = useIdentity();
-  const { isGlobalAdmin, canCreate, hasRole } = usePermissions();
+  const { apiClient, selectedTenant, refreshIdentity } = useIdentity();
+  const { isGlobalAdmin, canCreate, hasRole, hasOrgBypass } = usePermissions();
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const isOrgAdmin = organization?.roles?.some(
-    (r) => r === OrganizationRoleEnum.ORGANISATION_GLOBAL_ADMIN || r === OrganizationRoleEnum.ORGANISATION_ADMIN
-  ) ?? false;
 
   // Read initial tab from URL, default to 'settings'
   const tabFromUrl = searchParams.get('tab');
@@ -1036,7 +1032,7 @@ export const TenantSettingsPage: FC = () => {
             <Tabs.Tab value="organization" leftSection={<IconBuilding size={18} />}>
               Organization
             </Tabs.Tab>
-            {isOrgAdmin && (
+            {hasOrgBypass && (
             <Tabs.Tab value="org-iam" leftSection={<IconShieldLock size={18} />}>
               Organisation Access (IAM)
             </Tabs.Tab>
@@ -1068,12 +1064,12 @@ export const TenantSettingsPage: FC = () => {
 
             {/* Organization Settings Tab */}
             <Tabs.Panel value="organization">
-              <OrganizationSettingsPanel isOrgAdmin={isOrgAdmin} />
+              <OrganizationSettingsPanel isOrgAdmin={hasOrgBypass} />
             </Tabs.Panel>
 
             {/* Organisation Access (IAM) Tab */}
             <Tabs.Panel value="org-iam">
-              <OrganizationAccessPanel isOrgAdmin={isOrgAdmin} />
+              <OrganizationAccessPanel isOrgAdmin={hasOrgBypass} />
             </Tabs.Panel>
 
             {/* Tenant Settings Tab */}

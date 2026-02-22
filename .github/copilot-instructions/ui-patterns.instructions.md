@@ -332,28 +332,49 @@ resetBaseline(config);
 
 ### Overview
 
-The frontend enforces RBAC at two levels:
+The frontend enforces RBAC at three levels:
 
-1. **Tenant-level roles** — checked via `usePermissions()` hook (e.g., `isGlobalAdmin`, `canCreate('chat-agents')`)
-2. **Resource-level permissions** — checked via `my_permission` field on API response objects (`'ADMIN'` | `'WRITE'` | `'READ'` | `undefined`)
+1. **Organization-level roles** — checked via `usePermissions()` hook (e.g., `isOrgGlobalAdmin`, `hasOrgBypass`, `hasOrgRole(...)`)
+2. **Tenant-level roles** — checked via `usePermissions()` hook (e.g., `isGlobalAdmin`, `canCreate('chat-agents')`)
+3. **Resource-level permissions** — checked via `my_permission` field on API response objects (`'ADMIN'` | `'WRITE'` | `'READ'` | `undefined`)
 
 When `my_permission` is `undefined`/`null`, all actions remain visible (backward compatibility).
+
+### Organization Role Bypass
+
+Users with `ORGANISATION_GLOBAL_ADMIN` or `ORGANISATION_TENANT_ADMIN` bypass **all** tenant-level permission checks. This mirrors the backend behavior.
+
+| Org Role                      | Tenant Bypass | Org Management | Tenant Creation |
+| ----------------------------- | ------------- | -------------- | --------------- |
+| `ORGANISATION_GLOBAL_ADMIN`   | Yes           | Yes            | Yes             |
+| `ORGANISATION_TENANT_ADMIN`   | Yes           | No             | No              |
+| `ORGANISATION_TENANT_CREATOR` | No            | No             | Yes             |
+
+- `hasOrgBypass` — `true` when org role grants full tenant bypass (GLOBAL_ADMIN or TENANT_ADMIN)
+- `isOrgGlobalAdmin` — `true` only for `ORGANISATION_GLOBAL_ADMIN` (use for org management UI: org settings, org member CRUD)
+- `isOrgTenantAdmin` — `true` only for `ORGANISATION_TENANT_ADMIN`
+- `isGlobalAdmin` automatically includes org bypass users — all downstream checks (`canCreate`, `canWrite`, `canAdmin`, etc.) work automatically
 
 ### `usePermissions()` Hook
 
 ```tsx
 import { usePermissions } from "../../hooks";
 
-const { isGlobalAdmin, canCreate, hasRole } = usePermissions();
+const { isGlobalAdmin, canCreate, hasRole, hasOrgBypass, isOrgGlobalAdmin } =
+  usePermissions();
 ```
 
-| Method                    | Purpose                                                   |
-| ------------------------- | --------------------------------------------------------- |
-| `isGlobalAdmin`           | `true` if user has `GLOBAL_ADMIN` role                    |
-| `canCreate(resourceType)` | `true` if user can create entities of that type           |
-| `canAdmin(resourceType)`  | `true` if user has admin for that resource type           |
-| `hasRole(role)`           | `true` if user has a specific `TenantPermissionEnum` role |
-| `hasAnyRole(roles)`       | `true` if user has at least one of the given roles        |
+| Method / Property         | Purpose                                                                       |
+| ------------------------- | ----------------------------------------------------------------------------- |
+| `isGlobalAdmin`           | `true` if user has `TENANT_GLOBAL_ADMIN` **or** org bypass role               |
+| `hasOrgBypass`            | `true` if org role grants tenant bypass (GLOBAL_ADMIN or TENANT_ADMIN)        |
+| `isOrgGlobalAdmin`        | `true` only for `ORGANISATION_GLOBAL_ADMIN` (org settings, member management) |
+| `isOrgTenantAdmin`        | `true` only for `ORGANISATION_TENANT_ADMIN`                                   |
+| `hasOrgRole(role)`        | `true` if user has a specific `OrganizationRoleEnum` role                     |
+| `canCreate(resourceType)` | `true` if user can create entities of that type                               |
+| `canAdmin(resourceType)`  | `true` if user has admin for that resource type                               |
+| `hasRole(role)`           | `true` if user has a specific `TenantPermissionEnum` role                     |
+| `hasAnyRole(roles)`       | `true` if user has at least one of the given roles                            |
 
 ### List Pages — Gating Create Buttons
 
@@ -428,6 +449,8 @@ When `onAdd` is `undefined`, the add button is hidden entirely.
 - IAM tab, settings form fields, save button, danger zone: gated by `isGlobalAdmin`
 - Create buttons: gated by `canCreate(resourceType)` per entity
 - AI Models create: `isGlobalAdmin || hasRole(TenantPermissionEnum.TENANT_AI_MODELS_ADMIN)`
+- Organization tabs (settings, access): visible only when `hasOrgBypass` is `true`
+- Organization management (edit org settings, manage org members): gated by `isOrgGlobalAdmin`
 
 ### ConversationsPage — Resource Permission Gating
 
@@ -449,4 +472,7 @@ const canAdminConv = !convPerm || convPerm === "ADMIN";
 3. **Pass `undefined` to hide** — set callback props to `undefined` to hide associated UI elements
 4. **Tenant roles for create** — use `canCreate(resourceType)` from `usePermissions()`
 5. **Resource permissions for CRUD** — use `my_permission` from API response objects
-6. **When adding new tenant roles** — update `usePermissions.ts` (CREATOR_ROLES, ADMIN_ROLES maps), `api/types.ts` (`TenantPermissionEnum`), and document in these instruction files
+6. **Org bypass is automatic** — `isGlobalAdmin` includes org bypass users; all downstream checks (`canCreate`, `canWrite`, `canAdmin`, etc.) automatically respect org bypass
+7. **Org-specific UI** — use `isOrgGlobalAdmin` for org management features (org settings, org member CRUD), use `hasOrgBypass` for org tab visibility
+8. **Never check org roles manually** — always use `usePermissions()` helpers instead of reading `organization.roles` directly
+9. **When adding new tenant roles** — update `usePermissions.ts` (CREATOR_ROLES, ADMIN_ROLES maps), `api/types.ts` (`TenantPermissionEnum`), and document in these instruction files

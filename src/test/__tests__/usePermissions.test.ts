@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { usePermissions } from '../../hooks/usePermissions';
 import type { ResourceType } from '../../hooks/usePermissions';
-import { TenantPermissionEnum, PermissionActionEnum } from '../../api/types';
+import { TenantPermissionEnum, PermissionActionEnum, OrganizationRoleEnum } from '../../api/types';
 
 vi.mock('../../contexts', () => ({
   useIdentity: vi.fn(),
@@ -11,10 +11,10 @@ import { useIdentity } from '../../contexts';
 
 const mockUseIdentity = vi.mocked(useIdentity);
 
-function setupRoles(roles: string[]) {
+function setupRoles(roles: string[], orgRoles: string[] = []) {
   mockUseIdentity.mockReturnValue({
     user: null,
-    organization: null,
+    organization: orgRoles.length > 0 ? { id: 'org-1', name: 'Test Org', roles: orgRoles } : null,
     tenants: [],
     selectedTenant: null,
     selectedTenantRoles: roles as TenantPermissionEnum[],
@@ -66,8 +66,8 @@ describe('usePermissions', () => {
   });
 
   describe('isGlobalAdmin', () => {
-    it('returns true for GLOBAL_ADMIN', () => {
-      setupRoles([TenantPermissionEnum.GLOBAL_ADMIN]);
+    it('returns true for TENANT_GLOBAL_ADMIN', () => {
+      setupRoles([TenantPermissionEnum.TENANT_GLOBAL_ADMIN]);
       const { result } = renderHook(() => usePermissions());
       expect(result.current.isGlobalAdmin).toBe(true);
     });
@@ -90,8 +90,8 @@ describe('usePermissions', () => {
       { type: 'custom-groups', creatorRole: TenantPermissionEnum.CUSTOM_GROUP_CREATOR, adminRole: TenantPermissionEnum.CUSTOM_GROUPS_ADMIN },
     ];
 
-    it('returns true for GLOBAL_ADMIN on any resource type', () => {
-      setupRoles([TenantPermissionEnum.GLOBAL_ADMIN]);
+    it('returns true for TENANT_GLOBAL_ADMIN on any resource type', () => {
+      setupRoles([TenantPermissionEnum.TENANT_GLOBAL_ADMIN]);
       const { result } = renderHook(() => usePermissions());
       resourceTypes.forEach(({ type }) => {
         expect(result.current.canCreate(type)).toBe(true);
@@ -118,8 +118,8 @@ describe('usePermissions', () => {
   });
 
   describe('isResourceAdmin', () => {
-    it('returns true for GLOBAL_ADMIN', () => {
-      setupRoles([TenantPermissionEnum.GLOBAL_ADMIN]);
+    it('returns true for TENANT_GLOBAL_ADMIN', () => {
+      setupRoles([TenantPermissionEnum.TENANT_GLOBAL_ADMIN]);
       const { result } = renderHook(() => usePermissions());
       expect(result.current.isResourceAdmin('chat-agents')).toBe(true);
     });
@@ -138,8 +138,8 @@ describe('usePermissions', () => {
   });
 
   describe('canRead', () => {
-    it('returns true for GLOBAL_ADMIN even with null permission', () => {
-      setupRoles([TenantPermissionEnum.GLOBAL_ADMIN]);
+    it('returns true for TENANT_GLOBAL_ADMIN even with null permission', () => {
+      setupRoles([TenantPermissionEnum.TENANT_GLOBAL_ADMIN]);
       const { result } = renderHook(() => usePermissions());
       expect(result.current.canRead(null)).toBe(true);
     });
@@ -176,8 +176,8 @@ describe('usePermissions', () => {
   });
 
   describe('canWrite', () => {
-    it('returns true for GLOBAL_ADMIN even with null permission', () => {
-      setupRoles([TenantPermissionEnum.GLOBAL_ADMIN]);
+    it('returns true for TENANT_GLOBAL_ADMIN even with null permission', () => {
+      setupRoles([TenantPermissionEnum.TENANT_GLOBAL_ADMIN]);
       const { result } = renderHook(() => usePermissions());
       expect(result.current.canWrite(null)).toBe(true);
     });
@@ -208,8 +208,8 @@ describe('usePermissions', () => {
   });
 
   describe('canAdmin', () => {
-    it('returns true for GLOBAL_ADMIN even with null permission', () => {
-      setupRoles([TenantPermissionEnum.GLOBAL_ADMIN]);
+    it('returns true for TENANT_GLOBAL_ADMIN even with null permission', () => {
+      setupRoles([TenantPermissionEnum.TENANT_GLOBAL_ADMIN]);
       const { result } = renderHook(() => usePermissions());
       expect(result.current.canAdmin(null)).toBe(true);
     });
@@ -241,6 +241,103 @@ describe('usePermissions', () => {
       expect(result.current.canDelete(PermissionActionEnum.WRITE)).toBe(false);
       expect(result.current.canDelete(PermissionActionEnum.READ)).toBe(false);
       expect(result.current.canDelete(null)).toBe(false);
+    });
+  });
+
+  describe('organization role bypass', () => {
+    it('ORGANISATION_GLOBAL_ADMIN bypasses all tenant permissions (isGlobalAdmin=true)', () => {
+      setupRoles([TenantPermissionEnum.READER], [OrganizationRoleEnum.ORGANISATION_GLOBAL_ADMIN]);
+      const { result } = renderHook(() => usePermissions());
+      expect(result.current.isGlobalAdmin).toBe(true);
+      expect(result.current.hasOrgBypass).toBe(true);
+      expect(result.current.isOrgGlobalAdmin).toBe(true);
+      expect(result.current.isOrgTenantAdmin).toBe(false);
+      expect(result.current.canCreate('chat-agents')).toBe(true);
+      expect(result.current.canCreate('credentials')).toBe(true);
+      expect(result.current.isResourceAdmin('chat-agents')).toBe(true);
+      expect(result.current.canRead(null)).toBe(true);
+      expect(result.current.canWrite(null)).toBe(true);
+      expect(result.current.canAdmin(null)).toBe(true);
+      expect(result.current.canDelete(null)).toBe(true);
+    });
+
+    it('ORGANISATION_TENANT_ADMIN bypasses all tenant permissions (isGlobalAdmin=true)', () => {
+      setupRoles([TenantPermissionEnum.READER], [OrganizationRoleEnum.ORGANISATION_TENANT_ADMIN]);
+      const { result } = renderHook(() => usePermissions());
+      expect(result.current.isGlobalAdmin).toBe(true);
+      expect(result.current.hasOrgBypass).toBe(true);
+      expect(result.current.isOrgGlobalAdmin).toBe(false);
+      expect(result.current.isOrgTenantAdmin).toBe(true);
+      expect(result.current.canCreate('chat-agents')).toBe(true);
+      expect(result.current.isResourceAdmin('autonomous-agents')).toBe(true);
+      expect(result.current.canWrite(PermissionActionEnum.READ)).toBe(true);
+      expect(result.current.canAdmin(null)).toBe(true);
+    });
+
+    it('ORGANISATION_TENANT_CREATOR does NOT bypass tenant permissions', () => {
+      setupRoles([TenantPermissionEnum.READER], [OrganizationRoleEnum.ORGANISATION_TENANT_CREATOR]);
+      const { result } = renderHook(() => usePermissions());
+      expect(result.current.isGlobalAdmin).toBe(false);
+      expect(result.current.hasOrgBypass).toBe(false);
+      expect(result.current.isOrgGlobalAdmin).toBe(false);
+      expect(result.current.isOrgTenantAdmin).toBe(false);
+      expect(result.current.canCreate('chat-agents')).toBe(false);
+      expect(result.current.canAdmin(null)).toBe(false);
+    });
+
+    it('org bypass works even without any tenant roles', () => {
+      setupRoles([], [OrganizationRoleEnum.ORGANISATION_GLOBAL_ADMIN]);
+      const { result } = renderHook(() => usePermissions());
+      expect(result.current.isGlobalAdmin).toBe(true);
+      expect(result.current.canCreate('chat-agents')).toBe(true);
+      expect(result.current.canWrite(null)).toBe(true);
+    });
+
+    it('org bypass combined with TENANT_GLOBAL_ADMIN is still global admin', () => {
+      setupRoles([TenantPermissionEnum.TENANT_GLOBAL_ADMIN], [OrganizationRoleEnum.ORGANISATION_TENANT_ADMIN]);
+      const { result } = renderHook(() => usePermissions());
+      expect(result.current.isGlobalAdmin).toBe(true);
+      expect(result.current.hasOrgBypass).toBe(true);
+    });
+  });
+
+  describe('hasOrgRole', () => {
+    it('returns true when user has the org role', () => {
+      setupRoles([], [OrganizationRoleEnum.ORGANISATION_GLOBAL_ADMIN]);
+      const { result } = renderHook(() => usePermissions());
+      expect(result.current.hasOrgRole(OrganizationRoleEnum.ORGANISATION_GLOBAL_ADMIN)).toBe(true);
+    });
+
+    it('returns false when user lacks the org role', () => {
+      setupRoles([], [OrganizationRoleEnum.ORGANISATION_TENANT_CREATOR]);
+      const { result } = renderHook(() => usePermissions());
+      expect(result.current.hasOrgRole(OrganizationRoleEnum.ORGANISATION_GLOBAL_ADMIN)).toBe(false);
+    });
+
+    it('returns false when organization is null', () => {
+      setupRoles([]);
+      const { result } = renderHook(() => usePermissions());
+      expect(result.current.hasOrgRole(OrganizationRoleEnum.ORGANISATION_GLOBAL_ADMIN)).toBe(false);
+    });
+  });
+
+  describe('isOrgGlobalAdmin', () => {
+    it('returns true only for ORGANISATION_GLOBAL_ADMIN', () => {
+      setupRoles([], [OrganizationRoleEnum.ORGANISATION_GLOBAL_ADMIN]);
+      const { result } = renderHook(() => usePermissions());
+      expect(result.current.isOrgGlobalAdmin).toBe(true);
+    });
+
+    it('returns false for ORGANISATION_TENANT_ADMIN', () => {
+      setupRoles([], [OrganizationRoleEnum.ORGANISATION_TENANT_ADMIN]);
+      const { result } = renderHook(() => usePermissions());
+      expect(result.current.isOrgGlobalAdmin).toBe(false);
+    });
+
+    it('returns false when organization is null', () => {
+      setupRoles([]);
+      const { result } = renderHook(() => usePermissions());
+      expect(result.current.isOrgGlobalAdmin).toBe(false);
     });
   });
 });

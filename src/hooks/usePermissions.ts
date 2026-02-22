@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useIdentity } from '../contexts';
-import { TenantPermissionEnum, PermissionActionEnum } from '../api/types';
+import { TenantPermissionEnum, PermissionActionEnum, OrganizationRoleEnum } from '../api/types';
 
 export type ResourceType =
   | 'chat-agents'
@@ -37,10 +37,19 @@ const ADMIN_ROLES: Record<ResourceType, TenantPermissionEnum> = {
   'tenant-ai-models': TenantPermissionEnum.TENANT_AI_MODELS_ADMIN,
 };
 
+const ORG_BYPASS_ROLES: ReadonlySet<string> = new Set([
+  OrganizationRoleEnum.ORGANISATION_GLOBAL_ADMIN,
+  OrganizationRoleEnum.ORGANISATION_TENANT_ADMIN,
+]);
+
 export interface UsePermissionsReturn {
   hasRole: (role: TenantPermissionEnum) => boolean;
   hasAnyRole: (roles: TenantPermissionEnum[]) => boolean;
+  hasOrgRole: (role: OrganizationRoleEnum) => boolean;
   isGlobalAdmin: boolean;
+  isOrgGlobalAdmin: boolean;
+  isOrgTenantAdmin: boolean;
+  hasOrgBypass: boolean;
   canCreate: (resourceType: ResourceType) => boolean;
   isResourceAdmin: (resourceType: ResourceType) => boolean;
   canRead: (permission: PermissionActionEnum | null | undefined) => boolean;
@@ -50,10 +59,12 @@ export interface UsePermissionsReturn {
 }
 
 export function usePermissions(): UsePermissionsReturn {
-  const { selectedTenantRoles } = useIdentity();
+  const { selectedTenantRoles, organization } = useIdentity();
 
   return useMemo(() => {
     const rolesSet = new Set<string>(selectedTenantRoles);
+    const orgRoles = organization?.roles ?? [];
+    const orgRolesSet = new Set<string>(orgRoles);
 
     const hasRole = (role: TenantPermissionEnum): boolean => {
       return rolesSet.has(role);
@@ -63,7 +74,15 @@ export function usePermissions(): UsePermissionsReturn {
       return roles.some(role => rolesSet.has(role));
     };
 
-    const isGlobalAdmin = rolesSet.has(TenantPermissionEnum.GLOBAL_ADMIN);
+    const hasOrgRole = (role: OrganizationRoleEnum): boolean => {
+      return orgRolesSet.has(role);
+    };
+
+    const isOrgGlobalAdmin = orgRolesSet.has(OrganizationRoleEnum.ORGANISATION_GLOBAL_ADMIN);
+    const isOrgTenantAdmin = orgRolesSet.has(OrganizationRoleEnum.ORGANISATION_TENANT_ADMIN);
+    const hasOrgBypass = orgRoles.some(role => ORG_BYPASS_ROLES.has(role));
+
+    const isGlobalAdmin = rolesSet.has(TenantPermissionEnum.TENANT_GLOBAL_ADMIN) || hasOrgBypass;
 
     const canCreate = (resourceType: ResourceType): boolean => {
       if (isGlobalAdmin) return true;
@@ -97,7 +116,11 @@ export function usePermissions(): UsePermissionsReturn {
     return {
       hasRole,
       hasAnyRole,
+      hasOrgRole,
       isGlobalAdmin,
+      isOrgGlobalAdmin,
+      isOrgTenantAdmin,
+      hasOrgBypass,
       canCreate,
       isResourceAdmin,
       canRead,
@@ -105,5 +128,5 @@ export function usePermissions(): UsePermissionsReturn {
       canAdmin,
       canDelete,
     };
-  }, [selectedTenantRoles]);
+  }, [selectedTenantRoles, organization]);
 }

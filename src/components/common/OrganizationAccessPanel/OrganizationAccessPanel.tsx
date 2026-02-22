@@ -35,14 +35,12 @@ import { ConfirmDeleteDialog } from '../ConfirmDeleteDialog';
 
 const ORG_ROLE_COLORS: Record<string, string> = {
   ORGANISATION_GLOBAL_ADMIN: 'red',
-  ORGANISATION_ADMIN: 'orange',
   ORGANISATION_TENANT_ADMIN: 'teal',
   ORGANISATION_TENANT_CREATOR: 'blue',
 };
 
 const ORG_ROLE_LABELS: Record<string, string> = {
   ORGANISATION_GLOBAL_ADMIN: 'Global Admin',
-  ORGANISATION_ADMIN: 'Admin',
   ORGANISATION_TENANT_ADMIN: 'Tenant Admin',
   ORGANISATION_TENANT_CREATOR: 'Tenant Creator',
 };
@@ -52,7 +50,6 @@ const orgRoleLabel = (role: string): string =>
 
 const ORG_ROLE_OPTIONS: RoleOption[] = [
   { value: OrganizationRoleEnum.ORGANISATION_GLOBAL_ADMIN, label: 'Global Admin', description: 'Full organization access including billing and member management' },
-  { value: OrganizationRoleEnum.ORGANISATION_ADMIN, label: 'Admin', description: 'Manage organization settings and members' },
   { value: OrganizationRoleEnum.ORGANISATION_TENANT_ADMIN, label: 'Tenant Admin', description: 'Manage all tenants in this organization' },
   { value: OrganizationRoleEnum.ORGANISATION_TENANT_CREATOR, label: 'Tenant Creator', description: 'Create new tenants in this organization' },
 ];

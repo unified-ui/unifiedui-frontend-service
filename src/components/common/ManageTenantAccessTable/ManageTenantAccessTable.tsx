@@ -30,7 +30,7 @@ import classes from './ManageTenantAccessTable.module.css';
 export const TENANT_ROLE_OPTIONS: { value: TenantPermissionEnum; label: string; description: string; category: string }[] = [
   // Global
   { value: 'READER', label: 'Reader', description: 'Can access the tenant', category: 'General' },
-  { value: 'GLOBAL_ADMIN', label: 'Global Admin', description: 'Full access to everything', category: 'General' },
+  { value: 'TENANT_GLOBAL_ADMIN', label: 'Global Admin', description: 'Full access to everything', category: 'General' },
   // Custom Groups
   { value: 'CUSTOM_GROUPS_ADMIN', label: 'Custom Groups Admin', description: 'Manage all custom groups', category: 'Custom Groups' },
   { value: 'CUSTOM_GROUP_CREATOR', label: 'Custom Group Creator', description: 'Create new custom groups', category: 'Custom Groups' },
@@ -53,7 +53,7 @@ export const TENANT_ROLE_OPTIONS: { value: TenantPermissionEnum; label: string; 
 
 // Role priority for sorting (higher = more privileged)
 const ROLE_PRIORITY: Record<string, number> = {
-  GLOBAL_ADMIN: 100,
+  TENANT_GLOBAL_ADMIN: 100,
   // Admins
   CHAT_AGENTS_ADMIN: 50,
   AUTONOMOUS_AGENTS_ADMIN: 50,
@@ -169,7 +169,7 @@ const getRoleLabel = (role: TenantPermissionEnum): string => {
 
 // Get badge color based on role type
 const getRoleBadgeColor = (role: TenantPermissionEnum): string => {
-  if (role === 'GLOBAL_ADMIN') return 'red';
+  if (role === 'TENANT_GLOBAL_ADMIN') return 'red';
   if (role.endsWith('_ADMIN')) return 'orange';
   if (role.endsWith('_CREATOR')) return 'blue';
   return 'gray';

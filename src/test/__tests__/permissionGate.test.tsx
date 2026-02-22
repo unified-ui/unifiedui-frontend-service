@@ -56,7 +56,7 @@ describe('PermissionGate', () => {
       setupRoles([TenantPermissionEnum.READER]);
       renderWithProviders(
         <PermissionGate
-          requiredRole={TenantPermissionEnum.GLOBAL_ADMIN}
+          requiredRole={TenantPermissionEnum.TENANT_GLOBAL_ADMIN}
           fallback={<span>No access</span>}
         >
           <button>Admin Panel</button>
@@ -66,8 +66,8 @@ describe('PermissionGate', () => {
       expect(screen.getByText('No access')).toBeInTheDocument();
     });
 
-    it('renders children for GLOBAL_ADMIN regardless of resource permission', () => {
-      setupRoles([TenantPermissionEnum.GLOBAL_ADMIN]);
+    it('renders children for TENANT_GLOBAL_ADMIN regardless of resource permission', () => {
+      setupRoles([TenantPermissionEnum.TENANT_GLOBAL_ADMIN]);
       renderWithProviders(
         <PermissionGate permission={null} requiredAction="ADMIN">
           <button>Admin Action</button>
