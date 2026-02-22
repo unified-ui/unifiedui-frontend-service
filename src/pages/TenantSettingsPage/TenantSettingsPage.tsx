@@ -41,7 +41,7 @@ import {
   IconBuilding,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { ConfirmDeleteDialog, EditRolesDialog, OrganizationSettingsPanel } from '../../components/common';
+import { ConfirmDeleteDialog, EditRolesDialog, OrganizationSettingsPanel, OrganizationAccessPanel } from '../../components/common';
 import { ManageTenantAccessTable, TENANT_ROLE_OPTIONS } from '../../components/common/ManageTenantAccessTable';
 import type { TenantPrincipalPermission } from '../../components/common/ManageTenantAccessTable';
 import { AddPrincipalDialog } from '../../components/common/AddPrincipalDialog';
@@ -68,9 +68,9 @@ import { TenantPermissionEnum, ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnu
 import { useDelayedLoading, usePermissions } from '../../hooks';
 import classes from './TenantSettingsPage.module.css';
 
-type TabValue = 'organization' | 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'ai-models' | 'billing-and-licence';
+type TabValue = 'organization' | 'org-iam' | 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'ai-models' | 'billing-and-licence';
 
-const TAB_VALUES: TabValue[] = ['organization', 'settings', 'iam', 'custom-groups', 'tools', 'credentials', 'ai-models', 'billing-and-licence'];
+const TAB_VALUES: TabValue[] = ['organization', 'org-iam', 'settings', 'iam', 'custom-groups', 'tools', 'credentials', 'ai-models', 'billing-and-licence'];
 const DEFAULT_TAB: TabValue = 'settings';
 
 const PURPOSE_GROUP_COLORS: Record<string, string> = {
@@ -1036,12 +1036,17 @@ export const TenantSettingsPage: FC = () => {
             <Tabs.Tab value="organization" leftSection={<IconBuilding size={18} />}>
               Organization
             </Tabs.Tab>
+            {isOrgAdmin && (
+            <Tabs.Tab value="org-iam" leftSection={<IconShieldLock size={18} />}>
+              Organisation Access (IAM)
+            </Tabs.Tab>
+            )}
             <Tabs.Tab value="settings" leftSection={<IconSettings size={18} />}>
-              General
+              Tenant
             </Tabs.Tab>
             {isGlobalAdmin && (
             <Tabs.Tab value="iam" leftSection={<IconUsers size={18} />}>
-              Access (IAM)
+              Tenant Access (IAM)
             </Tabs.Tab>
             )}
             <Tabs.Tab value="custom-groups" leftSection={<IconUsersGroup size={18} />}>
@@ -1064,6 +1069,11 @@ export const TenantSettingsPage: FC = () => {
             {/* Organization Settings Tab */}
             <Tabs.Panel value="organization">
               <OrganizationSettingsPanel isOrgAdmin={isOrgAdmin} />
+            </Tabs.Panel>
+
+            {/* Organisation Access (IAM) Tab */}
+            <Tabs.Panel value="org-iam">
+              <OrganizationAccessPanel isOrgAdmin={isOrgAdmin} />
             </Tabs.Panel>
 
             {/* Tenant Settings Tab */}

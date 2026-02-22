@@ -55,6 +55,12 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
         }
         return null;
       },
+      environment_type: (value) => {
+        if (!value || value.trim().length === 0) {
+          return tCommon('validation.required', { field: t('environmentType') });
+        }
+        return null;
+      },
       description: (value) => {
         if (value && value.length > 2000) {
           return tCommon('validation.maxLength', { field: tCommon('description'), max: 2000 });
@@ -120,6 +126,14 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
             {...form.getInputProps('name')}
           />
 
+          <Select
+            label={t('environmentType')}
+            data={environmentOptions}
+            required
+            withAsterisk
+            {...form.getInputProps('environment_type')}
+          />
+
           <Box pos="relative">
             <Textarea
               label={tCommon('description')}
@@ -139,14 +153,6 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
               />
             </Box>
           </Box>
-
-          <Select
-            label={t('environmentType')}
-            data={environmentOptions}
-            required
-            withAsterisk
-            {...form.getInputProps('environment_type')}
-          />
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={handleClose} disabled={isSubmitting}>

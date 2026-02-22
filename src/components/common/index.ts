@@ -29,3 +29,4 @@ export { CommandPalette } from './CommandPalette';
 export { PermissionGate } from './PermissionGate';
 export type { PermissionGateProps } from './PermissionGate';
 export { OrganizationSettingsPanel } from './OrganizationSettingsPanel';
+export { OrganizationAccessPanel } from './OrganizationAccessPanel';

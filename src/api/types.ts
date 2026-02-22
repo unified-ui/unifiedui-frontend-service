@@ -91,7 +91,8 @@ export type EnvironmentTypeEnum = typeof EnvironmentTypeEnum[keyof typeof Enviro
 export const OrganizationRoleEnum = {
   ORGANISATION_GLOBAL_ADMIN: 'ORGANISATION_GLOBAL_ADMIN',
   ORGANISATION_ADMIN: 'ORGANISATION_ADMIN',
-  ORGANISATION_READER: 'ORGANISATION_READER',
+  ORGANISATION_TENANT_ADMIN: 'ORGANISATION_TENANT_ADMIN',
+  ORGANISATION_TENANT_CREATOR: 'ORGANISATION_TENANT_CREATOR',
 } as const;
 
 export type OrganizationRoleEnum = typeof OrganizationRoleEnum[keyof typeof OrganizationRoleEnum];
