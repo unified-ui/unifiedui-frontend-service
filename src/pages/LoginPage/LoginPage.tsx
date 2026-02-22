@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Loader, Stack, Text, Paper, Grid } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
@@ -81,7 +81,7 @@ const PROVIDER_DISPLAY_NAMES: Record<IdentityProviderType, string> = {
 
 interface IdpButtonConfig {
   provider: IdentityProviderType;
-  icon: () => JSX.Element;
+  icon: () => React.JSX.Element;
   labelKey: string;
 }
 

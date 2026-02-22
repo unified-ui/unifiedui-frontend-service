@@ -32,8 +32,8 @@ const mockUser = {
 };
 
 const mockTenants = [
-  { id: 'tenant-1', name: 'Tenant One', description: 'First', created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
-  { id: 'tenant-2', name: 'Tenant Two', description: 'Second', created_at: '2024-01-02T00:00:00Z', updated_at: '2024-01-02T00:00:00Z' },
+  { id: 'tenant-1', name: 'Tenant One', description: 'First', organization_id: 'org-1', environment_type: 'PRODUCTION' as const, is_default: true, can_be_deleted: false, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
+  { id: 'tenant-2', name: 'Tenant Two', description: 'Second', organization_id: 'org-1', environment_type: 'SANDBOX' as const, is_default: false, can_be_deleted: true, created_at: '2024-01-02T00:00:00Z', updated_at: '2024-01-02T00:00:00Z' },
 ];
 
 describe('Header', () => {
@@ -68,6 +68,7 @@ describe('Header', () => {
   it('renders tenant name when tenant is selected', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
+      organization: null,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
@@ -85,6 +86,7 @@ describe('Header', () => {
   it('shows "No Tenant" when no tenant selected', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
+      organization: null,
       tenants: [],
       selectedTenant: null,
       selectedTenantRoles: [],
@@ -102,6 +104,7 @@ describe('Header', () => {
   it('renders search input as readOnly', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
+      organization: null,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
@@ -120,6 +123,7 @@ describe('Header', () => {
   it('does not contain any German strings', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
+      organization: null,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
@@ -141,6 +145,7 @@ describe('Header', () => {
   it('renders user account section with display name', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
+      organization: null,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],

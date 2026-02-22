@@ -14,6 +14,7 @@ const mockUseIdentity = vi.mocked(useIdentity);
 function setupRoles(roles: string[]) {
   mockUseIdentity.mockReturnValue({
     user: null,
+    organization: null,
     tenants: [],
     selectedTenant: null,
     selectedTenantRoles: roles as TenantPermissionEnum[],

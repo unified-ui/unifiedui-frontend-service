@@ -62,8 +62,8 @@ const mockUser = {
 };
 
 const mockTenants = [
-  { id: 'tenant-1', name: 'Tenant One', description: 'First tenant', created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
-  { id: 'tenant-2', name: 'Tenant Two', description: 'Second tenant', created_at: '2024-01-02T00:00:00Z', updated_at: '2024-01-02T00:00:00Z' },
+  { id: 'tenant-1', name: 'Tenant One', description: 'First tenant', organization_id: 'org-1', environment_type: 'PRODUCTION' as const, is_default: true, can_be_deleted: false, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
+  { id: 'tenant-2', name: 'Tenant Two', description: 'Second tenant', organization_id: 'org-1', environment_type: 'SANDBOX' as const, is_default: false, can_be_deleted: true, created_at: '2024-01-02T00:00:00Z', updated_at: '2024-01-02T00:00:00Z' },
 ];
 
 describe('DashboardPage', () => {
@@ -76,6 +76,7 @@ describe('DashboardPage', () => {
 
     mockUseIdentity.mockReturnValue({
       user: null,
+      organization: null,
       tenants: [],
       selectedTenant: null,
       selectedTenantRoles: [],
@@ -101,6 +102,7 @@ describe('DashboardPage', () => {
   it('shows welcome message with user name', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
+      organization: null,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
@@ -118,6 +120,7 @@ describe('DashboardPage', () => {
   it('displays tenant subtitle when tenant is selected', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
+      organization: null,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
@@ -135,6 +138,7 @@ describe('DashboardPage', () => {
   it('displays stat cards for chat agents, agents, and conversations', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
+      organization: null,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
@@ -154,6 +158,7 @@ describe('DashboardPage', () => {
   it('shows empty favorites message when no favorites', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
+      organization: null,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
@@ -171,6 +176,7 @@ describe('DashboardPage', () => {
   it('shows empty recent visits message when no visits', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
+      organization: null,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
@@ -188,6 +194,7 @@ describe('DashboardPage', () => {
   it('shows favorites and recently visited section headers', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
+      organization: null,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
@@ -206,6 +213,7 @@ describe('DashboardPage', () => {
   it('does not contain any German strings', () => {
     mockUseIdentity.mockReturnValue({
       user: mockUser,
+      organization: null,
       tenants: mockTenants,
       selectedTenant: mockTenants[0],
       selectedTenantRoles: [],
