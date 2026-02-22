@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Stack,
   Text,
@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useIdentity } from '../../../contexts';
 import { OrganizationRoleEnum } from '../../../api/types';
 import type {
-  OrganizationMemberResponse,
+  OrganizationPrincipalResponse,
   PrincipalTypeEnum,
 } from '../../../api/types';
 import { AddPrincipalDialog } from '../AddPrincipalDialog';
@@ -24,18 +24,20 @@ const ORG_ROLE_OPTIONS: RoleOption[] = [
   { value: OrganizationRoleEnum.ORGANISATION_TENANT_CREATOR, label: 'Tenant Creator', description: 'Create new tenants in this organization' },
 ];
 
-/** Map backend OrganizationMemberResponse[] to the generic TenantPrincipalPermission[] format */
-const mapMembersToPrincipals = (members: OrganizationMemberResponse[]): TenantPrincipalPermission[] =>
-  members.map((m) => ({
-    id: m.principal_id,
-    principalId: m.principal_id,
-    principalType: m.principal_type as PrincipalTypeEnum,
-    displayName: m.display_name,
-    mail: m.mail,
-    principalName: m.principal_name,
+const PAGE_SIZE = 50;
+
+/** Map backend OrganizationPrincipalResponse[] to the generic TenantPrincipalPermission[] format */
+const mapPrincipalsToTableFormat = (principals: OrganizationPrincipalResponse[]): TenantPrincipalPermission[] =>
+  principals.map((p) => ({
+    id: p.principal_id,
+    principalId: p.principal_id,
+    principalType: p.principal_type as PrincipalTypeEnum,
+    displayName: p.display_name,
+    mail: p.mail,
+    principalName: p.principal_name,
     description: null,
     isActive: true,
-    roles: m.roles.map((r) => r.role) as unknown as TenantPrincipalPermission['roles'],
+    roles: p.roles.map((r) => r.role) as unknown as TenantPrincipalPermission['roles'],
   }));
 
 interface OrganizationAccessPanelProps {
@@ -46,36 +48,80 @@ export const OrganizationAccessPanel: FC<OrganizationAccessPanelProps> = ({ isOr
   const { t } = useTranslation('settings');
   const { apiClient, organization } = useIdentity();
 
-  const [members, setMembers] = useState<OrganizationMemberResponse[]>([]);
+  const [principals, setPrincipals] = useState<OrganizationPrincipalResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editPrincipal, setEditPrincipal] = useState<TenantPrincipalPermission | null>(null);
+  const [search, setSearch] = useState('');
+  const skipRef = useRef(0);
 
-  const fetchMembers = useCallback(async () => {
+  const fetchPrincipals = useCallback(async (reset = true) => {
     if (!apiClient || !organization) return;
-    setIsLoading(true);
+
+    if (reset) {
+      setIsLoading(true);
+      skipRef.current = 0;
+    } else {
+      setIsLoadingMore(true);
+    }
+
     try {
-      const data = await apiClient.listOrganizationMembers(organization.id);
-      setMembers(data.members);
+      const data = await apiClient.listOrganizationPrincipals(organization.id, {
+        skip: reset ? 0 : skipRef.current,
+        limit: PAGE_SIZE,
+        search: search || undefined,
+        order_by: 'display_name',
+        order_direction: 'asc',
+      });
+
+      if (reset) {
+        setPrincipals(data.principals);
+        skipRef.current = PAGE_SIZE;
+      } else {
+        setPrincipals((prev) => {
+          const existingIds = new Set(prev.map((p) => p.principal_id));
+          const uniqueNew = data.principals.filter((p) => !existingIds.has(p.principal_id));
+          return [...prev, ...uniqueNew];
+        });
+        skipRef.current += PAGE_SIZE;
+      }
+
+      setHasMore(data.principals.length === PAGE_SIZE);
+      setHasFetched(true);
     } catch {
       // handled by API client
     } finally {
       setIsLoading(false);
-      setHasFetched(true);
+      setIsLoadingMore(false);
     }
-  }, [apiClient, organization]);
+  }, [apiClient, organization, search]);
 
+  // Initial fetch + re-fetch when search changes
   useEffect(() => {
-    fetchMembers();
-  }, [fetchMembers]);
+    fetchPrincipals(true);
+  }, [fetchPrincipals]);
 
-  // Map members to the format expected by ManageTenantAccessTable
-  const principals = useMemo(() => mapMembersToPrincipals(members), [members]);
+  // Infinite scroll: load more handler
+  const handleLoadMore = useCallback(() => {
+    if (!isLoadingMore && hasMore) {
+      fetchPrincipals(false);
+    }
+  }, [fetchPrincipals, isLoadingMore, hasMore]);
+
+  // Search handler (server-side)
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+  }, []);
+
+  // Map principals to the format expected by ManageTenantAccessTable
+  const tablePrincipals = useMemo(() => mapPrincipalsToTableFormat(principals), [principals]);
 
   const existingPrincipalIds = useMemo(
-    () => members.map((m) => m.principal_id),
-    [members]
+    () => principals.map((p) => p.principal_id),
+    [principals]
   );
 
   // Row click → open EditRolesDialog
@@ -95,7 +141,7 @@ export const OrganizationAccessPanel: FC<OrganizationAccessPanelProps> = ({ isOr
         // Remove roles that are no longer selected
         for (const role of currentRoles) {
           if (!newRoles.has(role)) {
-            await apiClient.deleteOrganizationMember(organization.id, {
+            await apiClient.deleteOrganizationPrincipal(organization.id, {
               principal_id: editPrincipal.principalId,
               principal_type: editPrincipal.principalType,
               role: role as OrganizationRoleEnum,
@@ -106,7 +152,7 @@ export const OrganizationAccessPanel: FC<OrganizationAccessPanelProps> = ({ isOr
         // Add roles that are newly selected
         for (const role of newRoles) {
           if (!currentRoles.has(role)) {
-            await apiClient.setOrganizationMember(organization.id, {
+            await apiClient.setOrganizationPrincipal(organization.id, {
               principal_id: editPrincipal.principalId,
               principal_type: editPrincipal.principalType,
               role: role as OrganizationRoleEnum,
@@ -115,12 +161,12 @@ export const OrganizationAccessPanel: FC<OrganizationAccessPanelProps> = ({ isOr
         }
 
         setEditPrincipal(null);
-        await fetchMembers();
+        await fetchPrincipals(true);
       } catch {
         // handled by API client
       }
     },
-    [apiClient, organization, editPrincipal, fetchMembers]
+    [apiClient, organization, editPrincipal, fetchPrincipals]
   );
 
   // Add new principals with selected roles
@@ -131,7 +177,7 @@ export const OrganizationAccessPanel: FC<OrganizationAccessPanelProps> = ({ isOr
       try {
         for (const principal of selectedPrincipals) {
           for (const role of roles) {
-            await apiClient.setOrganizationMember(organization.id, {
+            await apiClient.setOrganizationPrincipal(organization.id, {
               principal_id: principal.id,
               principal_type: principal.type as PrincipalTypeEnum,
               role: role as OrganizationRoleEnum,
@@ -139,12 +185,12 @@ export const OrganizationAccessPanel: FC<OrganizationAccessPanelProps> = ({ isOr
           }
         }
         setAddDialogOpen(false);
-        await fetchMembers();
+        await fetchPrincipals(true);
       } catch {
         // handled by API client
       }
     },
-    [apiClient, organization, fetchMembers]
+    [apiClient, organization, fetchPrincipals]
   );
 
   // Delete all roles for a principal (remove access entirely)
@@ -152,23 +198,23 @@ export const OrganizationAccessPanel: FC<OrganizationAccessPanelProps> = ({ isOr
     async (principalId: string, principalType: PrincipalTypeEnum) => {
       if (!apiClient || !organization) return;
 
-      const member = members.find((m) => m.principal_id === principalId);
-      if (!member) return;
+      const principal = principals.find((p) => p.principal_id === principalId);
+      if (!principal) return;
 
       try {
-        for (const r of member.roles) {
-          await apiClient.deleteOrganizationMember(organization.id, {
+        for (const r of principal.roles) {
+          await apiClient.deleteOrganizationPrincipal(organization.id, {
             principal_id: principalId,
             principal_type: principalType,
             role: r.role as OrganizationRoleEnum,
           });
         }
-        await fetchMembers();
+        await fetchPrincipals(true);
       } catch {
         // handled by API client
       }
     },
-    [apiClient, organization, members, fetchMembers]
+    [apiClient, organization, principals, fetchPrincipals]
   );
 
   if (!organization) {
@@ -182,12 +228,16 @@ export const OrganizationAccessPanel: FC<OrganizationAccessPanelProps> = ({ isOr
   return (
     <Stack gap="md">
       <ManageTenantAccessTable
-        principals={principals}
+        principals={tablePrincipals}
         isLoading={isLoading}
+        isLoadingMore={isLoadingMore}
         hasFetched={hasFetched}
+        hasMore={hasMore}
         onManageAccess={handleManageAccess}
         onDeletePrincipal={isOrgAdmin ? handleDeletePrincipal : undefined}
         onAddPrincipal={() => setAddDialogOpen(true)}
+        onSearchChange={handleSearchChange}
+        onLoadMore={handleLoadMore}
         roleOptions={ORG_ROLE_OPTIONS}
         showStatusColumn={false}
       />

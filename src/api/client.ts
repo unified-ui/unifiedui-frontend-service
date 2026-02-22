@@ -26,9 +26,10 @@ import type {
   OrganizationResponse,
   CreateOrganizationRequest,
   UpdateOrganizationRequest,
-  OrganizationMembersResponse,
-  SetOrganizationMemberRequest,
-  DeleteOrganizationMemberRequest,
+  OrganizationPrincipalsResponse,
+  OrganizationPrincipalsQueryParams,
+  SetOrganizationPrincipalRequest,
+  DeleteOrganizationPrincipalRequest,
   TenantWithOrganizationResponse,
   CreateTenantInOrganizationRequest,
   // Chat Agent Types
@@ -315,16 +316,17 @@ export class UnifiedUIAPIClient {
     return this.request<OrganizationResponse>('PATCH', `/api/v1/platform-service/organizations/${organizationId}`, data, 'Organization updated successfully');
   }
 
-  async listOrganizationMembers(organizationId: string): Promise<OrganizationMembersResponse> {
-    return this.request<OrganizationMembersResponse>('GET', `/api/v1/platform-service/organizations/${organizationId}/members`);
+  async listOrganizationPrincipals(organizationId: string, params?: OrganizationPrincipalsQueryParams): Promise<OrganizationPrincipalsResponse> {
+    const query = this.buildQueryString(params || {});
+    return this.request<OrganizationPrincipalsResponse>('GET', `/api/v1/platform-service/organizations/${organizationId}/principals${query}`);
   }
 
-  async setOrganizationMember(organizationId: string, data: SetOrganizationMemberRequest): Promise<void> {
-    return this.request<void>('POST', `/api/v1/platform-service/organizations/${organizationId}/members`, data, 'Member role set successfully');
+  async setOrganizationPrincipal(organizationId: string, data: SetOrganizationPrincipalRequest): Promise<void> {
+    return this.request<void>('POST', `/api/v1/platform-service/organizations/${organizationId}/principals`, data, 'Principal role set successfully');
   }
 
-  async deleteOrganizationMember(organizationId: string, data: DeleteOrganizationMemberRequest): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/platform-service/organizations/${organizationId}/members`, data, 'Member role removed successfully');
+  async deleteOrganizationPrincipal(organizationId: string, data: DeleteOrganizationPrincipalRequest): Promise<void> {
+    return this.request<void>('DELETE', `/api/v1/platform-service/organizations/${organizationId}/principals`, data, 'Principal role removed successfully');
   }
 
   async listOrganizationTenants(organizationId: string): Promise<TenantWithOrganizationResponse[]> {

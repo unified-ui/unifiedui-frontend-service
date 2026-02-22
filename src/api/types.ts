@@ -770,7 +770,7 @@ export interface OrganizationMemberRoleResponse {
   created_at: string;
 }
 
-export interface OrganizationMemberResponse {
+export interface OrganizationPrincipalResponse {
   principal_id: string;
   principal_type: string;
   display_name?: string;
@@ -779,9 +779,18 @@ export interface OrganizationMemberResponse {
   roles: OrganizationMemberRoleResponse[];
 }
 
-export interface OrganizationMembersResponse {
+export interface OrganizationPrincipalsQueryParams {
+  skip?: number;
+  limit?: number;
+  search?: string;
+  order_by?: 'display_name';
+  order_direction?: 'asc' | 'desc';
+}
+
+export interface OrganizationPrincipalsResponse {
   organization_id: string;
-  members: OrganizationMemberResponse[];
+  principals: OrganizationPrincipalResponse[];
+  total_count: number;
 }
 
 export interface UpdateOrganizationRequest {
@@ -798,13 +807,13 @@ export interface CreateOrganizationRequest {
   subscription_tier?: string;
 }
 
-export interface SetOrganizationMemberRequest {
+export interface SetOrganizationPrincipalRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
   role: OrganizationRoleEnum;
 }
 
-export interface DeleteOrganizationMemberRequest {
+export interface DeleteOrganizationPrincipalRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
   role: OrganizationRoleEnum;
