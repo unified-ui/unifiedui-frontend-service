@@ -48,7 +48,7 @@ interface TracingContextState {
   resetCanvasView: () => void;
   toggleHierarchyVisible: () => void;
   toggleChatVisible: () => void;
-  
+
   // Message-to-Trace mapping
   /** Find a trace node by extMessageId (matches TraceNode.referenceId) */
   findNodeForMessage: (extMessageId: string) => TraceNodeResponse | null;

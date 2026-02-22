@@ -237,8 +237,8 @@ export const LoginTokenPage = () => {
                   {t('fetchFoundryTokenDescription')}
                   {foundryError && <Text c="red" size="xs" mt="xs">{foundryError}</Text>}
                 </Text>
-                <Button 
-                  onClick={fetchFoundryToken} 
+                <Button
+                  onClick={fetchFoundryToken}
                   loading={isFoundryLoading}
                   fullWidth
                 >

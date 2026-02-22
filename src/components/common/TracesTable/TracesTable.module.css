@@ -87,7 +87,7 @@
   flex-shrink: 0;
 }
 
-[data-mantine-color-scheme='dark'] .traceIcon {
+[data-mantine-color-scheme="dark"] .traceIcon {
   background-color: var(--color-gray-800);
   color: var(--color-gray-400);
 }

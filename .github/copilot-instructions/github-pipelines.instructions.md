@@ -1,5 +1,5 @@
 ---
-applyTo: '.github/**'
+applyTo: ".github/**"
 ---
 
 # GitHub Pipelines — Frontend Service
@@ -8,12 +8,12 @@ applyTo: '.github/**'
 
 All workflow files follow a prefix-based naming convention:
 
-| Prefix | Purpose | Example |
-|--------|---------|---------|
-| `ci-` | Continuous Integration (lint, test, build) | `ci-tests-and-lint.yml` |
-| `cd-` | Continuous Deployment (deploy to environments) | `cd-deploy-staging.yml` |
-| `ci-int-tests-` | Integration test suites | `ci-int-tests-api.yml` |
-| `ci-e2e-tests-` | End-to-end test suites | `ci-e2e-tests-playwright.yml` |
+| Prefix          | Purpose                                        | Example                       |
+| --------------- | ---------------------------------------------- | ----------------------------- |
+| `ci-`           | Continuous Integration (lint, test, build)     | `ci-tests-and-lint.yml`       |
+| `cd-`           | Continuous Deployment (deploy to environments) | `cd-deploy-staging.yml`       |
+| `ci-int-tests-` | Integration test suites                        | `ci-int-tests-api.yml`        |
+| `ci-e2e-tests-` | End-to-end test suites                         | `ci-e2e-tests-playwright.yml` |
 
 The `name:` field inside each workflow MUST match the filename (without `.yml`).
 
@@ -25,9 +25,9 @@ The `name:` field inside each workflow MUST match the filename (without `.yml`).
 
 **Triggers**: push/pull_request to `main`/`develop`, workflow_dispatch
 
-| Job | What it does |
-|-----|-------------|
-| **lint** | `tsc --noEmit` + `npm run lint` (ESLint) |
+| Job      | What it does                                          |
+| -------- | ----------------------------------------------------- |
+| **lint** | `tsc --noEmit` + `npm run lint` (ESLint)              |
 | **test** | `vitest run --coverage` with coverage artifact upload |
 
 **Coverage**: Reported but not enforced yet. Target is 80% — enforce once test coverage reaches that level.
@@ -52,13 +52,13 @@ Validates that PRs to `main` originate from a `release/*` branch.
 
 ## Tool Versions
 
-| Tool | Version | Config |
-|------|---------|--------|
-| Node.js | 22 | `setup-node@v4` |
-| TypeScript | ~5.9 | `tsconfig.json` |
-| ESLint | ≥9.39 | `eslint.config.js` |
-| Vitest | ≥4.0 | `vite.config.ts` (`test` block) |
-| @vitest/coverage-v8 | latest | Coverage provider |
+| Tool                | Version | Config                          |
+| ------------------- | ------- | ------------------------------- |
+| Node.js             | 22      | `setup-node@v4`                 |
+| TypeScript          | ~5.9    | `tsconfig.json`                 |
+| ESLint              | ≥9.39   | `eslint.config.js`              |
+| Vitest              | ≥4.0    | `vite.config.ts` (`test` block) |
+| @vitest/coverage-v8 | latest  | Coverage provider               |
 
 ---
 

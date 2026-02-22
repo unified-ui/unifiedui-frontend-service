@@ -36,10 +36,10 @@ export const Header: FC = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-      
+
       if (userAccountRef.current && !userAccountRef.current.contains(target)) {
         const isPortalElement = (target as Element).closest?.('[data-portal]');
-        
+
         if (!isPortalElement) {
           setUserDropdownOpened(false);
         }
@@ -58,9 +58,9 @@ export const Header: FC = () => {
   const userName = user?.display_name || account?.name || 'User';
   const userEmail = user?.mail || account?.username || 'user@example.com';
   const displayName = userName.length > 20 ? userName.substring(0, 20) + '…' : userName;
-  
+
   const tenantDisplayName = selectedTenant?.name || t('noTenant');
-  const tenantOptions = tenants.length > 0 
+  const tenantOptions = tenants.length > 0
     ? tenants.map(t => ({ value: t.id, label: t.name }))
     : [{ value: '', label: t('noTenantsAvailable') }];
 
@@ -94,9 +94,9 @@ export const Header: FC = () => {
       />
 
       <Group gap="md">
-        <ActionIcon 
-          variant="subtle" 
-          size="lg" 
+        <ActionIcon
+          variant="subtle"
+          size="lg"
           radius="xl"
           onClick={() => toggleColorScheme()}
           aria-label={isDark ? t('switchToLight') : t('switchToDark')}
@@ -104,10 +104,10 @@ export const Header: FC = () => {
         >
           {isDark ? <IconSun size={20} /> : <IconMoon size={20} />}
         </ActionIcon>
-        
+
         <div ref={userAccountRef} className={classes.userAccountWrapper}>
-          <Group 
-            gap="xs" 
+          <Group
+            gap="xs"
             className={classes.userAccount}
             onClick={() => setUserDropdownOpened(!userDropdownOpened)}
           >
@@ -119,10 +119,10 @@ export const Header: FC = () => {
           </Group>
 
           {userDropdownOpened && (
-            <Paper 
-              className={classes.userDropdown} 
-              shadow="md" 
-              radius="md" 
+            <Paper
+              className={classes.userDropdown}
+              shadow="md"
+              radius="md"
               p="md"
               onClick={(e) => e.stopPropagation()}
             >
@@ -168,9 +168,9 @@ export const Header: FC = () => {
 
                 <Divider />
 
-                <Button 
+                <Button
                   leftSection={<IconLogout size={16} />}
-                  variant="light" 
+                  variant="light"
                   color="red"
                   fullWidth
                   onClick={logout}

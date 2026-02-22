@@ -2,4 +2,6 @@ export { msalConfig, loginRequest, authConfig, enabledProviders, ALL_IDENTITY_PR
 export type { IdentityProviderType, AuthConfig } from './authConfig';
 export { AuthProvider, useAuth } from './AuthProvider';
 export { GoogleAuthProvider } from './GoogleAuthProvider';
+export { useGoogleAuth } from './useGoogleAuth';
 export { CognitoAuthProvider } from './CognitoAuthProvider';
+export { useCognitoAuth } from './useCognitoAuth';

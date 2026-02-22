@@ -195,10 +195,10 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
   const initializeFromData = useCallback(
     (data: AutonomousAgentResponse) => {
       setAutonomousAgent(data);
-      
+
       // Extract N8N config if available
       const config = data.config || {};
-      
+
       form.setValues({
         name: data.name,
         description: data.description || '',

@@ -123,27 +123,27 @@ src/
 
 ### `components/common/`
 
-| Component | Purpose |
-|-----------|---------|
-| `PageHeader` | Page title + description + action button |
-| `EntityAvatar` | Hash-based colored initials avatar for entities |
-| `Breadcrumbs` | Navigation breadcrumbs for detail pages |
-| `DataTable` | Feature-rich list with search, sort, filter, infinite scroll → see [data-table.instructions.md](./components/data-table.instructions.md) |
-| `DataTableToolbar` | Search bar + sort + filter popover (child of DataTable) |
-| `DataTableRow` | Single row card in DataTable (child of DataTable) |
-| `TracesTable` | Traces-specific table with date presets + sort (used in AutonomousAgentDetailsPage) |
-| `SecretField` | Masked secret value with reveal/copy/rotate actions |
-| `DelayedTooltip` | Tooltip with 1s open delay, multiline, max-width 400 |
-| `DetailPageTabs` | Reusable tab container for detail pages |
-| `TagInput` | Tag input with autocomplete |
-| `ConfirmDeleteDialog` | Generic confirmation modal |
-| `ManageAccessTable` | Resource permission management table |
-| `ManageTenantAccessTable` | Tenant-level permission management |
-| `AddPrincipalDialog` | Dialog for adding principals to resources |
-| `EditRolesDialog` | Dialog for editing principal roles |
-| `EntityDetailsForm` | Generic entity detail form |
-| `GenerateWithAIButton` | Button that triggers AI-powered content generation |
-| `MarkdownRenderer` | Renders markdown content with syntax highlighting |
+| Component                 | Purpose                                                                                                                                  |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `PageHeader`              | Page title + description + action button                                                                                                 |
+| `EntityAvatar`            | Hash-based colored initials avatar for entities                                                                                          |
+| `Breadcrumbs`             | Navigation breadcrumbs for detail pages                                                                                                  |
+| `DataTable`               | Feature-rich list with search, sort, filter, infinite scroll → see [data-table.instructions.md](./components/data-table.instructions.md) |
+| `DataTableToolbar`        | Search bar + sort + filter popover (child of DataTable)                                                                                  |
+| `DataTableRow`            | Single row card in DataTable (child of DataTable)                                                                                        |
+| `TracesTable`             | Traces-specific table with date presets + sort (used in AutonomousAgentDetailsPage)                                                      |
+| `SecretField`             | Masked secret value with reveal/copy/rotate actions                                                                                      |
+| `DelayedTooltip`          | Tooltip with 1s open delay, multiline, max-width 400                                                                                     |
+| `DetailPageTabs`          | Reusable tab container for detail pages                                                                                                  |
+| `TagInput`                | Tag input with autocomplete                                                                                                              |
+| `ConfirmDeleteDialog`     | Generic confirmation modal                                                                                                               |
+| `ManageAccessTable`       | Resource permission management table                                                                                                     |
+| `ManageTenantAccessTable` | Tenant-level permission management                                                                                                       |
+| `AddPrincipalDialog`      | Dialog for adding principals to resources                                                                                                |
+| `EditRolesDialog`         | Dialog for editing principal roles                                                                                                       |
+| `EntityDetailsForm`       | Generic entity detail form                                                                                                               |
+| `GenerateWithAIButton`    | Button that triggers AI-powered content generation                                                                                       |
+| `MarkdownRenderer`        | Renders markdown content with syntax highlighting                                                                                        |
 
 | `CommandPalette` | Global command palette (cmdk, `⌘K` shortcut) |
 | `PermissionGate` | Declarative permission-based rendering (hide/disable by role or resource permission) |
@@ -151,76 +151,77 @@ src/
 
 ### `components/dialogs/`
 
-| Dialog | Purpose |
-|--------|---------|
-| `CreateChatAgentDialog` | Create new chat agent |
-| `EditChatAgentDialog/` | Edit chat agent |
-| `CreateAutonomousAgentDialog` | Create autonomous agent |
-| `EditAutonomousAgentDialog/` | Edit autonomous agent |
-| `CreateChatWidgetDialog` | Create chat widget |
-| `EditChatWidgetDialog/` | Edit chat widget |
-| `CreateCredentialDialog` | Create credential |
-| `EditCredentialDialog/` | Edit credential |
-| `CreateCustomGroupDialog` | Create custom group |
-| `EditCustomGroupDialog/` | Edit custom group |
-| `CreateToolDialog` | Create tool |
-| `EditToolDialog/` | Edit tool |
-| `CreateTenantDialog` | Create new tenant |
-| `IntegrationDialog/` | API integration samples (POST/PUT payloads) |
-| `AIModelDialog/` | Create/edit tenant AI model configuration |
-| `AnalyzeErrorDialog/` | AI-powered trace error analysis dialog |
-| `SearchConversationsDialog` | Conversation search modal |
-| `ShareConversationDialog` | Share conversation modal |
+| Dialog                        | Purpose                                     |
+| ----------------------------- | ------------------------------------------- |
+| `CreateChatAgentDialog`       | Create new chat agent                       |
+| `EditChatAgentDialog/`        | Edit chat agent                             |
+| `CreateAutonomousAgentDialog` | Create autonomous agent                     |
+| `EditAutonomousAgentDialog/`  | Edit autonomous agent                       |
+| `CreateChatWidgetDialog`      | Create chat widget                          |
+| `EditChatWidgetDialog/`       | Edit chat widget                            |
+| `CreateCredentialDialog`      | Create credential                           |
+| `EditCredentialDialog/`       | Edit credential                             |
+| `CreateCustomGroupDialog`     | Create custom group                         |
+| `EditCustomGroupDialog/`      | Edit custom group                           |
+| `CreateToolDialog`            | Create tool                                 |
+| `EditToolDialog/`             | Edit tool                                   |
+| `CreateTenantDialog`          | Create new tenant                           |
+| `IntegrationDialog/`          | API integration samples (POST/PUT payloads) |
+| `AIModelDialog/`              | Create/edit tenant AI model configuration   |
+| `AnalyzeErrorDialog/`         | AI-powered trace error analysis dialog      |
+| `SearchConversationsDialog`   | Conversation search modal                   |
+| `ShareConversationDialog`     | Share conversation modal                    |
 
 ### `components/layout/`
 
 See [components/layout.instructions.md](./components/layout.instructions.md) for details.
 
-| Component | Purpose |
-|-----------|---------|
-| `MainLayout` | App shell: Header + Sidebar + content area |
-| `Sidebar` | Left nav rail with expandable entity lists |
-| `Header` | Top bar: logo, search (CommandPalette), notifications, theme toggle, user menu |
-| `GlobalChatSidebar` | Right hover panel for recent conversations |
-| `NotificationPanel` | Right slide-out drawer for notifications (Mantine Drawer) |
+| Component           | Purpose                                                                        |
+| ------------------- | ------------------------------------------------------------------------------ |
+| `MainLayout`        | App shell: Header + Sidebar + content area                                     |
+| `Sidebar`           | Left nav rail with expandable entity lists                                     |
+| `Header`            | Top bar: logo, search (CommandPalette), notifications, theme toggle, user menu |
+| `GlobalChatSidebar` | Right hover panel for recent conversations                                     |
+| `NotificationPanel` | Right slide-out drawer for notifications (Mantine Drawer)                      |
 
 ### `components/chat/`
 
 Reusable chat components — can be composed into any page that needs chat functionality (ConversationsPage, ReActAgentDeveloperPage, EmbedChatPage, external widgets).
 
-| Component | Purpose |
-|-----------|--------|
-| `ChatView` | Composite chat container: orchestrates ChatContent + ChatInput + drag-drop + optional `headerSlot`, `tracingSlot`, `emptyStateSlot` |
-| `ChatContent` | Message list with auto-scroll, streaming, markdown rendering, reactions, edit/delete |
-| `ChatInput` | Input with file attachments, drag-drop, auto-resize textarea |
-| `ChatHeader` | Chat header with app selector, tracing toggle, export, share, delete |
-| `ChatEmptyState` | Reusable empty state with icon, title, description |
-| `FeedbackDialog` | Thumbs-down feedback text dialog |
+| Component        | Purpose                                                                                                                             |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `ChatView`       | Composite chat container: orchestrates ChatContent + ChatInput + drag-drop + optional `headerSlot`, `tracingSlot`, `emptyStateSlot` |
+| `ChatContent`    | Message list with auto-scroll, streaming, markdown rendering, reactions, edit/delete                                                |
+| `ChatInput`      | Input with file attachments, drag-drop, auto-resize textarea                                                                        |
+| `ChatHeader`     | Chat header with app selector, tracing toggle, export, share, delete                                                                |
+| `ChatEmptyState` | Reusable empty state with icon, title, description                                                                                  |
+| `FeedbackDialog` | Thumbs-down feedback text dialog                                                                                                    |
 
 **Architecture**: 3-layer pattern:
+
 1. **Atomic components** — ChatContent, ChatInput, ChatHeader, ChatEmptyState, FeedbackDialog
 2. **Composite** — ChatView (assembles atomics + slots for header/tracing/empty state)
 3. **Pages** — Wire hooks + pass props to ChatView
 
 ### `components/conversation/`
 
-| Component | Purpose |
-|-----------|--------|
+| Component             | Purpose                                                                                      |
+| --------------------- | -------------------------------------------------------------------------------------------- |
 | `ConversationSidebar` | Conversation list sidebar with search, grouping (time/chat agent), favorites, rename, delete |
 
 ### `components/tracing/`
 
 See [components/tracing.instructions.md](./components/tracing.instructions.md) for details.
 
-| Component | Purpose |
-|-----------|---------|
-| `TracingVisualDialog` | Full-screen trace visualization modal |
-| `TracingCanvasView` | ReactFlow-based interactive flow diagram |
-| `TracingHierarchyView` | Tree sidebar for navigating trace nodes |
-| `TracingDataSection` | Bottom panel with logs + input/output/metadata |
-| `TracingSidebar` | Compact tracing sidebar for conversation pages |
-| `TracingSubHeader` | Trace selector + layout controls |
-| `TracingContext` | React Context for tracing state management |
+| Component              | Purpose                                        |
+| ---------------------- | ---------------------------------------------- |
+| `TracingVisualDialog`  | Full-screen trace visualization modal          |
+| `TracingCanvasView`    | ReactFlow-based interactive flow diagram       |
+| `TracingHierarchyView` | Tree sidebar for navigating trace nodes        |
+| `TracingDataSection`   | Bottom panel with logs + input/output/metadata |
+| `TracingSidebar`       | Compact tracing sidebar for conversation pages |
+| `TracingSubHeader`     | Trace selector + layout controls               |
+| `TracingContext`       | React Context for tracing state management     |
 
 ---
 
@@ -228,44 +229,44 @@ See [components/tracing.instructions.md](./components/tracing.instructions.md) f
 
 ### Routes (from `src/routes/index.tsx`)
 
-| Route | Page | Auth |
-|-------|------|------|
-| `/login` | LoginPage | Public |
-| `/login/token` | LoginTokenPage | Public |
-| `/dashboard` | DashboardPage | Protected |
-| `/tenant-settings` | TenantSettingsPage | Protected |
-| `/chat-agents` | ChatAgentsPage | Protected |
-| `/conversations` | ConversationsPage | Protected |
-| `/conversations/:conversationId` | ConversationsPage | Protected |
+| Route                            | Page               | Auth      |
+| -------------------------------- | ------------------ | --------- |
+| `/login`                         | LoginPage          | Public    |
+| `/login/token`                   | LoginTokenPage     | Public    |
+| `/dashboard`                     | DashboardPage      | Protected |
+| `/tenant-settings`               | TenantSettingsPage | Protected |
+| `/chat-agents`                   | ChatAgentsPage     | Protected |
+| `/conversations`                 | ConversationsPage  | Protected |
+| `/conversations/:conversationId` | ConversationsPage  | Protected |
 
 > **ConversationsPage** uses `ChatView` from `components/chat/`, `ConversationSidebar` from `components/conversation/`, and hooks from `hooks/chat/` + `hooks/conversation/`. It owns no sub-components or hooks itself — only wiring.
 >
 > **ReActAgentDeveloperPage** uses `ChatView` from `components/chat/` for its playground panel.
-| `/autonomous-agents` | AutonomousAgentsPage | Protected |
-| `/autonomous-agents/:agentId` | AutonomousAgentDetailsPage | Protected |
-| `/chat-widgets` | ChatWidgetsPage | Protected |
-| `/widget-designer` | WidgetDesignerPage | Protected |
-| `/re-act-agents` | ReActAgentDeveloperPage | Protected |
-| `/dev/tracing` | TracingDialogDevelopmentPage | Protected (dev) |
-| `/embed/chat/:agentId` | EmbedChatPage | Public |
-| `*` | NotFoundPage | — |
+> | `/autonomous-agents` | AutonomousAgentsPage | Protected |
+> | `/autonomous-agents/:agentId` | AutonomousAgentDetailsPage | Protected |
+> | `/chat-widgets` | ChatWidgetsPage | Protected |
+> | `/widget-designer` | WidgetDesignerPage | Protected |
+> | `/re-act-agents` | ReActAgentDeveloperPage | Protected |
+> | `/dev/tracing` | TracingDialogDevelopmentPage | Protected (dev) |
+> | `/embed/chat/:agentId` | EmbedChatPage | Public |
+> | `*` | NotFoundPage | — |
 
 ---
 
 ## Contexts
 
-| Context | Key Exports | Purpose |
-|---------|-------------|---------|
-| `IdentityContext` | `useIdentity()` → `{ user, tenants, selectedTenant, selectedTenantRoles, apiClient, refreshIdentity, selectTenant, getFoundryToken }` | Composite provider wrapping Auth + Tenant + ApiClient; exposes `selectedTenantRoles: TenantPermissionEnum[]` |
-| `AuthContext` | `useAuthContext()` → `{ user, isLoading, setUser, setIsLoading }` | User authentication state |
-| `TenantContext` | `useTenantContext()` → `{ tenants, selectedTenant, selectTenant, setTenants }` | Tenant selection + persistence |
-| `ApiClientContext` | `useApiClient()` → `UnifiedUIAPIClient` | API client instance |
-| `AICapabilitiesContext` | `useAICapabilities()` → `{ aiModels, isLoading }` | AI model data for current tenant |
-| `FavoritesContext` | `useFavorites()` → `{ favorites, toggleFavorite, isFavorite }` | User favorites management (chat-agents, autonomous-agents, chat-widgets, conversations, re-act-agents) |
-| `NotificationsContext` | `useNotifications()` → `{ notifications, unreadCount, markAsRead, markAllRead, deleteNotification }` | Notification polling + state |
-| `RecentVisitsContext` | `useRecentVisits()` → `{ recentVisits, trackVisit, syncVisits }` | Recent visit tracking |
-| `SidebarDataContext` | `useSidebarData()` → `{ chatAgents, autonomousAgents, chatWidgets, fetch*, refresh* }` | Cached sidebar entity lists |
-| `ChatSidebarContext` | `useChatSidebar()` → `{ isVisible, onSidebarHoverEnter, onSidebarHoverLeave }` | Right chat sidebar visibility |
+| Context                 | Key Exports                                                                                                                           | Purpose                                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `IdentityContext`       | `useIdentity()` → `{ user, tenants, selectedTenant, selectedTenantRoles, apiClient, refreshIdentity, selectTenant, getFoundryToken }` | Composite provider wrapping Auth + Tenant + ApiClient; exposes `selectedTenantRoles: TenantPermissionEnum[]` |
+| `AuthContext`           | `useAuthContext()` → `{ user, isLoading, setUser, setIsLoading }`                                                                     | User authentication state                                                                                    |
+| `TenantContext`         | `useTenantContext()` → `{ tenants, selectedTenant, selectTenant, setTenants }`                                                        | Tenant selection + persistence                                                                               |
+| `ApiClientContext`      | `useApiClient()` → `UnifiedUIAPIClient`                                                                                               | API client instance                                                                                          |
+| `AICapabilitiesContext` | `useAICapabilities()` → `{ aiModels, isLoading }`                                                                                     | AI model data for current tenant                                                                             |
+| `FavoritesContext`      | `useFavorites()` → `{ favorites, toggleFavorite, isFavorite }`                                                                        | User favorites management (chat-agents, autonomous-agents, chat-widgets, conversations, re-act-agents)       |
+| `NotificationsContext`  | `useNotifications()` → `{ notifications, unreadCount, markAsRead, markAllRead, deleteNotification }`                                  | Notification polling + state                                                                                 |
+| `RecentVisitsContext`   | `useRecentVisits()` → `{ recentVisits, trackVisit, syncVisits }`                                                                      | Recent visit tracking                                                                                        |
+| `SidebarDataContext`    | `useSidebarData()` → `{ chatAgents, autonomousAgents, chatWidgets, fetch*, refresh* }`                                                | Cached sidebar entity lists                                                                                  |
+| `ChatSidebarContext`    | `useChatSidebar()` → `{ isVisible, onSidebarHoverEnter, onSidebarHoverLeave }`                                                        | Right chat sidebar visibility                                                                                |
 
 ---
 

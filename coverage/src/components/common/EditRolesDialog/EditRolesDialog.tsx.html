@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../../../index.html">All files</a> / <a href="index.html">src/components/common/EditRolesDialog</a> EditRolesDialog.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">6.81% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>3/44</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/32</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/13</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">7.31% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>3/41</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -618,7 +618,7 @@ export const EditRolesDialog: FC&lt;EditRolesDialogProps&gt; = <span class="fsta
   };
 &nbsp;
   // Check if roles have changed
-  const hasChanges = 
+  const hasChanges =
 <span class="cstat-no" title="statement not covered" >    selectedRoles.length !== currentRoles.length ||</span>
     selectedRoles.some((r) =&gt; !currentRoles.includes(r)) ||
     currentRoles.some(<span class="fstat-no" title="function not covered" >(r</span>) =&gt; <span class="cstat-no" title="statement not covered" >!selectedRoles.includes(r))</span>;
@@ -662,7 +662,7 @@ export const EditRolesDialog: FC&lt;EditRolesDialogProps&gt; = <span class="fsta
           &lt;Text size="sm" fw={500} mb="xs"&gt;
             Select permissions
           &lt;/Text&gt;
-          
+
           &lt;ScrollArea.Autosize mah={400} scrollbarSize={8}&gt;
             &lt;Stack gap="sm" pr={8}&gt;
               {filteredRoleOptions.map(<span class="fstat-no" title="function not covered" >(r</span>ole) =&gt; (
@@ -692,7 +692,7 @@ export const EditRolesDialog: FC&lt;EditRolesDialogProps&gt; = <span class="fsta
               ))}
             &lt;/Stack&gt;
           &lt;/ScrollArea.Autosize&gt;
-          
+
           {selectedRoles.length === 0 &amp;&amp; (
             &lt;Text size="xs" c="red" mt="xs"&gt;
               At least one role must be selected
@@ -736,4 +736,3 @@ export const EditRolesDialog: FC&lt;EditRolesDialogProps&gt; = <span class="fsta
         <script src="../../../../block-navigation.js"></script>
     </body>
 </html>
-    

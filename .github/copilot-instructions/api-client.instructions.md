@@ -8,10 +8,10 @@ The API client (`src/api/client.ts`) is a single class `UnifiedUIAPIClient` with
 
 The client talks to **two backend services**:
 
-| Service | Purpose | Base URL Source |
-|---------|---------|----------------|
-| Platform Service | CRUD for tenants, chat agents, credentials, permissions, etc. | Constructor `baseURL` param |
-| Agent Service | Chat messages, SSE streaming, traces | `setAgentServiceBaseURL()` — set dynamically |
+| Service          | Purpose                                                       | Base URL Source                              |
+| ---------------- | ------------------------------------------------------------- | -------------------------------------------- |
+| Platform Service | CRUD for tenants, chat agents, credentials, permissions, etc. | Constructor `baseURL` param                  |
+| Agent Service    | Chat messages, SSE streaming, traces                          | `setAgentServiceBaseURL()` — set dynamically |
 
 Platform Service endpoints use `this.baseURL` directly. Agent Service endpoints call `this.getAgentServiceURL()` which throws if not yet configured.
 
@@ -140,15 +140,15 @@ Methods are grouped by resource with comment headers:
 
 Most resources follow this pattern:
 
-| Method | HTTP | Path |
-|--------|------|------|
-| `list{Resource}s` | GET | `/{resource}s?skip=&limit=` |
-| `get{Resource}` | GET | `/{resource}s/{id}` |
-| `create{Resource}` | POST | `/{resource}s` |
-| `update{Resource}` | PUT | `/{resource}s/{id}` |
-| `delete{Resource}` | DELETE | `/{resource}s/{id}` |
-| `list{Resource}Principals` | GET | `/{resource}s/{id}/principals` |
-| `set{Resource}Permission` | PUT | `/{resource}s/{id}/principals/{principalId}` |
+| Method                       | HTTP   | Path                                         |
+| ---------------------------- | ------ | -------------------------------------------- |
+| `list{Resource}s`            | GET    | `/{resource}s?skip=&limit=`                  |
+| `get{Resource}`              | GET    | `/{resource}s/{id}`                          |
+| `create{Resource}`           | POST   | `/{resource}s`                               |
+| `update{Resource}`           | PUT    | `/{resource}s/{id}`                          |
+| `delete{Resource}`           | DELETE | `/{resource}s/{id}`                          |
+| `list{Resource}Principals`   | GET    | `/{resource}s/{id}/principals`               |
+| `set{Resource}Permission`    | PUT    | `/{resource}s/{id}/principals/{principalId}` |
 | `delete{Resource}Permission` | DELETE | `/{resource}s/{id}/principals/{principalId}` |
 
 ---
@@ -174,15 +174,15 @@ async *sendMessageStream(
 
 ### SSE Event Types
 
-| Type | Purpose |
-|------|--------|
-| `STREAM_START` | Stream begins, provides messageId and conversationId |
-| `TEXT_STREAM` | Text content chunk for typewriter effect |
-| `STREAM_NEW_MESSAGE` | New message in multi-message response |
-| `STREAM_END` | Stream complete |
-| `MESSAGE_COMPLETE` | Full message with metadata |
-| `TITLE_GENERATION` | AI-generated conversation title (streamed after first message) |
-| `ERROR` | Error in stream |
+| Type                 | Purpose                                                        |
+| -------------------- | -------------------------------------------------------------- |
+| `STREAM_START`       | Stream begins, provides messageId and conversationId           |
+| `TEXT_STREAM`        | Text content chunk for typewriter effect                       |
+| `STREAM_NEW_MESSAGE` | New message in multi-message response                          |
+| `STREAM_END`         | Stream complete                                                |
+| `MESSAGE_COMPLETE`   | Full message with metadata                                     |
+| `TITLE_GENERATION`   | AI-generated conversation title (streamed after first message) |
+| `ERROR`              | Error in stream                                                |
 
 The `onTitleGeneration` callback receives title text that can be displayed with typewriter animation in the conversations list.
 
@@ -199,9 +199,10 @@ The `onTitleGeneration` callback receives title text that can be displayed with 
 
 ```typescript
 export const PrincipalTypeEnum = {
-  USER: 'USER',
-  IDENTITY_GROUP: 'IDENTITY_GROUP',
-  CUSTOM_GROUP: 'CUSTOM_GROUP',
+  USER: "USER",
+  IDENTITY_GROUP: "IDENTITY_GROUP",
+  CUSTOM_GROUP: "CUSTOM_GROUP",
 } as const;
-export type PrincipalTypeEnum = typeof PrincipalTypeEnum[keyof typeof PrincipalTypeEnum];
+export type PrincipalTypeEnum =
+  (typeof PrincipalTypeEnum)[keyof typeof PrincipalTypeEnum];
 ```

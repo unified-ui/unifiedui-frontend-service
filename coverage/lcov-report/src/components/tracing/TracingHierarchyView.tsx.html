@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../../index.html">All files</a> / <a href="index.html">src/components/tracing</a> TracingHierarchyView.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>0/150</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/168</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/34</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>0/145</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -1643,7 +1643,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * TracingHierarchyView - Tree Sidebar für Navigation
- * 
+ *
  * Features:
  * - Baum-Struktur mit curved Verbindungslinien (VSCode-Style)
  * - Type Badge + Name + Status Icon
@@ -1651,7 +1651,7 @@
  * - Klick = Selektion → Canvas + DataSection update
  * - variant: 'full' | 'compact' - Für Dialog vs Sidebar
  * - showDataPanels: VS Code-style resizable Panels (Logs, Input, Output, Metadata)
- * 
+ *
  * Data Panels (VS Code Style):
  * - Jedes Panel ist individuell expand/collapse
  * - Jedes expandierte Panel hat eigenen Resize-Handle
@@ -1831,17 +1831,17 @@ const ResizablePanel: FC&lt;ResizablePanelProps&gt; = <span class="cstat-no" tit
 <span class="cstat-no" title="statement not covered" >    e.preventDefault();</span>
 <span class="cstat-no" title="statement not covered" >    e.stopPropagation();</span>
 <span class="cstat-no" title="statement not covered" >    isResizing.current = true;</span>
-    
+
     const startY = <span class="cstat-no" title="statement not covered" >e.clientY;</span>
     const startHeight = <span class="cstat-no" title="statement not covered" >height;</span>
 &nbsp;
     const handleMouseMove = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(m</span>oveEvent: MouseEvent) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      if (!isResizing.current) <span class="cstat-no" title="statement not covered" >return;</span></span>
-      
+
       // Bewegung nach oben = Panel wird größer (deltaY negativ)
       const deltaY = <span class="cstat-no" title="statement not covered" >startY - moveEvent.clientY;</span>
       const newHeight = <span class="cstat-no" title="statement not covered" >Math.max(PANEL_MIN_HEIGHT, startHeight + deltaY);</span>
-      
+
       // Direkte Höhenänderung ohne requestAnimationFrame für responsive resize
 <span class="cstat-no" title="statement not covered" >      onHeightChange(newHeight);</span>
     };
@@ -1863,19 +1863,19 @@ const ResizablePanel: FC&lt;ResizablePanelProps&gt; = <span class="cstat-no" tit
   const panelHeight = <span class="cstat-no" title="statement not covered" >isExpanded ? height : PANEL_HEADER_HEIGHT;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
-    &lt;div 
+    &lt;div
       ref={containerRef}
       className={`${classes.resizablePanel} ${isExpanded ? classes.panelExpanded : classes.panelCollapsed}`}
       style={{ height: panelHeight }}
     &gt;
       {/* Resize Handle - nur wenn expanded */}
       {isExpanded &amp;&amp; (
-        &lt;div 
+        &lt;div
           className={classes.panelResizeHandle}
           onMouseDown={handleResizeStart}
         /&gt;
       )}
-      
+
       {/* Panel Header */}
       &lt;UnstyledButton
         className={classes.panelHeader}
@@ -1893,12 +1893,12 @@ const ResizablePanel: FC&lt;ResizablePanelProps&gt; = <span class="cstat-no" tit
           &lt;Text size="xs" c="dimmed" className={classes.panelNoContent}&gt;–&lt;/Text&gt;
         )}
       &lt;/UnstyledButton&gt;
-      
+
       {/* Panel Content mit eigener ScrollArea */}
       {isExpanded &amp;&amp; (
-        &lt;ScrollArea 
-          className={classes.panelScrollArea} 
-          type="auto" 
+        &lt;ScrollArea
+          className={classes.panelScrollArea}
+          type="auto"
           offsetScrollbars
           style={{ height: height - PANEL_HEADER_HEIGHT }}
         &gt;
@@ -1924,23 +1924,23 @@ interface DataPanelsContainerProps {
 const DataPanelsContainer: FC&lt;DataPanelsContainerProps&gt; = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >({</span> maxHeight: _maxHeight = <span class="branch-0 cbranch-no" title="branch not covered" >600 }</span>) =&gt; {</span>
   const { selectedTrace, selectedNode <span class="cstat-no" title="statement not covered" >} = useTracing();</span>
   const { t <span class="cstat-no" title="statement not covered" >} = useTranslation();</span>
-  
+
   const [activeHeight, setActiveHeight<span class="cstat-no" title="statement not covered" >] = useState(PANEL_DEFAULT_HEIGHT);</span>
-  
+
   // Panel states - alle initial collapsed, teilen sich activeHeight
   const [expandedPanel, setExpandedPanel<span class="cstat-no" title="statement not covered" >] = useState&lt;PanelId | null&gt;(null);</span>
 &nbsp;
   const isRoot = <span class="cstat-no" title="statement not covered" >selectedNode === null;</span>
-  
+
   // Data extraction
   const <span class="cstat-no" title="statement not covered" >logs = useMemo(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    if (isRoot) <span class="cstat-no" title="statement not covered" >return selectedTrace?.logs;</span></span>
 <span class="cstat-no" title="statement not covered" >    return selectedNode?.logs;</span>
   }, [isRoot, selectedTrace, selectedNode]);
-  
+
   const inputData = <span class="cstat-no" title="statement not covered" >selectedNode?.data?.input;</span>
   const outputData = <span class="cstat-no" title="statement not covered" >selectedNode?.data?.output;</span>
-  
+
   const <span class="cstat-no" title="statement not covered" >metadata = useMemo(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    if (isRoot) <span class="cstat-no" title="statement not covered" >return selectedTrace?.referenceMetadata;</span></span>
 <span class="cstat-no" title="statement not covered" >    return selectedNode?.metadata;</span>
@@ -1961,14 +1961,14 @@ const DataPanelsContainer: FC&lt;DataPanelsContainerProps&gt; = <span class="cst
 <span class="cstat-no" title="statement not covered" >    if (!data) {</span>
 <span class="cstat-no" title="statement not covered" >      return &lt;Text size="xs" c="dimmed" fs="italic"&gt;{t('tracing:noData', { title })}&lt;/Text&gt;;</span>
     }
-    
+
     const { text, arguments: args, extraData, metadata: dataMeta, ...rest } = <span class="cstat-no" title="statement not covered" >data;</span>
     const hasContent = <span class="cstat-no" title="statement not covered" >text || args || dataMeta || extraData || Object.keys(rest).length &gt; 0;</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (!hasContent) {</span>
 <span class="cstat-no" title="statement not covered" >      return &lt;Text size="xs" c="dimmed" fs="italic"&gt;{t('tracing:noData', { title })}&lt;/Text&gt;;</span>
     }
-    
+
 <span class="cstat-no" title="statement not covered" >    return (</span>
       &lt;div className={classes.dataContent}&gt;
         {text &amp;&amp; (
@@ -2368,7 +2368,7 @@ export const TracingHierarchyView: FC&lt;TracingHierarchyViewProps&gt; = <span c
   const isChatSidebar = <span class="cstat-no" title="statement not covered" >theme === 'chatSidebar';</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
-    &lt;div 
+    &lt;div
       ref={containerRef}
       className={`${classes.container} ${isCompact ? classes.containerCompact : ''} ${isChatSidebar ? classes.containerChatSidebar : ''} ${showDataPanels ? classes.containerWithPanels : ''}`}
     &gt;
@@ -2390,10 +2390,10 @@ export const TracingHierarchyView: FC&lt;TracingHierarchyViewProps&gt; = <span c
           )}
         &lt;/div&gt;
       )}
-      
+
       {/* Tree Area - flexibles Wachstum */}
-      &lt;ScrollArea 
-        className={classes.scrollArea} 
+      &lt;ScrollArea
+        className={classes.scrollArea}
         type="auto"
         style={showDataPanels ? { flex: 1, minHeight: TREE_MIN_HEIGHT } : undefined}
       &gt;
@@ -2422,7 +2422,7 @@ export const TracingHierarchyView: FC&lt;TracingHierarchyViewProps&gt; = <span c
           })}
         &lt;/div&gt;
       &lt;/ScrollArea&gt;
-      
+
       {/* Data Panels (VS Code Style - NEW) */}
       {showDataPanels &amp;&amp; &lt;DataPanelsContainer /&gt;}
     &lt;/div&gt;
@@ -2449,4 +2449,3 @@ export default TracingHierarchyView;
         <script src="../../../block-navigation.js"></script>
     </body>
 </html>
-    

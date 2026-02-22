@@ -27,9 +27,7 @@ Always use calculated max-height on scroll containers inside tabs:
 ```tsx
 <Tabs.Panel value="details">
   <div className={classes.tabPanelScrollWrapper}>
-    <div className={classes.tabPanelScrollArea}>
-      {/* scrollable content */}
-    </div>
+    <div className={classes.tabPanelScrollArea}>{/* scrollable content */}</div>
   </div>
 </Tabs.Panel>
 ```
@@ -47,11 +45,11 @@ This pushes the scrollbar into the negative-margin space, keeping content alignm
 
 Adjust the offset based on what is above the scroll area:
 
-| Context | Offset | Accounts for |
-|---------|--------|-------------|
+| Context         | Offset  | Accounts for                                 |
+| --------------- | ------- | -------------------------------------------- |
 | Detail page tab | `400px` | Header (70px) + page header + tabs + padding |
-| Modal tab | `320px` | Modal chrome + tabs + padding |
-| DataTable | Dynamic | Passed as prop or calculated |
+| Modal tab       | `320px` | Modal chrome + tabs + padding                |
+| DataTable       | Dynamic | Passed as prop or calculated                 |
 
 ### Rules
 
@@ -75,9 +73,7 @@ Used for detail pages and settings pages with multiple sections.
 
   <Tabs.Panel value="details" className={classes.tabPanel}>
     <div className={classes.tabPanelScrollWrapper}>
-      <div className={classes.tabPanelScrollArea}>
-        {/* content */}
-      </div>
+      <div className={classes.tabPanelScrollArea}>{/* content */}</div>
     </div>
   </Tabs.Panel>
 </Tabs>
@@ -105,9 +101,7 @@ Group related fields into visual sections:
 ```tsx
 <Paper className={classes.sectionCard}>
   <Text className={classes.sectionTitle}>Section Name</Text>
-  <Stack gap="sm">
-    {/* form fields or display values */}
-  </Stack>
+  <Stack gap="sm">{/* form fields or display values */}</Stack>
 </Paper>
 ```
 
@@ -118,15 +112,12 @@ Group related fields into visual sections:
 ### Standard Dialog Pattern
 
 ```tsx
-<Modal
-  opened={opened}
-  onClose={onClose}
-  title="Dialog Title"
-  size="lg"
->
+<Modal opened={opened} onClose={onClose} title="Dialog Title" size="lg">
   {/* form content */}
   <Group justify="flex-end" mt="xl">
-    <Button variant="subtle" onClick={onClose}>Cancel</Button>
+    <Button variant="subtle" onClick={onClose}>
+      Cancel
+    </Button>
     <Button onClick={handleSubmit}>Save</Button>
   </Group>
 </Modal>
@@ -170,7 +161,12 @@ DataTable uses `IntersectionObserver` on a sentinel element at the bottom:
 When placing buttons/links inside clickable rows, prevent the row click from firing:
 
 ```tsx
-<ActionIcon onClick={(e) => { e.stopPropagation(); handleAction(); }}>
+<ActionIcon
+  onClick={(e) => {
+    e.stopPropagation();
+    handleAction();
+  }}
+>
   <IconEdit />
 </ActionIcon>
 ```
@@ -241,11 +237,13 @@ Errors from `apiClient` trigger the `onError` callback in IdentityContext, which
 Whenever text may be truncated (via `truncate`, `lineClamp={1}`, `text-overflow: ellipsis`, or CSS line-clamp), **always** wrap it in a `DelayedTooltip` so users can read the full text on hover.
 
 ```tsx
-import { DelayedTooltip } from '../DelayedTooltip'; // or from '../../components/common'
+import { DelayedTooltip } from "../DelayedTooltip"; // or from '../../components/common'
 
 <DelayedTooltip label={item.name}>
-  <Text size="sm" truncate>{item.name}</Text>
-</DelayedTooltip>
+  <Text size="sm" truncate>
+    {item.name}
+  </Text>
+</DelayedTooltip>;
 ```
 
 ### Rules
@@ -273,10 +271,10 @@ import { DelayedTooltip } from '../DelayedTooltip'; // or from '../../components
 
 ### Two Hook Approach
 
-| Hook | Use when... |
-|------|-------------|
-| `useFormDirtyGuard(form.isDirty())` | Mantine `useForm`-based dialogs — registers `beforeunload` handler |
-| `useUnsavedChanges(currentValue, baselineValue)` | `useState`-based pages — deep comparison + `beforeunload` |
+| Hook                                             | Use when...                                                        |
+| ------------------------------------------------ | ------------------------------------------------------------------ |
+| `useFormDirtyGuard(form.isDirty())`              | Mantine `useForm`-based dialogs — registers `beforeunload` handler |
+| `useUnsavedChanges(currentValue, baselineValue)` | `useState`-based pages — deep comparison + `beforeunload`          |
 
 ### useForm-Based Dialogs (EditChatAgentDialog, EditToolDialog, etc.)
 
@@ -301,7 +299,7 @@ onSuccess?.();
 ### useState-Based Pages (ReActAgentDeveloperPage, WidgetDesignerPage)
 
 ```tsx
-import { useUnsavedChanges } from '../../hooks';
+import { useUnsavedChanges } from "../../hooks";
 
 const [config, setConfig] = useState(DEFAULT_CONFIG);
 const [savedConfig, setSavedConfig] = useState<Config | undefined>(undefined);
@@ -316,7 +314,9 @@ setSavedConfig(structuredClone(loadedConfig));
 resetBaseline(config);
 
 // Save button:
-<Button disabled={!hasChanges} onClick={handleSave}>Save</Button>
+<Button disabled={!hasChanges} onClick={handleSave}>
+  Save
+</Button>;
 ```
 
 ### Rules
@@ -342,18 +342,18 @@ When `my_permission` is `undefined`/`null`, all actions remain visible (backward
 ### `usePermissions()` Hook
 
 ```tsx
-import { usePermissions } from '../../hooks';
+import { usePermissions } from "../../hooks";
 
 const { isGlobalAdmin, canCreate, hasRole } = usePermissions();
 ```
 
-| Method | Purpose |
-|--------|---------|
-| `isGlobalAdmin` | `true` if user has `GLOBAL_ADMIN` role |
-| `canCreate(resourceType)` | `true` if user can create entities of that type |
-| `canAdmin(resourceType)` | `true` if user has admin for that resource type |
-| `hasRole(role)` | `true` if user has a specific `TenantPermissionEnum` role |
-| `hasAnyRole(roles)` | `true` if user has at least one of the given roles |
+| Method                    | Purpose                                                   |
+| ------------------------- | --------------------------------------------------------- |
+| `isGlobalAdmin`           | `true` if user has `GLOBAL_ADMIN` role                    |
+| `canCreate(resourceType)` | `true` if user can create entities of that type           |
+| `canAdmin(resourceType)`  | `true` if user has admin for that resource type           |
+| `hasRole(role)`           | `true` if user has a specific `TenantPermissionEnum` role |
+| `hasAnyRole(roles)`       | `true` if user has at least one of the given roles        |
 
 ### List Pages — Gating Create Buttons
 
@@ -373,17 +373,17 @@ Pass `undefined` instead of the callback to hide the button entirely.
 
 ```tsx
 const perm = item.my_permission;
-const canWriteItem = perm === 'ADMIN' || perm === 'WRITE';
-const canAdminItem = perm === 'ADMIN';
+const canWriteItem = perm === "ADMIN" || perm === "WRITE";
+const canAdminItem = perm === "ADMIN";
 const hasPermission = perm != null;
 ```
 
-| Action | Condition |
-|--------|-----------|
-| Open / Pin | Always visible |
-| Edit / Duplicate | Hidden when `hasPermission && !canWriteItem` |
-| Status toggle | Disabled when `hasPermission && !canWriteItem` |
-| Manage Access / Delete | Hidden when `hasPermission && !canAdminItem` |
+| Action                 | Condition                                      |
+| ---------------------- | ---------------------------------------------- |
+| Open / Pin             | Always visible                                 |
+| Edit / Duplicate       | Hidden when `hasPermission && !canWriteItem`   |
+| Status toggle          | Disabled when `hasPermission && !canWriteItem` |
+| Manage Access / Delete | Hidden when `hasPermission && !canAdminItem`   |
 
 Map `my_permission` through in `mapToTableItem`:
 
@@ -400,11 +400,16 @@ const mapToTableItem = (entity: EntityResponse): DataTableItem => ({
 
 ```tsx
 const { isGlobalAdmin } = usePermissions();
-const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission === 'ADMIN';
+const showIamTab =
+  isGlobalAdmin || !initialData || initialData.my_permission === "ADMIN";
 
-{showIamTab && (
-  <Box><SegmentedControl /* ... */ /></Box>
-)}
+{
+  showIamTab && (
+    <Box>
+      <SegmentedControl /* ... */ />
+    </Box>
+  );
+}
 ```
 
 ### Sidebar — Add Button Gating
@@ -413,7 +418,7 @@ const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission ==
 const { canCreate } = usePermissions();
 const canAddEntity = activeEntity ? canCreate(activeEntity) : false;
 
-<SidebarDataList onAdd={canAddEntity ? handleAddClick : undefined} />
+<SidebarDataList onAdd={canAddEntity ? handleAddClick : undefined} />;
 ```
 
 When `onAdd` is `undefined`, the add button is hidden entirely.
@@ -428,8 +433,9 @@ When `onAdd` is `undefined`, the add button is hidden entirely.
 
 ```tsx
 const convPerm = conversation?.my_permission;
-const canWriteConversation = !convPerm || convPerm === 'ADMIN' || convPerm === 'WRITE';
-const canAdminConv = !convPerm || convPerm === 'ADMIN';
+const canWriteConversation =
+  !convPerm || convPerm === "ADMIN" || convPerm === "WRITE";
+const canAdminConv = !convPerm || convPerm === "ADMIN";
 ```
 
 - Chat input disabled when `!canWriteConversation`

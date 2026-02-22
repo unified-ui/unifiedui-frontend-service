@@ -117,7 +117,7 @@ export const EditRolesDialog: FC<EditRolesDialogProps> = ({
   };
 
   // Check if roles have changed
-  const hasChanges = 
+  const hasChanges =
     selectedRoles.length !== currentRoles.length ||
     selectedRoles.some((r) => !currentRoles.includes(r)) ||
     currentRoles.some((r) => !selectedRoles.includes(r));
@@ -161,7 +161,7 @@ export const EditRolesDialog: FC<EditRolesDialogProps> = ({
           <Text size="sm" fw={500} mb="xs">
             Select permissions
           </Text>
-          
+
           <ScrollArea.Autosize mah={400} scrollbarSize={8}>
             <Stack gap="sm" pr={8}>
               {filteredRoleOptions.map((role) => (
@@ -191,7 +191,7 @@ export const EditRolesDialog: FC<EditRolesDialogProps> = ({
               ))}
             </Stack>
           </ScrollArea.Autosize>
-          
+
           {selectedRoles.length === 0 && (
             <Text size="xs" c="red" mt="xs">
               At least one role must be selected

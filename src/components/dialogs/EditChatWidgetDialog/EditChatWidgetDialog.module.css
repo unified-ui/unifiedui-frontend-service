@@ -22,7 +22,11 @@
   width: 40px;
   height: 40px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-500),
+    var(--color-secondary-500)
+  );
   color: white;
 }
 
@@ -37,7 +41,7 @@
   padding: var(--spacing-xs);
 }
 
-[data-mantine-color-scheme='dark'] .segmentedControl {
+[data-mantine-color-scheme="dark"] .segmentedControl {
   background-color: var(--bg-app);
 }
 
@@ -47,7 +51,9 @@
   border-radius: var(--radius-sm);
 }
 
-[data-mantine-color-scheme='dark'] .segmentedControl :global(.mantine-SegmentedControl-indicator) {
+[data-mantine-color-scheme="dark"]
+  .segmentedControl
+  :global(.mantine-SegmentedControl-indicator) {
   background-color: #292929;
 }
 
@@ -62,7 +68,9 @@
   color: var(--color-primary-600);
 }
 
-[data-mantine-color-scheme='dark'] .segmentedControl :global(.mantine-SegmentedControl-label[data-active]) {
+[data-mantine-color-scheme="dark"]
+  .segmentedControl
+  :global(.mantine-SegmentedControl-label[data-active]) {
   color: var(--color-primary-400);
 }
 

@@ -67,7 +67,9 @@
   padding: 2px 10px;
   border-radius: var(--radius-xs);
   border: 1px solid var(--border-default);
-  transition: border-color 0.15s, background-color 0.15s;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
   display: inline-flex;
   align-items: center;
 }

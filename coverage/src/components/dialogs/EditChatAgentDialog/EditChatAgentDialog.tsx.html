@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../../../index.html">All files</a> / <a href="index.html">src/components/dialogs/EditChatAgentDialog</a> EditChatAgentDialog.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">2.71% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>6/221</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/215</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/47</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">2.83% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>6/212</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -2128,7 +2128,7 @@ export const EditChatAgentDialog: FC&lt;EditChatAgentDialogProps&gt; = <span cla
   const [isSaving, setIsSaving<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
   const [error, setError<span class="cstat-no" title="statement not covered" >] = useState&lt;string | null&gt;(null);</span>
   const [chatAgent, setChatAgent<span class="cstat-no" title="statement not covered" >] = useState&lt;ChatAgentResponse | null&gt;(null);</span>
-  
+
   // Credentials state
   const [credentials, setCredentials<span class="cstat-no" title="statement not covered" >] = useState&lt;CredentialResponse[]&gt;([]);</span>
   const [isLoadingCredentials, setIsLoadingCredentials<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
@@ -2136,7 +2136,7 @@ export const EditChatAgentDialog: FC&lt;EditChatAgentDialogProps&gt; = <span cla
   const [credentialFieldTarget, setCredentialFieldTarget<span class="cstat-no" title="statement not covered" >] = useState&lt;'api_key' | 'chat_auth' | null&gt;(null);</span>
   const [credentialSearch, setCredentialSearch<span class="cstat-no" title="statement not covered" >] = useState('');</span>
   const [debouncedCredentialSearch<span class="cstat-no" title="statement not covered" >] = useDebouncedValue(credentialSearch, 300);</span>
-  
+
   // Principals state
   const [principals, setPrincipals<span class="cstat-no" title="statement not covered" >] = useState&lt;PrincipalPermission[]&gt;([]);</span>
   const [isPrincipalsLoading, setIsPrincipalsLoading<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
@@ -2268,7 +2268,7 @@ export const EditChatAgentDialog: FC&lt;EditChatAgentDialogProps&gt; = <span cla
   // Load credentials when dialog opens
   const <span class="cstat-no" title="statement not covered" >loadCredentials = useCallback(<span class="fstat-no" title="function not covered" >async (s</span>earchTerm?: string) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (!apiClient || !selectedTenant) <span class="cstat-no" title="statement not covered" >return;</span></span>
-    
+
 <span class="cstat-no" title="statement not covered" >    setIsLoadingCredentials(true);</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
       const response = <span class="cstat-no" title="statement not covered" >await apiClient.listCredentials(selectedTenant.id, { </span>
@@ -2303,15 +2303,15 @@ export const EditChatAgentDialog: FC&lt;EditChatAgentDialogProps&gt; = <span cla
   // Initialize from initialData when provided
   const <span class="cstat-no" title="statement not covered" >initializeFromData = useCallback(<span class="fstat-no" title="function not covered" >(d</span>ata: ChatAgentResponse) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    setChatAgent(data);</span>
-    
+
     // Parse config from chat agent based on type
     const n8nConfig = <span class="cstat-no" title="statement not covered" >data.type === ChatAgentTypeEnum.N8N </span>
-      ? (data.config as unknown as N8NChatAgentConfig | undefined) 
+      ? (data.config as unknown as N8NChatAgentConfig | undefined)
       : undefined;
     const foundryConfig = <span class="cstat-no" title="statement not covered" >data.type === ChatAgentTypeEnum.MICROSOFT_FOUNDRY </span>
-      ? (data.config as unknown as FoundryChatAgentConfig | undefined) 
+      ? (data.config as unknown as FoundryChatAgentConfig | undefined)
       : undefined;
-    
+
 <span class="cstat-no" title="statement not covered" >    form.setValues({</span>
       name: data.name,
       type: data.type,
@@ -2440,7 +2440,7 @@ export const EditChatAgentDialog: FC&lt;EditChatAgentDialogProps&gt; = <span cla
 <span class="cstat-no" title="statement not covered" >    try {</span>
       // Build config based on chat agent type
       let config: N8NChatAgentConfig | FoundryChatAgentConfig | undefined;
-      
+
 <span class="cstat-no" title="statement not covered" >      if (values.type === ChatAgentTypeEnum.N8N) {</span>
 <span class="cstat-no" title="statement not covered" >        config = {</span>
           api_version: values.n8n_api_version as N8NApiVersionEnum,
@@ -2476,7 +2476,7 @@ export const EditChatAgentDialog: FC&lt;EditChatAgentDialogProps&gt; = <span cla
       // Update tags if changed
       const currentTags = <span class="cstat-no" title="statement not covered" >chatAgent?.tags?.map(<span class="fstat-no" title="function not covered" >(t</span>) =&gt; <span class="cstat-no" title="statement not covered" >t.name)</span> || [];</span>
       const newTags = <span class="cstat-no" title="statement not covered" >values.tags;</span>
-      
+
 <span class="cstat-no" title="statement not covered" >      if (JSON.stringify(currentTags.sort()) !== JSON.stringify(newTags.sort())) {</span>
 <span class="cstat-no" title="statement not covered" >        await apiClient.setChatAgentTags(selectedTenant.id, chatAgentId, newTags);</span>
       }
@@ -2502,7 +2502,7 @@ export const EditChatAgentDialog: FC&lt;EditChatAgentDialogProps&gt; = <span cla
   const handleCredentialCreated = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async (c</span>redential?: { id: string; name: string }) =&gt; {</span>
     // Refresh credentials list
 <span class="cstat-no" title="statement not covered" >    await loadCredentials();</span>
-    
+
     // Auto-select the newly created credential
 <span class="cstat-no" title="statement not covered" >    if (credential &amp;&amp; credentialFieldTarget) {</span>
 <span class="cstat-no" title="statement not covered" >      if (credentialFieldTarget === 'api_key') {</span>
@@ -2977,4 +2977,3 @@ export const EditChatAgentDialog: FC&lt;EditChatAgentDialogProps&gt; = <span cla
         <script src="../../../../block-navigation.js"></script>
     </body>
 </html>
-    

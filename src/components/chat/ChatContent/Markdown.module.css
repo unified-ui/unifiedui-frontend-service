@@ -86,7 +86,7 @@
   color: var(--color-primary-700);
 }
 
-[data-mantine-color-scheme='dark'] .inlineCode {
+[data-mantine-color-scheme="dark"] .inlineCode {
   background-color: var(--color-gray-700);
   color: var(--color-primary-300);
 }

@@ -34,11 +34,11 @@ interface DataTableItem {
   my_permission?: string;
 }
 
-type SortOption = 'updated' | 'created' | 'name-asc' | 'name-desc';
+type SortOption = "updated" | "created" | "name-asc" | "name-desc";
 
 interface FilterState {
   tags: string[];
-  status: 'all' | 'active' | 'inactive';
+  status: "all" | "active" | "inactive";
 }
 ```
 
@@ -51,6 +51,7 @@ DataTable supports two filtering/sorting modes:
 ### Internal (client-side)
 
 When no external handlers are provided, DataTable internally:
+
 - Filters items by search text (name, description, type)
 - Filters by tags and status
 - Sorts by the selected sort option
@@ -58,6 +59,7 @@ When no external handlers are provided, DataTable internally:
 ### External (server-side)
 
 When passing `searchValue`/`onSearchChange`, `sortBy`/`onSortChange`, `filters`/`onFilterChange`:
+
 - DataTable delegates all filtering/sorting to the parent
 - Parent is responsible for fetching filtered data from the API
 
@@ -100,14 +102,14 @@ The `margin-right: -md` / `padding-right: md` trick keeps the scrollbar outside 
 
 ## DataTableToolbar
 
-| Prop | Purpose |
-|------|---------|
-| `searchPlaceholder` | Placeholder text for search input |
-| `searchValue` / `onSearchChange` | External search control |
-| `sortBy` / `onSortChange` | External sort control |
-| `availableTags` | Tag list for filter dropdown |
-| `filters` / `onFilterChange` | External filter control |
-| `showFilter` / `showSort` | Toggle visibility of sort/filter controls |
+| Prop                             | Purpose                                   |
+| -------------------------------- | ----------------------------------------- |
+| `searchPlaceholder`              | Placeholder text for search input         |
+| `searchValue` / `onSearchChange` | External search control                   |
+| `sortBy` / `onSortChange`        | External sort control                     |
+| `availableTags`                  | Tag list for filter dropdown              |
+| `filters` / `onFilterChange`     | External filter control                   |
+| `showFilter` / `showSort`        | Toggle visibility of sort/filter controls |
 
 Contains: Search `TextInput`, Sort `Select`, Filter `Popover` with `MultiSelect` (tags) and radio buttons (status).
 
@@ -115,20 +117,21 @@ Contains: Search `TextInput`, Sort `Select`, Filter `Popover` with `MultiSelect`
 
 ## DataTableRow
 
-| Prop | Purpose |
-|------|---------|
-| `item` | The data item to display |
-| `icon` | Custom icon ReactNode |
-| `showStatus` | Show active/inactive toggle |
-| `onStatusChange` | Callback for status toggle |
+| Prop                        | Purpose                                  |
+| --------------------------- | ---------------------------------------- |
+| `item`                      | The data item to display                 |
+| `icon`                      | Custom icon ReactNode                    |
+| `showStatus`                | Show active/inactive toggle              |
+| `onStatusChange`            | Callback for status toggle               |
 | `onOpen/onEdit/onShare/...` | Action callbacks (shown in context menu) |
-| `onRowClick` | Click handler for the entire row |
+| `onRowClick`                | Click handler for the entire row         |
 
 **Tooltip thresholds**: Name > 25 chars, Description > 50 chars → show truncated with tooltip.
 
 **Context menu**: 3-dot `ActionIcon` with Mantine `Menu` — Open, Edit, Manage Access, Duplicate, Pin/Unpin, Delete.
 
 **Row layout**: Outer `Group wrap="nowrap" gap="lg"` contains:
+
 1. Left group (`flex: 1, minWidth: 0, maxWidth: 600`) — checkbox, favorite, icon, name/description
 2. Type text (`width: 180px, flex-shrink: 0`)
 3. Tags group (`width: 200px, flex-shrink: 0`)
@@ -140,12 +143,12 @@ The left group uses `flex: 1` to fill available space (capped at 600px). The rig
 
 **Permission-aware actions**: When `my_permission` is set on the item, row actions are gated:
 
-| Action | Condition |
-|--------|----------|
-| Open / Pin | Always visible |
-| Edit / Duplicate | Hidden when `hasPermission && !canWriteItem` |
-| Status toggle | Disabled when `hasPermission && !canWriteItem` |
-| Manage Access / Delete | Hidden when `hasPermission && !canAdminItem` |
+| Action                 | Condition                                      |
+| ---------------------- | ---------------------------------------------- |
+| Open / Pin             | Always visible                                 |
+| Edit / Duplicate       | Hidden when `hasPermission && !canWriteItem`   |
+| Status toggle          | Disabled when `hasPermission && !canWriteItem` |
+| Manage Access / Delete | Hidden when `hasPermission && !canAdminItem`   |
 
 When `my_permission` is `undefined`, all actions remain visible (backward compatibility).
 
@@ -153,10 +156,10 @@ When `my_permission` is `undefined`, all actions remain visible (backward compat
 
 ## Responsive Breakpoints
 
-| Breakpoint | Hidden |
-|------------|--------|
-| `< 992px` | Type column |
-| `< 768px` | Tags column |
+| Breakpoint | Hidden      |
+| ---------- | ----------- |
+| `< 992px`  | Type column |
+| `< 768px`  | Tags column |
 
 ---
 
@@ -166,10 +169,10 @@ DataTable supports row selection with bulk action capabilities.
 
 ### Props
 
-| Prop | Type | Purpose |
-|------|------|---------|
-| `enableSelection` | `boolean` | Show checkboxes on rows |
-| `onBulkDelete` | `(ids: string[]) => void` | Callback for bulk delete action |
+| Prop                 | Type                                       | Purpose                         |
+| -------------------- | ------------------------------------------ | ------------------------------- |
+| `enableSelection`    | `boolean`                                  | Show checkboxes on rows         |
+| `onBulkDelete`       | `(ids: string[]) => void`                  | Callback for bulk delete action |
 | `onBulkStatusToggle` | `(ids: string[], active: boolean) => void` | Callback for bulk status toggle |
 
 ### Behavior
@@ -182,11 +185,11 @@ DataTable supports row selection with bulk action capabilities.
 
 ### CSS Classes
 
-| Class | Purpose |
-|-------|---------|
-| `.bulkActionBar` | Floating action bar above list |
-| `.rowSelected` | Highlighted selected row background |
-| `.rowCheckbox` | Checkbox alignment within row |
+| Class            | Purpose                             |
+| ---------------- | ----------------------------------- |
+| `.bulkActionBar` | Floating action bar above list      |
+| `.rowSelected`   | Highlighted selected row background |
+| `.rowCheckbox`   | Checkbox alignment within row       |
 
 ---
 

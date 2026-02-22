@@ -46,7 +46,7 @@
   flex-shrink: 0;
 }
 
-[data-mantine-color-scheme='dark'] .headerIcon {
+[data-mantine-color-scheme="dark"] .headerIcon {
   color: var(--color-primary-400);
 }
 
@@ -116,7 +116,7 @@
   border-left-color: var(--color-primary-500);
 }
 
-[data-mantine-color-scheme='dark'] .listItem:hover {
+[data-mantine-color-scheme="dark"] .listItem:hover {
   background: rgba(66, 165, 245, 0.1);
   border-left-color: var(--color-primary-400);
 }
@@ -169,7 +169,7 @@
     width: calc(100vw - 60px);
     max-width: 320px;
   }
-  
+
   .container.expanded {
     width: calc(100vw - 60px);
     max-width: 450px;

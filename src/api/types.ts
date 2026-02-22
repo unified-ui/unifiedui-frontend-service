@@ -77,6 +77,25 @@ export const FavoriteResourceTypeEnum = {
 
 export type FavoriteResourceTypeEnum = typeof FavoriteResourceTypeEnum[keyof typeof FavoriteResourceTypeEnum];
 
+// ========== Environment Type Enum ==========
+
+export const EnvironmentTypeEnum = {
+  SANDBOX: 'SANDBOX',
+  PRODUCTION: 'PRODUCTION',
+} as const;
+
+export type EnvironmentTypeEnum = typeof EnvironmentTypeEnum[keyof typeof EnvironmentTypeEnum];
+
+// ========== Organization Role Enum ==========
+
+export const OrganizationRoleEnum = {
+  ORGANISATION_GLOBAL_ADMIN: 'ORGANISATION_GLOBAL_ADMIN',
+  ORGANISATION_ADMIN: 'ORGANISATION_ADMIN',
+  ORGANISATION_READER: 'ORGANISATION_READER',
+} as const;
+
+export type OrganizationRoleEnum = typeof OrganizationRoleEnum[keyof typeof OrganizationRoleEnum];
+
 // ========== Credential Type Enum ==========
 
 export const CredentialTypeEnum = {
@@ -633,6 +652,13 @@ export interface TenantWithRoles {
   roles: string[];
 }
 
+export interface OrganizationContextResponse {
+  id: string;
+  name: string;
+  slug: string;
+  roles: string[];
+}
+
 export interface MeResponse {
   id: string;
   identity_provider: string;
@@ -641,6 +667,7 @@ export interface MeResponse {
   firstname: string;
   lastname: string;
   mail: string;
+  organization?: OrganizationContextResponse;
   tenants: TenantWithRoles[];
   groups: IdentityGroup[];
   custom_groups: unknown[];
@@ -652,6 +679,10 @@ export interface TenantResponse {
   id: string;
   name: string;
   description?: string;
+  organization_id: string;
+  environment_type: EnvironmentTypeEnum;
+  is_default: boolean;
+  can_be_deleted: boolean;
   created_at: string;
   updated_at: string;
   created_by?: string;
@@ -661,6 +692,7 @@ export interface TenantResponse {
 export interface CreateTenantRequest {
   name: string;
   description?: string;
+  environment_type?: EnvironmentTypeEnum;
 }
 
 export interface UpdateTenantRequest {
@@ -710,6 +742,85 @@ export interface PrincipalsResponse {
 export interface TenantPrincipalsResponse {
   tenant_id: string;
   principals: TenantPrincipalDetail[];
+}
+
+// ========== Organization Types ==========
+
+export interface OrganizationResponse {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  identity_provider: string;
+  identity_tenant_id: string;
+  subscription_tier: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+export interface OrganizationMemberRoleResponse {
+  id: string;
+  principal_id: string;
+  principal_type: string;
+  role: string;
+  created_at: string;
+}
+
+export interface OrganizationMemberResponse {
+  principal_id: string;
+  principal_type: string;
+  display_name?: string;
+  principal_name?: string;
+  mail?: string;
+  roles: OrganizationMemberRoleResponse[];
+}
+
+export interface OrganizationMembersResponse {
+  organization_id: string;
+  members: OrganizationMemberResponse[];
+}
+
+export interface UpdateOrganizationRequest {
+  name?: string;
+  description?: string;
+}
+
+export interface SetOrganizationMemberRequest {
+  principal_id: string;
+  principal_type: PrincipalTypeEnum;
+  role: OrganizationRoleEnum;
+}
+
+export interface DeleteOrganizationMemberRequest {
+  principal_id: string;
+  principal_type: PrincipalTypeEnum;
+  role: OrganizationRoleEnum;
+}
+
+export interface CreateTenantInOrganizationRequest {
+  name: string;
+  description?: string;
+  environment_type: EnvironmentTypeEnum;
+  previous_stage_id?: string;
+  is_default?: boolean;
+}
+
+export interface TenantWithOrganizationResponse {
+  id: string;
+  name: string;
+  description?: string;
+  organization_id: string;
+  environment_type: EnvironmentTypeEnum;
+  previous_stage_id?: string;
+  is_default: boolean;
+  can_be_deleted: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
 }
 
 // ========== Chat Agent Types ==========

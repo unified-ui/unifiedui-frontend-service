@@ -1,6 +1,6 @@
 /**
  * Tracing Components - Index Export (v2)
- * 
+ *
  * New implementation based on TRACING_VISUALIZATION_SPEC.md v2
  */
 

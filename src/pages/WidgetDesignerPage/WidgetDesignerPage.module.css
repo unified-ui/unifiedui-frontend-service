@@ -36,7 +36,9 @@
 
 .canvasField {
   cursor: pointer;
-  transition: background-color 150ms ease, border-color 150ms ease;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
 }
 
 .canvasField:hover {
@@ -48,7 +50,7 @@
   background-color: var(--mantine-color-primary-0);
 }
 
-[data-mantine-color-scheme='dark'] .canvasFieldSelected {
+[data-mantine-color-scheme="dark"] .canvasFieldSelected {
   background-color: var(--mantine-color-primary-9);
 }
 

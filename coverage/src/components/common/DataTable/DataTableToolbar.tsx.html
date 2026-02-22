@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../../../index.html">All files</a> / <a href="index.html">src/components/common/DataTable</a> DataTableToolbar.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">8.1% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>3/37</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/29</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/15</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">8.82% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>3/34</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -649,12 +649,12 @@ export const DataTableToolbar: FC&lt;DataTableToolbarProps&gt; = <span class="fs
 <span class="cstat-no" title="statement not covered" >  useEffect(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
     const handleClickOutside = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(e</span>vent: MouseEvent) =&gt; {</span>
       const target = <span class="cstat-no" title="statement not covered" >event.target as Node;</span>
-      
+
       // Check if click is outside filterButtonRef
 <span class="cstat-no" title="statement not covered" >      if (filterButtonRef.current &amp;&amp; !filterButtonRef.current.contains(target)) {</span>
         // Check if click is on a Mantine portal element (dropdown, select options, etc.)
         const isPortalElement = (<span class="cstat-no" title="statement not covered" >target as Element).closest?.('[data-portal]');</span>
-        
+
 <span class="cstat-no" title="statement not covered" >        if (!isPortalElement) {</span>
 <span class="cstat-no" title="statement not covered" >          setFilterOpened(false);</span>
         }
@@ -671,7 +671,7 @@ export const DataTableToolbar: FC&lt;DataTableToolbarProps&gt; = <span class="fs
   }, [filterOpened]);
 &nbsp;
   const <span class="cstat-no" title="statement not covered" >activeFilterCount = </span>
-    (filters.tags.length &gt; 0 ? 1 : 0) + 
+    (filters.tags.length &gt; 0 ? 1 : 0) +
     (filters.status !== 'all' ? 1 : 0);
 &nbsp;
   const <span class="cstat-no" title="statement not covered" >handleFilterApply = useCallback(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
@@ -737,11 +737,11 @@ export const DataTableToolbar: FC&lt;DataTableToolbarProps&gt; = <span class="fs
                     &lt;IconFilter size={18} /&gt;
                   &lt;/ActionIcon&gt;
                   {activeFilterCount &gt; 0 &amp;&amp; (
-                    &lt;Badge 
-                      size="xs" 
-                      circle 
-                      pos="absolute" 
-                      top={-4} 
+                    &lt;Badge
+                      size="xs"
+                      circle
+                      pos="absolute"
+                      top={-4}
                       right={-4}
                       style={{ pointerEvents: 'none', zIndex: 1 }}
                     &gt;
@@ -829,4 +829,3 @@ export const DataTableToolbar: FC&lt;DataTableToolbarProps&gt; = <span class="fs
         <script src="../../../../block-navigation.js"></script>
     </body>
 </html>
-    

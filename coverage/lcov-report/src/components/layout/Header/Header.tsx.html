@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../../../index.html">All files</a> / <a href="index.html">src/components/layout/Header</a> Header.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">57.44% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>27/47</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">41.66% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>15/36</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">23.52% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>4/17</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">61.36% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>27/44</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -495,10 +495,10 @@ export const Header: FC = () =&gt; {
   useEffect(() =&gt; {
     const handleClickOutside = <span class="fstat-no" title="function not covered" >(e</span>vent: MouseEvent) =&gt; {
       const target = <span class="cstat-no" title="statement not covered" >event.target as Node;</span>
-      
+
 <span class="cstat-no" title="statement not covered" >      if (userAccountRef.current &amp;&amp; !userAccountRef.current.contains(target)) {</span>
         const isPortalElement = (<span class="cstat-no" title="statement not covered" >target as Element).closest?.('[data-portal]');</span>
-        
+
 <span class="cstat-no" title="statement not covered" >        if (!isPortalElement) {</span>
 <span class="cstat-no" title="statement not covered" >          setUserDropdownOpened(false);</span>
         }
@@ -517,9 +517,9 @@ export const Header: FC = () =&gt; {
   const userName = user?.display_name || account?.name || 'User';
   const userEmail = user?.mail || account?.username || <span class="branch-2 cbranch-no" title="branch not covered" >'user@example.com';</span>
   const displayName = userName.length &gt; 20 ? <span class="branch-0 cbranch-no" title="branch not covered" >userName.substring(0, 20) + '…' : u</span>serName;
-  
+
   const tenantDisplayName = selectedTenant?.name || t('noTenant');
-  const tenantOptions = tenants.length &gt; 0 
+  const tenantOptions = tenants.length &gt; 0
     ? tenants.map(t =&gt; ({ value: t.id, label: t.name }))
     : [{ value: '', label: t('noTenantsAvailable') }];
 &nbsp;
@@ -553,9 +553,9 @@ export const Header: FC = () =&gt; {
       /&gt;
 &nbsp;
       &lt;Group gap="md"&gt;
-        &lt;ActionIcon 
-          variant="subtle" 
-          size="lg" 
+        &lt;ActionIcon
+          variant="subtle"
+          size="lg"
           radius="xl"
           onClick={<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >t</span>oggleColorScheme()}</span>
           aria-label={isDark ? <span class="branch-0 cbranch-no" title="branch not covered" >t('switchToLight') : t</span>('switchToDark')}
@@ -563,10 +563,10 @@ export const Header: FC = () =&gt; {
         &gt;
           {isDark ? <span class="branch-0 cbranch-no" title="branch not covered" >&lt;IconSun size={20} /&gt; : &lt;</span>IconMoon size={20} /&gt;}
         &lt;/ActionIcon&gt;
-        
+
         &lt;div ref={userAccountRef} className={classes.userAccountWrapper}&gt;
-          &lt;Group 
-            gap="xs" 
+          &lt;Group
+            gap="xs"
             className={classes.userAccount}
             onClick={<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >s</span>etUserDropdownOpened(!userDropdownOpened)}</span>
           &gt;
@@ -579,9 +579,9 @@ export const Header: FC = () =&gt; {
 &nbsp;
           {userDropdownOpened &amp;&amp; (
 <span class="branch-1 cbranch-no" title="branch not covered" >            &lt;Paper </span>
-              className={classes.userDropdown} 
-              shadow="md" 
-              radius="md" 
+              className={classes.userDropdown}
+              shadow="md"
+              radius="md"
               p="md"
               onClick={<span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >e.stopPropagation()}</span>
             &gt;
@@ -627,9 +627,9 @@ export const Header: FC = () =&gt; {
 &nbsp;
                 &lt;Divider /&gt;
 &nbsp;
-                &lt;Button 
+                &lt;Button
                   leftSection={&lt;IconLogout size={16} /&gt;}
-                  variant="light" 
+                  variant="light"
                   color="red"
                   fullWidth
                   onClick={logout}
@@ -673,4 +673,3 @@ export const Header: FC = () =&gt; {
         <script src="../../../../block-navigation.js"></script>
     </body>
 </html>
-    

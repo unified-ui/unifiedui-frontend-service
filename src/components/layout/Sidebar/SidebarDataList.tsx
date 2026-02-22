@@ -175,7 +175,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
     (item: DataListItem) => {
       const [targetPath] = item.link.split('?');
       const currentPath = location.pathname;
-      
+
       // If we're on the same path, use replace to force query param update
       if (currentPath === targetPath) {
         navigate(item.link, { replace: true });

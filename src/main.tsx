@@ -27,6 +27,7 @@ msalInstance.initialize().then(() => {
   });
 });
 
+// eslint-disable-next-line react-refresh/only-export-components
 const IdpWrapper = ({ children }: { children: ReactNode }) => {
   switch (authConfig.provider) {
     case 'google':

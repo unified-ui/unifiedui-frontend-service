@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../../index.html">All files</a> / <a href="index.html">src/pages/TracingDialogDevelopmentPage</a> TracingDialogDevelopmentPage.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>0/51</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/38</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/10</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>0/51</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -551,14 +551,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * TracingDialogDevelopmentPage
- * 
+ *
  * Development page for testing tracing visualization as modal dialog.
  * Route: /dev/tracing
- * 
+ *
  * Query Parameters:
  * - conversationId: Load traces for a conversation
  * - autonomousAgentId: Load traces for an autonomous agent
- * 
+ *
  * Example URLs:
  * - /dev/tracing?conversationId=abc123
  * - /dev/tracing?autonomousAgentId=xyz789
@@ -597,7 +597,7 @@ export const TracingDialogDevelopmentPage: FC = <span class="cstat-no" title="st
   const [_isLoading, setIsLoading<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
   const [_error, setError<span class="cstat-no" title="statement not covered" >] = useState&lt;string | null&gt;(null);</span>
   const [dialogOpened, setDialogOpened<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
-  
+
   // Input state
   const [conversationIdInput, setConversationIdInput<span class="cstat-no" title="statement not covered" >] = useState(</span>
     searchParams.get('conversationId') || ''
@@ -756,7 +756,7 @@ export const TracingDialogDevelopmentPage: FC = <span class="cstat-no" title="st
               &lt;Group gap="xs"&gt;
                 &lt;Text size="sm" fw={500}&gt;Active Query Parameters:&lt;/Text&gt;
                 &lt;Code&gt;
-                  {conversationId 
+                  {conversationId
                     ? `conversationId=${conversationId}`
                     : `autonomousAgentId=${autonomousAgentId}`
                   }
@@ -811,4 +811,3 @@ export default TracingDialogDevelopmentPage;
         <script src="../../../block-navigation.js"></script>
     </body>
 </html>
-    

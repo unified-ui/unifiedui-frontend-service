@@ -59,9 +59,9 @@ export const ChatAgentSelectDialog: FC<ChatAgentSelectDialogProps> = ({
 
   const filteredChatAgents = useMemo(() => {
     if (!debouncedQuery.trim()) return chatAgents;
-    
+
     const query = debouncedQuery.toLowerCase();
-    return chatAgents.filter(app => 
+    return chatAgents.filter(app =>
       app.name.toLowerCase().includes(query)
     );
   }, [debouncedQuery, chatAgents]);

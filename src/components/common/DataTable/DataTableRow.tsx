@@ -103,9 +103,9 @@ export const DataTableRow: FC<DataTableRowProps> = ({
   };
 
   return (
-    <Paper 
-      className={`${classes.row} ${onRowClick ? classes.clickable : ''} ${isDeleting ? classes.rowDeleting : ''} ${isSelected ? classes.rowSelected : ''}`} 
-      p="md" 
+    <Paper
+      className={`${classes.row} ${onRowClick ? classes.clickable : ''} ${isDeleting ? classes.rowDeleting : ''} ${isSelected ? classes.rowSelected : ''}`}
+      p="md"
       withBorder
       onClick={() => onRowClick?.(item.id)}
       style={onRowClick ? { cursor: 'pointer' } : undefined}
@@ -164,10 +164,10 @@ export const DataTableRow: FC<DataTableRowProps> = ({
             </Badge>
           ))}
           {hasHiddenTags && (
-            <Popover 
-              position="top" 
-              withArrow 
-              shadow="md" 
+            <Popover
+              position="top"
+              withArrow
+              shadow="md"
               withinPortal
               opened={popoverOpened}
               onChange={setPopoverOpened}

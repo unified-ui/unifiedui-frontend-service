@@ -1,9 +1,9 @@
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode, FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth';
 import { UnifiedUIAPIClient } from '../api/client';
-import type { TenantResponse, IdentityUser, TenantPermissionEnum } from '../api/types';
+import type { TenantResponse, IdentityUser, TenantPermissionEnum, OrganizationContextResponse } from '../api/types';
 import { notifications } from '@mantine/notifications';
 import { AuthProviderInternal, useAuthContext } from './AuthContext';
 import { TenantProvider, useTenantContext } from './TenantContext';
@@ -11,6 +11,7 @@ import { ApiClientProvider, useApiClient } from './ApiClientContext';
 
 interface IdentityContextType {
   user: IdentityUser | null;
+  organization: OrganizationContextResponse | null;
   tenants: TenantResponse[];
   selectedTenant: TenantResponse | null;
   selectedTenantRoles: TenantPermissionEnum[];
@@ -36,6 +37,7 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
   const { user, isLoading, setUser, setIsLoading } = useAuthContext();
   const { tenants, selectedTenant, selectedTenantRoles, setTenantsWithRoles, selectTenant } = useTenantContext();
   const { apiClient, setApiClient } = useApiClient();
+  const [organization, setOrganization] = useState<OrganizationContextResponse | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -68,6 +70,7 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
     } else {
       setApiClient(null);
       setUser(null);
+      setOrganization(null);
       setTenantsWithRoles([]);
     }
   }, [isAuthenticated, getAccessToken]);
@@ -83,7 +86,7 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
 
     setIsLoading(true);
     try {
-      let meResponse = await apiClient.getMe({ noCache });
+      const meResponse = await apiClient.getMe({ noCache });
 
       const identityUser: IdentityUser = {
         id: meResponse.id,
@@ -95,20 +98,8 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
         mail: meResponse.mail,
       };
 
-      const tenantsWithRoles = meResponse.tenants || [];
-
-      if (tenantsWithRoles.length === 0) {
-        await apiClient.createTenant({
-          name: 'default',
-          description: 'Default tenant created automatically',
-        });
-
-        meResponse = await apiClient.getMe({ noCache });
-        setTenantsWithRoles(meResponse.tenants || []);
-      } else {
-        setTenantsWithRoles(tenantsWithRoles);
-      }
-
+      setOrganization(meResponse.organization || null);
+      setTenantsWithRoles(meResponse.tenants || []);
       setUser(identityUser);
     } catch (error) {
       console.error('Failed to load identity:', error);
@@ -119,6 +110,7 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
 
   const value: IdentityContextType = {
     user,
+    organization,
     tenants,
     selectedTenant,
     selectedTenantRoles,

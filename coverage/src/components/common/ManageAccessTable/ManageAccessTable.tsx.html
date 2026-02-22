@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../../../index.html">All files</a> / <a href="index.html">src/components/common/ManageAccessTable</a> ManageAccessTable.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">7.05% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>6/85</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/75</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/22</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">7.31% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>6/82</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -1073,13 +1073,13 @@ export const ManageAccessTable: FC&lt;ManageAccessTableProps&gt; = <span class="
   // Search state
   const [searchValue, setSearchValue<span class="cstat-no" title="statement not covered" >] = useState('');</span>
   const [debouncedSearch<span class="cstat-no" title="statement not covered" >] = useDebouncedValue(searchValue, 300);</span>
-  
+
   // Role filter state
   const [roleFilter, setRoleFilter<span class="cstat-no" title="statement not covered" >] = useState&lt;string[]&gt;([]);</span>
-  
+
   // Loading states for individual role changes
   const [loadingRoles, setLoadingRoles<span class="cstat-no" title="statement not covered" >] = useState&lt;Set&lt;string&gt;&gt;(new Set());</span>
-  
+
   // Delete confirmation dialog state
   const [deleteDialog, setDeleteDialog<span class="cstat-no" title="statement not covered" >] = useState&lt;{</span>
     open: boolean;
@@ -1267,13 +1267,13 @@ export const ManageAccessTable: FC&lt;ManageAccessTableProps&gt; = <span class="
                 const hasDisplayName = <span class="cstat-no" title="statement not covered" >!!principal.displayName;</span>
                 const secondaryText = <span class="cstat-no" title="statement not covered" >principal.mail || principal.principalName || null;</span>
                 const hasSecondary = <span class="cstat-no" title="statement not covered" >!!secondaryText;</span>
-                
+
                 // Fallback: if no display name, show principalId
                 const primaryText = <span class="cstat-no" title="statement not covered" >principal.displayName || principal.principalId;</span>
-                
+
                 // Check if this is the current logged-in user (prevent self-modification)
                 const isCurrentUser = <span class="cstat-no" title="statement not covered" >currentUser?.id === principal.principalId;</span>
-                
+
 <span class="cstat-no" title="statement not covered" >                return (</span>
                 &lt;Table.Tr key={principal.id}&gt;
                   &lt;Table.Td&gt;
@@ -1390,4 +1390,3 @@ export const ManageAccessTable: FC&lt;ManageAccessTableProps&gt; = <span class="
         <script src="../../../../block-navigation.js"></script>
     </body>
 </html>
-    

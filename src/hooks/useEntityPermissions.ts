@@ -9,12 +9,12 @@ import type {
 import type { PrincipalPermission } from '../components/common/ManageAccessTable/ManageAccessTable';
 import type { SelectedPrincipal } from '../components/common/AddPrincipalDialog/AddPrincipalDialog';
 
-export type EntityType = 
-  | 'chat-agent' 
-  | 'autonomous-agent' 
+export type EntityType =
+  | 'chat-agent'
+  | 'autonomous-agent'
   | 're-act-agent'
-  | 'credential' 
-  | 'chat-widget' 
+  | 'credential'
+  | 'chat-widget'
   | 'conversation'
   | 'tool';
 

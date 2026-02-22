@@ -23,15 +23,15 @@ npx vitest run --coverage  # Coverage report
 
 ## File Locations
 
-| What | Path |
-|------|------|
-| Vitest config | `vite.config.ts` → `test` section |
-| Setup file | `src/test/setup.ts` |
-| Test utils | `src/test/utils.tsx` |
-| MSW handlers | `src/test/mocks/handlers.ts` |
-| MSW server | `src/test/mocks/server.ts` |
-| Test files | `src/test/__tests__/*.test.tsx` |
-| i18n for tests | `src/i18n/i18nForTests.ts` |
+| What           | Path                              |
+| -------------- | --------------------------------- |
+| Vitest config  | `vite.config.ts` → `test` section |
+| Setup file     | `src/test/setup.ts`               |
+| Test utils     | `src/test/utils.tsx`              |
+| MSW handlers   | `src/test/mocks/handlers.ts`      |
+| MSW server     | `src/test/mocks/server.ts`        |
+| Test files     | `src/test/__tests__/*.test.tsx`   |
+| i18n for tests | `src/i18n/i18nForTests.ts`        |
 
 ---
 
@@ -56,18 +56,24 @@ This wraps components with `MantineProvider`, `I18nextProvider`, and `MemoryRout
 Components that use contexts (`useIdentity`, `useAuth`, `useSidebarData`, `useChatSidebar`, `useAuthContext`, `useTenantContext`, `useApiClient`, `useFavorites`, `useRecentVisits`) need vi.mock:
 
 ```typescript
-vi.mock('../../contexts', () => ({
+vi.mock("../../contexts", () => ({
   useIdentity: vi.fn(),
-  useSidebarData: vi.fn().mockReturnValue({ /* defaults */ }),
-  useChatSidebar: vi.fn().mockReturnValue({ isVisible: false, onSidebarHoverEnter: vi.fn(), onSidebarHoverLeave: vi.fn() }),
+  useSidebarData: vi.fn().mockReturnValue({
+    /* defaults */
+  }),
+  useChatSidebar: vi.fn().mockReturnValue({
+    isVisible: false,
+    onSidebarHoverEnter: vi.fn(),
+    onSidebarHoverLeave: vi.fn(),
+  }),
 }));
 
-vi.mock('../../auth', () => ({
+vi.mock("../../auth", () => ({
   useAuth: vi.fn().mockReturnValue({
     isAuthenticated: true,
     login: vi.fn(),
     logout: vi.fn(),
-    account: { username: 'test@example.com' },
+    account: { username: "test@example.com" },
   }),
 }));
 ```
@@ -80,11 +86,11 @@ Text that appears in both Header and page content (e.g., user name, tenant name)
 
 ### Test Naming
 
-| Pattern | Example |
-|---------|---------|
-| Test file | `{component}.test.tsx` |
-| Describe block | `describe('ComponentName', () => { ... })` |
-| Test case | `it('shows loading state', () => { ... })` |
+| Pattern             | Example                                                    |
+| ------------------- | ---------------------------------------------------------- |
+| Test file           | `{component}.test.tsx`                                     |
+| Describe block      | `describe('ComponentName', () => { ... })`                 |
+| Test case           | `it('shows loading state', () => { ... })`                 |
 | German string check | `it('does not contain any German strings', () => { ... })` |
 
 ### MSW Handlers

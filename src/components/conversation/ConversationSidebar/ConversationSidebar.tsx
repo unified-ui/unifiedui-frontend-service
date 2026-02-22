@@ -91,7 +91,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
   const { apiClient, selectedTenant } = useIdentity();
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   const [groupMode, setGroupMode] = useState<GroupMode>(() => {
     const stored = localStorage.getItem(STORAGE_KEY_GROUP_MODE);
     return (stored === 'time' || stored === 'chat-agent') ? stored : 'time';
@@ -107,11 +107,11 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
     conversationName: string;
   }>({ open: false, conversationId: '', conversationName: '' });
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   const [chatAgentSelectDialogOpen, setChatAgentSelectDialogOpen] = useState(false);
 
   const selectedChatAgentId = searchParams.get('selected-chatAgentId');
-  
+
   const selectedChatAgent = useMemo(() => {
     if (!selectedChatAgentId) return null;
     return chatAgents.find(app => app.id === selectedChatAgentId) || null;
@@ -155,14 +155,14 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
 
   const handleRenameSave = async () => {
     if (!editingId || !apiClient || !selectedTenant) return;
-    
+
     try {
       await apiClient.updateConversation(selectedTenant.id, editingId, {
         name: editingName,
       });
-      
+
       onRenameConversation?.(editingId, editingName);
-      
+
       setEditingId(null);
       setEditingName('');
     } catch (error) {
@@ -181,7 +181,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
 
   const handleDeleteConfirm = async () => {
     if (!deleteDialog.conversationId) return;
-    
+
     setIsDeleting(true);
     try {
       await onDeleteConversation?.(deleteDialog.conversationId);
@@ -207,7 +207,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
 
     if (effectiveGroupMode === 'chat-agent') {
       const appGroups = new Map<string, ConversationResponse[]>();
-      
+
       unpinned.forEach(conv => {
         const appId = conv.chat_agent_id;
         if (!appGroups.has(appId)) {
@@ -217,11 +217,11 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
       });
 
       const result: GroupedConversations[] = [];
-      
+
       if (pinned.length > 0) {
         result.push({ label: t('conversations:pinned'), conversations: pinned });
       }
-      
+
       const sortedGroups = Array.from(appGroups.entries()).sort((a, b) => {
         const aLatest = Math.max(...a[1].map(c => new Date(c.updated_at).getTime()));
         const bLatest = Math.max(...b[1].map(c => new Date(c.updated_at).getTime()));
@@ -231,7 +231,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
       sortedGroups.forEach(([appId, convs]) => {
         result.push({
           label: getChatAgentName(appId),
-          conversations: convs.sort((a, b) => 
+          conversations: convs.sort((a, b) =>
             new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
           ),
         });
@@ -346,7 +346,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
             <IconLayoutList size={14} />
             <span>{t('conversations:groupByTime')}</span>
           </UnstyledButton>
-          
+
           {isFilterActive ? (
             <div className={classes.segmentedTabFilter}>
               <IconApps size={14} style={{ flexShrink: 0 }} />

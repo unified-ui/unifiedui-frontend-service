@@ -121,4 +121,3 @@ export const semanticColors = {
     info: colors.info[4],
   },
 };
-

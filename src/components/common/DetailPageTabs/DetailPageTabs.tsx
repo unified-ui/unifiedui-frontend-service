@@ -30,14 +30,14 @@ export const DetailPageTabs: FC<DetailPageTabsProps> = ({
   iamLabel = 'Manage Access',
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   // Use URL query param if no external control
   const urlTab = searchParams.get('tab') as DetailTab | null;
   const activeTab = externalActiveTab ?? urlTab ?? 'details';
 
   const handleTabChange = (value: string | null) => {
     const tab = (value as DetailTab) || 'details';
-    
+
     if (externalOnTabChange) {
       externalOnTabChange(tab);
     } else {

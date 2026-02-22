@@ -9,13 +9,13 @@
 
     <!-- Serpent winding around the staff -->
     <!-- Snake body segments (s-curves around the rod) -->
-    <path d="M0 110 
-             C 35 100, 45 80, 30 65 
-             C 15 50, -15 50, -30 35 
-             C -45 20, -45 0, -30 -15 
-             C -15 -30, 15 -30, 30 -45 
-             C 45 -60, 45 -80, 30 -90 
-             C 15 -100, 0 -95, -10 -85" 
+    <path d="M0 110
+             C 35 100, 45 80, 30 65
+             C 15 50, -15 50, -30 35
+             C -45 20, -45 0, -30 -15
+             C -15 -30, 15 -30, 30 -45
+             C 45 -60, 45 -80, 30 -90
+             C 15 -100, 0 -95, -10 -85"
           stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 
     <!-- Snake head -->

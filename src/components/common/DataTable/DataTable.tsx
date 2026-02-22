@@ -88,7 +88,7 @@ export const DataTable: FC<DataTableProps> = ({
   const [internalSortBy, setInternalSortBy] = useState<SortOption>('updated');
   const [internalFilters, setInternalFilters] = useState<FilterState>({ tags: [], status: 'all' });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  
+
   const showLoadingSkeleton = useDelayedLoading(isLoading, 500);
 
   const filters = externalFilters ?? internalFilters;
@@ -388,7 +388,7 @@ export const DataTable: FC<DataTableProps> = ({
                     onSelect={enableSelection ? handleToggleSelect : undefined}
                   />
                 ))}
-                
+
                 {hasMore && (
                   <div ref={sentinelRef} className={classes.sentinel}>
                     {isLoadingMore && (

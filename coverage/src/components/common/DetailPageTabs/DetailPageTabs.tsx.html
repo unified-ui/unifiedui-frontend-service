@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../../../index.html">All files</a> / <a href="index.html">src/components/common/DetailPageTabs</a> DetailPageTabs.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">10% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>1/10</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/9</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/2</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">10% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>1/10</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -257,14 +257,14 @@ export const DetailPageTabs: FC&lt;DetailPageTabsProps&gt; = <span class="fstat-
   iamLabel = <span class="branch-0 cbranch-no" title="branch not covered" >'Manage Access',</span>
 }) =&gt; {
   const [searchParams, setSearchParams<span class="cstat-no" title="statement not covered" >] = useSearchParams();</span>
-  
+
   // Use URL query param if no external control
   const urlTab = <span class="cstat-no" title="statement not covered" >searchParams.get('tab') as DetailTab | null;</span>
   const activeTab = <span class="cstat-no" title="statement not covered" >externalActiveTab ?? urlTab ?? 'details';</span>
 &nbsp;
   const handleTabChange = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(v</span>alue: string | null) =&gt; {</span>
     const tab = (<span class="cstat-no" title="statement not covered" >value as DetailTab) || 'details';</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (externalOnTabChange) {</span>
 <span class="cstat-no" title="statement not covered" >      externalOnTabChange(tab);</span>
     } else {
@@ -325,4 +325,3 @@ export const DetailPageTabs: FC&lt;DetailPageTabsProps&gt; = <span class="fstat-
         <script src="../../../../block-navigation.js"></script>
     </body>
 </html>
-    

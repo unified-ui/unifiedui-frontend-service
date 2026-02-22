@@ -65,7 +65,7 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
         <Text size="sm" c="dimmed">
           {displayMessage}
         </Text>
-        
+
         <Text size="xs" c="red.6" style={{
           padding: 'var(--spacing-sm) var(--spacing-sm)',
           backgroundColor: 'var(--color-error-50)',
@@ -78,15 +78,15 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
         <Group justify="flex-end" gap="sm" mt="sm">
           {reverseButtons ? (
             <>
-              <Button 
-                color="red" 
+              <Button
+                color="red"
                 onClick={handleConfirm}
                 loading={isLoading}
               >
                 {confirmButtonText}
               </Button>
-              <Button 
-                variant="default" 
+              <Button
+                variant="default"
                 onClick={onClose}
                 disabled={isLoading}
               >
@@ -95,15 +95,15 @@ export const ConfirmDeleteDialog: FC<ConfirmDeleteDialogProps> = ({
             </>
           ) : (
             <>
-              <Button 
-                variant="default" 
+              <Button
+                variant="default"
                 onClick={onClose}
                 disabled={isLoading}
               >
                 Cancel
               </Button>
-              <Button 
-                color="red" 
+              <Button
+                color="red"
                 onClick={handleConfirm}
                 loading={isLoading}
               >

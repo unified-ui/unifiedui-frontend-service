@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../../../index.html">All files</a> / <a href="index.html">src/components/common/DataTable</a> DataTable.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">1% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>1/100</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/111</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/26</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">1.06% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>1/94</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -969,7 +969,7 @@ export const DataTable: FC&lt;DataTableProps&gt; = <span class="fstat-no" title=
   const [internalSortBy, setInternalSortBy<span class="cstat-no" title="statement not covered" >] = useState&lt;SortOption&gt;('updated');</span>
   const [internalFilters, setInternalFilters<span class="cstat-no" title="statement not covered" >] = useState&lt;FilterState&gt;({ tags: [], status: 'all' });</span>
   const [selectedIds, setSelectedIds<span class="cstat-no" title="statement not covered" >] = useState&lt;Set&lt;string&gt;&gt;(new Set());</span>
-  
+
   const <span class="cstat-no" title="statement not covered" >showLoadingSkeleton = useDelayedLoading(isLoading, 500);</span>
 &nbsp;
   const filters = <span class="cstat-no" title="statement not covered" >externalFilters ?? internalFilters;</span>
@@ -1269,7 +1269,7 @@ export const DataTable: FC&lt;DataTableProps&gt; = <span class="fstat-no" title=
                     onSelect={enableSelection ? handleToggleSelect : undefined}
                   /&gt;
                 ))}
-                
+
                 {hasMore &amp;&amp; (
                   &lt;div ref={sentinelRef} className={classes.sentinel}&gt;
                     {isLoadingMore &amp;&amp; (
@@ -1306,4 +1306,3 @@ export const DataTable: FC&lt;DataTableProps&gt; = <span class="fstat-no" title=
         <script src="../../../../block-navigation.js"></script>
     </body>
 </html>
-    

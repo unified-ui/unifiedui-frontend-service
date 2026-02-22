@@ -8,5 +8,19 @@
   "tools": "Tools",
   "billing": "Billing",
   "newApiKey": "New API Key",
-  "keepCurrentValue": "Leave empty to keep the current value"
+  "keepCurrentValue": "Leave empty to keep the current value",
+  "organization": "Organization",
+  "organizationInfo": "Organization Information",
+  "organizationMembers": "Organization Members",
+  "orgSlug": "Slug",
+  "orgSubscription": "Subscription",
+  "orgMembersHint": "Manage who has access to this organization and its tenants. Organization admins can manage members and create new tenants.",
+  "noOrgMembers": "No members found.",
+  "noOrganization": "No organization found for your account.",
+  "principalType": "Type",
+  "roles": "Roles",
+  "environmentType": "Environment",
+  "environmentSandbox": "Sandbox",
+  "environmentProduction": "Production",
+  "createTenant": "Create Tenant"
 }

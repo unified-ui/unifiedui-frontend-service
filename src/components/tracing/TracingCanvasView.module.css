@@ -48,7 +48,9 @@
   justify-content: center;
   padding: var(--spacing-xs);
   cursor: pointer;
-  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  transition:
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
   position: relative;
 }
 

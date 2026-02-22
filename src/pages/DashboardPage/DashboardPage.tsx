@@ -272,4 +272,3 @@ export const DashboardPage: FC = () => {
     </MainLayout>
   );
 };
-

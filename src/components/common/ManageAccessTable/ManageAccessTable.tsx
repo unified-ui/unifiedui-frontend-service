@@ -136,13 +136,13 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
   // Search state
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearch] = useDebouncedValue(searchValue, 300);
-  
+
   // Role filter state
   const [roleFilter, setRoleFilter] = useState<string[]>([]);
-  
+
   // Loading states for individual role changes
   const [loadingRoles, setLoadingRoles] = useState<Set<string>>(new Set());
-  
+
   // Delete confirmation dialog state
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
@@ -330,13 +330,13 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
                 const hasDisplayName = !!principal.displayName;
                 const secondaryText = principal.mail || principal.principalName || null;
                 const hasSecondary = !!secondaryText;
-                
+
                 // Fallback: if no display name, show principalId
                 const primaryText = principal.displayName || principal.principalId;
-                
+
                 // Check if this is the current logged-in user (prevent self-modification)
                 const isCurrentUser = currentUser?.id === principal.principalId;
-                
+
                 return (
                 <Table.Tr key={principal.id}>
                   <Table.Td>

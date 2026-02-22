@@ -40,7 +40,7 @@ export const GlobalChatSidebar: FC = () => {
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
   const { isVisible, onSidebarHoverEnter, onSidebarHoverLeave } = useChatSidebar();
-  
+
   const [conversations, setConversations] = useState<ConversationResponse[]>([]);
   const [chatAgents, setChatAgents] = useState<ChatAgentResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -92,7 +92,7 @@ export const GlobalChatSidebar: FC = () => {
   }
 
   return (
-    <Box 
+    <Box
       className={classes.sidebar}
       onMouseEnter={onSidebarHoverEnter}
       onMouseLeave={onSidebarHoverLeave}
@@ -133,8 +133,8 @@ export const GlobalChatSidebar: FC = () => {
       </ScrollArea>
 
       {/* Footer */}
-      <Box 
-        className={classes.footer} 
+      <Box
+        className={classes.footer}
         onClick={() => navigate('/conversations')}
       >
         <Group gap="xs">

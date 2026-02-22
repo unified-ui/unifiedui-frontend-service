@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import type { AccountInfo } from '@azure/msal-browser';
 import { authConfig, loginRequest } from './authConfig';
-import { useGoogleAuth } from './GoogleAuthProvider';
-import { useCognitoAuth } from './CognitoAuthProvider';
+import { useGoogleAuth } from './useGoogleAuth';
+import { useCognitoAuth } from './useCognitoAuth';
 
 interface AuthContextType {
   isAuthenticated: boolean;

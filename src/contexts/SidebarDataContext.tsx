@@ -69,7 +69,7 @@ interface SidebarDataProviderProps {
 
 export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) => {
   const { apiClient, selectedTenant } = useIdentity();
-  
+
   const [data, setData] = useState<SidebarDataState>({
     chatAgents: [],
     autonomousAgents: [],
@@ -77,7 +77,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     reActAgents: [],
     conversations: [],
   });
-  
+
   const [loadingStates, setLoadingStates] = useState<LoadingState>({
     'chat-agents': false,
     'autonomous-agents': false,
@@ -85,7 +85,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     're-act-agents': false,
     conversations: false,
   });
-  
+
   const [errorStates, setErrorStates] = useState<ErrorState>({
     'chat-agents': null,
     'autonomous-agents': null,
@@ -93,7 +93,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     're-act-agents': null,
     conversations: null,
   });
-  
+
   const [fetchedStates, setFetchedStates] = useState<FetchedState>({
     'chat-agents': false,
     'autonomous-agents': false,
@@ -125,17 +125,17 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
 
   const fetchChatAgents = useCallback(async (noCache = false) => {
     if (!apiClient || !selectedTenant) return;
-    
+
     if (!noCache && fetchedStatesRef.current['chat-agents'] && dataRef.current.chatAgents.length > 0) {
       return;
     }
-    
+
     setLoadingStates(prev => ({ ...prev, 'chat-agents': true }));
     setErrorStates(prev => ({ ...prev, 'chat-agents': null }));
-    
+
     try {
       const result = await apiClient.listChatAgents(
-        selectedTenant.id, 
+        selectedTenant.id,
         { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' },
         noCache ? { noCache: true } : undefined
       );
@@ -150,20 +150,20 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
       setLoadingStates(prev => ({ ...prev, 'chat-agents': false }));
     }
   }, [apiClient, selectedTenant]);
-  
+
   const fetchAutonomousAgents = useCallback(async (noCache = false) => {
     if (!apiClient || !selectedTenant) return;
-    
+
     if (!noCache && fetchedStatesRef.current['autonomous-agents'] && dataRef.current.autonomousAgents.length > 0) {
       return;
     }
-    
+
     setLoadingStates(prev => ({ ...prev, 'autonomous-agents': true }));
     setErrorStates(prev => ({ ...prev, 'autonomous-agents': null }));
-    
+
     try {
       const result = await apiClient.listAutonomousAgents(
-        selectedTenant.id, 
+        selectedTenant.id,
         { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' },
         noCache ? { noCache: true } : undefined
       );
@@ -181,17 +181,17 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
 
   const fetchChatWidgets = useCallback(async (noCache = false) => {
     if (!apiClient || !selectedTenant) return;
-    
+
     if (!noCache && fetchedStatesRef.current['chat-widgets'] && dataRef.current.chatWidgets.length > 0) {
       return;
     }
-    
+
     setLoadingStates(prev => ({ ...prev, 'chat-widgets': true }));
     setErrorStates(prev => ({ ...prev, 'chat-widgets': null }));
-    
+
     try {
       const result = await apiClient.listChatWidgets(
-        selectedTenant.id, 
+        selectedTenant.id,
         { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' },
         noCache ? { noCache: true } : undefined
       );
@@ -209,17 +209,17 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
 
   const fetchReActAgents = useCallback(async (noCache = false) => {
     if (!apiClient || !selectedTenant) return;
-    
+
     if (!noCache && fetchedStatesRef.current['re-act-agents'] && dataRef.current.reActAgents.length > 0) {
       return;
     }
-    
+
     setLoadingStates(prev => ({ ...prev, 're-act-agents': true }));
     setErrorStates(prev => ({ ...prev, 're-act-agents': null }));
-    
+
     try {
       const result = await apiClient.listReActAgents(
-        selectedTenant.id, 
+        selectedTenant.id,
         { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' },
         noCache ? { noCache: true } : undefined
       );
@@ -237,17 +237,17 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
 
   const fetchConversations = useCallback(async (noCache = false) => {
     if (!apiClient || !selectedTenant) return;
-    
+
     if (!noCache && fetchedStatesRef.current.conversations && dataRef.current.conversations.length > 0) {
       return;
     }
-    
+
     setLoadingStates(prev => ({ ...prev, conversations: true }));
     setErrorStates(prev => ({ ...prev, conversations: null }));
-    
+
     try {
       const result = await apiClient.listConversations(
-        selectedTenant.id, 
+        selectedTenant.id,
         { limit: 999, view: 'quick-list', order_by: 'updated_at', order_direction: 'desc' },
         noCache ? { noCache: true } : undefined
       );
@@ -282,11 +282,11 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
         break;
     }
   }, [fetchChatAgents, fetchAutonomousAgents, fetchChatWidgets, fetchReActAgents, fetchConversations]);
-  
+
   const refreshChatAgents = useCallback(async () => {
     await fetchChatAgents(true);
   }, [fetchChatAgents]);
-  
+
   const refreshAutonomousAgents = useCallback(async () => {
     await fetchAutonomousAgents(true);
   }, [fetchAutonomousAgents]);
@@ -322,11 +322,11 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
         break;
     }
   }, [refreshChatAgents, refreshAutonomousAgents, refreshChatWidgets, refreshReActAgents, refreshConversations]);
-  
+
   const hasFetched = useCallback((entityType: EntityType): boolean => {
     return fetchedStatesRef.current[entityType] || false;
   }, []);
-  
+
   const clearCache = useCallback(() => {
     setData({
       chatAgents: [],

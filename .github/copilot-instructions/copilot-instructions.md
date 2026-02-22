@@ -1,5 +1,5 @@
 ---
-applyTo: '**'
+applyTo: "**"
 ---
 
 # unified-ui Frontend — Copilot Instructions
@@ -16,19 +16,19 @@ applyTo: '**'
 
 Read the relevant instruction file **before** working in that area.
 
-| File | Read when... |
-|------|-------------|
-| [react-structure.instructions.md](./react-structure.instructions.md) | Creating new pages, components, or modifying folder structure |
-| [design-system.instructions.md](./design-system.instructions.md) | Styling anything — colors, spacing, typography, light/dark mode |
-| [api-client.instructions.md](./api-client.instructions.md) | Adding API calls, new endpoints, or working with IdentityContext |
-| [ui-patterns.instructions.md](./ui-patterns.instructions.md) | Implementing scrolling, tabs, dialogs, forms, lists, or detail pages |
-| [instruction-management.instructions.md](./instruction-management.instructions.md) | After completing work — decides if/how to update docs |
-| [components/layout.instructions.md](./components/layout.instructions.md) | Touching MainLayout, Sidebar, Header, or page shells |
-| [components/data-table.instructions.md](./components/data-table.instructions.md) | Working with DataTable, list pages, infinite scroll, or search/filter |
-| [components/tracing.instructions.md](./components/tracing.instructions.md) | Working with trace visualization, TracingVisualDialog, or canvas |
-| [branding.instructions.md](./branding.instructions.md) | Adding/changing tenant branding, login page customization, assets |
-| [testing.instructions.md](./testing.instructions.md) | Writing tests, running tests, understanding test patterns |
-| [github-pipelines.instructions.md](./github-pipelines.instructions.md) | Working with CI/CD workflows, adding pipelines, coverage thresholds |
+| File                                                                               | Read when...                                                          |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [react-structure.instructions.md](./react-structure.instructions.md)               | Creating new pages, components, or modifying folder structure         |
+| [design-system.instructions.md](./design-system.instructions.md)                   | Styling anything — colors, spacing, typography, light/dark mode       |
+| [api-client.instructions.md](./api-client.instructions.md)                         | Adding API calls, new endpoints, or working with IdentityContext      |
+| [ui-patterns.instructions.md](./ui-patterns.instructions.md)                       | Implementing scrolling, tabs, dialogs, forms, lists, or detail pages  |
+| [instruction-management.instructions.md](./instruction-management.instructions.md) | After completing work — decides if/how to update docs                 |
+| [components/layout.instructions.md](./components/layout.instructions.md)           | Touching MainLayout, Sidebar, Header, or page shells                  |
+| [components/data-table.instructions.md](./components/data-table.instructions.md)   | Working with DataTable, list pages, infinite scroll, or search/filter |
+| [components/tracing.instructions.md](./components/tracing.instructions.md)         | Working with trace visualization, TracingVisualDialog, or canvas      |
+| [branding.instructions.md](./branding.instructions.md)                             | Adding/changing tenant branding, login page customization, assets     |
+| [testing.instructions.md](./testing.instructions.md)                               | Writing tests, running tests, understanding test patterns             |
+| [github-pipelines.instructions.md](./github-pipelines.instructions.md)             | Working with CI/CD workflows, adding pipelines, coverage thresholds   |
 
 ---
 
@@ -46,23 +46,24 @@ Read the relevant instruction file **before** working in that area.
 10. **Keep files under 400 lines** — Split into sub-components if exceeding.
 11. **i18n for all UI strings** — Never hardcode user-visible strings. Use `useTranslation()` from `react-i18next`. Keys in `src/i18n/locales/en-US/{namespace}.json`. Outside React components (callbacks, contexts), use `i18next.t('namespace:key')`.
 12. **Run tests after changes** — After significant changes: `npx vitest run`. Write tests for new components/features using Vitest + RTL. Run `npm run lint` to verify ESLint passes.
+13. **Run pre-commit after EVERY task** — After completing any task (including intermediate sub-tasks), ALWAYS run `pre-commit run --all-files` and fix any failures before reporting completion. This is mandatory — never skip this step, even for small changes. Pre-commit must pass before any task is considered done.
 
 ---
 
 ## Naming Conventions
 
-| What | Pattern | Example |
-|------|---------|---------|
-| Page component | `{Name}Page/` | `ChatAgentsPage/` |
-| Detail page | `{Name}DetailsPage/` | `AutonomousAgentDetailsPage/` |
-| Common component | `{Name}/` in `components/common/` | `DataTable/`, `SecretField/` |
-| Dialog component | `{Name}Dialog` in `components/dialogs/` | `IntegrationDialog/` |
-| Layout component | in `components/layout/` | `MainLayout/`, `Sidebar/` |
-| CSS Module | `{ComponentName}.module.css` | `DataTable.module.css` |
-| Context | `{Name}Context.tsx` in `contexts/` | `IdentityContext.tsx` |
-| Hook | `use{Name}.ts` in `hooks/` | `useDebounce.ts` |
-| Types | in `api/types.ts` (API) or co-located | — |
-| Barrel export | `index.ts` | re-exports component + types |
+| What             | Pattern                                 | Example                       |
+| ---------------- | --------------------------------------- | ----------------------------- |
+| Page component   | `{Name}Page/`                           | `ChatAgentsPage/`             |
+| Detail page      | `{Name}DetailsPage/`                    | `AutonomousAgentDetailsPage/` |
+| Common component | `{Name}/` in `components/common/`       | `DataTable/`, `SecretField/`  |
+| Dialog component | `{Name}Dialog` in `components/dialogs/` | `IntegrationDialog/`          |
+| Layout component | in `components/layout/`                 | `MainLayout/`, `Sidebar/`     |
+| CSS Module       | `{ComponentName}.module.css`            | `DataTable.module.css`        |
+| Context          | `{Name}Context.tsx` in `contexts/`      | `IdentityContext.tsx`         |
+| Hook             | `use{Name}.ts` in `hooks/`              | `useDebounce.ts`              |
+| Types            | in `api/types.ts` (API) or co-located   | —                             |
+| Barrel export    | `index.ts`                              | re-exports component + types  |
 
 ---
 
@@ -106,6 +107,7 @@ export const MyComponent: FC<Props> = ({ ... }) => {
 - **Run tests**: `npx vitest run`
 - **Run tests (watch)**: `npx vitest`
 - **Type check**: `npx tsc --noEmit`
+- **Pre-commit**: `pre-commit run --all-files`
 - **Routes**: `src/routes/index.tsx`
 - **API Client**: `src/api/client.ts` (~130 methods)
 - **Types**: `src/api/types.ts` (~1370 lines, all enums + interfaces)
@@ -130,6 +132,7 @@ export const MyComponent: FC<Props> = ({ ... }) => {
 After completing work, evaluate whether documentation needs updating. Full rules in [instruction-management.instructions.md](./instruction-management.instructions.md).
 
 **Update docs when:**
+
 - New reusable component created → add to `react-structure.instructions.md`
 - New UI pattern established → add to `ui-patterns.instructions.md`
 - New complex component → consider dedicated `components/*.instructions.md`

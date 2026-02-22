@@ -36,42 +36,42 @@ public/branding/
 interface BrandingConfig {
   slug: string;
   displayName: string;
-  logoUrl: string | null;       // Small logo top-left (null = fallback icon)
-  iconUrl: string | null;       // Large icon right panel (null = default/icon.svg)
-  faviconUrl: string | null;    // Browser favicon
+  logoUrl: string | null; // Small logo top-left (null = fallback icon)
+  iconUrl: string | null; // Large icon right panel (null = default/icon.svg)
+  faviconUrl: string | null; // Browser favicon
 
-  login: LoginBranding;         // Login page colors + text
-  app: AppBranding;             // Header/sidebar colors (future use)
+  login: LoginBranding; // Login page colors + text
+  app: AppBranding; // Header/sidebar colors (future use)
   typography: BrandingTypography; // Font family/size (future use)
 }
 ```
 
 ### LoginBranding
 
-| Field | Type | Purpose |
-|-------|------|---------|
-| `bgLeft` | `string` | CSS background for left panel |
-| `bgRight` | `string` | CSS background for right panel |
-| `textColor` | `string` | Text color on left panel |
-| `heading` | `string \| null` | Custom heading (null = i18n default) |
-| `buttonBorderColor` | `string` | Auth button border |
-| `buttonHoverBg` | `string` | Auth button hover background |
+| Field               | Type             | Purpose                              |
+| ------------------- | ---------------- | ------------------------------------ |
+| `bgLeft`            | `string`         | CSS background for left panel        |
+| `bgRight`           | `string`         | CSS background for right panel       |
+| `textColor`         | `string`         | Text color on left panel             |
+| `heading`           | `string \| null` | Custom heading (null = i18n default) |
+| `buttonBorderColor` | `string`         | Auth button border                   |
+| `buttonHoverBg`     | `string`         | Auth button hover background         |
 
 ### AppBranding (future)
 
-| Field | Purpose |
-|-------|---------|
-| `headerBg` / `headerTextColor` | Header colors |
-| `sidebarBg` / `sidebarTextColor` | Sidebar colors |
+| Field                                        | Purpose             |
+| -------------------------------------------- | ------------------- |
+| `headerBg` / `headerTextColor`               | Header colors       |
+| `sidebarBg` / `sidebarTextColor`             | Sidebar colors      |
 | `sidebarActiveBg` / `sidebarActiveTextColor` | Active sidebar item |
 
 ### BrandingTypography (future)
 
-| Field | Purpose |
-|-------|---------|
-| `fontFamily` | Primary font |
+| Field               | Purpose                             |
+| ------------------- | ----------------------------------- |
+| `fontFamily`        | Primary font                        |
 | `headingFontFamily` | Heading font (fallback: fontFamily) |
-| `baseFontSize` | Base font size in px |
+| `baseFontSize`      | Base font size in px                |
 
 ---
 
@@ -107,7 +107,7 @@ Only override fields that differ from `DEFAULT_BRANDING`. The `deepMerge()` reso
 In `src/config/branding.config.ts`:
 
 ```typescript
-const ACTIVE_BRANDING: string = 'neuerkunde';
+const ACTIVE_BRANDING: string = "neuerkunde";
 ```
 
 Deploy — done.

@@ -101,7 +101,7 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
   const [credentialFieldTarget, setCredentialFieldTarget] = useState<'api_key' | 'chat_auth' | null>(null);
-  
+
   // Server-side filtering for credentials
   const [credentialSearch, setCredentialSearch] = useState('');
   const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
@@ -222,10 +222,10 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
   // Load credentials when dialog opens or search changes
   const loadCredentials = useCallback(async (searchTerm?: string) => {
     if (!apiClient || !selectedTenant) return;
-    
+
     setIsLoadingCredentials(true);
     try {
-      const response = await apiClient.listCredentials(selectedTenant.id, { 
+      const response = await apiClient.listCredentials(selectedTenant.id, {
         limit: 100,
         order_by: 'name',
         order_direction: 'asc',
@@ -275,7 +275,7 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
     try {
       // Build config based on chat agent type
       let config: N8NChatAgentConfig | FoundryChatAgentConfig | undefined;
-      
+
       if (values.type === ChatAgentTypeEnum.N8N) {
         config = {
           api_version: values.n8n_api_version as N8NApiVersionEnum,
@@ -346,7 +346,7 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
     if (apiClient && selectedTenant) {
       try {
         await loadCredentials();
-        
+
         // Auto-select the newly created credential
         if (credential && credentialFieldTarget) {
           if (credentialFieldTarget === 'api_key') {

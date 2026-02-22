@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../index.html">All files</a> / <a href="index.html">src/contexts</a> ChatSidebarContext.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>0/42</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/21</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/9</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>0/41</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -324,7 +324,7 @@ export const ChatSidebarProvider: FC&lt;ChatSidebarProviderProps&gt; = <span cla
   const <span class="cstat-no" title="statement not covered" >location = useLocation();</span>
   const [isHoveringNav, setIsHoveringNav<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
   const [isHoveringSidebar, setIsHoveringSidebar<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
-  
+
   const <span class="cstat-no" title="statement not covered" >hoverTimeoutRef = useRef&lt;ReturnType&lt;typeof setTimeout&gt; | null&gt;(null);</span>
   const <span class="cstat-no" title="statement not covered" >closeTimeoutRef = useRef&lt;ReturnType&lt;typeof setTimeout&gt; | null&gt;(null);</span>
 &nbsp;
@@ -337,18 +337,18 @@ export const ChatSidebarProvider: FC&lt;ChatSidebarProviderProps&gt; = <span cla
   const <span class="cstat-no" title="statement not covered" >onNavItemHoverEnter = useCallback(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
     // Don't trigger hover if already on conversations page
 <span class="cstat-no" title="statement not covered" >    if (isOnConversationsPage) <span class="cstat-no" title="statement not covered" >return;</span></span>
-    
+
     // Clear any pending close timeout
 <span class="cstat-no" title="statement not covered" >    if (closeTimeoutRef.current) {</span>
 <span class="cstat-no" title="statement not covered" >      clearTimeout(closeTimeoutRef.current);</span>
 <span class="cstat-no" title="statement not covered" >      closeTimeoutRef.current = null;</span>
     }
-    
+
     // Small delay before showing
 <span class="cstat-no" title="statement not covered" >    if (hoverTimeoutRef.current) {</span>
 <span class="cstat-no" title="statement not covered" >      clearTimeout(hoverTimeoutRef.current);</span>
     }
-    
+
 <span class="cstat-no" title="statement not covered" >    hoverTimeoutRef.current = setTimeout(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >      setIsHoveringNav(true);</span>
     }, 150);
@@ -359,7 +359,7 @@ export const ChatSidebarProvider: FC&lt;ChatSidebarProviderProps&gt; = <span cla
 <span class="cstat-no" title="statement not covered" >      clearTimeout(hoverTimeoutRef.current);</span>
 <span class="cstat-no" title="statement not covered" >      hoverTimeoutRef.current = null;</span>
     }
-    
+
     // Delay closing to allow moving to sidebar
 <span class="cstat-no" title="statement not covered" >    closeTimeoutRef.current = setTimeout(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >      if (!isHoveringSidebar) {</span>
@@ -370,7 +370,7 @@ export const ChatSidebarProvider: FC&lt;ChatSidebarProviderProps&gt; = <span cla
 &nbsp;
   const <span class="cstat-no" title="statement not covered" >onSidebarHoverEnter = useCallback(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    setIsHoveringSidebar(true);</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (closeTimeoutRef.current) {</span>
 <span class="cstat-no" title="statement not covered" >      clearTimeout(closeTimeoutRef.current);</span>
 <span class="cstat-no" title="statement not covered" >      closeTimeoutRef.current = null;</span>
@@ -379,7 +379,7 @@ export const ChatSidebarProvider: FC&lt;ChatSidebarProviderProps&gt; = <span cla
 &nbsp;
   const <span class="cstat-no" title="statement not covered" >onSidebarHoverLeave = useCallback(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    setIsHoveringSidebar(false);</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    closeTimeoutRef.current = setTimeout(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >      if (!isHoveringNav) {</span>
 <span class="cstat-no" title="statement not covered" >        setIsHoveringNav(false);</span>
@@ -430,4 +430,3 @@ export const useChatSidebar = <span class="cstat-no" title="statement not covere
         <script src="../../block-navigation.js"></script>
     </body>
 </html>
-    

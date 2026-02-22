@@ -67,11 +67,11 @@
   transition: background-color var(--transition-fast) ease;
 }
 
-.item[data-selected='true'] {
+.item[data-selected="true"] {
   background-color: var(--gray-100);
 }
 
-[data-mantine-color-scheme='dark'] .item[data-selected='true'] {
+[data-mantine-color-scheme="dark"] .item[data-selected="true"] {
   background-color: var(--gray-800);
 }
 

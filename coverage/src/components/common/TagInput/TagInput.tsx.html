@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../../../index.html">All files</a> / <a href="index.html">src/components/common/TagInput</a> TagInput.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0.86% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>1/115</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/95</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/25</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0.91% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>1/109</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -713,7 +713,7 @@ export const TagInput: FC&lt;TagInputProps&gt; = <span class="fstat-no" title="f
         const { query: lastQuery, hadResults: lastHadResults } = <span class="cstat-no" title="statement not covered" >lastSearchRef.current;</span>
         const isLonger = <span class="cstat-no" title="statement not covered" >debouncedInput.length &gt; lastQuery.length;</span>
         const startsWithLast = <span class="cstat-no" title="statement not covered" >debouncedInput.toLowerCase().startsWith(lastQuery.toLowerCase());</span>
-        
+
 <span class="cstat-no" title="statement not covered" >        if (!lastHadResults &amp;&amp; isLonger &amp;&amp; startsWithLast) {</span>
           // User added characters to a query that had no results
           // No need to fetch again, will still be empty
@@ -730,17 +730,17 @@ export const TagInput: FC&lt;TagInputProps&gt; = <span class="fstat-no" title="f
         const tags = <span class="cstat-no" title="statement not covered" >Array.isArray(response) ? response : (response?.tags || []);</span>
         const filteredTags = <span class="cstat-no" title="statement not covered" >tags</span>
           .map(<span class="fstat-no" title="function not covered" >(t</span>ag: { id: number; name: string }) =&gt; <span class="cstat-no" title="statement not covered" >tag.name)</span>
-          .filter(<span class="fstat-no" title="function not covered" >(n</span>ame: string) =&gt; 
+          .filter(<span class="fstat-no" title="function not covered" >(n</span>ame: string) =&gt;
 <span class="cstat-no" title="statement not covered" >            name.toLowerCase().includes(debouncedInput.toLowerCase()) &amp;&amp;</span>
             !valueRef.current.includes(name)
           );
-        
+
         // Cache this search result
 <span class="cstat-no" title="statement not covered" >        lastSearchRef.current = {</span>
           query: debouncedInput,
           hadResults: filteredTags.length &gt; 0,
         };
-        
+
 <span class="cstat-no" title="statement not covered" >        setSuggestions(filteredTags);</span>
 <span class="cstat-no" title="statement not covered" >        setShowDropdown(filteredTags.length &gt; 0);</span>
 <span class="cstat-no" title="statement not covered" >        setHighlightedIndex(-1);</span>
@@ -840,7 +840,7 @@ export const TagInput: FC&lt;TagInputProps&gt; = <span class="fstat-no" title="f
           {description}
         &lt;/Text&gt;
       )}
-      
+
       &lt;Box
         className={`${classes.container} ${error ? classes.containerError : ''} ${disabled ? classes.containerDisabled : ''}`}
         onClick={handleContainerClick}
@@ -862,7 +862,7 @@ export const TagInput: FC&lt;TagInputProps&gt; = <span class="fstat-no" title="f
               )}
             &lt;/Box&gt;
           ))}
-          
+
           &lt;input
             ref={inputRef}
             type="text"
@@ -882,7 +882,7 @@ export const TagInput: FC&lt;TagInputProps&gt; = <span class="fstat-no" title="f
             disabled={disabled || (maxTags !== undefined &amp;&amp; value.length &gt;= maxTags)}
             className={classes.input}
           /&gt;
-          
+
           {isLoading &amp;&amp; (
             &lt;Loader size="xs" className={classes.loader} /&gt;
           )}
@@ -891,9 +891,9 @@ export const TagInput: FC&lt;TagInputProps&gt; = <span class="fstat-no" title="f
 &nbsp;
       {showDropdown &amp;&amp; suggestions.length &gt; 0 &amp;&amp; (
         &lt;Portal&gt;
-          &lt;Paper 
-            className={classes.dropdown} 
-            shadow="md" 
+          &lt;Paper
+            className={classes.dropdown}
+            shadow="md"
             withBorder
             p={4}
             style={{
@@ -946,4 +946,3 @@ export const TagInput: FC&lt;TagInputProps&gt; = <span class="fstat-no" title="f
         <script src="../../../../block-navigation.js"></script>
     </body>
 </html>
-    

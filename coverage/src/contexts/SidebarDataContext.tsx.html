@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../index.html">All files</a> / <a href="index.html">src/contexts</a> SidebarDataContext.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>0/182</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/88</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/54</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>0/142</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -930,7 +930,7 @@ interface SidebarDataProviderProps {
 &nbsp;
 export const SidebarDataProvider: FC&lt;SidebarDataProviderProps&gt; = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >({</span> children }) =&gt; {</span>
   const { apiClient, selectedTenant <span class="cstat-no" title="statement not covered" >} = useIdentity();</span>
-  
+
   const [data, setData<span class="cstat-no" title="statement not covered" >] = useState&lt;SidebarDataState&gt;({</span>
     chatAgents: [],
     autonomousAgents: [],
@@ -938,7 +938,7 @@ export const SidebarDataProvider: FC&lt;SidebarDataProviderProps&gt; = <span cla
     reActAgents: [],
     conversations: [],
   });
-  
+
   const [loadingStates, setLoadingStates<span class="cstat-no" title="statement not covered" >] = useState&lt;LoadingState&gt;({</span>
     'chat-agents': false,
     'autonomous-agents': false,
@@ -946,7 +946,7 @@ export const SidebarDataProvider: FC&lt;SidebarDataProviderProps&gt; = <span cla
     're-act-agents': false,
     conversations: false,
   });
-  
+
   const [errorStates, setErrorStates<span class="cstat-no" title="statement not covered" >] = useState&lt;ErrorState&gt;({</span>
     'chat-agents': null,
     'autonomous-agents': null,
@@ -954,7 +954,7 @@ export const SidebarDataProvider: FC&lt;SidebarDataProviderProps&gt; = <span cla
     're-act-agents': null,
     conversations: null,
   });
-  
+
   const [fetchedStates, setFetchedStates<span class="cstat-no" title="statement not covered" >] = useState&lt;FetchedState&gt;({</span>
     'chat-agents': false,
     'autonomous-agents': false,
@@ -986,17 +986,17 @@ export const SidebarDataProvider: FC&lt;SidebarDataProviderProps&gt; = <span cla
 &nbsp;
   const <span class="cstat-no" title="statement not covered" >fetchChatAgents = useCallback(<span class="fstat-no" title="function not covered" >async (n</span>oCache = <span class="branch-0 cbranch-no" title="branch not covered" >false) =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    if (!apiClient || !selectedTenant) <span class="cstat-no" title="statement not covered" >return;</span></span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (!noCache &amp;&amp; fetchedStatesRef.current['chat-agents'] &amp;&amp; dataRef.current.chatAgents.length &gt; 0) {</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
     }
-    
+
 <span class="cstat-no" title="statement not covered" >    setLoadingStates(<span class="fstat-no" title="function not covered" >prev =&gt; (<span class="cstat-no" title="statement not covered" >{</span> ...prev, 'chat-agents': true }))</span>;</span>
 <span class="cstat-no" title="statement not covered" >    setErrorStates(<span class="fstat-no" title="function not covered" >prev =&gt; (<span class="cstat-no" title="statement not covered" >{</span> ...prev, 'chat-agents': null }))</span>;</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    try {</span>
       const result = <span class="cstat-no" title="statement not covered" >await apiClient.listChatAgents(</span>
-        selectedTenant.id, 
+        selectedTenant.id,
         { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' },
         noCache ? { noCache: true } : undefined
       );
@@ -1011,20 +1011,20 @@ export const SidebarDataProvider: FC&lt;SidebarDataProviderProps&gt; = <span cla
 <span class="cstat-no" title="statement not covered" >      setLoadingStates(<span class="fstat-no" title="function not covered" >prev =&gt; (<span class="cstat-no" title="statement not covered" >{</span> ...prev, 'chat-agents': false }))</span>;</span>
     }
   }, [apiClient, selectedTenant]);
-  
+
   const <span class="cstat-no" title="statement not covered" >fetchAutonomousAgents = useCallback(<span class="fstat-no" title="function not covered" >async (n</span>oCache = <span class="branch-0 cbranch-no" title="branch not covered" >false) =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    if (!apiClient || !selectedTenant) <span class="cstat-no" title="statement not covered" >return;</span></span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (!noCache &amp;&amp; fetchedStatesRef.current['autonomous-agents'] &amp;&amp; dataRef.current.autonomousAgents.length &gt; 0) {</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
     }
-    
+
 <span class="cstat-no" title="statement not covered" >    setLoadingStates(<span class="fstat-no" title="function not covered" >prev =&gt; (<span class="cstat-no" title="statement not covered" >{</span> ...prev, 'autonomous-agents': true }))</span>;</span>
 <span class="cstat-no" title="statement not covered" >    setErrorStates(<span class="fstat-no" title="function not covered" >prev =&gt; (<span class="cstat-no" title="statement not covered" >{</span> ...prev, 'autonomous-agents': null }))</span>;</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    try {</span>
       const result = <span class="cstat-no" title="statement not covered" >await apiClient.listAutonomousAgents(</span>
-        selectedTenant.id, 
+        selectedTenant.id,
         { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' },
         noCache ? { noCache: true } : undefined
       );
@@ -1042,17 +1042,17 @@ export const SidebarDataProvider: FC&lt;SidebarDataProviderProps&gt; = <span cla
 &nbsp;
   const <span class="cstat-no" title="statement not covered" >fetchChatWidgets = useCallback(<span class="fstat-no" title="function not covered" >async (n</span>oCache = <span class="branch-0 cbranch-no" title="branch not covered" >false) =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    if (!apiClient || !selectedTenant) <span class="cstat-no" title="statement not covered" >return;</span></span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (!noCache &amp;&amp; fetchedStatesRef.current['chat-widgets'] &amp;&amp; dataRef.current.chatWidgets.length &gt; 0) {</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
     }
-    
+
 <span class="cstat-no" title="statement not covered" >    setLoadingStates(<span class="fstat-no" title="function not covered" >prev =&gt; (<span class="cstat-no" title="statement not covered" >{</span> ...prev, 'chat-widgets': true }))</span>;</span>
 <span class="cstat-no" title="statement not covered" >    setErrorStates(<span class="fstat-no" title="function not covered" >prev =&gt; (<span class="cstat-no" title="statement not covered" >{</span> ...prev, 'chat-widgets': null }))</span>;</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    try {</span>
       const result = <span class="cstat-no" title="statement not covered" >await apiClient.listChatWidgets(</span>
-        selectedTenant.id, 
+        selectedTenant.id,
         { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' },
         noCache ? { noCache: true } : undefined
       );
@@ -1070,17 +1070,17 @@ export const SidebarDataProvider: FC&lt;SidebarDataProviderProps&gt; = <span cla
 &nbsp;
   const <span class="cstat-no" title="statement not covered" >fetchReActAgents = useCallback(<span class="fstat-no" title="function not covered" >async (n</span>oCache = <span class="branch-0 cbranch-no" title="branch not covered" >false) =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    if (!apiClient || !selectedTenant) <span class="cstat-no" title="statement not covered" >return;</span></span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (!noCache &amp;&amp; fetchedStatesRef.current['re-act-agents'] &amp;&amp; dataRef.current.reActAgents.length &gt; 0) {</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
     }
-    
+
 <span class="cstat-no" title="statement not covered" >    setLoadingStates(<span class="fstat-no" title="function not covered" >prev =&gt; (<span class="cstat-no" title="statement not covered" >{</span> ...prev, 're-act-agents': true }))</span>;</span>
 <span class="cstat-no" title="statement not covered" >    setErrorStates(<span class="fstat-no" title="function not covered" >prev =&gt; (<span class="cstat-no" title="statement not covered" >{</span> ...prev, 're-act-agents': null }))</span>;</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    try {</span>
       const result = <span class="cstat-no" title="statement not covered" >await apiClient.listReActAgents(</span>
-        selectedTenant.id, 
+        selectedTenant.id,
         { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' },
         noCache ? { noCache: true } : undefined
       );
@@ -1098,17 +1098,17 @@ export const SidebarDataProvider: FC&lt;SidebarDataProviderProps&gt; = <span cla
 &nbsp;
   const <span class="cstat-no" title="statement not covered" >fetchConversations = useCallback(<span class="fstat-no" title="function not covered" >async (n</span>oCache = <span class="branch-0 cbranch-no" title="branch not covered" >false) =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    if (!apiClient || !selectedTenant) <span class="cstat-no" title="statement not covered" >return;</span></span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (!noCache &amp;&amp; fetchedStatesRef.current.conversations &amp;&amp; dataRef.current.conversations.length &gt; 0) {</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
     }
-    
+
 <span class="cstat-no" title="statement not covered" >    setLoadingStates(<span class="fstat-no" title="function not covered" >prev =&gt; (<span class="cstat-no" title="statement not covered" >{</span> ...prev, conversations: true }))</span>;</span>
 <span class="cstat-no" title="statement not covered" >    setErrorStates(<span class="fstat-no" title="function not covered" >prev =&gt; (<span class="cstat-no" title="statement not covered" >{</span> ...prev, conversations: null }))</span>;</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    try {</span>
       const result = <span class="cstat-no" title="statement not covered" >await apiClient.listConversations(</span>
-        selectedTenant.id, 
+        selectedTenant.id,
         { limit: 999, view: 'quick-list', order_by: 'updated_at', order_direction: 'desc' },
         noCache ? { noCache: true } : undefined
       );
@@ -1143,11 +1143,11 @@ export const SidebarDataProvider: FC&lt;SidebarDataProviderProps&gt; = <span cla
 <span class="cstat-no" title="statement not covered" >        break;</span>
     }
   }, [fetchChatAgents, fetchAutonomousAgents, fetchChatWidgets, fetchReActAgents, fetchConversations]);
-  
+
   const <span class="cstat-no" title="statement not covered" >refreshChatAgents = useCallback(<span class="fstat-no" title="function not covered" >async () =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    await fetchChatAgents(true);</span>
   }, [fetchChatAgents]);
-  
+
   const <span class="cstat-no" title="statement not covered" >refreshAutonomousAgents = useCallback(<span class="fstat-no" title="function not covered" >async () =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    await fetchAutonomousAgents(true);</span>
   }, [fetchAutonomousAgents]);
@@ -1183,11 +1183,11 @@ export const SidebarDataProvider: FC&lt;SidebarDataProviderProps&gt; = <span cla
 <span class="cstat-no" title="statement not covered" >        break;</span>
     }
   }, [refreshChatAgents, refreshAutonomousAgents, refreshChatWidgets, refreshReActAgents, refreshConversations]);
-  
+
   const <span class="cstat-no" title="statement not covered" >hasFetched = useCallback(<span class="fstat-no" title="function not covered" >(e</span>ntityType: EntityType): boolean =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    return fetchedStatesRef.current[entityType] || false;</span>
   }, []);
-  
+
   const <span class="cstat-no" title="statement not covered" >clearCache = useCallback(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    setData({</span>
       chatAgents: [],
@@ -1276,4 +1276,3 @@ export const useSidebarData = <span class="cstat-no" title="statement not covere
         <script src="../../block-navigation.js"></script>
     </body>
 </html>
-    

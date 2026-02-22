@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../index.html">All files</a> / <a href="index.html">src/api</a> client.ts</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>0/291</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/165</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/153</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>0/287</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -3242,8 +3242,8 @@ export class UnifiedUIAPIClient {
   // ========== Chat Agent Endpoints ==========
 &nbsp;
   async <span class="fstat-no" title="function not covered" >listChatAgents(</span>
-    tenantId: string, 
-    params?: PaginationParams &amp; OrderParams &amp; FilterParams &amp; { view?: 'quick-list' }, 
+    tenantId: string,
+    params?: PaginationParams &amp; OrderParams &amp; FilterParams &amp; { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise&lt;ChatAgentResponse[] | QuickListItemResponse[]&gt; {
     const query = <span class="cstat-no" title="statement not covered" >this.buildQueryString(params || {});</span>
@@ -3294,8 +3294,8 @@ export class UnifiedUIAPIClient {
   // ========== Autonomous Agent Endpoints ==========
 &nbsp;
   async <span class="fstat-no" title="function not covered" >listAutonomousAgents(</span>
-    tenantId: string, 
-    params?: PaginationParams &amp; OrderParams &amp; FilterParams &amp; { view?: 'quick-list' }, 
+    tenantId: string,
+    params?: PaginationParams &amp; OrderParams &amp; FilterParams &amp; { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise&lt;AutonomousAgentResponse[] | QuickListItemResponse[]&gt; {
     const query = <span class="cstat-no" title="statement not covered" >this.buildQueryString(params || {});</span>
@@ -3413,8 +3413,8 @@ export class UnifiedUIAPIClient {
   // ========== Credential Endpoints ==========
 &nbsp;
   async <span class="fstat-no" title="function not covered" >listCredentials(</span>
-    tenantId: string, 
-    params?: PaginationParams &amp; OrderParams &amp; FilterParams &amp; { view?: 'quick-list' }, 
+    tenantId: string,
+    params?: PaginationParams &amp; OrderParams &amp; FilterParams &amp; { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise&lt;CredentialResponse[] | QuickListItemResponse[]&gt; {
     const query = <span class="cstat-no" title="statement not covered" >this.buildQueryString(params || {});</span>
@@ -3474,7 +3474,7 @@ export class UnifiedUIAPIClient {
   // ========== Chat Widget Endpoints ==========
 &nbsp;
   async <span class="fstat-no" title="function not covered" >listChatWidgets(</span>
-    tenantId: string, 
+    tenantId: string,
     params?: PaginationParams &amp; OrderParams &amp; FilterParams &amp; { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise&lt;ChatWidgetResponse[] | QuickListItemResponse[]&gt; {
@@ -4100,7 +4100,7 @@ export class UnifiedUIAPIClient {
 <span class="cstat-no" title="statement not covered" >          } else if (line === '' &amp;&amp; currentEvent &amp;&amp; currentData) {</span>
 <span class="cstat-no" title="statement not covered" >            try {</span>
               const parsed = <span class="cstat-no" title="statement not covered" >JSON.parse(currentData);</span>
-              
+
               // Handle unified stream message format
 <span class="cstat-no" title="statement not covered" >              if (currentEvent === 'message' &amp;&amp; parsed.type) {</span>
                 const streamMsg = <span class="cstat-no" title="statement not covered" >parsed as SSEStreamMessage;</span>
@@ -4142,7 +4142,7 @@ export class UnifiedUIAPIClient {
                   case 'ERROR':
 <span class="cstat-no" title="statement not covered" >                    if (onError &amp;&amp; streamMsg.config) {</span>
                       const errorMessage = <span class="cstat-no" title="statement not covered" >typeof streamMsg.config.message === 'string' </span>
-                        ? streamMsg.config.message 
+                        ? streamMsg.config.message
                         : 'An error occurred';
 <span class="cstat-no" title="statement not covered" >                      onError(</span>
                         streamMsg.config.code || 'UNKNOWN_ERROR',
@@ -4158,7 +4158,7 @@ export class UnifiedUIAPIClient {
 <span class="cstat-no" title="statement not covered" >                    break;</span>
                 }
               }
-              
+
 <span class="cstat-no" title="statement not covered" >              yield {</span>
                 type: currentEvent as SSEEvent['type'],
                 data: parsed,
@@ -4405,4 +4405,3 @@ export class UnifiedUIAPIClient {
         <script src="../../block-navigation.js"></script>
     </body>
 </html>
-    

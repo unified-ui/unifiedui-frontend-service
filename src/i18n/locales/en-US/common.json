@@ -58,6 +58,13 @@
   "embedChatAgent": "Embed Chat — Agent: {{agentId}}",
   "tokenAuthComingSoon": "Token-based auth coming in a future phase.",
   "noPermission": "You don't have permission to perform this action",
+  "enterName": "Enter a name",
+  "optionalDescription": "Optional description",
+  "remove": "Remove",
+  "validation": {
+    "required": "{{field}} is required",
+    "maxLength": "{{field}} cannot exceed {{max}} characters"
+  },
   "embedAllowedOrigins": "Allowed Embed Origins",
   "embedAllowedOriginsPlaceholder": "e.g. https://example.com",
   "embedAllowedOriginsDescription": "Origins allowed to embed this chat agent in an iframe. Press Enter to add.",

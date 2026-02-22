@@ -559,7 +559,7 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
           <Text size="sm" fw={500} mb="xs">
             Select {multiSelect ? 'permissions' : 'permission level'}
           </Text>
-          
+
           <ScrollArea.Autosize mah={300} scrollbarSize={8}>
             {multiSelect ? (
               <Stack gap="sm" pr={8}>

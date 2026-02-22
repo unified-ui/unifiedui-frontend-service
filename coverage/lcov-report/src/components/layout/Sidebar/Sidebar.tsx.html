@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../../../index.html">All files</a> / <a href="index.html">src/components/layout/Sidebar</a> Sidebar.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">37.7% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>92/244</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">16.96% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>19/112</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">19.04% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>12/63</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">40.45% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>89/220</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -1254,7 +1254,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { type FC, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Stack, UnstyledButton, Text, Tooltip, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { 
+import {
   IconHome, IconHomeFilled,
   IconMessages, IconMessageFilled,
   IconSparkles,
@@ -1316,7 +1316,7 @@ export const Sidebar: FC = () =&gt; {
   const { t } = useTranslation('sidebar');
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const {
     chatAgents,
     autonomousAgents,
@@ -1331,7 +1331,7 @@ export const Sidebar: FC = () =&gt; {
     refreshChatWidgets,
     refreshReActAgents,
   } = useSidebarData();
-  
+
   const { apiClient, selectedTenant } = useIdentity();
 &nbsp;
   const { isFavorite: checkFavorite, toggleFavorite } = useFavorites();
@@ -1362,7 +1362,7 @@ export const Sidebar: FC = () =&gt; {
     },
     [toggleFavorite, ENTITY_TO_FAVORITE_TYPE]
   );
-  
+
   const [activeEntity, setActiveEntity] = useState&lt;EntityType | null&gt;(null);
   const canAddEntity = activeEntity ? <span class="branch-0 cbranch-no" title="branch not covered" >canCreate(activeEntity) : f</span>alse;
   const [isDataListExpanded, setIsDataListExpanded] = useState(() =&gt; {
@@ -1376,7 +1376,7 @@ export const Sidebar: FC = () =&gt; {
   const [isHoveringDataList, setIsHoveringDataList] = useState(false);
   const [isHoveringNavItem, setIsHoveringNavItem] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   const [isConversationsSidebarVisible, setIsConversationsSidebarVisible] = useState(false);
   const [isHoveringConversationsNav, setIsHoveringConversationsNav] = useState(false);
   const [isHoveringConversationsSidebar, setIsHoveringConversationsSidebar] = useState(false);
@@ -1385,10 +1385,10 @@ export const Sidebar: FC = () =&gt; {
   const [conversationsLoading, setConversationsLoading] = useState(false);
   const [conversationsError, setConversationsError] = useState&lt;string | null&gt;(null);
   const [conversationsRefreshing, setConversationsRefreshing] = useState(false);
-  
+
   const hoverTimeoutRef = useRef&lt;ReturnType&lt;typeof setTimeout&gt; | null&gt;(null);
   const closeTimeoutRef = useRef&lt;ReturnType&lt;typeof setTimeout&gt; | null&gt;(null);
-  
+
   const conversationsHoverTimeoutRef = useRef&lt;ReturnType&lt;typeof setTimeout&gt; | null&gt;(null);
   const conversationsCloseTimeoutRef = useRef&lt;ReturnType&lt;typeof setTimeout&gt; | null&gt;(null);
 &nbsp;
@@ -1429,7 +1429,7 @@ export const Sidebar: FC = () =&gt; {
 &nbsp;
   const dataListItems: DataListItem[] = useMemo(() =&gt; {
     <span class="missing-if-branch" title="else path not taken" >E</span>if (!activeEntity) return [];
-    
+
 <span class="cstat-no" title="statement not covered" >    switch (activeEntity) {</span>
       case 'chat-agents':
 <span class="cstat-no" title="statement not covered" >        return chatAgents.map(<span class="fstat-no" title="function not covered" >app =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span></span>
@@ -1477,21 +1477,21 @@ export const Sidebar: FC = () =&gt; {
   const handleNavItemHoverEnter = useCallback(<span class="fstat-no" title="function not covered" >(i</span>tem: NavItem) =&gt; {
 <span class="cstat-no" title="statement not covered" >    if (!item.hasDataList || !item.entityType) <span class="cstat-no" title="statement not covered" >return;</span></span>
 <span class="cstat-no" title="statement not covered" >    if (isOnEntityListPage(item.entityType)) <span class="cstat-no" title="statement not covered" >return;</span></span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (closeTimeoutRef.current) {</span>
 <span class="cstat-no" title="statement not covered" >      clearTimeout(closeTimeoutRef.current);</span>
 <span class="cstat-no" title="statement not covered" >      closeTimeoutRef.current = null;</span>
     }
-    
+
 <span class="cstat-no" title="statement not covered" >    setIsHoveringNavItem(true);</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (hoverTimeoutRef.current) {</span>
 <span class="cstat-no" title="statement not covered" >      clearTimeout(hoverTimeoutRef.current);</span>
     }
-    
+
 <span class="cstat-no" title="statement not covered" >    hoverTimeoutRef.current = setTimeout(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >      setActiveEntity(item.entityType!);</span>
-      
+
       const config = <span class="cstat-no" title="statement not covered" >entityConfigs[item.entityType!];</span>
 <span class="cstat-no" title="statement not covered" >      if (config) {</span>
 <span class="cstat-no" title="statement not covered" >        config.fetchData();</span>
@@ -1501,12 +1501,12 @@ export const Sidebar: FC = () =&gt; {
 &nbsp;
   const handleNavItemHoverLeave = useCallback(<span class="fstat-no" title="function not covered" >() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    setIsHoveringNavItem(false);</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (hoverTimeoutRef.current) {</span>
 <span class="cstat-no" title="statement not covered" >      clearTimeout(hoverTimeoutRef.current);</span>
 <span class="cstat-no" title="statement not covered" >      hoverTimeoutRef.current = null;</span>
     }
-    
+
 <span class="cstat-no" title="statement not covered" >    closeTimeoutRef.current = setTimeout(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >      if (!isHoveringDataList) {</span>
 <span class="cstat-no" title="statement not covered" >        setActiveEntity(null);</span>
@@ -1516,7 +1516,7 @@ export const Sidebar: FC = () =&gt; {
 &nbsp;
   const handleDataListHoverEnter = useCallback(<span class="fstat-no" title="function not covered" >() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    setIsHoveringDataList(true);</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (closeTimeoutRef.current) {</span>
 <span class="cstat-no" title="statement not covered" >      clearTimeout(closeTimeoutRef.current);</span>
 <span class="cstat-no" title="statement not covered" >      closeTimeoutRef.current = null;</span>
@@ -1525,7 +1525,7 @@ export const Sidebar: FC = () =&gt; {
 &nbsp;
   const handleDataListHoverLeave = useCallback(<span class="fstat-no" title="function not covered" >() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    setIsHoveringDataList(false);</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    closeTimeoutRef.current = setTimeout(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >      if (!isHoveringNavItem) {</span>
 <span class="cstat-no" title="statement not covered" >        setActiveEntity(null);</span>
@@ -1534,21 +1534,21 @@ export const Sidebar: FC = () =&gt; {
   }, [isHoveringNavItem]);
 &nbsp;
   const isOnConversationsPage = location.pathname.startsWith('/conversations');
-  
+
   const handleConversationsNavHoverEnter = useCallback(<span class="fstat-no" title="function not covered" >() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (isOnConversationsPage) <span class="cstat-no" title="statement not covered" >return;</span></span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (conversationsCloseTimeoutRef.current) {</span>
 <span class="cstat-no" title="statement not covered" >      clearTimeout(conversationsCloseTimeoutRef.current);</span>
 <span class="cstat-no" title="statement not covered" >      conversationsCloseTimeoutRef.current = null;</span>
     }
-    
+
 <span class="cstat-no" title="statement not covered" >    setIsHoveringConversationsNav(true);</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (conversationsHoverTimeoutRef.current) {</span>
 <span class="cstat-no" title="statement not covered" >      clearTimeout(conversationsHoverTimeoutRef.current);</span>
     }
-    
+
 <span class="cstat-no" title="statement not covered" >    conversationsHoverTimeoutRef.current = setTimeout(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >      setIsConversationsSidebarVisible(true);</span>
     }, 150);
@@ -1556,12 +1556,12 @@ export const Sidebar: FC = () =&gt; {
 &nbsp;
   const handleConversationsNavHoverLeave = useCallback(<span class="fstat-no" title="function not covered" >() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    setIsHoveringConversationsNav(false);</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (conversationsHoverTimeoutRef.current) {</span>
 <span class="cstat-no" title="statement not covered" >      clearTimeout(conversationsHoverTimeoutRef.current);</span>
 <span class="cstat-no" title="statement not covered" >      conversationsHoverTimeoutRef.current = null;</span>
     }
-    
+
 <span class="cstat-no" title="statement not covered" >    conversationsCloseTimeoutRef.current = setTimeout(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >      if (!isHoveringConversationsSidebar) {</span>
 <span class="cstat-no" title="statement not covered" >        setIsConversationsSidebarVisible(false);</span>
@@ -1571,7 +1571,7 @@ export const Sidebar: FC = () =&gt; {
 &nbsp;
   const handleConversationsSidebarHoverEnter = useCallback(<span class="fstat-no" title="function not covered" >() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    setIsHoveringConversationsSidebar(true);</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (conversationsCloseTimeoutRef.current) {</span>
 <span class="cstat-no" title="statement not covered" >      clearTimeout(conversationsCloseTimeoutRef.current);</span>
 <span class="cstat-no" title="statement not covered" >      conversationsCloseTimeoutRef.current = null;</span>
@@ -1580,7 +1580,7 @@ export const Sidebar: FC = () =&gt; {
 &nbsp;
   const handleConversationsSidebarHoverLeave = useCallback(<span class="fstat-no" title="function not covered" >() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    setIsHoveringConversationsSidebar(false);</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    conversationsCloseTimeoutRef.current = setTimeout(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >      if (!isHoveringConversationsNav) {</span>
 <span class="cstat-no" title="statement not covered" >        setIsConversationsSidebarVisible(false);</span>
@@ -1595,14 +1595,14 @@ export const Sidebar: FC = () =&gt; {
 &nbsp;
   const loadConversations = useCallback(<span class="fstat-no" title="function not covered" >async (u</span>seCache = <span class="branch-0 cbranch-no" title="branch not covered" >true) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (!apiClient || !selectedTenant) <span class="cstat-no" title="statement not covered" >return;</span></span>
-    
+
 <span class="cstat-no" title="statement not covered" >    if (!useCache) {</span>
 <span class="cstat-no" title="statement not covered" >      setConversationsRefreshing(true);</span>
     } else {
 <span class="cstat-no" title="statement not covered" >      setConversationsLoading(true);</span>
     }
 <span class="cstat-no" title="statement not covered" >    setConversationsError(null);</span>
-    
+
 <span class="cstat-no" title="statement not covered" >    try {</span>
       const [convsList, appsList] = <span class="cstat-no" title="statement not covered" >await Promise.all([</span>
         apiClient.listConversations(selectedTenant.id, {
@@ -1667,7 +1667,7 @@ export const Sidebar: FC = () =&gt; {
 &nbsp;
   const handleAddClick = useCallback(<span class="fstat-no" title="function not covered" >async () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (!activeEntity) <span class="cstat-no" title="statement not covered" >return;</span></span>
-    
+
 <span class="cstat-no" title="statement not covered" >    switch (activeEntity) {</span>
       case 'chat-agents':
 <span class="cstat-no" title="statement not covered" >        setIsChatAgentDialogOpen(true);</span>
@@ -1705,7 +1705,7 @@ export const Sidebar: FC = () =&gt; {
 &nbsp;
   const handleRefresh = useCallback(<span class="fstat-no" title="function not covered" >async () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (!activeEntity) <span class="cstat-no" title="statement not covered" >return;</span></span>
-    
+
 <span class="cstat-no" title="statement not covered" >    setIsRefreshing(true);</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      await refreshEntityData(activeEntity);</span>
@@ -1757,8 +1757,8 @@ export const Sidebar: FC = () =&gt; {
           className={`${classes.navItem} ${isActive ? <span class="branch-0 cbranch-no" title="branch not covered" >classes.navItemActive : '</span>'} ${isEntityHovered ? <span class="branch-0 cbranch-no" title="branch not covered" >classes.navItemHovered : '</span>'}`}
         &gt;
           {isActive ? <span class="branch-0 cbranch-no" title="branch not covered" >&lt;IconFilled size={24} stroke={isActive &amp;&amp; item.iconFilled ? 0 : 1.5} /&gt; : &lt;</span>Icon size={24} stroke={1.5} /&gt;}
-          &lt;Text 
-            size="xs" 
+          &lt;Text
+            size="xs"
             className={classes.navLabel}
             fw={isActive ? <span class="branch-0 cbranch-no" title="branch not covered" >700 : 4</span>00}
           &gt;
@@ -1779,12 +1779,12 @@ export const Sidebar: FC = () =&gt; {
           &lt;Divider className={classes.navDivider} /&gt;
           {mainNavItemsBottom.map(renderNavItem)}
         &lt;/Stack&gt;
-        
+
         &lt;Stack gap="xs" className={classes.navBottom}&gt;
           {bottomNavItems.map(renderNavItem)}
         &lt;/Stack&gt;
       &lt;/aside&gt;
-      
+
       {activeEntity &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >activeConfig &amp;&amp; (</span>
 <span class="branch-2 cbranch-no" title="branch not covered" >        &lt;SidebarDataList</span>
           title={activeConfig.title}
@@ -1864,4 +1864,3 @@ export const Sidebar: FC = () =&gt; {
         <script src="../../../../block-navigation.js"></script>
     </body>
 </html>
-    

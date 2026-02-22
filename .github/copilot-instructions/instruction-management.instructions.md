@@ -4,16 +4,16 @@
 
 ### DO update when:
 
-| Trigger | Action |
-|---------|--------|
-| New reusable component created | Add to `react-structure.instructions.md` component catalog |
-| New UI pattern established | Add to `ui-patterns.instructions.md` |
-| New complex component (>300 lines, multiple files) | Consider dedicated `components/*.instructions.md` |
-| Folder structure changed | Update `react-structure.instructions.md` |
-| New API resource added | Update `api-client.instructions.md` |
-| Design tokens added/changed | Update `design-system.instructions.md` |
-| New context created | Update `react-structure.instructions.md` contexts table |
-| New route added | Update `react-structure.instructions.md` routes table |
+| Trigger                                            | Action                                                     |
+| -------------------------------------------------- | ---------------------------------------------------------- |
+| New reusable component created                     | Add to `react-structure.instructions.md` component catalog |
+| New UI pattern established                         | Add to `ui-patterns.instructions.md`                       |
+| New complex component (>300 lines, multiple files) | Consider dedicated `components/*.instructions.md`          |
+| Folder structure changed                           | Update `react-structure.instructions.md`                   |
+| New API resource added                             | Update `api-client.instructions.md`                        |
+| Design tokens added/changed                        | Update `design-system.instructions.md`                     |
+| New context created                                | Update `react-structure.instructions.md` contexts table    |
+| New route added                                    | Update `react-structure.instructions.md` routes table      |
 
 ### NEVER update for:
 
@@ -39,17 +39,17 @@ After completing work, ask yourself:
 
 ## File Responsibilities
 
-| File | Covers |
-|------|--------|
-| `copilot-instructions.md` | Project overview, golden rules, naming, quick reference |
-| `react-structure.instructions.md` | Folder structure, component catalog, routes, contexts |
-| `design-system.instructions.md` | CSS tokens, dark mode, Mantine theme, CSS Module conventions |
-| `api-client.instructions.md` | API client architecture, adding endpoints, types patterns |
-| `ui-patterns.instructions.md` | Scrolling, tabs, dialogs, lists, event handling |
-| `instruction-management.instructions.md` | This file — when/how to update docs |
-| `components/layout.instructions.md` | MainLayout, Sidebar, Header |
-| `components/data-table.instructions.md` | DataTable, toolbar, infinite scroll, filtering |
-| `components/tracing.instructions.md` | Trace visualization, canvas, hierarchy, context |
+| File                                     | Covers                                                       |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| `copilot-instructions.md`                | Project overview, golden rules, naming, quick reference      |
+| `react-structure.instructions.md`        | Folder structure, component catalog, routes, contexts        |
+| `design-system.instructions.md`          | CSS tokens, dark mode, Mantine theme, CSS Module conventions |
+| `api-client.instructions.md`             | API client architecture, adding endpoints, types patterns    |
+| `ui-patterns.instructions.md`            | Scrolling, tabs, dialogs, lists, event handling              |
+| `instruction-management.instructions.md` | This file — when/how to update docs                          |
+| `components/layout.instructions.md`      | MainLayout, Sidebar, Header                                  |
+| `components/data-table.instructions.md`  | DataTable, toolbar, infinite scroll, filtering               |
+| `components/tracing.instructions.md`     | Trace visualization, canvas, hierarchy, context              |
 
 ---
 

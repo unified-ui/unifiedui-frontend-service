@@ -22,6 +22,14 @@ import type {
   TenantPrincipalsQueryParams,
   SetPrincipalRequest,
   DeletePrincipalRequest,
+  // Organization Types
+  OrganizationResponse,
+  UpdateOrganizationRequest,
+  OrganizationMembersResponse,
+  SetOrganizationMemberRequest,
+  DeleteOrganizationMemberRequest,
+  TenantWithOrganizationResponse,
+  CreateTenantInOrganizationRequest,
   // Chat Agent Types
   ChatAgentResponse,
   CreateChatAgentRequest,
@@ -292,11 +300,45 @@ export class UnifiedUIAPIClient {
     return this.request<void>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/principals/${principalId}/status`, { principal_type: principalType, is_active: isActive }, isActive ? 'Principal activated' : 'Principal deactivated');
   }
 
+  // ========== Organization Endpoints ==========
+
+  async getOrganization(organizationId: string): Promise<OrganizationResponse> {
+    return this.request<OrganizationResponse>('GET', `/api/v1/platform-service/organizations/${organizationId}`);
+  }
+
+  async updateOrganization(organizationId: string, data: UpdateOrganizationRequest): Promise<OrganizationResponse> {
+    return this.request<OrganizationResponse>('PATCH', `/api/v1/platform-service/organizations/${organizationId}`, data, 'Organization updated successfully');
+  }
+
+  async listOrganizationMembers(organizationId: string): Promise<OrganizationMembersResponse> {
+    return this.request<OrganizationMembersResponse>('GET', `/api/v1/platform-service/organizations/${organizationId}/members`);
+  }
+
+  async setOrganizationMember(organizationId: string, data: SetOrganizationMemberRequest): Promise<void> {
+    return this.request<void>('PUT', `/api/v1/platform-service/organizations/${organizationId}/members`, data, 'Member role set successfully');
+  }
+
+  async deleteOrganizationMember(organizationId: string, data: DeleteOrganizationMemberRequest): Promise<void> {
+    return this.request<void>('DELETE', `/api/v1/platform-service/organizations/${organizationId}/members`, data, 'Member role removed successfully');
+  }
+
+  async listOrganizationTenants(organizationId: string): Promise<TenantWithOrganizationResponse[]> {
+    return this.request<TenantWithOrganizationResponse[]>('GET', `/api/v1/platform-service/organizations/${organizationId}/tenants`);
+  }
+
+  async createTenantInOrganization(organizationId: string, data: CreateTenantInOrganizationRequest): Promise<TenantWithOrganizationResponse> {
+    return this.request<TenantWithOrganizationResponse>('POST', `/api/v1/platform-service/organizations/${organizationId}/tenants`, data, 'Tenant created successfully');
+  }
+
+  async deleteTenantInOrganization(organizationId: string, tenantId: string): Promise<void> {
+    return this.request<void>('DELETE', `/api/v1/platform-service/organizations/${organizationId}/tenants/${tenantId}`, undefined, 'Tenant deleted successfully');
+  }
+
   // ========== Chat Agent Endpoints ==========
 
   async listChatAgents(
-    tenantId: string, 
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' }, 
+    tenantId: string,
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise<ChatAgentResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
@@ -347,8 +389,8 @@ export class UnifiedUIAPIClient {
   // ========== Autonomous Agent Endpoints ==========
 
   async listAutonomousAgents(
-    tenantId: string, 
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' }, 
+    tenantId: string,
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise<AutonomousAgentResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
@@ -466,8 +508,8 @@ export class UnifiedUIAPIClient {
   // ========== Credential Endpoints ==========
 
   async listCredentials(
-    tenantId: string, 
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' }, 
+    tenantId: string,
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise<CredentialResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
@@ -527,7 +569,7 @@ export class UnifiedUIAPIClient {
   // ========== Chat Widget Endpoints ==========
 
   async listChatWidgets(
-    tenantId: string, 
+    tenantId: string,
     params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise<ChatWidgetResponse[] | QuickListItemResponse[]> {
@@ -1153,7 +1195,7 @@ export class UnifiedUIAPIClient {
           } else if (line === '' && currentEvent && currentData) {
             try {
               const parsed = JSON.parse(currentData);
-              
+
               // Handle unified stream message format
               if (currentEvent === 'message' && parsed.type) {
                 const streamMsg = parsed as SSEStreamMessage;
@@ -1194,8 +1236,8 @@ export class UnifiedUIAPIClient {
                     break;
                   case 'ERROR':
                     if (onError && streamMsg.config) {
-                      const errorMessage = typeof streamMsg.config.message === 'string' 
-                        ? streamMsg.config.message 
+                      const errorMessage = typeof streamMsg.config.message === 'string'
+                        ? streamMsg.config.message
                         : 'An error occurred';
                       onError(
                         streamMsg.config.code || 'UNKNOWN_ERROR',
@@ -1211,7 +1253,7 @@ export class UnifiedUIAPIClient {
                     break;
                 }
               }
-              
+
               yield {
                 type: currentEvent as SSEEvent['type'],
                 data: parsed,

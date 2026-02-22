@@ -1,6 +1,6 @@
 /**
  * TracingDataSection - Logs + Input/Output Panel
- * 
+ *
  * Features:
  * - Links: Logs Panel (1/4 Breite)
  * - Rechts: Tabs (Input/Output | Metadata)

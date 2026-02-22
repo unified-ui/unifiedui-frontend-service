@@ -1,6 +1,6 @@
 /**
  * TracingHierarchyView - CSS Module
- * 
+ *
  * Features:
  * - VSCode-style Tree mit curved Linien
  * - Indentation per Level
@@ -34,11 +34,11 @@
   background: transparent;
 }
 
-:global([data-mantine-color-scheme='dark']) .containerChatSidebar {
+:global([data-mantine-color-scheme="dark"]) .containerChatSidebar {
   background: #1a1a1a;
 }
 
-:global([data-mantine-color-scheme='dark']) .containerChatSidebar .header {
+:global([data-mantine-color-scheme="dark"]) .containerChatSidebar .header {
   background: #1a1a1a;
   border-bottom: none;
 }
@@ -256,7 +256,7 @@
 }
 
 .panelResizeHandle::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 50%;

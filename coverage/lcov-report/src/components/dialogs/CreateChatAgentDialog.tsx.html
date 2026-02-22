@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../../index.html">All files</a> / <a href="index.html">src/components/dialogs</a> CreateChatAgentDialog.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">24.21% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>31/128</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">6.08% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>7/115</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">17.24% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>5/29</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">24.6% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>31/126</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -1402,7 +1402,7 @@ export const CreateChatAgentDialog: FC&lt;CreateChatAgentDialogProps&gt; = ({
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
   const [credentialFieldTarget, setCredentialFieldTarget] = useState&lt;'api_key' | 'chat_auth' | null&gt;(null);
-  
+
   // Server-side filtering for credentials
   const [credentialSearch, setCredentialSearch] = useState('');
   const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
@@ -1523,7 +1523,7 @@ export const CreateChatAgentDialog: FC&lt;CreateChatAgentDialogProps&gt; = ({
   // Load credentials when dialog opens or search changes
   const loadCredentials = useCallback(<span class="fstat-no" title="function not covered" >async (s</span>earchTerm?: string) =&gt; {
 <span class="cstat-no" title="statement not covered" >    if (!apiClient || !selectedTenant) <span class="cstat-no" title="statement not covered" >return;</span></span>
-    
+
 <span class="cstat-no" title="statement not covered" >    setIsLoadingCredentials(true);</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
       const response = <span class="cstat-no" title="statement not covered" >await apiClient.listCredentials(selectedTenant.id, { </span>
@@ -1576,7 +1576,7 @@ export const CreateChatAgentDialog: FC&lt;CreateChatAgentDialogProps&gt; = ({
 <span class="cstat-no" title="statement not covered" >    try {</span>
       // Build config based on chat agent type
       let config: N8NChatAgentConfig | FoundryChatAgentConfig | undefined;
-      
+
 <span class="cstat-no" title="statement not covered" >      if (values.type === ChatAgentTypeEnum.N8N) {</span>
 <span class="cstat-no" title="statement not covered" >        config = {</span>
           api_version: values.n8n_api_version as N8NApiVersionEnum,
@@ -1647,7 +1647,7 @@ export const CreateChatAgentDialog: FC&lt;CreateChatAgentDialogProps&gt; = ({
 <span class="cstat-no" title="statement not covered" >    if (apiClient &amp;&amp; selectedTenant) {</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
 <span class="cstat-no" title="statement not covered" >        await loadCredentials();</span>
-        
+
         // Auto-select the newly created credential
 <span class="cstat-no" title="statement not covered" >        if (credential &amp;&amp; credentialFieldTarget) {</span>
 <span class="cstat-no" title="statement not covered" >          if (credentialFieldTarget === 'api_key') {</span>
@@ -1936,4 +1936,3 @@ export const CreateChatAgentDialog: FC&lt;CreateChatAgentDialogProps&gt; = ({
         <script src="../../../block-navigation.js"></script>
     </body>
 </html>
-    

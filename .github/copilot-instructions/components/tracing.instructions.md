@@ -34,36 +34,36 @@ Central state for all tracing components.
 
 ### State Shape
 
-| Field | Type | Purpose |
-|-------|------|---------|
-| `traces` | `FullTraceResponse[]` | All available traces |
-| `selectedTrace` | `FullTraceResponse \| null` | Currently viewed trace |
-| `selectedNode` | `TraceNodeResponse \| null` | Selected node in graph/tree |
-| `layoutDirection` | `'horizontal' \| 'vertical'` | Canvas layout (persisted localStorage) |
-| `hierarchyCollapsed` | `Set<string>` | Collapsed node IDs in tree view |
-| `canvasCollapsed` | `Set<string>` | Collapsed node IDs in canvas |
-| `hierarchyVisible` | `boolean` | Tree sidebar visibility (persisted localStorage) |
+| Field                | Type                         | Purpose                                          |
+| -------------------- | ---------------------------- | ------------------------------------------------ |
+| `traces`             | `FullTraceResponse[]`        | All available traces                             |
+| `selectedTrace`      | `FullTraceResponse \| null`  | Currently viewed trace                           |
+| `selectedNode`       | `TraceNodeResponse \| null`  | Selected node in graph/tree                      |
+| `layoutDirection`    | `'horizontal' \| 'vertical'` | Canvas layout (persisted localStorage)           |
+| `hierarchyCollapsed` | `Set<string>`                | Collapsed node IDs in tree view                  |
+| `canvasCollapsed`    | `Set<string>`                | Collapsed node IDs in canvas                     |
+| `hierarchyVisible`   | `boolean`                    | Tree sidebar visibility (persisted localStorage) |
 
 ### Key Actions
 
-| Action | Purpose |
-|--------|---------|
-| `selectTrace(id)` | Switch active trace |
-| `selectNode(node)` | Highlight node in both views |
-| `toggleHierarchyCollapse(id)` | Expand/collapse tree node |
-| `toggleCanvasCollapse(id)` | Expand/collapse canvas node |
-| `setLayoutDirection(dir)` | Switch horizontal/vertical layout |
-| `centerOnNode(id)` | Pan canvas to specific node |
+| Action                          | Purpose                                 |
+| ------------------------------- | --------------------------------------- |
+| `selectTrace(id)`               | Switch active trace                     |
+| `selectNode(node)`              | Highlight node in both views            |
+| `toggleHierarchyCollapse(id)`   | Expand/collapse tree node               |
+| `toggleCanvasCollapse(id)`      | Expand/collapse canvas node             |
+| `setLayoutDirection(dir)`       | Switch horizontal/vertical layout       |
+| `centerOnNode(id)`              | Pan canvas to specific node             |
 | `findNodeForMessage(messageId)` | Find trace node matching a chat message |
-| `selectNodeByExtMessageId(id)` | Bidirectional message-trace linking |
+| `selectNodeByExtMessageId(id)`  | Bidirectional message-trace linking     |
 
 ### Provider Props
 
-| Prop | Purpose |
-|------|---------|
-| `traces` | Trace data array |
-| `initialTraceId` | Pre-select a trace on mount |
-| `initialNodeReferenceId` | Pre-select a node by reference ID |
+| Prop                      | Purpose                                                        |
+| ------------------------- | -------------------------------------------------------------- |
+| `traces`                  | Trace data array                                               |
+| `initialTraceId`          | Pre-select a trace on mount                                    |
+| `initialNodeReferenceId`  | Pre-select a node by reference ID                              |
 | `onNodeReferenceIdChange` | Callback when selected node changes (for message highlighting) |
 
 ---
@@ -101,25 +101,25 @@ Interactive flow graph built with `@xyflow/react` and `dagre` layout.
 
 ### Node Type Icons
 
-| Node Type | Icon |
-|-----------|------|
-| `llm` | IconBrain |
-| `tool` | IconTool |
-| `agent` | IconRobot |
-| `chain` | IconLink |
+| Node Type  | Icon              |
+| ---------- | ----------------- |
+| `llm`      | IconBrain         |
+| `tool`     | IconTool          |
+| `agent`    | IconRobot         |
+| `chain`    | IconLink          |
 | `workflow` | IconArrowsShuffle |
-| `custom` | IconBox |
-| `other` | IconCircle |
+| `custom`   | IconBox           |
+| `other`    | IconCircle        |
 
 ### Status Icons
 
-| Status | Icon | Color |
-|--------|------|-------|
-| `completed` | IconCheck | green |
-| `failed` | IconX | red |
-| `running` | IconLoader (animated) | yellow |
-| `pending` | IconClock | gray |
-| `cancelled` | IconPlayerStop | orange |
+| Status      | Icon                  | Color  |
+| ----------- | --------------------- | ------ |
+| `completed` | IconCheck             | green  |
+| `failed`    | IconX                 | red    |
+| `running`   | IconLoader (animated) | yellow |
+| `pending`   | IconClock             | gray   |
+| `cancelled` | IconPlayerStop        | orange |
 
 ---
 
@@ -131,20 +131,20 @@ VSCode-style tree with curved connection lines and collapsible data panels.
 
 ### Variants
 
-| Variant | Usage |
-|---------|-------|
-| `full` | In TracingVisualDialog (left panel) |
+| Variant   | Usage                                 |
+| --------- | ------------------------------------- |
+| `full`    | In TracingVisualDialog (left panel)   |
 | `compact` | In TracingSidebar (embedded in pages) |
 
 ### Data Panels
 
 VS Code-style resizable panels at the bottom of the tree:
 
-| Panel | Content |
-|-------|---------|
-| Logs | Trace log entries |
-| Input | Selected node's input data |
-| Output | Selected node's output data |
+| Panel    | Content                                     |
+| -------- | ------------------------------------------- |
+| Logs     | Trace log entries                           |
+| Input    | Selected node's input data                  |
+| Output   | Selected node's output data                 |
 | Metadata | Node metadata (reference IDs, timing, etc.) |
 
 Each panel has its own expand/collapse toggle and resize handle.
@@ -176,6 +176,7 @@ Bottom panel in the dialog showing detailed node data.
 ### JsonViewer (inner component)
 
 Collapsible JSON renderer:
+
 - Auto-expands payloads ≤ 5 lines
 - Shows line count badge
 - Toggleable expand/collapse all

@@ -1,27 +1,9 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { ReactNode, FC } from 'react';
 import type { AccountInfo } from '@azure/msal-browser';
 import { authConfig } from './authConfig';
-
-interface GoogleAuthContextType {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  account: AccountInfo | null;
-  login: () => Promise<void>;
-  logout: () => Promise<void>;
-  getAccessToken: () => Promise<string | null>;
-  getFoundryToken: () => Promise<string | null>;
-}
-
-const GoogleAuthContext = createContext<GoogleAuthContextType | undefined>(undefined);
-
-export const useGoogleAuth = (): GoogleAuthContextType => {
-  const context = useContext(GoogleAuthContext);
-  if (!context) {
-    throw new Error('useGoogleAuth must be used within GoogleAuthProvider');
-  }
-  return context;
-};
+import { GoogleAuthContext } from './useGoogleAuth';
+import type { GoogleAuthContextType } from './useGoogleAuth';
 
 interface GoogleAuthProviderProps {
   children: ReactNode;
@@ -35,7 +17,6 @@ export const GoogleAuthProvider: FC<GoogleAuthProviderProps> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
   const [account, setAccount] = useState<AccountInfo | null>(null);
   const [idToken, setIdToken] = useState<string | null>(null);
-  const clientRef = useRef<google.accounts.id.IdConfiguration | null>(null);
 
   const parseJwt = useCallback((token: string): Record<string, string> => {
     const base64Url = token.split('.')[1];

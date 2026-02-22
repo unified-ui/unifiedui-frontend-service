@@ -28,13 +28,13 @@ The layout chain (MainLayout → `.content`) keeps `overflow: hidden`. **Page co
 
 ### CSS Variables (defined in `src/styles/variables.css`)
 
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `--header-height` | `56px` | Header fixed height |
-| `--sidebar-width` | `80px` | Sidebar fixed width |
-| `--sidebar-width-mobile` | `56px` | Sidebar width on mobile |
-| `--content-padding-y` | `24px` | Content vertical padding |
-| `--content-padding-x` | `32px` | Content horizontal padding |
+| Variable                 | Value  | Purpose                    |
+| ------------------------ | ------ | -------------------------- |
+| `--header-height`        | `56px` | Header fixed height        |
+| `--sidebar-width`        | `80px` | Sidebar fixed width        |
+| `--sidebar-width-mobile` | `56px` | Sidebar width on mobile    |
+| `--content-padding-y`    | `24px` | Content vertical padding   |
+| `--content-padding-x`    | `32px` | Content horizontal padding |
 
 ---
 
@@ -42,18 +42,18 @@ The layout chain (MainLayout → `.content`) keeps `overflow: hidden`. **Page co
 
 **File**: `src/components/layout/MainLayout/`
 
-| Prop | Type | Default | Purpose |
-|------|------|---------|---------|
-| `children` | `ReactNode` | — | Page content |
-| `noPadding` | `boolean` | `false` | Remove default `var(--spacing-xl)` padding from content area |
+| Prop        | Type        | Default | Purpose                                                      |
+| ----------- | ----------- | ------- | ------------------------------------------------------------ |
+| `children`  | `ReactNode` | —       | Page content                                                 |
+| `noPadding` | `boolean`   | `false` | Remove default `var(--spacing-xl)` padding from content area |
 
 ### CSS Classes
 
-| Class | Rules |
-|-------|-------|
-| `.layout` | `width: 100vw`, `height: 100vh`, `display: flex`, `flex-direction: column`, `overflow: hidden` |
-| `.content` | `margin-top: var(--header-height)`, `margin-left: var(--sidebar-width)`, `height: calc(100vh - var(--header-height))`, `overflow: hidden`, `display: flex`, `flex-direction: column`, `padding: var(--content-padding-y) var(--content-padding-x)` |
-| `.noPadding` | Removes padding from `.content` |
+| Class        | Rules                                                                                                                                                                                                                                              |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.layout`    | `width: 100vw`, `height: 100vh`, `display: flex`, `flex-direction: column`, `overflow: hidden`                                                                                                                                                     |
+| `.content`   | `margin-top: var(--header-height)`, `margin-left: var(--sidebar-width)`, `height: calc(100vh - var(--header-height))`, `overflow: hidden`, `display: flex`, `flex-direction: column`, `padding: var(--content-padding-y) var(--content-padding-x)` |
+| `.noPadding` | Removes padding from `.content`                                                                                                                                                                                                                    |
 
 ### Tablet Breakpoint (`@768px`)
 
@@ -167,19 +167,19 @@ Active nav item gets a blue left border (`border-left: 4px solid var(--color-pri
 
 Width-constrained wrapper using Mantine `<Container>`.
 
-| Prop | Type | Default | Purpose |
-|------|------|---------|---------|
-| `children` | `ReactNode` | — | Page content |
-| `size` | `'sm' \| 'md' \| 'lg' \| 'xl'` | `'lg'` | Max width |
+| Prop       | Type                           | Default | Purpose      |
+| ---------- | ------------------------------ | ------- | ------------ |
+| `children` | `ReactNode`                    | —       | Page content |
+| `size`     | `'sm' \| 'md' \| 'lg' \| 'xl'` | `'lg'`  | Max width    |
 
 ### Size Map
 
 | Size | Max Width |
-|------|-----------|
-| sm | 800px |
-| md | 1000px |
-| lg | 1200px |
-| xl | 1400px |
+| ---- | --------- |
+| sm   | 800px     |
+| md   | 1000px    |
+| lg   | 1200px    |
+| xl   | 1400px    |
 
 ### CSS
 

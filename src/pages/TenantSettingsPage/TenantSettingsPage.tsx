@@ -38,9 +38,10 @@ import {
   IconShieldLock,
   IconTool,
   IconBrain,
+  IconBuilding,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { ConfirmDeleteDialog, EditRolesDialog } from '../../components/common';
+import { ConfirmDeleteDialog, EditRolesDialog, OrganizationSettingsPanel } from '../../components/common';
 import { ManageTenantAccessTable, TENANT_ROLE_OPTIONS } from '../../components/common/ManageTenantAccessTable';
 import type { TenantPrincipalPermission } from '../../components/common/ManageTenantAccessTable';
 import { AddPrincipalDialog } from '../../components/common/AddPrincipalDialog';
@@ -63,13 +64,13 @@ import type {
   ToolResponse,
   AIModelResponse,
 } from '../../api/types';
-import { TenantPermissionEnum, ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum } from '../../api/types';
+import { TenantPermissionEnum, ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum, OrganizationRoleEnum } from '../../api/types';
 import { useDelayedLoading, usePermissions } from '../../hooks';
 import classes from './TenantSettingsPage.module.css';
 
-type TabValue = 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'ai-models' | 'billing-and-licence';
+type TabValue = 'organization' | 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'ai-models' | 'billing-and-licence';
 
-const TAB_VALUES: TabValue[] = ['settings', 'iam', 'custom-groups', 'tools', 'credentials', 'ai-models', 'billing-and-licence'];
+const TAB_VALUES: TabValue[] = ['organization', 'settings', 'iam', 'custom-groups', 'tools', 'credentials', 'ai-models', 'billing-and-licence'];
 const DEFAULT_TAB: TabValue = 'settings';
 
 const PURPOSE_GROUP_COLORS: Record<string, string> = {
@@ -94,9 +95,13 @@ interface TenantSettingsFormValues {
 }
 
 export const TenantSettingsPage: FC = () => {
-  const { apiClient, selectedTenant, refreshIdentity } = useIdentity();
+  const { apiClient, selectedTenant, organization, refreshIdentity } = useIdentity();
   const { isGlobalAdmin, canCreate, hasRole } = usePermissions();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const isOrgAdmin = organization?.roles?.some(
+    (r) => r === OrganizationRoleEnum.ORGANISATION_GLOBAL_ADMIN || r === OrganizationRoleEnum.ORGANISATION_ADMIN
+  ) ?? false;
 
   // Read initial tab from URL, default to 'settings'
   const tabFromUrl = searchParams.get('tab');
@@ -1028,6 +1033,9 @@ export const TenantSettingsPage: FC = () => {
           }}
         >
           <Tabs.List>
+            <Tabs.Tab value="organization" leftSection={<IconBuilding size={18} />}>
+              Organization
+            </Tabs.Tab>
             <Tabs.Tab value="settings" leftSection={<IconSettings size={18} />}>
               General
             </Tabs.Tab>
@@ -1052,6 +1060,11 @@ export const TenantSettingsPage: FC = () => {
               Billing
             </Tabs.Tab>
           </Tabs.List>
+
+            {/* Organization Settings Tab */}
+            <Tabs.Panel value="organization">
+              <OrganizationSettingsPanel isOrgAdmin={isOrgAdmin} />
+            </Tabs.Panel>
 
             {/* Tenant Settings Tab */}
             <Tabs.Panel value="settings">

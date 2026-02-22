@@ -187,7 +187,7 @@ const sortRolesByPriority = (roles: TenantPermissionEnum[]): TenantPermissionEnu
 // Role Badge Component with popover for hidden roles
 const RoleBadges: FC<{ roles: TenantPermissionEnum[] }> = ({ roles }) => {
   const [popoverOpened, setPopoverOpened] = useState(false);
-  
+
   const sortedRoles = sortRolesByPriority(roles);
   const visibleRoles = sortedRoles.slice(0, MAX_VISIBLE_ROLES);
   const hiddenRoles = sortedRoles.slice(MAX_VISIBLE_ROLES);
@@ -196,10 +196,10 @@ const RoleBadges: FC<{ roles: TenantPermissionEnum[] }> = ({ roles }) => {
   return (
     <Group gap={4} wrap="wrap">
       {visibleRoles.map((role) => (
-        <Badge 
-          key={role} 
-          size="sm" 
-          variant="light" 
+        <Badge
+          key={role}
+          size="sm"
+          variant="light"
           color={getRoleBadgeColor(role)}
           radius="sm"
         >
@@ -222,10 +222,10 @@ const RoleBadges: FC<{ roles: TenantPermissionEnum[] }> = ({ roles }) => {
               onClick={(e) => e.stopPropagation()}
               style={{ display: 'inline-block', lineHeight: 1 }}
             >
-              <Badge 
-                size="sm" 
-                variant="outline" 
-                radius="sm" 
+              <Badge
+                size="sm"
+                variant="outline"
+                radius="sm"
                 style={{ cursor: 'pointer', display: 'inline-flex' }}
               >
                 +{hiddenRoles.length}
@@ -238,10 +238,10 @@ const RoleBadges: FC<{ roles: TenantPermissionEnum[] }> = ({ roles }) => {
           >
             <Group gap={4} wrap="wrap" maw={300}>
               {hiddenRoles.map((role) => (
-                <Badge 
-                  key={role} 
-                  size="sm" 
-                  variant="light" 
+                <Badge
+                  key={role}
+                  size="sm"
+                  variant="light"
                   color={getRoleBadgeColor(role)}
                   radius="sm"
                 >
@@ -279,13 +279,13 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
   // Search state (for internal debouncing)
   const [internalSearchValue, setInternalSearchValue] = useState(controlledSearchValue || '');
   const [debouncedSearch] = useDebouncedValue(internalSearchValue, 400);
-  
+
   // Role filter state
   const [internalRoleFilter, setInternalRoleFilter] = useState<string[]>(controlledRoleFilterValue || []);
-  
+
   // Infinite scroll observer ref
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  
+
   // Delete confirmation dialog state
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
@@ -369,8 +369,8 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
   }, [onManageAccess]);
 
   // Group role options for filter dropdown
-  const roleFilterOptions = useMemo(() => 
-    TENANT_ROLE_OPTIONS.map(r => ({ value: r.value, label: r.label })), 
+  const roleFilterOptions = useMemo(() =>
+    TENANT_ROLE_OPTIONS.map(r => ({ value: r.value, label: r.label })),
     []
   );
 
@@ -452,7 +452,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
                 <Table.Td colSpan={5}>
                   <Center py="xl">
                     <Text c="dimmed">
-                      {hasFetched 
+                      {hasFetched
                         ? (internalSearchValue || internalRoleFilter.length > 0
                           ? 'No principals match your filters'
                           : 'No principals have access yet. Click "Add Principal" to get started.')
@@ -467,7 +467,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
                 const isCurrentUser = currentUser?.id === principal.principalId;
 
                 return (
-                  <Table.Tr 
+                  <Table.Tr
                     key={`${principal.principalId}-${principal.principalType}`}
                     onClick={() => !isCurrentUser && handleRowClick(principal)}
                     style={{ cursor: isCurrentUser ? 'default' : 'pointer' }}
@@ -553,7 +553,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
           </Table.Tbody>
         </Table>
         </div>
-        
+
         {/* Infinite scroll trigger element */}
         {hasMore && (
           <div ref={loadMoreRef} className={classes.loadMoreTrigger}>

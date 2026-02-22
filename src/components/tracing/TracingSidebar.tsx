@@ -1,6 +1,6 @@
 /**
  * TracingSidebar - Wrapper für TracingHierarchyView in Sidebar-Mode
- * 
+ *
  * Nutzt TracingHierarchyView mit:
  * - variant: 'compact'
  * - theme: 'chatSidebar' (black background, border-radius left-top)

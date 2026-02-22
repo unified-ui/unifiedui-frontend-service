@@ -10,7 +10,7 @@
 }
 
 .errorText {
-  font-family: 'Fira Code', monospace;
+  font-family: "Fira Code", monospace;
   font-size: var(--font-size-xs);
   margin-top: var(--spacing-xs);
 }

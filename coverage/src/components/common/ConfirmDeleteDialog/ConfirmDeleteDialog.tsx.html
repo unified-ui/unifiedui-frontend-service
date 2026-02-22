@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../../../index.html">All files</a> / <a href="index.html">src/components/common/ConfirmDeleteDialog</a> ConfirmDeleteDialog.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">20% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>1/5</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/11</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/2</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">20% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>1/5</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -366,7 +366,7 @@ export const ConfirmDeleteDialog: FC&lt;ConfirmDeleteDialogProps&gt; = <span cla
         &lt;Text size="sm" c="dimmed"&gt;
           {displayMessage}
         &lt;/Text&gt;
-        
+
         &lt;Text size="xs" c="red.6" style={{
           padding: 'var(--spacing-sm) var(--spacing-sm)',
           backgroundColor: 'var(--color-error-50)',
@@ -379,15 +379,15 @@ export const ConfirmDeleteDialog: FC&lt;ConfirmDeleteDialogProps&gt; = <span cla
         &lt;Group justify="flex-end" gap="sm" mt="sm"&gt;
           {reverseButtons ? (
             &lt;&gt;
-              &lt;Button 
-                color="red" 
+              &lt;Button
+                color="red"
                 onClick={handleConfirm}
                 loading={isLoading}
               &gt;
                 {confirmButtonText}
               &lt;/Button&gt;
-              &lt;Button 
-                variant="default" 
+              &lt;Button
+                variant="default"
                 onClick={onClose}
                 disabled={isLoading}
               &gt;
@@ -396,15 +396,15 @@ export const ConfirmDeleteDialog: FC&lt;ConfirmDeleteDialogProps&gt; = <span cla
             &lt;/&gt;
           ) : (
             &lt;&gt;
-              &lt;Button 
-                variant="default" 
+              &lt;Button
+                variant="default"
                 onClick={onClose}
                 disabled={isLoading}
               &gt;
                 Cancel
               &lt;/Button&gt;
-              &lt;Button 
-                color="red" 
+              &lt;Button
+                color="red"
                 onClick={handleConfirm}
                 loading={isLoading}
               &gt;
@@ -436,4 +436,3 @@ export const ConfirmDeleteDialog: FC&lt;ConfirmDeleteDialogProps&gt; = <span cla
         <script src="../../../../block-navigation.js"></script>
     </body>
 </html>
-    

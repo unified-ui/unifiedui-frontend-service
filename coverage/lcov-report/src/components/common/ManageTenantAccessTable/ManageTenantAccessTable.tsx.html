@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../../../index.html">All files</a> / <a href="index.html">src/components/common/ManageTenantAccessTable</a> ManageTenantAccessTable.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">9.73% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>11/113</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>0/116</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>0/37</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">10.47% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>11/105</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -1414,7 +1414,7 @@ const sortRolesByPriority = <span class="fstat-no" title="function not covered" 
 // Role Badge Component with popover for hidden roles
 const RoleBadges: FC&lt;{ roles: TenantPermissionEnum[] }&gt; = <span class="fstat-no" title="function not covered" >({</span> roles }) =&gt; {
   const [popoverOpened, setPopoverOpened<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
-  
+
   const sortedRoles = <span class="cstat-no" title="statement not covered" >sortRolesByPriority(roles);</span>
   const visibleRoles = <span class="cstat-no" title="statement not covered" >sortedRoles.slice(0, MAX_VISIBLE_ROLES);</span>
   const hiddenRoles = <span class="cstat-no" title="statement not covered" >sortedRoles.slice(MAX_VISIBLE_ROLES);</span>
@@ -1424,9 +1424,9 @@ const RoleBadges: FC&lt;{ roles: TenantPermissionEnum[] }&gt; = <span class="fst
     &lt;Group gap={4} wrap="wrap"&gt;
       {visibleRoles.map(<span class="fstat-no" title="function not covered" >(r</span>ole) =&gt; (
 <span class="cstat-no" title="statement not covered" >        &lt;Badge </span>
-          key={role} 
-          size="sm" 
-          variant="light" 
+          key={role}
+          size="sm"
+          variant="light"
           color={getRoleBadgeColor(role)}
           radius="sm"
         &gt;
@@ -1449,10 +1449,10 @@ const RoleBadges: FC&lt;{ roles: TenantPermissionEnum[] }&gt; = <span class="fst
               onClick={<span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >e.stopPropagation()}</span>
               style={{ display: 'inline-block', lineHeight: 1 }}
             &gt;
-              &lt;Badge 
-                size="sm" 
-                variant="outline" 
-                radius="sm" 
+              &lt;Badge
+                size="sm"
+                variant="outline"
+                radius="sm"
                 style={{ cursor: 'pointer', display: 'inline-flex' }}
               &gt;
                 +{hiddenRoles.length}
@@ -1466,9 +1466,9 @@ const RoleBadges: FC&lt;{ roles: TenantPermissionEnum[] }&gt; = <span class="fst
             &lt;Group gap={4} wrap="wrap" maw={300}&gt;
               {hiddenRoles.map(<span class="fstat-no" title="function not covered" >(r</span>ole) =&gt; (
 <span class="cstat-no" title="statement not covered" >                &lt;Badge </span>
-                  key={role} 
-                  size="sm" 
-                  variant="light" 
+                  key={role}
+                  size="sm"
+                  variant="light"
                   color={getRoleBadgeColor(role)}
                   radius="sm"
                 &gt;
@@ -1506,13 +1506,13 @@ export const ManageTenantAccessTable: FC&lt;ManageTenantAccessTableProps&gt; = <
   // Search state (for internal debouncing)
   const [internalSearchValue, setInternalSearchValue<span class="cstat-no" title="statement not covered" >] = useState(controlledSearchValue || '');</span>
   const [debouncedSearch<span class="cstat-no" title="statement not covered" >] = useDebouncedValue(internalSearchValue, 400);</span>
-  
+
   // Role filter state
   const [internalRoleFilter, setInternalRoleFilter<span class="cstat-no" title="statement not covered" >] = useState&lt;string[]&gt;(controlledRoleFilterValue || []);</span>
-  
+
   // Infinite scroll observer ref
   const <span class="cstat-no" title="statement not covered" >loadMoreRef = useRef&lt;HTMLDivElement&gt;(null);</span>
-  
+
   // Delete confirmation dialog state
   const [deleteDialog, setDeleteDialog<span class="cstat-no" title="statement not covered" >] = useState&lt;{</span>
     open: boolean;
@@ -1679,7 +1679,7 @@ export const ManageTenantAccessTable: FC&lt;ManageTenantAccessTableProps&gt; = <
                 &lt;Table.Td colSpan={5}&gt;
                   &lt;Center py="xl"&gt;
                     &lt;Text c="dimmed"&gt;
-                      {hasFetched 
+                      {hasFetched
                         ? (internalSearchValue || internalRoleFilter.length &gt; 0
                           ? 'No principals match your filters'
                           : 'No principals have access yet. Click "Add Principal" to get started.')
@@ -1694,7 +1694,7 @@ export const ManageTenantAccessTable: FC&lt;ManageTenantAccessTableProps&gt; = <
                 const isCurrentUser = <span class="cstat-no" title="statement not covered" >currentUser?.id === principal.principalId;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >                return (</span>
-                  &lt;Table.Tr 
+                  &lt;Table.Tr
                     key={`${principal.principalId}-${principal.principalType}`}
                     onClick={<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >!</span>isCurrentUser &amp;&amp; handleRowClick(principal)}</span>
                     style={{ cursor: isCurrentUser ? 'default' : 'pointer' }}
@@ -1780,7 +1780,7 @@ export const ManageTenantAccessTable: FC&lt;ManageTenantAccessTableProps&gt; = <
           &lt;/Table.Tbody&gt;
         &lt;/Table&gt;
         &lt;/div&gt;
-        
+
         {/* Infinite scroll trigger element */}
         {hasMore &amp;&amp; (
           &lt;div ref={loadMoreRef} className={classes.loadMoreTrigger}&gt;
@@ -1825,4 +1825,3 @@ export const ManageTenantAccessTable: FC&lt;ManageTenantAccessTableProps&gt; = <
         <script src="../../../../block-navigation.js"></script>
     </body>
 </html>
-    

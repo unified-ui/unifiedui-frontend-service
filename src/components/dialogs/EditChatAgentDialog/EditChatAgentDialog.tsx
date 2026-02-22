@@ -133,7 +133,7 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [chatAgent, setChatAgent] = useState<ChatAgentResponse | null>(null);
-  
+
   // Credentials state
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
@@ -141,7 +141,7 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
   const [credentialFieldTarget, setCredentialFieldTarget] = useState<'api_key' | 'chat_auth' | null>(null);
   const [credentialSearch, setCredentialSearch] = useState('');
   const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
-  
+
   // Principals state
   const [principals, setPrincipals] = useState<PrincipalPermission[]>([]);
   const [isPrincipalsLoading, setIsPrincipalsLoading] = useState(false);
@@ -273,10 +273,10 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
   // Load credentials when dialog opens
   const loadCredentials = useCallback(async (searchTerm?: string) => {
     if (!apiClient || !selectedTenant) return;
-    
+
     setIsLoadingCredentials(true);
     try {
-      const response = await apiClient.listCredentials(selectedTenant.id, { 
+      const response = await apiClient.listCredentials(selectedTenant.id, {
         limit: 100,
         order_by: 'name',
         order_direction: 'asc',
@@ -308,15 +308,15 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
   // Initialize from initialData when provided
   const initializeFromData = useCallback((data: ChatAgentResponse) => {
     setChatAgent(data);
-    
+
     // Parse config from chat agent based on type
-    const n8nConfig = data.type === ChatAgentTypeEnum.N8N 
-      ? (data.config as unknown as N8NChatAgentConfig | undefined) 
+    const n8nConfig = data.type === ChatAgentTypeEnum.N8N
+      ? (data.config as unknown as N8NChatAgentConfig | undefined)
       : undefined;
-    const foundryConfig = data.type === ChatAgentTypeEnum.MICROSOFT_FOUNDRY 
-      ? (data.config as unknown as FoundryChatAgentConfig | undefined) 
+    const foundryConfig = data.type === ChatAgentTypeEnum.MICROSOFT_FOUNDRY
+      ? (data.config as unknown as FoundryChatAgentConfig | undefined)
       : undefined;
-    
+
     form.setValues({
       name: data.name,
       type: data.type,
@@ -445,7 +445,7 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
     try {
       // Build config based on chat agent type
       let config: N8NChatAgentConfig | FoundryChatAgentConfig | undefined;
-      
+
       if (values.type === ChatAgentTypeEnum.N8N) {
         config = {
           api_version: values.n8n_api_version as N8NApiVersionEnum,
@@ -481,7 +481,7 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
       // Update tags if changed
       const currentTags = chatAgent?.tags?.map((t) => t.name) || [];
       const newTags = values.tags;
-      
+
       if (JSON.stringify(currentTags.sort()) !== JSON.stringify(newTags.sort())) {
         await apiClient.setChatAgentTags(selectedTenant.id, chatAgentId, newTags);
       }
@@ -507,7 +507,7 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
   const handleCredentialCreated = async (credential?: { id: string; name: string }) => {
     // Refresh credentials list
     await loadCredentials();
-    
+
     // Auto-select the newly created credential
     if (credential && credentialFieldTarget) {
       if (credentialFieldTarget === 'api_key') {

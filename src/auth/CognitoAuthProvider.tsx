@@ -1,27 +1,9 @@
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { ReactNode, FC } from 'react';
 import type { AccountInfo } from '@azure/msal-browser';
 import { authConfig } from './authConfig';
-
-interface CognitoAuthContextType {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  account: AccountInfo | null;
-  login: () => Promise<void>;
-  logout: () => Promise<void>;
-  getAccessToken: () => Promise<string | null>;
-  getFoundryToken: () => Promise<string | null>;
-}
-
-const CognitoAuthContext = createContext<CognitoAuthContextType | undefined>(undefined);
-
-export const useCognitoAuth = (): CognitoAuthContextType => {
-  const context = useContext(CognitoAuthContext);
-  if (!context) {
-    throw new Error('useCognitoAuth must be used within CognitoAuthProvider');
-  }
-  return context;
-};
+import { CognitoAuthContext } from './useCognitoAuth';
+import type { CognitoAuthContextType } from './useCognitoAuth';
 
 interface CognitoAuthProviderProps {
   children: ReactNode;

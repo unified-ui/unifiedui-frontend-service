@@ -15,41 +15,41 @@
         }
     </style>
 </head>
-    
+
 <body>
 <div class='wrapper'>
     <div class='pad1'>
         <h1><a href="../../../../index.html">All files</a> / <a href="index.html">src/components/layout/GlobalChatSidebar</a> GlobalChatSidebar.tsx</h1>
         <div class='clearfix'>
-            
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">47.22% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>17/36</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">31.25% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>5/16</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">18.18% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>2/11</span>
             </div>
-        
-            
+
+
             <div class='fl pad1y space-right2'>
                 <span class="strong">48.57% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>17/35</span>
             </div>
-        
-            
+
+
         </div>
         <p class="quiet">
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
@@ -399,7 +399,7 @@ export const GlobalChatSidebar: FC = () =&gt; {
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
   const { isVisible, onSidebarHoverEnter, onSidebarHoverLeave } = useChatSidebar();
-  
+
   const [conversations, setConversations] = useState&lt;ConversationResponse[]&gt;([]);
   const [chatAgents, setChatAgents] = useState&lt;ChatAgentResponse[]&gt;([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -451,7 +451,7 @@ export const GlobalChatSidebar: FC = () =&gt; {
   }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
-    &lt;Box 
+    &lt;Box
       className={classes.sidebar}
       onMouseEnter={onSidebarHoverEnter}
       onMouseLeave={onSidebarHoverLeave}
@@ -492,8 +492,8 @@ export const GlobalChatSidebar: FC = () =&gt; {
       &lt;/ScrollArea&gt;
 &nbsp;
       {/* Footer */}
-      &lt;Box 
-        className={classes.footer} 
+      &lt;Box
+        className={classes.footer}
         onClick={<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >n</span>avigate('/conversations')}</span>
       &gt;
         &lt;Group gap="xs"&gt;
@@ -523,4 +523,3 @@ export const GlobalChatSidebar: FC = () =&gt; {
         <script src="../../../../block-navigation.js"></script>
     </body>
 </html>
-    

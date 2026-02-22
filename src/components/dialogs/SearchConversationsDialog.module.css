@@ -38,6 +38,6 @@
   flex-shrink: 0;
 }
 
-[data-mantine-color-scheme='dark'] .resultIcon {
+[data-mantine-color-scheme="dark"] .resultIcon {
   color: var(--color-primary-400);
 }

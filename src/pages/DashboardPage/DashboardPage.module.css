@@ -27,7 +27,9 @@
 
 .statCard {
   cursor: pointer;
-  transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+  transition:
+    transform var(--transition-fast) ease,
+    box-shadow var(--transition-fast) ease;
   background: var(--bg-paper);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
@@ -93,7 +95,9 @@
 
 .entityCard {
   cursor: pointer;
-  transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+  transition:
+    transform var(--transition-fast) ease,
+    box-shadow var(--transition-fast) ease;
   background: var(--bg-paper);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);

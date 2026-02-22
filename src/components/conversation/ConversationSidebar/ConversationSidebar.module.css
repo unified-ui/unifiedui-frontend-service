@@ -17,8 +17,8 @@
 }
 
 /* Dark mode sidebar variables */
-:global([data-mantine-color-scheme='dark']) .sidebar,
-:global([data-mantine-color-scheme='dark']) .sidebarCollapsed {
+:global([data-mantine-color-scheme="dark"]) .sidebar,
+:global([data-mantine-color-scheme="dark"]) .sidebarCollapsed {
   --sidebar-bg: #1a1a1a;
   --sidebar-text: #ffffff;
   --sidebar-text-secondary: rgba(255, 255, 255, 0.7);
