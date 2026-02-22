@@ -1,7 +1,7 @@
 import { type FC, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Stack, UnstyledButton, Text, Tooltip, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { 
+import {
   IconHome, IconHomeFilled,
   IconMessages, IconMessageFilled,
   IconSparkles,
@@ -63,7 +63,7 @@ export const Sidebar: FC = () => {
   const { t } = useTranslation('sidebar');
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const {
     chatAgents,
     autonomousAgents,
@@ -78,7 +78,7 @@ export const Sidebar: FC = () => {
     refreshChatWidgets,
     refreshReActAgents,
   } = useSidebarData();
-  
+
   const { apiClient, selectedTenant } = useIdentity();
 
   const { isFavorite: checkFavorite, toggleFavorite } = useFavorites();
@@ -109,7 +109,7 @@ export const Sidebar: FC = () => {
     },
     [toggleFavorite, ENTITY_TO_FAVORITE_TYPE]
   );
-  
+
   const [activeEntity, setActiveEntity] = useState<EntityType | null>(null);
   const canAddEntity = activeEntity ? canCreate(activeEntity) : false;
   const [isDataListExpanded, setIsDataListExpanded] = useState(() => {
@@ -123,7 +123,7 @@ export const Sidebar: FC = () => {
   const [isHoveringDataList, setIsHoveringDataList] = useState(false);
   const [isHoveringNavItem, setIsHoveringNavItem] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   const [isConversationsSidebarVisible, setIsConversationsSidebarVisible] = useState(false);
   const [isHoveringConversationsNav, setIsHoveringConversationsNav] = useState(false);
   const [isHoveringConversationsSidebar, setIsHoveringConversationsSidebar] = useState(false);
@@ -132,10 +132,10 @@ export const Sidebar: FC = () => {
   const [conversationsLoading, setConversationsLoading] = useState(false);
   const [conversationsError, setConversationsError] = useState<string | null>(null);
   const [conversationsRefreshing, setConversationsRefreshing] = useState(false);
-  
+
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
+
   const conversationsHoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const conversationsCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -143,7 +143,7 @@ export const Sidebar: FC = () => {
   const [isAutonomousAgentDialogOpen, setIsAutonomousAgentDialogOpen] = useState(false);
   const [isChatWidgetDialogOpen, setIsChatWidgetDialogOpen] = useState(false);
 
-  const entityConfigs: Record<EntityType, EntityConfig> = useMemo(() => ({
+  const entityConfigs = useMemo<Partial<Record<EntityType, EntityConfig>>>(() => ({
     'chat-agents': {
       title: t('chatAgents'),
       icon: <IconSparkles size={24} />,
@@ -176,34 +176,34 @@ export const Sidebar: FC = () => {
 
   const dataListItems: DataListItem[] = useMemo(() => {
     if (!activeEntity) return [];
-    
+
     switch (activeEntity) {
       case 'chat-agents':
         return chatAgents.map(app => ({
           id: app.id,
           name: app.name,
-          link: entityConfigs['chat-agents'].getLink(app.id),
+          link: entityConfigs['chat-agents']!.getLink(app.id),
           icon: <EntityAvatar entityType="chat-agent" size="xs" />,
         }));
       case 'autonomous-agents':
         return autonomousAgents.map(agent => ({
           id: agent.id,
           name: agent.name,
-          link: entityConfigs['autonomous-agents'].getLink(agent.id),
+          link: entityConfigs['autonomous-agents']!.getLink(agent.id),
           icon: <EntityAvatar entityType="autonomous-agent" size="xs" />,
         }));
       case 'chat-widgets':
         return chatWidgets.map(widget => ({
           id: widget.id,
           name: widget.name,
-          link: entityConfigs['chat-widgets'].getLink(widget.id),
+          link: entityConfigs['chat-widgets']!.getLink(widget.id),
           icon: <EntityAvatar entityType="chat-widget" size="xs" />,
         }));
       case 're-act-agents':
         return reActAgents.map(agent => ({
           id: agent.id,
           name: agent.name,
-          link: entityConfigs['re-act-agents'].getLink(agent.id),
+          link: entityConfigs['re-act-agents']!.getLink(agent.id),
           icon: <EntityAvatar entityType="re-act-agent" size="xs" />,
         }));
       default:
@@ -212,7 +212,7 @@ export const Sidebar: FC = () => {
   }, [activeEntity, chatAgents, autonomousAgents, chatWidgets, reActAgents, entityConfigs]);
 
   const isOnEntityListPage = useCallback((entityType: EntityType) => {
-    const entityPaths: Record<EntityType, string> = {
+    const entityPaths: Partial<Record<EntityType, string>> = {
       'chat-agents': '/chat-agents',
       'autonomous-agents': '/autonomous-agents',
       'chat-widgets': '/chat-widgets',
@@ -224,21 +224,21 @@ export const Sidebar: FC = () => {
   const handleNavItemHoverEnter = useCallback((item: NavItem) => {
     if (!item.hasDataList || !item.entityType) return;
     if (isOnEntityListPage(item.entityType)) return;
-    
+
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
-    
+
     setIsHoveringNavItem(true);
-    
+
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
-    
+
     hoverTimeoutRef.current = setTimeout(() => {
       setActiveEntity(item.entityType!);
-      
+
       const config = entityConfigs[item.entityType!];
       if (config) {
         config.fetchData();
@@ -248,12 +248,12 @@ export const Sidebar: FC = () => {
 
   const handleNavItemHoverLeave = useCallback(() => {
     setIsHoveringNavItem(false);
-    
+
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
     }
-    
+
     closeTimeoutRef.current = setTimeout(() => {
       if (!isHoveringDataList) {
         setActiveEntity(null);
@@ -263,7 +263,7 @@ export const Sidebar: FC = () => {
 
   const handleDataListHoverEnter = useCallback(() => {
     setIsHoveringDataList(true);
-    
+
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
@@ -272,7 +272,7 @@ export const Sidebar: FC = () => {
 
   const handleDataListHoverLeave = useCallback(() => {
     setIsHoveringDataList(false);
-    
+
     closeTimeoutRef.current = setTimeout(() => {
       if (!isHoveringNavItem) {
         setActiveEntity(null);
@@ -281,21 +281,21 @@ export const Sidebar: FC = () => {
   }, [isHoveringNavItem]);
 
   const isOnConversationsPage = location.pathname.startsWith('/conversations');
-  
+
   const handleConversationsNavHoverEnter = useCallback(() => {
     if (isOnConversationsPage) return;
-    
+
     if (conversationsCloseTimeoutRef.current) {
       clearTimeout(conversationsCloseTimeoutRef.current);
       conversationsCloseTimeoutRef.current = null;
     }
-    
+
     setIsHoveringConversationsNav(true);
-    
+
     if (conversationsHoverTimeoutRef.current) {
       clearTimeout(conversationsHoverTimeoutRef.current);
     }
-    
+
     conversationsHoverTimeoutRef.current = setTimeout(() => {
       setIsConversationsSidebarVisible(true);
     }, 150);
@@ -303,12 +303,12 @@ export const Sidebar: FC = () => {
 
   const handleConversationsNavHoverLeave = useCallback(() => {
     setIsHoveringConversationsNav(false);
-    
+
     if (conversationsHoverTimeoutRef.current) {
       clearTimeout(conversationsHoverTimeoutRef.current);
       conversationsHoverTimeoutRef.current = null;
     }
-    
+
     conversationsCloseTimeoutRef.current = setTimeout(() => {
       if (!isHoveringConversationsSidebar) {
         setIsConversationsSidebarVisible(false);
@@ -318,7 +318,7 @@ export const Sidebar: FC = () => {
 
   const handleConversationsSidebarHoverEnter = useCallback(() => {
     setIsHoveringConversationsSidebar(true);
-    
+
     if (conversationsCloseTimeoutRef.current) {
       clearTimeout(conversationsCloseTimeoutRef.current);
       conversationsCloseTimeoutRef.current = null;
@@ -327,7 +327,7 @@ export const Sidebar: FC = () => {
 
   const handleConversationsSidebarHoverLeave = useCallback(() => {
     setIsHoveringConversationsSidebar(false);
-    
+
     conversationsCloseTimeoutRef.current = setTimeout(() => {
       if (!isHoveringConversationsNav) {
         setIsConversationsSidebarVisible(false);
@@ -342,14 +342,14 @@ export const Sidebar: FC = () => {
 
   const loadConversations = useCallback(async (useCache = true) => {
     if (!apiClient || !selectedTenant) return;
-    
+
     if (!useCache) {
       setConversationsRefreshing(true);
     } else {
       setConversationsLoading(true);
     }
     setConversationsError(null);
-    
+
     try {
       const [convsList, appsList] = await Promise.all([
         apiClient.listConversations(selectedTenant.id, {
@@ -414,7 +414,7 @@ export const Sidebar: FC = () => {
 
   const handleAddClick = useCallback(async () => {
     if (!activeEntity) return;
-    
+
     switch (activeEntity) {
       case 'chat-agents':
         setIsChatAgentDialogOpen(true);
@@ -452,7 +452,7 @@ export const Sidebar: FC = () => {
 
   const handleRefresh = useCallback(async () => {
     if (!activeEntity) return;
-    
+
     setIsRefreshing(true);
     try {
       await refreshEntityData(activeEntity);
@@ -504,8 +504,8 @@ export const Sidebar: FC = () => {
           className={`${classes.navItem} ${isActive ? classes.navItemActive : ''} ${isEntityHovered ? classes.navItemHovered : ''}`}
         >
           {isActive ? <IconFilled size={24} stroke={isActive && item.iconFilled ? 0 : 1.5} /> : <Icon size={24} stroke={1.5} />}
-          <Text 
-            size="xs" 
+          <Text
+            size="xs"
             className={classes.navLabel}
             fw={isActive ? 700 : 400}
           >
@@ -526,12 +526,12 @@ export const Sidebar: FC = () => {
           <Divider className={classes.navDivider} />
           {mainNavItemsBottom.map(renderNavItem)}
         </Stack>
-        
+
         <Stack gap="xs" className={classes.navBottom}>
           {bottomNavItems.map(renderNavItem)}
         </Stack>
       </aside>
-      
+
       {activeEntity && activeConfig && (
         <SidebarDataList
           title={activeConfig.title}

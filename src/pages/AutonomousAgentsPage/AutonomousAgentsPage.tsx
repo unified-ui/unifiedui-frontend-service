@@ -42,13 +42,13 @@ export const AutonomousAgentsPage: FC = () => {
   }), []);
 
   const listEntities = useCallback(
-    (tenantId: string, params: Parameters<typeof apiClient.listAutonomousAgents>[1]) =>
+    (tenantId: string, params: Parameters<NonNullable<typeof apiClient>['listAutonomousAgents']>[1]) =>
       apiClient!.listAutonomousAgents(tenantId, params) as Promise<AutonomousAgentResponse[]>,
     [apiClient]
   );
 
   const listTags = useCallback(
-    (tenantId: string, params: Parameters<typeof apiClient.listAutonomousAgentTypeTags>[1]) =>
+    (tenantId: string, params: Parameters<NonNullable<typeof apiClient>['listAutonomousAgentTypeTags']>[1]) =>
       apiClient!.listAutonomousAgentTypeTags(tenantId, params),
     [apiClient]
   );

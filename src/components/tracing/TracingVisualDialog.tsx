@@ -37,7 +37,7 @@ interface DialogContentProps {
 
 const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
   const { selectedTrace, hierarchyVisible, chatVisible } = useTracing();
-  const capabilities = useAICapabilities();
+  const { capabilities } = useAICapabilities();
 
   // Panel sizes (percentages)
   const [canvasHeight, setCanvasHeight] = useState(75); // 75% canvas, 25% data section
@@ -141,7 +141,7 @@ const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
           </Box>
         </Group>
         <Group gap="sm">
-          {capabilities.trace_analysis && (
+          {capabilities?.trace_analysis && (
             <Button
               variant="light"
               size="compact-sm"
@@ -227,12 +227,12 @@ const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
         )}
       </Group>
 
-      {capabilities.trace_analysis && (
+      {capabilities?.trace_analysis && (
         <TraceAnalysisPanel
           opened={analysisPanelOpened}
           onClose={() => setAnalysisPanelOpened(false)}
           traceId={selectedTrace?.id}
-          nodes={(selectedTrace?.nodes || []) as Record<string, unknown>[]}
+          nodes={(selectedTrace?.nodes || []) as unknown as Record<string, unknown>[]}
         />
       )}
     </Stack>

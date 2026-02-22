@@ -57,14 +57,13 @@ import { AIModelDialog } from '../../components/dialogs/AIModelDialog';
 import type { EditDialogTab } from '../../components/dialogs';
 import { useIdentity } from '../../contexts';
 import type {
-  TenantPermissionEnum,
   PrincipalTypeEnum,
   CustomGroupResponse,
   CredentialResponse,
   ToolResponse,
   AIModelResponse,
 } from '../../api/types';
-import { ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum } from '../../api/types';
+import { TenantPermissionEnum, ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum } from '../../api/types';
 import { useDelayedLoading, usePermissions } from '../../hooks';
 import classes from './TenantSettingsPage.module.css';
 
@@ -98,7 +97,7 @@ export const TenantSettingsPage: FC = () => {
   const { apiClient, selectedTenant, refreshIdentity } = useIdentity();
   const { isGlobalAdmin, canCreate, hasRole } = usePermissions();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   // Read initial tab from URL, default to 'settings'
   const tabFromUrl = searchParams.get('tab');
   const initialTab = isValidTab(tabFromUrl) ? tabFromUrl : DEFAULT_TAB;
@@ -147,7 +146,7 @@ export const TenantSettingsPage: FC = () => {
   const [principalsRoleFilter, setPrincipalsRoleFilter] = useState<string[]>([]);
   const [addPrincipalDialogOpen, setAddPrincipalDialogOpen] = useState(false);
   const [editPrincipal, setEditPrincipal] = useState<TenantPrincipalPermission | null>(null);
-  
+
   const PRINCIPALS_PAGE_SIZE = 50;
 
   // ===== Custom Groups State =====
@@ -169,7 +168,7 @@ export const TenantSettingsPage: FC = () => {
     name: string;
   }>({ open: false, id: '', name: '' });
   const [isDeletingGroup, setIsDeletingGroup] = useState(false);
-  
+
   const CUSTOM_GROUPS_PAGE_SIZE = 50;
   const customGroupsLoadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -192,7 +191,7 @@ export const TenantSettingsPage: FC = () => {
     name: string;
   }>({ open: false, id: '', name: '' });
   const [isDeletingCredential, setIsDeletingCredential] = useState(false);
-  
+
   const CREDENTIALS_PAGE_SIZE = 50;
   const credentialsLoadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -216,16 +215,16 @@ export const TenantSettingsPage: FC = () => {
     name: string;
   }>({ open: false, id: '', name: '' });
   const [isDeletingTool, setIsDeletingTool] = useState(false);
-  
+
   const TOOLS_PAGE_SIZE = 50;
   const toolsLoadMoreRef = useRef<HTMLDivElement>(null);
-  
+
   // Tool type options for filter
   const TOOL_TYPE_OPTIONS = [
     { value: ToolTypeEnum.MCP_SERVER, label: 'MCP Server' },
     { value: ToolTypeEnum.OPENAPI_DEFINITION, label: 'OpenAPI Definition' },
   ];
-  
+
   const getToolTypeBadgeColor = (type: string): string => {
     switch (type) {
       case ToolTypeEnum.MCP_SERVER:
@@ -326,7 +325,7 @@ export const TenantSettingsPage: FC = () => {
     setPrincipalsError(null);
 
     const skip = reset ? 0 : principalsSkip;
-    
+
     try {
       const response = await apiClient.getTenantPrincipals(selectedTenant.id, {
         skip,
@@ -336,7 +335,7 @@ export const TenantSettingsPage: FC = () => {
         order_by: 'display_name',
         order_direction: 'asc',
       });
-      
+
       // Transform response: use display_name, mail, principal_name from principal level
       const newPrincipals: TenantPrincipalPermission[] = response.principals.map(principal => ({
         id: `${principal.principal_id}-${principal.principal_type}`,
@@ -349,7 +348,7 @@ export const TenantSettingsPage: FC = () => {
         isActive: principal.is_active,
         roles: principal.roles.map(r => r.role),
       }));
-      
+
       if (reset) {
         setPrincipals(newPrincipals);
         setPrincipalsSkip(PRINCIPALS_PAGE_SIZE);
@@ -362,7 +361,7 @@ export const TenantSettingsPage: FC = () => {
         });
         setPrincipalsSkip(prev => prev + PRINCIPALS_PAGE_SIZE);
       }
-      
+
       // Determine if there are more items to load
       setPrincipalsHasMore(newPrincipals.length === PRINCIPALS_PAGE_SIZE);
       setPrincipalsFetched(true);
@@ -1292,7 +1291,7 @@ export const TenantSettingsPage: FC = () => {
                       </Table.Tbody>
                     </Table>
                   </div>
-                    
+
                     {/* Infinite scroll trigger element */}
                     {customGroupsHasMore && (
                       <div ref={customGroupsLoadMoreRef} className={classes.loadMoreTrigger}>
@@ -1313,7 +1312,7 @@ export const TenantSettingsPage: FC = () => {
               <Stack gap="md">
                 <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
                   <Text size="sm">
-                    Manage tools for ReACT agents. Tools can be MCP servers or OpenAPI definitions 
+                    Manage tools for ReACT agents. Tools can be MCP servers or OpenAPI definitions
                     that agents use to interact with external services.
                   </Text>
                 </Alert>
@@ -1479,7 +1478,7 @@ export const TenantSettingsPage: FC = () => {
                       </Table.Tbody>
                     </Table>
                   </div>
-                    
+
                     {/* Infinite scroll trigger element */}
                     {toolsHasMore && (
                       <div ref={toolsLoadMoreRef} className={classes.loadMoreTrigger}>
@@ -1500,7 +1499,7 @@ export const TenantSettingsPage: FC = () => {
               <Stack gap="md">
                 <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
                   <Text size="sm">
-                    Manage credentials for connecting to external services and APIs. 
+                    Manage credentials for connecting to external services and APIs.
                     Click on a credential to view details or manage access permissions.
                   </Text>
                 </Alert>
@@ -1656,7 +1655,7 @@ export const TenantSettingsPage: FC = () => {
                       </Table.Tbody>
                     </Table>
                   </div>
-                    
+
                     {/* Infinite scroll trigger element */}
                     {credentialsHasMore && (
                       <div ref={credentialsLoadMoreRef} className={classes.loadMoreTrigger}>

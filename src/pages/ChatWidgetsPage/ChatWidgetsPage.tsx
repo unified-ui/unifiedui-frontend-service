@@ -37,13 +37,13 @@ export const ChatWidgetsPage: FC = () => {
   }), []);
 
   const listEntities = useCallback(
-    (tenantId: string, params: Parameters<typeof apiClient.listChatWidgets>[1]) =>
+    (tenantId: string, params: Parameters<NonNullable<typeof apiClient>['listChatWidgets']>[1]) =>
       apiClient!.listChatWidgets(tenantId, params) as Promise<ChatWidgetResponse[]>,
     [apiClient]
   );
 
   const listTags = useCallback(
-    (tenantId: string, params: Parameters<typeof apiClient.listChatWidgetTypeTags>[1]) =>
+    (tenantId: string, params: Parameters<NonNullable<typeof apiClient>['listChatWidgetTypeTags']>[1]) =>
       apiClient!.listChatWidgetTypeTags(tenantId, params),
     [apiClient]
   );
