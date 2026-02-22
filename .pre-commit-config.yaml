@@ -18,9 +18,9 @@ repos:
     hooks:
       - id: eslint
         name: ESLint
-        entry: npx eslint --fix
+        entry: npx eslint --fix --no-warn-ignored
         language: system
-        types: [javascript, jsx, ts, tsx]
+        types_or: [javascript, jsx, ts, tsx]
         pass_filenames: true
 
   # Prettier (if needed)
@@ -37,7 +37,7 @@ repos:
         name: TypeScript
         entry: npx tsc --noEmit
         language: system
-        types: [ts, tsx]
+        types_or: [ts, tsx]
         pass_filenames: false
 
   # Commit message linting

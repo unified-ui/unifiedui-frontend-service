@@ -1,6 +1,10 @@
 # Custom
 .env
 
+# Build & Coverage
+coverage
+htmlcov
+
 # Logs
 logs
 *.log
