@@ -1,13 +1,14 @@
 import type { FC } from 'react';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Group, TextInput, ActionIcon, Avatar, Text, Title, useMantineColorScheme, Stack, Paper, Button, Divider, Select } from '@mantine/core';
-import { IconSearch, IconBrain, IconSun, IconMoon, IconLogout, IconPlus } from '@tabler/icons-react';
+import { IconSearch, IconBrain, IconSun, IconMoon, IconLogout, IconPlus, IconBuilding } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
 import { useIdentity } from '../../../contexts';
 import { useKeyboardShortcuts } from '../../../hooks';
 import { CreateTenantDialog } from '../../dialogs';
+import { CreateOrganizationDialog } from '../../dialogs';
 import { CommandPalette } from '../../common';
 import classes from './Header.module.css';
 
@@ -16,10 +17,12 @@ export const Header: FC = () => {
   const navigate = useNavigate();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const { account, logout } = useAuth();
-  const { user, tenants, selectedTenant, selectTenant } = useIdentity();
+  const { user, isSystemAdmin, organization, tenants, selectedTenant, selectTenant } = useIdentity();
   const isDark = colorScheme === 'dark';
   const [userDropdownOpened, setUserDropdownOpened] = useState(false);
   const [isTenantDialogOpen, setIsTenantDialogOpen] = useState(false);
+  const [isOrgDialogOpen, setIsOrgDialogOpen] = useState(false);
+  const [orgDialogDismissed, setOrgDialogDismissed] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const userAccountRef = useRef<HTMLDivElement>(null);
 
@@ -32,6 +35,12 @@ export const Header: FC = () => {
     onFocusSearch: handleFocusSearch,
     onOpenSettings: () => navigate('/tenant-settings'),
   });
+
+  // Auto-show create org dialog for sys admin without organization
+  const shouldShowOrgDialog = useMemo(
+    () => isSystemAdmin && !organization && !!user && !orgDialogDismissed,
+    [isSystemAdmin, organization, user, orgDialogDismissed],
+  );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -166,6 +175,19 @@ export const Header: FC = () => {
                   {t('addTenant')}
                 </Button>
 
+                {isSystemAdmin && !organization && (
+                  <Button
+                    leftSection={<IconBuilding size={14} />}
+                    variant="light"
+                    color="blue"
+                    size="xs"
+                    fullWidth
+                    onClick={() => setIsOrgDialogOpen(true)}
+                  >
+                    {t('setupOrganization')}
+                  </Button>
+                )}
+
                 <Divider />
 
                 <Button
@@ -186,6 +208,14 @@ export const Header: FC = () => {
       <CreateTenantDialog
         opened={isTenantDialogOpen}
         onClose={() => setIsTenantDialogOpen(false)}
+      />
+
+      <CreateOrganizationDialog
+        opened={isOrgDialogOpen || shouldShowOrgDialog}
+        onClose={() => {
+          setIsOrgDialogOpen(false);
+          setOrgDialogDismissed(true);
+        }}
       />
 
       <CommandPalette

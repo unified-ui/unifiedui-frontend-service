@@ -24,6 +24,7 @@ import type {
   DeletePrincipalRequest,
   // Organization Types
   OrganizationResponse,
+  CreateOrganizationRequest,
   UpdateOrganizationRequest,
   OrganizationMembersResponse,
   SetOrganizationMemberRequest,
@@ -302,6 +303,10 @@ export class UnifiedUIAPIClient {
 
   // ========== Organization Endpoints ==========
 
+  async createOrganization(data: CreateOrganizationRequest): Promise<OrganizationResponse> {
+    return this.request<OrganizationResponse>('POST', '/api/v1/platform-service/organizations', data, 'Organization created successfully');
+  }
+
   async getOrganization(organizationId: string): Promise<OrganizationResponse> {
     return this.request<OrganizationResponse>('GET', `/api/v1/platform-service/organizations/${organizationId}`);
   }
@@ -315,7 +320,7 @@ export class UnifiedUIAPIClient {
   }
 
   async setOrganizationMember(organizationId: string, data: SetOrganizationMemberRequest): Promise<void> {
-    return this.request<void>('PUT', `/api/v1/platform-service/organizations/${organizationId}/members`, data, 'Member role set successfully');
+    return this.request<void>('POST', `/api/v1/platform-service/organizations/${organizationId}/members`, data, 'Member role set successfully');
   }
 
   async deleteOrganizationMember(organizationId: string, data: DeleteOrganizationMemberRequest): Promise<void> {

@@ -3,6 +3,7 @@ export { CreateAutonomousAgentDialog } from './CreateAutonomousAgentDialog';
 export { CreateChatWidgetDialog } from './CreateChatWidgetDialog';
 export { CreateCredentialDialog } from './CreateCredentialDialog';
 export { CreateCustomGroupDialog } from './CreateCustomGroupDialog';
+export { CreateOrganizationDialog } from './CreateOrganizationDialog';
 export { CreateTenantDialog } from './CreateTenantDialog';
 export { CreateToolDialog } from './CreateToolDialog';
 export { EditChatAgentDialog, type EditDialogTab } from './EditChatAgentDialog';

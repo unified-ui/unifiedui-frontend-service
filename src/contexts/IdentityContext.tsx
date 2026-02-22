@@ -11,6 +11,7 @@ import { ApiClientProvider, useApiClient } from './ApiClientContext';
 
 interface IdentityContextType {
   user: IdentityUser | null;
+  isSystemAdmin: boolean;
   organization: OrganizationContextResponse | null;
   tenants: TenantResponse[];
   selectedTenant: TenantResponse | null;
@@ -38,6 +39,7 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
   const { tenants, selectedTenant, selectedTenantRoles, setTenantsWithRoles, selectTenant } = useTenantContext();
   const { apiClient, setApiClient } = useApiClient();
   const [organization, setOrganization] = useState<OrganizationContextResponse | null>(null);
+  const [isSystemAdmin, setIsSystemAdmin] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -70,6 +72,7 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
     } else {
       setApiClient(null);
       setUser(null);
+      setIsSystemAdmin(false);
       setOrganization(null);
       setTenantsWithRoles([]);
     }
@@ -98,6 +101,7 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
         mail: meResponse.mail,
       };
 
+      setIsSystemAdmin(meResponse.is_system_admin ?? false);
       setOrganization(meResponse.organization || null);
       setTenantsWithRoles(meResponse.tenants || []);
       setUser(identityUser);
@@ -110,6 +114,7 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
 
   const value: IdentityContextType = {
     user,
+    isSystemAdmin,
     organization,
     tenants,
     selectedTenant,

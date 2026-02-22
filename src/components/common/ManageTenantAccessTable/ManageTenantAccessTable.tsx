@@ -23,6 +23,7 @@ import type { TenantPermissionEnum, PrincipalTypeEnum } from '../../../api/types
 import { useIdentity } from '../../../contexts';
 import { ConfirmDeleteDialog } from '../ConfirmDeleteDialog';
 import { DelayedTooltip } from '../DelayedTooltip';
+import type { RoleOption } from '../AddPrincipalDialog';
 import classes from './ManageTenantAccessTable.module.css';
 
 // Tenant roles with labels and descriptions
@@ -119,6 +120,10 @@ interface ManageTenantAccessTableProps {
   searchValue?: string;
   /** Current role filter values (controlled) */
   roleFilterValue?: string[];
+  /** Custom role options for filter dropdown, labels, and badge colors. Defaults to TENANT_ROLE_OPTIONS. */
+  roleOptions?: RoleOption[];
+  /** Whether to show the Status column with active/inactive toggle. Defaults to true. */
+  showStatusColumn?: boolean;
 }
 
 const getPrincipalIcon = (type: PrincipalTypeEnum) => {
@@ -162,14 +167,20 @@ const getPrincipalTypeBadgeColor = (type: PrincipalTypeEnum): string => {
 };
 
 // Get role label from role value
-const getRoleLabel = (role: TenantPermissionEnum): string => {
-  const option = TENANT_ROLE_OPTIONS.find((o) => o.value === role);
+const getRoleLabel = (role: TenantPermissionEnum, roleOptions?: RoleOption[]): string => {
+  const options = roleOptions || TENANT_ROLE_OPTIONS;
+  const option = options.find((o) => o.value === role);
   return option?.label || role;
 };
 
 // Get badge color based on role type
-const getRoleBadgeColor = (role: TenantPermissionEnum): string => {
-  if (role === 'TENANT_GLOBAL_ADMIN') return 'red';
+const getRoleBadgeColor = (role: TenantPermissionEnum, roleOptions?: RoleOption[]): string => {
+  // If custom role options provided, check for color property
+  if (roleOptions) {
+    const option = roleOptions.find((o) => o.value === role);
+    if (option && 'color' in option && typeof option.color === 'string') return option.color;
+  }
+  if (role === 'TENANT_GLOBAL_ADMIN' || role === 'ORGANISATION_GLOBAL_ADMIN') return 'red';
   if (role.endsWith('_ADMIN')) return 'orange';
   if (role.endsWith('_CREATOR')) return 'blue';
   return 'gray';
@@ -185,7 +196,7 @@ const sortRolesByPriority = (roles: TenantPermissionEnum[]): TenantPermissionEnu
 };
 
 // Role Badge Component with popover for hidden roles
-const RoleBadges: FC<{ roles: TenantPermissionEnum[] }> = ({ roles }) => {
+const RoleBadges: FC<{ roles: TenantPermissionEnum[]; roleOptions?: RoleOption[] }> = ({ roles, roleOptions }) => {
   const [popoverOpened, setPopoverOpened] = useState(false);
 
   const sortedRoles = sortRolesByPriority(roles);
@@ -200,10 +211,10 @@ const RoleBadges: FC<{ roles: TenantPermissionEnum[] }> = ({ roles }) => {
           key={role}
           size="sm"
           variant="light"
-          color={getRoleBadgeColor(role)}
+          color={getRoleBadgeColor(role, roleOptions)}
           radius="sm"
         >
-          {getRoleLabel(role)}
+          {getRoleLabel(role, roleOptions)}
         </Badge>
       ))}
       {hasHiddenRoles && (
@@ -242,10 +253,10 @@ const RoleBadges: FC<{ roles: TenantPermissionEnum[] }> = ({ roles }) => {
                   key={role}
                   size="sm"
                   variant="light"
-                  color={getRoleBadgeColor(role)}
+                  color={getRoleBadgeColor(role, roleOptions)}
                   radius="sm"
                 >
-                  {getRoleLabel(role)}
+                  {getRoleLabel(role, roleOptions)}
                 </Badge>
               ))}
             </Group>
@@ -272,7 +283,11 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
   onLoadMore,
   searchValue: controlledSearchValue,
   roleFilterValue: controlledRoleFilterValue,
+  roleOptions: roleOptionsProp,
+  showStatusColumn = true,
 }) => {
+  // Resolve role options (default to tenant roles)
+  const resolvedRoleOptions = roleOptionsProp || TENANT_ROLE_OPTIONS;
   // Get current user to prevent self-modification
   const { user: currentUser } = useIdentity();
 
@@ -370,8 +385,8 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
 
   // Group role options for filter dropdown
   const roleFilterOptions = useMemo(() =>
-    TENANT_ROLE_OPTIONS.map(r => ({ value: r.value, label: r.label })),
-    []
+    resolvedRoleOptions.map(r => ({ value: r.value, label: r.label })),
+    [resolvedRoleOptions]
   );
 
   // Determine what to show in table body
@@ -380,6 +395,9 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
   const showError = !!error;
   const showEmpty = !isLoading && principals.length === 0;
   const showData = !isLoading && principals.length > 0;
+
+  // Number of table columns depends on whether status column is shown
+  const totalColumns = showStatusColumn ? 5 : 4;
 
   return (
     <Stack gap="md" className={classes.container}>
@@ -420,7 +438,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
             <Table.Tr>
               <Table.Th className={classes.colPrincipal}>Principal</Table.Th>
               <Table.Th className={classes.colType}>Type</Table.Th>
-              <Table.Th className={classes.colStatus}>Status</Table.Th>
+              {showStatusColumn && <Table.Th className={classes.colStatus}>Status</Table.Th>}
               <Table.Th className={classes.colRoles}>Roles</Table.Th>
               <Table.Th className={classes.colActions}></Table.Th>
             </Table.Tr>
@@ -429,7 +447,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
             {/* Show loading spinner (initial or filter loading) */}
             {(showInitialLoading || showFilterLoading) && (
               <Table.Tr>
-                <Table.Td colSpan={5}>
+                <Table.Td colSpan={totalColumns}>
                   <Center py="xl">
                     <Loader size="md" />
                   </Center>
@@ -439,7 +457,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
             {/* Show error */}
             {showError && (
               <Table.Tr>
-                <Table.Td colSpan={5}>
+                <Table.Td colSpan={totalColumns}>
                   <Center py="xl">
                     <Text c="red">{error}</Text>
                   </Center>
@@ -449,7 +467,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
             {/* Show empty state */}
             {showEmpty && (
               <Table.Tr>
-                <Table.Td colSpan={5}>
+                <Table.Td colSpan={totalColumns}>
                   <Center py="xl">
                     <Text c="dimmed">
                       {hasFetched
@@ -510,6 +528,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
                     </Table.Td>
 
                     {/* Status Column with Switch */}
+                    {showStatusColumn && (
                     <Table.Td onClick={(e) => e.stopPropagation()}>
                       <Group gap="xs" wrap="nowrap">
                         <Switch
@@ -527,10 +546,11 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
                         </Text>
                       </Group>
                     </Table.Td>
+                    )}
 
                     {/* Roles - displayed as badges like tags */}
                     <Table.Td onClick={(e) => e.stopPropagation()}>
-                      <RoleBadges roles={principal.roles} />
+                      <RoleBadges roles={principal.roles} roleOptions={resolvedRoleOptions} />
                     </Table.Td>
 
                     {/* Actions */}

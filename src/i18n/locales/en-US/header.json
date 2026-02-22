@@ -5,6 +5,15 @@
   "tenantLabel": "Tenant:",
   "tenantId": "Tenant ID:",
   "addTenant": "Add Tenant",
+  "setupOrganization": "Setup Organization",
+  "createOrg": {
+    "title": "Create Organization",
+    "description": "No organization exists yet. As system admin, create one to get started.",
+    "namePlaceholder": "e.g. Acme Corp",
+    "slugPlaceholder": "e.g. acme-corp",
+    "descriptionPlaceholder": "Optional description...",
+    "slugValidation": "Slug must contain only lowercase letters, numbers and hyphens"
+  },
   "manageAccount": "Manage Account",
   "manageTenant": "Manage Tenant",
   "manageLicence": "Manage Licence",

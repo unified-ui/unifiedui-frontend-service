@@ -667,6 +667,7 @@ export interface MeResponse {
   firstname: string;
   lastname: string;
   mail: string;
+  is_system_admin: boolean;
   organization?: OrganizationContextResponse;
   tenants: TenantWithRoles[];
   groups: IdentityGroup[];
@@ -786,6 +787,15 @@ export interface OrganizationMembersResponse {
 export interface UpdateOrganizationRequest {
   name?: string;
   description?: string;
+}
+
+export interface CreateOrganizationRequest {
+  name: string;
+  slug: string;
+  description?: string;
+  identity_provider: string;
+  identity_tenant_id: string;
+  subscription_tier?: string;
 }
 
 export interface SetOrganizationMemberRequest {

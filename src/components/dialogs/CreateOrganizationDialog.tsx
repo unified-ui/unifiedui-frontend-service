@@ -8,43 +8,43 @@ import {
   Stack,
   Text,
   Box,
-  Select,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { notifications } from '@mantine/notifications';
 import { IconBuilding } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useIdentity } from '../../contexts';
-import { EnvironmentTypeEnum } from '../../api/types';
-import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
 
-interface CreateTenantDialogProps {
+interface CreateOrganizationDialogProps {
   opened: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
 }
 
 interface FormValues {
   name: string;
+  slug: string;
   description: string;
-  environment_type: string;
 }
 
-export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
+const toSlug = (value: string): string =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+export const CreateOrganizationDialog: FC<CreateOrganizationDialogProps> = ({
   opened,
   onClose,
-  onSuccess,
 }) => {
-  const { t } = useTranslation('settings');
+  const { t } = useTranslation('header');
   const { t: tCommon } = useTranslation('common');
-  const { apiClient, organization, refreshIdentity } = useIdentity();
+  const { apiClient, user, refreshIdentity } = useIdentity();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     initialValues: {
       name: '',
+      slug: '',
       description: '',
-      environment_type: EnvironmentTypeEnum.SANDBOX,
     },
     validate: {
       name: (value) => {
@@ -56,9 +56,12 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
         }
         return null;
       },
-      environment_type: (value) => {
+      slug: (value) => {
         if (!value || value.trim().length === 0) {
-          return tCommon('validation.required', { field: t('environmentType') });
+          return tCommon('validation.required', { field: 'Slug' });
+        }
+        if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(value) && value.length > 1) {
+          return t('createOrg.slugValidation');
         }
         return null;
       },
@@ -72,28 +75,19 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
   });
 
   const handleSubmit = async (values: FormValues) => {
-    if (!apiClient) return;
-
-    if (!organization) {
-      notifications.show({
-        title: tCommon('error'),
-        message: t('noOrganization'),
-        color: 'red',
-        position: 'top-right',
-      });
-      return;
-    }
+    if (!apiClient || !user) return;
 
     setIsSubmitting(true);
     try {
-      await apiClient.createTenantInOrganization(organization.id, {
+      await apiClient.createOrganization({
         name: values.name.trim(),
+        slug: values.slug.trim(),
         description: values.description?.trim() || undefined,
-        environment_type: values.environment_type as EnvironmentTypeEnum,
+        identity_provider: user.identity_provider,
+        identity_tenant_id: user.identity_tenant_id || '',
       });
       form.reset();
-      await refreshIdentity();
-      onSuccess?.();
+      await refreshIdentity(true);
       onClose();
     } catch {
       // Error handling is done by the API client
@@ -103,67 +97,65 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
   };
 
   const handleClose = () => {
-    form.reset();
-    onClose();
+    if (!isSubmitting) {
+      form.reset();
+      onClose();
+    }
   };
-
-  const environmentOptions = [
-    { value: EnvironmentTypeEnum.SANDBOX, label: t('environmentSandbox') },
-    { value: EnvironmentTypeEnum.PRODUCTION, label: t('environmentProduction') },
-  ];
 
   return (
     <Modal
       opened={opened}
       onClose={handleClose}
       title={
-        <Group gap="sm">
-          <IconBuilding size={24} />
-          <Text fw={600} size="lg">{t('createTenant')}</Text>
+        <Group gap="xs">
+          <IconBuilding size={20} />
+          <Text fw={600}>{t('createOrg.title')}</Text>
         </Group>
       }
       size="md"
-      centered
+      closeOnClickOutside={!isSubmitting}
+      closeOnEscape={!isSubmitting}
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">
+          <Box>
+            <Text size="sm" c="dimmed" mb="md">
+              {t('createOrg.description')}
+            </Text>
+          </Box>
+
           <TextInput
             label={tCommon('name')}
-            placeholder={tCommon('enterName')}
+            placeholder={t('createOrg.namePlaceholder')}
             required
-            withAsterisk
-            maxLength={255}
-            data-autofocus
+            disabled={isSubmitting}
             {...form.getInputProps('name')}
+            onChange={(e) => {
+              form.getInputProps('name').onChange(e);
+              if (!form.isTouched('slug')) {
+                form.setFieldValue('slug', toSlug(e.currentTarget.value));
+              }
+            }}
           />
 
-          <Select
-            label={t('environmentType')}
-            data={environmentOptions}
+          <TextInput
+            label="Slug"
+            placeholder={t('createOrg.slugPlaceholder')}
             required
-            withAsterisk
-            {...form.getInputProps('environment_type')}
+            disabled={isSubmitting}
+            {...form.getInputProps('slug')}
           />
 
-          <Box pos="relative">
-            <Textarea
-              label={tCommon('description')}
-              placeholder={tCommon('optionalDescription')}
-              maxLength={2000}
-              minRows={3}
-              maxRows={6}
-              autosize
-              {...form.getInputProps('description')}
-            />
-            <Box pos="absolute" top={0} right={0}>
-              <GenerateWithAIButton
-                entityType="tenant"
-                entityName={form.values.name}
-                existingDescription={form.values.description || undefined}
-                onGenerated={(desc: string) => form.setFieldValue('description', desc)}
-              />
-            </Box>
-          </Box>
+          <Textarea
+            label={tCommon('description')}
+            placeholder={t('createOrg.descriptionPlaceholder')}
+            minRows={2}
+            maxRows={4}
+            autosize
+            disabled={isSubmitting}
+            {...form.getInputProps('description')}
+          />
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={handleClose} disabled={isSubmitting}>
