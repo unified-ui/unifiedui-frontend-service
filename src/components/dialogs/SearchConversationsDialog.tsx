@@ -24,7 +24,7 @@ import type {
   ChatAgentResponse,
   MessageResponse,
 } from '../../api/types';
-import type { ApiClient } from '../../api/client';
+import type { UnifiedUIAPIClient } from '../../api/client';
 import classes from './SearchConversationsDialog.module.css';
 
 interface SearchConversationsDialogProps {
@@ -32,7 +32,7 @@ interface SearchConversationsDialogProps {
   onClose: () => void;
   conversations: ConversationResponse[];
   chatAgents: ChatAgentResponse[];
-  apiClient: ApiClient | null;
+  apiClient: UnifiedUIAPIClient | null;
   tenantId: string | undefined;
   onSelectMessage: (conversationId: string, messageId: string) => void;
 }
