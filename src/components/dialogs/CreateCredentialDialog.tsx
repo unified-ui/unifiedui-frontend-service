@@ -172,7 +172,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
           <Text fw={600} size="lg">Create Credential</Text>
         </Group>
       }
-      size="md"
+      size="lg"
       centered
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>

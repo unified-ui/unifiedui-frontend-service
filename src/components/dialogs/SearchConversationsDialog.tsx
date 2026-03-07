@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Modal,
   Stack,
@@ -12,12 +12,19 @@ import {
   Box,
   UnstyledButton,
   ActionIcon,
+  Loader,
+  Center,
 } from '@mantine/core';
 import { DelayedTooltip } from '../common';
 import { useDebouncedValue } from '@mantine/hooks';
-import { IconSearch, IconMessage, IconX, IconClock } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
-import type { ConversationResponse, ChatAgentResponse } from '../../api/types';
+import { IconSearch, IconMessage, IconX, IconClock, IconUser, IconRobot } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
+import type {
+  ConversationResponse,
+  ChatAgentResponse,
+  MessageResponse,
+} from '../../api/types';
+import type { ApiClient } from '../../api/client';
 import classes from './SearchConversationsDialog.module.css';
 
 interface SearchConversationsDialogProps {
@@ -25,12 +32,14 @@ interface SearchConversationsDialogProps {
   onClose: () => void;
   conversations: ConversationResponse[];
   chatAgents: ChatAgentResponse[];
+  apiClient: ApiClient | null;
+  tenantId: string | undefined;
+  onSelectMessage: (conversationId: string, messageId: string) => void;
 }
 
-interface SearchResult {
+interface ConversationSearchResult {
   conversation: ConversationResponse;
   chatAgentName: string;
-  matchReason: string;
 }
 
 export const SearchConversationsDialog: FC<SearchConversationsDialogProps> = ({
@@ -38,72 +47,96 @@ export const SearchConversationsDialog: FC<SearchConversationsDialogProps> = ({
   onClose,
   conversations,
   chatAgents,
+  apiClient,
+  tenantId,
+  onSelectMessage,
 }) => {
-  const navigate = useNavigate();
+  const { t } = useTranslation('conversations');
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedQuery] = useDebouncedValue(searchQuery, 300);
+  const [debouncedQuery] = useDebouncedValue(searchQuery, 400);
+  const [messageResults, setMessageResults] = useState<MessageResponse[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  // Reset search when dialog closes
   useEffect(() => {
     if (!opened) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+
       setSearchQuery('');
+
+      setMessageResults([]);
     }
   }, [opened]);
 
-  // Get chat agent name helper
-  const getChatAgentName = (chatAgentId: string): string => {
-    const app = chatAgents.find(a => a.id === chatAgentId);
-    return app?.name || 'Unknown Chat Agent';
+  useEffect(() => {
+    if (!debouncedQuery.trim() || !apiClient || !tenantId) {
+
+      setMessageResults([]);
+      return;
+    }
+
+    let cancelled = false;
+    const fetchResults = async () => {
+
+      setIsSearching(true);
+      try {
+        const response = await apiClient.searchMessages(tenantId, {
+          query: debouncedQuery.trim(),
+          limit: 30,
+        });
+        if (!cancelled) {
+          setMessageResults(response.messages);
+        }
+      } catch {
+        if (!cancelled) {
+          setMessageResults([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsSearching(false);
+        }
+      }
+    };
+
+    fetchResults();
+    return () => { cancelled = true; };
+  }, [debouncedQuery, apiClient, tenantId]);
+
+  const conversationMap = useMemo(() => {
+    const map = new Map<string, ConversationResponse>();
+    conversations.forEach(conv => map.set(conv.id, conv));
+    return map;
+  }, [conversations]);
+
+  const chatAgentMap = useMemo(() => {
+    const map = new Map<string, string>();
+    chatAgents.forEach(agent => map.set(agent.id, agent.name));
+    return map;
+  }, [chatAgents]);
+
+  const getConversationName = useCallback((conversationId: string): string => {
+    return conversationMap.get(conversationId)?.name || conversationId;
+  }, [conversationMap]);
+
+  const getChatAgentName = useCallback((chatAgentId: string): string => {
+    return chatAgentMap.get(chatAgentId) || t('unknownAgent');
+  }, [chatAgentMap, t]);
+
+  const recentConversations = useMemo((): ConversationSearchResult[] => {
+    return [...conversations]
+      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+      .slice(0, 10)
+      .map(conv => ({
+        conversation: conv,
+        chatAgentName: getChatAgentName(conv.chat_agent_id),
+      }));
+  }, [conversations, getChatAgentName]);
+
+  const handleSelectMessage = (msg: MessageResponse) => {
+    onSelectMessage(msg.conversationId, msg.id);
+    onClose();
   };
 
-  // Search logic
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
-  const searchResults = useMemo((): SearchResult[] => {
-    if (!debouncedQuery.trim()) return [];
-
-    const query = debouncedQuery.toLowerCase();
-    const results: SearchResult[] = [];
-
-    conversations.forEach(conv => {
-      const matchReasons: string[] = [];
-
-      // Check name
-      if (conv.name.toLowerCase().includes(query)) {
-        matchReasons.push('name');
-      }
-
-      // Check description
-      if (conv.description?.toLowerCase().includes(query)) {
-        matchReasons.push('description');
-      }
-
-      // Check chat agent name
-      const appName = getChatAgentName(conv.chat_agent_id);
-      if (appName.toLowerCase().includes(query)) {
-        matchReasons.push('chat agent');
-      }
-
-      // If any match, add to results
-      if (matchReasons.length > 0) {
-        results.push({
-          conversation: conv,
-          chatAgentName: appName,
-          matchReason: matchReasons.join(', '),
-        });
-      }
-    });
-
-    // Sort by most recent update
-    results.sort((a, b) =>
-      new Date(b.conversation.updated_at).getTime() - new Date(a.conversation.updated_at).getTime()
-    );
-
-    return results;
-  }, [debouncedQuery, conversations, chatAgents]);
-
   const handleSelectConversation = (conversationId: string) => {
-    navigate(`/conversations/${conversationId}`);
+    onSelectMessage(conversationId, '');
     onClose();
   };
 
@@ -122,22 +155,34 @@ export const SearchConversationsDialog: FC<SearchConversationsDialogProps> = ({
     return date.toLocaleDateString();
   };
 
+  const truncateContent = (content: string, maxLength: number = 120): string => {
+    if (content.length <= maxLength) return content;
+    return content.substring(0, maxLength) + '...';
+  };
+
+  const isShowingMessages = debouncedQuery.trim().length > 0;
+
   return (
     <Modal
       opened={opened}
       onClose={onClose}
-      title="Search Conversations"
+      title={
+        <Group gap="sm">
+          <IconSearch size={24} />
+          <Text fw={600} size="lg">{t('searchMessages')}</Text>
+        </Group>
+      }
       size="lg"
       padding="md"
+      centered
     >
       <Stack gap="md">
-        {/* Search Input */}
         <TextInput
-          placeholder="Search by name, description, or chat agent..."
+          placeholder={t('searchMessagesPlaceholder')}
           size="md"
           leftSection={<IconSearch size={20} />}
           rightSection={
-            searchQuery && (
+            searchQuery ? (
               <ActionIcon
                 variant="subtle"
                 onClick={() => setSearchQuery('')}
@@ -145,43 +190,93 @@ export const SearchConversationsDialog: FC<SearchConversationsDialogProps> = ({
               >
                 <IconX size={16} />
               </ActionIcon>
-            )
+            ) : undefined
           }
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.currentTarget.value)}
-          autoFocus
+          data-autofocus
         />
 
-        {/* Results */}
         <ScrollArea h={400} type="auto">
-          {!debouncedQuery.trim() ? (
-            <Box className={classes.emptyState}>
-              <IconSearch size={48} className={classes.emptyIcon} />
-              <Text size="sm" c="dimmed" mt="md">
-                Start typing to search conversations
-              </Text>
-            </Box>
-          ) : searchResults.length === 0 ? (
-            <Box className={classes.emptyState}>
-              <IconMessage size={48} className={classes.emptyIcon} />
-              <Text size="sm" c="dimmed" mt="md">
-                No conversations found
-              </Text>
-              <Text size="xs" c="dimmed">
-                Try searching with different keywords
-              </Text>
-            </Box>
+          {isSearching ? (
+            <Center h={200}>
+              <Loader size="md" color="gray" />
+            </Center>
+          ) : isShowingMessages ? (
+            messageResults.length === 0 ? (
+              <Box className={classes.emptyState}>
+                <IconMessage size={48} className={classes.emptyIcon} />
+                <Text size="sm" c="dimmed" mt="md">
+                  {t('noMessagesFound')}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {t('tryDifferentKeywords')}
+                </Text>
+              </Box>
+            ) : (
+              <Stack gap="xs">
+                {messageResults.map((msg) => (
+                  <UnstyledButton
+                    key={msg.id}
+                    onClick={() => handleSelectMessage(msg)}
+                    className={classes.resultItem}
+                  >
+                    <Paper p="md" withBorder className={classes.resultPaper}>
+                      <Group gap="md" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+                        {msg.type === 'user' ? (
+                          <IconUser size={20} className={classes.resultIcon} />
+                        ) : (
+                          <IconRobot size={20} className={classes.resultIcon} />
+                        )}
+                        <Box style={{ flex: 1, minWidth: 0 }}>
+                          <Text size="sm" lineClamp={2} className={classes.messagePreview}>
+                            {truncateContent(msg.content)}
+                          </Text>
+                          <Group gap="xs" mt={4}>
+                            <Badge
+                              size="xs"
+                              variant="light"
+                              color={msg.type === 'user' ? 'blue' : 'teal'}
+                            >
+                              {msg.type === 'user' ? t('userMessage') : t('assistantMessage')}
+                            </Badge>
+                            <DelayedTooltip label={getConversationName(msg.conversationId)}>
+                              <Badge size="xs" variant="outline">
+                                {getConversationName(msg.conversationId)}
+                              </Badge>
+                            </DelayedTooltip>
+                            <Group gap={4}>
+                              <IconClock size={12} />
+                              <Text size="xs" c="dimmed">
+                                {formatDate(msg.createdAt)}
+                              </Text>
+                            </Group>
+                          </Group>
+                        </Box>
+                      </Group>
+                    </Paper>
+                  </UnstyledButton>
+                ))}
+              </Stack>
+            )
           ) : (
-            <Stack gap="xs">
-              {searchResults.map((result) => (
-                <UnstyledButton
-                  key={result.conversation.id}
-                  onClick={() => handleSelectConversation(result.conversation.id)}
-                  className={classes.resultItem}
-                >
-                  <Paper p="md" withBorder className={classes.resultPaper}>
-                    <Group justify="space-between" wrap="nowrap">
-                      <Group gap="md" style={{ flex: 1, minWidth: 0 }}>
+            recentConversations.length === 0 ? (
+              <Box className={classes.emptyState}>
+                <IconMessage size={48} className={classes.emptyIcon} />
+                <Text size="sm" c="dimmed" mt="md">
+                  {t('noConversations')}
+                </Text>
+              </Box>
+            ) : (
+              <Stack gap="xs">
+                {recentConversations.map((result) => (
+                  <UnstyledButton
+                    key={result.conversation.id}
+                    onClick={() => handleSelectConversation(result.conversation.id)}
+                    className={classes.resultItem}
+                  >
+                    <Paper p="md" withBorder className={classes.resultPaper}>
+                      <Group gap="md" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
                         <IconMessage size={20} className={classes.resultIcon} />
                         <Box style={{ flex: 1, minWidth: 0 }}>
                           <DelayedTooltip label={result.conversation.name}>
@@ -209,20 +304,19 @@ export const SearchConversationsDialog: FC<SearchConversationsDialogProps> = ({
                           </Group>
                         </Box>
                       </Group>
-                    </Group>
-                  </Paper>
-                </UnstyledButton>
-              ))}
-            </Stack>
+                    </Paper>
+                  </UnstyledButton>
+                ))}
+              </Stack>
+            )
           )}
         </ScrollArea>
 
-        {/* Results Count */}
-        {debouncedQuery.trim() && (
-          <Text size="xs" c="dimmed" ta="center">
-            {searchResults.length} {searchResults.length === 1 ? 'result' : 'results'} found
-          </Text>
-        )}
+        <Text size="xs" c="dimmed" ta="center">
+          {isShowingMessages
+            ? t('resultsFound', { count: messageResults.length })
+            : t('recentConversations', { count: recentConversations.length })}
+        </Text>
       </Stack>
     </Modal>
   );

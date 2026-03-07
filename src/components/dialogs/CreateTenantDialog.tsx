@@ -122,7 +122,7 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
           <Text fw={600} size="lg">{t('createTenant')}</Text>
         </Group>
       }
-      size="md"
+      size="lg"
       centered
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>

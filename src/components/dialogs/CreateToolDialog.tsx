@@ -118,7 +118,7 @@ export const CreateToolDialog: FC<CreateToolDialogProps> = ({
           <Text fw={600}>Create New Tool</Text>
         </Group>
       }
-      size="md"
+      size="lg"
       centered
       closeOnClickOutside={!isSubmitting}
       closeOnEscape={!isSubmitting}

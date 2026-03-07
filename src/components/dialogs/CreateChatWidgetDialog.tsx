@@ -119,7 +119,7 @@ export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
           <Text fw={600} size="lg">Create Chat Widget</Text>
         </Group>
       }
-      size="md"
+      size="lg"
       centered
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>

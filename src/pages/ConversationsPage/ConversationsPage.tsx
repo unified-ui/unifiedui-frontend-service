@@ -29,6 +29,7 @@ export const ConversationsPage: FC = () => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [searchHighlightedMessageId, setSearchHighlightedMessageId] = useState<string | null>(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   const tenantId = selectedTenant?.id;
@@ -106,6 +107,16 @@ export const ConversationsPage: FC = () => {
 
   const handleShare = useCallback(() => setShareDialogOpen(true), []);
   const handleSearchOpen = useCallback(() => setSearchDialogOpen(true), []);
+
+  const handleSearchSelectMessage = useCallback((targetConversationId: string, messageId: string) => {
+    if (messageId) {
+      setSearchHighlightedMessageId(messageId);
+      setTimeout(() => setSearchHighlightedMessageId(null), 2000);
+    }
+    if (targetConversationId !== conversationId) {
+      navigate(`/conversations/${targetConversationId}`);
+    }
+  }, [conversationId, navigate]);
 
   const handleEmbedSetup = useCallback(() => {
     if (convList.selectedChatAgentId) {
@@ -281,7 +292,7 @@ export const ConversationsPage: FC = () => {
             onViewTrace={tracing.handleViewTrace}
             reactions={chat.reactions}
             highlightedExtMessageId={tracing.highlightedMessageExtId}
-            highlightedUserMessageId={tracing.highlightedUserMessageId}
+            highlightedUserMessageId={searchHighlightedMessageId || tracing.highlightedUserMessageId}
             inputDisabled={!convList.selectedChatAgentId || !canWriteConversation}
             inputPlaceholder={
               convList.selectedChatAgentId
@@ -307,6 +318,9 @@ export const ConversationsPage: FC = () => {
         onClose={() => setSearchDialogOpen(false)}
         conversations={convList.conversations}
         chatAgents={convList.chatAgents}
+        apiClient={apiClient}
+        tenantId={tenantId}
+        onSelectMessage={handleSearchSelectMessage}
       />
 
       {tracing.tracingDialogOpen && tracing.traces.length > 0 && (

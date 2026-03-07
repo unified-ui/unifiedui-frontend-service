@@ -74,5 +74,14 @@
   "noChatAgentsFound": "No chat agents found",
   "noChatAgentsAvailable": "No chat agents available",
   "clearFilter": "Clear filter",
-  "filteredByChatAgent": "Filtered by chat agent"
+  "filteredByChatAgent": "Filtered by chat agent",
+  "searchMessages": "Search Messages",
+  "searchMessagesPlaceholder": "Search message content...",
+  "noMessagesFound": "No messages found",
+  "tryDifferentKeywords": "Try searching with different keywords",
+  "resultsFound": "{{count}} result found",
+  "resultsFound_other": "{{count}} results found",
+  "recentConversations": "{{count}} recent conversations",
+  "userMessage": "You",
+  "assistantMessage": "Assistant"
 }

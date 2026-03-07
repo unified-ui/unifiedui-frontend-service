@@ -10,7 +10,7 @@
 .inputOuterWrapper {
   width: 80%;
   max-width: 900px;
-  background-color: #303030;
+  background-color: var(--color-gray-200);
   border: none;
   border-radius: var(--radius-xl);
   padding: var(--spacing-md);
@@ -238,6 +238,10 @@
 }
 
 /* Dark mode adjustments */
+[data-mantine-color-scheme="dark"] .inputOuterWrapper {
+  background-color: #303030;
+}
+
 [data-mantine-color-scheme="dark"] .dragging {
   background-color: var(--color-primary-900);
 }

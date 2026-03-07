@@ -254,7 +254,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
             <Text fw={600} size="lg">Create Autonomous Agent</Text>
           </Group>
         }
-        size="md"
+        size="lg"
         centered
       >
         <form onSubmit={form.onSubmit(handleSubmit)}>

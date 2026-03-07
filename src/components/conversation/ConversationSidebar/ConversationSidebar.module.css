@@ -13,7 +13,7 @@
   --sidebar-scrollbar: rgba(0, 0, 0, 0.15);
   --sidebar-scrollbar-hover: rgba(0, 0, 0, 0.25);
   --sidebar-segmented-bg: var(--bg-elevated);
-  --sidebar-segmented-indicator: var(--bg-paper);
+  --sidebar-segmented-indicator: var(--color-gray-300);
 }
 
 /* Dark mode sidebar variables */
@@ -162,7 +162,7 @@
 }
 
 .segmentedTabActive {
-  background-color: #000000 !important;
+  background-color: var(--sidebar-segmented-indicator) !important;
   color: var(--sidebar-text);
 }
 

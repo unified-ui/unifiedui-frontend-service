@@ -113,7 +113,8 @@ export const CreateOrganizationDialog: FC<CreateOrganizationDialogProps> = ({
           <Text fw={600}>{t('createOrg.title')}</Text>
         </Group>
       }
-      size="md"
+      size="lg"
+      centered
       closeOnClickOutside={!isSubmitting}
       closeOnEscape={!isSubmitting}
     >

@@ -227,6 +227,10 @@ export interface GetMessagesResponse {
   messages: MessageResponse[];
 }
 
+export interface SearchMessagesResponse {
+  messages: MessageResponse[];
+}
+
 export interface FileAttachment {
   type: 'image' | 'file' | 'audio';
   imageUrl?: string;

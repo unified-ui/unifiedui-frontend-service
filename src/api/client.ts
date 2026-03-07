@@ -97,6 +97,7 @@ import type {
   SyncRecentVisitsRequest,
   // Agent Service Types
   GetMessagesResponse,
+  SearchMessagesResponse,
   MessageResponse,
   SendMessageRequest,
   EditMessageRequest,
@@ -1038,6 +1039,20 @@ export class UnifiedUIAPIClient {
     return this.agentServiceRequest<GetMessagesResponse>(
       'GET',
       `/api/v1/agent-service/tenants/${tenantId}/conversation/messages${query}`
+    );
+  }
+
+  /**
+   * Search messages by content text across all conversations.
+   */
+  async searchMessages(
+    tenantId: string,
+    params: { query: string; limit?: number; skip?: number }
+  ): Promise<SearchMessagesResponse> {
+    const queryStr = this.buildQueryString(params);
+    return this.agentServiceRequest<SearchMessagesResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/conversation/messages/search${queryStr}`
     );
   }
 

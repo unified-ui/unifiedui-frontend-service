@@ -16,11 +16,6 @@
   display: block;
   width: 100%;
   text-align: left;
-  transition: transform var(--transition-fast);
-}
-
-.resultItem:hover {
-  transform: translateX(4px);
 }
 
 .resultPaper {
@@ -30,7 +25,7 @@
 
 .resultPaper:hover {
   border-color: var(--color-primary-400);
-  background-color: var(--bg-elevated);
+  background-color: var(--bg-hover);
 }
 
 .resultIcon {
@@ -40,4 +35,9 @@
 
 [data-mantine-color-scheme="dark"] .resultIcon {
   color: var(--color-primary-400);
+}
+
+.messagePreview {
+  color: var(--text-secondary);
+  word-break: break-word;
 }

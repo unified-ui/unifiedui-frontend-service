@@ -24,10 +24,12 @@
 .containerChatSidebar {
   border-left: none;
   border-top-left-radius: var(--radius-lg);
+  background: var(--bg-paper);
 }
 
 .containerChatSidebar .header {
   border-bottom: none;
+  background: var(--bg-paper);
 }
 
 .containerChatSidebar .dataPanelsContainer {

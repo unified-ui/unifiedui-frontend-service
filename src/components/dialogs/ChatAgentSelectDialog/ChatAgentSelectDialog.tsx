@@ -83,7 +83,7 @@ export const ChatAgentSelectDialog: FC<ChatAgentSelectDialogProps> = ({
           <Text fw={600} size="lg">{t('conversations:selectChatAgent')}</Text>
         </Group>
       }
-      size="md"
+      size="lg"
       centered
     >
       <Stack gap="md">
@@ -94,6 +94,7 @@ export const ChatAgentSelectDialog: FC<ChatAgentSelectDialogProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{ flex: 1 }}
+            data-autofocus
           />
           <ActionIcon
             variant="subtle"

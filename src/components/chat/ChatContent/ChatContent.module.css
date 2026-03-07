@@ -119,8 +119,8 @@
   min-width: 4rem;
   width: fit-content;
   padding: var(--spacing-sm) var(--spacing-sm);
-  background-color: var(--color-primary-600);
-  color: white;
+  background-color: var(--color-primary-100);
+  color: var(--text-primary);
   border-radius: var(--mantine-radius-xl) var(--mantine-radius-xs)
     var(--mantine-radius-xl) var(--mantine-radius-xl);
   font-size: var(--font-size-lg) !important;

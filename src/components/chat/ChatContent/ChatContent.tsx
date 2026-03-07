@@ -196,9 +196,12 @@ export const ChatContent: FC<ChatContentProps> = ({
               );
             }
 
-            const refSetter = isUser
-              ? (el: HTMLDivElement | null) => setUserMessageRef(message.id, el)
-              : messageExtId ? (el: HTMLDivElement | null) => setMessageRef(messageExtId, el) : undefined;
+            const refSetter = (el: HTMLDivElement | null) => {
+              setUserMessageRef(message.id, el);
+              if (!isUser && messageExtId) {
+                setMessageRef(messageExtId, el);
+              }
+            };
 
             return (
               <MessageBubble
