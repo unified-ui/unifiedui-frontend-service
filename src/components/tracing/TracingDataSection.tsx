@@ -21,58 +21,11 @@ import {
   IconAlertTriangle,
 } from '@tabler/icons-react';
 import { useTracing } from './TracingContext';
+import { JsonViewer } from './JsonViewer';
 import { AnalyzeErrorDialog } from '../dialogs/AnalyzeErrorDialog';
 import type { TraceNodeDataIO } from '../../api/types';
 import classes from './TracingDataSection.module.css';
 
-// ============================================================================
-// JSON VIEWER COMPONENT
-// ============================================================================
-
-interface JsonViewerProps {
-  data: unknown;
-  initialCollapsed?: boolean;
-}
-
-const JsonViewer: FC<JsonViewerProps> = ({ data, initialCollapsed = true }) => {
-  const [collapsed, setCollapsed] = useState(initialCollapsed);
-
-  if (data === null || data === undefined) {
-    return <Text size="xs" c="dimmed" fs="italic">null</Text>;
-  }
-
-  if (typeof data !== 'object') {
-    return <Code block className={classes.codeBlock}>{String(data)}</Code>;
-  }
-
-  const jsonString = JSON.stringify(data, null, 2);
-  const lineCount = jsonString.split('\n').length;
-  const isLarge = lineCount > 5;
-
-  if (!isLarge) {
-    return <Code block className={classes.codeBlock}>{jsonString}</Code>;
-  }
-
-  return (
-    <div className={classes.jsonViewer}>
-      <UnstyledButton
-        className={classes.jsonToggle}
-        onClick={() => setCollapsed(!collapsed)}
-      >
-        {collapsed ? <IconChevronRight size={14} /> : <IconChevronDown size={14} />}
-        <Text size="xs" c="dimmed">{lineCount} lines</Text>
-      </UnstyledButton>
-      <Collapse in={!collapsed}>
-        <Code block className={classes.codeBlock}>{jsonString}</Code>
-      </Collapse>
-      {collapsed && (
-        <Code block className={classes.codeBlockPreview}>
-          {jsonString.split('\n').slice(0, 3).join('\n')}...
-        </Code>
-      )}
-    </div>
-  );
-};
 
 // ============================================================================
 // COLLAPSIBLE SECTION

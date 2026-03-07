@@ -1,0 +1,143 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-app);
+  overflow: hidden;
+}
+
+/* ============================================ */
+/* PANEL STATES                                 */
+/* ============================================ */
+
+.panelCollapsed {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-default);
+  overflow: hidden;
+}
+
+.panelCollapsed:last-child {
+  border-bottom: none;
+}
+
+.panelExpanded {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--border-default);
+  overflow: hidden;
+}
+
+.panelExpanded:last-child {
+  border-bottom: none;
+}
+
+/* ============================================ */
+/* PANEL HEADER                                 */
+/* ============================================ */
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  height: 28px;
+  width: 100%;
+  cursor: pointer;
+  background: var(--bg-paper);
+  transition: background-color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.panelHeader:hover {
+  background: var(--bg-hover);
+}
+
+.panelChevron {
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.panelIcon {
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.panelTitle {
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 11px;
+}
+
+.panelBadge {
+  flex-shrink: 0;
+}
+
+.panelNoContent {
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+/* ============================================ */
+/* PANEL CONTENT                                */
+/* ============================================ */
+
+.panelContent {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.panelContentInner {
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--spacing-sm);
+}
+
+/* ============================================ */
+/* DATA CONTENT                                 */
+/* ============================================ */
+
+.dataContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.dataTextSection {
+  margin-bottom: var(--spacing-xs);
+}
+
+.dataSubSection {
+  margin-top: var(--spacing-xs);
+}
+
+.textCodeBlock {
+  font-size: var(--font-size-xs);
+  background: var(--bg-paper) !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ============================================ */
+/* LOGS                                         */
+/* ============================================ */
+
+.logsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.logEntry {
+  padding: var(--spacing-xs);
+  background: var(--bg-paper);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+}
