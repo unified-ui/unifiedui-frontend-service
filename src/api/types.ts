@@ -2,9 +2,9 @@
 
 export const TenantPermissionEnum = {
   READER: 'READER',
-  GLOBAL_ADMIN: 'GLOBAL_ADMIN',
-  APPLICATIONS_ADMIN: 'APPLICATIONS_ADMIN',
-  APPLICATIONS_CREATOR: 'APPLICATIONS_CREATOR',
+  TENANT_GLOBAL_ADMIN: 'TENANT_GLOBAL_ADMIN',
+  CHAT_AGENTS_ADMIN: 'CHAT_AGENTS_ADMIN',
+  CHAT_AGENTS_CREATOR: 'CHAT_AGENTS_CREATOR',
   AUTONOMOUS_AGENTS_ADMIN: 'AUTONOMOUS_AGENTS_ADMIN',
   AUTONOMOUS_AGENTS_CREATOR: 'AUTONOMOUS_AGENTS_CREATOR',
   CONVERSATIONS_ADMIN: 'CONVERSATIONS_ADMIN',
@@ -17,6 +17,7 @@ export const TenantPermissionEnum = {
   CHAT_WIDGETS_CREATOR: 'CHAT_WIDGETS_CREATOR',
   REACT_AGENT_ADMIN: 'REACT_AGENT_ADMIN',
   REACT_AGENT_CREATOR: 'REACT_AGENT_CREATOR',
+  TENANT_AI_MODELS_ADMIN: 'TENANT_AI_MODELS_ADMIN',
 } as const;
 
 export type TenantPermissionEnum = typeof TenantPermissionEnum[keyof typeof TenantPermissionEnum];
@@ -37,13 +38,14 @@ export const PrincipalTypeEnum = {
 
 export type PrincipalTypeEnum = typeof PrincipalTypeEnum[keyof typeof PrincipalTypeEnum];
 
-export const ApplicationTypeEnum = {
+export const ChatAgentTypeEnum = {
   N8N: 'N8N',
   MICROSOFT_FOUNDRY: 'MICROSOFT_FOUNDRY',
   REST_API: 'REST_API',
+  REACT_AGENT: 'REACT_AGENT',
 } as const;
 
-export type ApplicationTypeEnum = typeof ApplicationTypeEnum[keyof typeof ApplicationTypeEnum];
+export type ChatAgentTypeEnum = typeof ChatAgentTypeEnum[keyof typeof ChatAgentTypeEnum];
 
 export const ChatWidgetTypeEnum = {
   IFRAME: 'IFRAME',
@@ -67,12 +69,32 @@ export interface N8NAutonomousAgentConfig {
 }
 
 export const FavoriteResourceTypeEnum = {
-  APPLICATION: 'applications',
+  CHAT_AGENT: 'chat-agents',
   AUTONOMOUS_AGENT: 'autonomous-agents',
+  CHAT_WIDGET: 'chat-widgets',
   CONVERSATION: 'conversations',
 } as const;
 
 export type FavoriteResourceTypeEnum = typeof FavoriteResourceTypeEnum[keyof typeof FavoriteResourceTypeEnum];
+
+// ========== Environment Type Enum ==========
+
+export const EnvironmentTypeEnum = {
+  SANDBOX: 'SANDBOX',
+  PRODUCTION: 'PRODUCTION',
+} as const;
+
+export type EnvironmentTypeEnum = typeof EnvironmentTypeEnum[keyof typeof EnvironmentTypeEnum];
+
+// ========== Organization Role Enum ==========
+
+export const OrganizationRoleEnum = {
+  ORGANISATION_GLOBAL_ADMIN: 'ORGANISATION_GLOBAL_ADMIN',
+  ORGANISATION_TENANT_ADMIN: 'ORGANISATION_TENANT_ADMIN',
+  ORGANISATION_TENANT_CREATOR: 'ORGANISATION_TENANT_CREATOR',
+} as const;
+
+export type OrganizationRoleEnum = typeof OrganizationRoleEnum[keyof typeof OrganizationRoleEnum];
 
 // ========== Credential Type Enum ==========
 
@@ -93,7 +115,7 @@ export const ToolTypeEnum = {
 
 export type ToolTypeEnum = typeof ToolTypeEnum[keyof typeof ToolTypeEnum];
 
-// ========== N8N Application Config Types ==========
+// ========== N8N Chat Agent Config Types ==========
 
 export const N8NApiVersionEnum = {
   V1: 'v1',
@@ -107,7 +129,7 @@ export const N8NWorkflowTypeEnum = {
 
 export type N8NWorkflowTypeEnum = typeof N8NWorkflowTypeEnum[keyof typeof N8NWorkflowTypeEnum];
 
-export interface N8NApplicationConfig {
+export interface N8NChatAgentConfig {
   api_version: N8NApiVersionEnum;
   workflow_type: N8NWorkflowTypeEnum;
   use_unified_chat_history: boolean;
@@ -118,7 +140,7 @@ export interface N8NApplicationConfig {
   chat_auth_credential_id?: string;
 }
 
-// ========== Microsoft Foundry Application Config Types ==========
+// ========== Microsoft Foundry Chat Agent Config Types ==========
 
 export const FoundryAgentTypeEnum = {
   AGENT: 'AGENT',
@@ -133,7 +155,7 @@ export const FoundryApiVersionEnum = {
 
 export type FoundryApiVersionEnum = typeof FoundryApiVersionEnum[keyof typeof FoundryApiVersionEnum];
 
-export interface FoundryApplicationConfig {
+export interface FoundryChatAgentConfig {
   agent_type: FoundryAgentTypeEnum;
   api_version: FoundryApiVersionEnum;
   project_endpoint: string;
@@ -146,6 +168,11 @@ export interface FoundryApplicationConfig {
 export const MessageType = {
   USER: 'user',
   ASSISTANT: 'assistant',
+  REASONING: 'reasoning',
+  TOOL_CALL: 'tool_call',
+  TOOL_RESULT: 'tool_result',
+  PLAN: 'plan',
+  SUB_AGENT: 'sub_agent',
 } as const;
 
 export type MessageType = typeof MessageType[keyof typeof MessageType];
@@ -155,6 +182,7 @@ export const MessageStatus = {
   PROCESSING: 'processing',
   COMPLETED: 'completed',
   FAILED: 'failed',
+  CANCELLED: 'cancelled',
 } as const;
 
 export type MessageStatus = typeof MessageStatus[keyof typeof MessageStatus];
@@ -180,7 +208,7 @@ export interface MessageResponse {
   id: string;
   type: MessageType;
   conversationId: string;
-  applicationId: string;
+  chatAgentId: string;
   content: string;
   userId?: string;
   userMessageId?: string;
@@ -188,17 +216,39 @@ export interface MessageResponse {
   errorMessage?: string;
   statusTraces?: StatusTrace[];
   metadata?: AssistantMetadata;
+  attachmentsMetadata?: AttachmentMetadata[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AttachmentMetadata {
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  fileCategory: string;
 }
 
 export interface GetMessagesResponse {
   messages: MessageResponse[];
 }
 
+export interface SearchMessagesResponse {
+  messages: MessageResponse[];
+}
+
+export interface FileAttachment {
+  type: 'image' | 'file' | 'audio';
+  imageUrl?: string;
+  fileData?: string;
+  filename?: string;
+  mimeType?: string;
+  detail?: 'low' | 'high' | 'auto';
+}
+
 export interface MessageContent {
   content: string;
   attachments?: string[];
+  files?: FileAttachment[];
 }
 
 export interface InvokeConfig {
@@ -208,7 +258,7 @@ export interface InvokeConfig {
 
 export interface SendMessageRequest {
   conversationId?: string;
-  applicationId: string;
+  chatAgentId: string;
   message: MessageContent;
   invokeConfig?: InvokeConfig;
   extConversationId?: string; // External conversation ID for Foundry
@@ -218,6 +268,40 @@ export interface SendMessageResponse {
   userMessageId: string;
   assistantMessageId: string;
   conversationId: string;
+}
+
+// ========== Reaction Types ==========
+
+export const ReactionType = {
+  THUMBS_UP: 'thumbs_up',
+  THUMBS_DOWN: 'thumbs_down',
+} as const;
+
+export type ReactionType = typeof ReactionType[keyof typeof ReactionType];
+
+export interface ReactionResponse {
+  id: string;
+  tenantId: string;
+  conversationId: string;
+  messageId: string;
+  userId: string;
+  reaction: ReactionType;
+  feedbackText?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ListReactionsResponse {
+  reactions: ReactionResponse[];
+}
+
+export interface UpsertReactionRequest {
+  reaction: ReactionType;
+  feedbackText?: string;
+}
+
+export interface EditMessageRequest {
+  content: string;
 }
 
 // ========== Trace Types (Full Hierarchical Traces) ==========
@@ -242,6 +326,16 @@ export const TraceNodeType = {
   CONDITIONAL: 'conditional',
   LOOP: 'loop',
   CUSTOM: 'custom',
+  MEMORY: 'memory',
+  VECTOR_STORE: 'vector_store',
+  EMBEDDING: 'embedding',
+  OUTPUT_PARSER: 'output_parser',
+  DOCUMENT: 'document',
+  TEXT_SPLITTER: 'text_splitter',
+  APP: 'app',
+  DATA_TRANSFORM: 'data_transform',
+  QUEUE: 'queue',
+  DATABASE: 'database',
 } as const;
 
 export type TraceNodeType = typeof TraceNodeType[keyof typeof TraceNodeType];
@@ -298,7 +392,7 @@ export interface TraceNodeResponse {
 export interface FullTraceResponse {
   id: string;
   tenantId: string;
-  applicationId?: string;
+  chatAgentId?: string;
   conversationId?: string;
   autonomousAgentId?: string;
   contextType: TraceContextType | string;
@@ -398,6 +492,21 @@ export const SSEStreamMessageType = {
   MESSAGE_COMPLETE: 'MESSAGE_COMPLETE',
   TITLE_GENERATION: 'TITLE_GENERATION',
   ERROR: 'ERROR',
+  REASONING_START: 'REASONING_START',
+  REASONING_STREAM: 'REASONING_STREAM',
+  REASONING_END: 'REASONING_END',
+  TOOL_CALL_START: 'TOOL_CALL_START',
+  TOOL_CALL_STREAM: 'TOOL_CALL_STREAM',
+  TOOL_CALL_END: 'TOOL_CALL_END',
+  PLAN_START: 'PLAN_START',
+  PLAN_STREAM: 'PLAN_STREAM',
+  PLAN_COMPLETE: 'PLAN_COMPLETE',
+  SUB_AGENT_START: 'SUB_AGENT_START',
+  SUB_AGENT_STREAM: 'SUB_AGENT_STREAM',
+  SUB_AGENT_END: 'SUB_AGENT_END',
+  SYNTHESIS_START: 'SYNTHESIS_START',
+  SYNTHESIS_STREAM: 'SYNTHESIS_STREAM',
+  TRACE: 'TRACE',
 } as const;
 
 export type SSEStreamMessageType = typeof SSEStreamMessageType[keyof typeof SSEStreamMessageType];
@@ -411,6 +520,12 @@ export interface SSEStreamMessage {
     code?: string;
     message?: string | MessageResponse;
     details?: string;
+    toolName?: string;
+    toolInput?: string;
+    agentName?: string;
+    agentId?: string;
+    traceId?: string;
+    [key: string]: unknown;
   };
 }
 
@@ -463,7 +578,7 @@ export interface TagListResponse {
   total: number;
 }
 
-/** Response type for resource-specific tag endpoints (e.g., /applications/tags) */
+/** Response type for resource-specific tag endpoints (e.g., /chat-agents/tags) */
 export type ResourceTypeTagsResponse = TagSummary[];
 
 export interface ResourceTagsResponse {
@@ -492,6 +607,12 @@ export interface SetResourceTagsRequest {
 export interface QuickListItemResponse {
   id: string;
   name: string;
+}
+
+export interface ConversationQuickListItemResponse {
+  id: string;
+  name: string;
+  chat_agent_id: string;
 }
 
 // ========== Principal Types ==========
@@ -561,6 +682,13 @@ export interface TenantWithRoles {
   roles: string[];
 }
 
+export interface OrganizationContextResponse {
+  id: string;
+  name: string;
+  slug: string;
+  roles: string[];
+}
+
 export interface MeResponse {
   id: string;
   identity_provider: string;
@@ -569,6 +697,8 @@ export interface MeResponse {
   firstname: string;
   lastname: string;
   mail: string;
+  is_system_admin: boolean;
+  organization?: OrganizationContextResponse;
   tenants: TenantWithRoles[];
   groups: IdentityGroup[];
   custom_groups: unknown[];
@@ -580,6 +710,10 @@ export interface TenantResponse {
   id: string;
   name: string;
   description?: string;
+  organization_id: string;
+  environment_type: EnvironmentTypeEnum;
+  is_default: boolean;
+  can_be_deleted: boolean;
   created_at: string;
   updated_at: string;
   created_by?: string;
@@ -589,6 +723,7 @@ export interface TenantResponse {
 export interface CreateTenantRequest {
   name: string;
   description?: string;
+  environment_type?: EnvironmentTypeEnum;
 }
 
 export interface UpdateTenantRequest {
@@ -640,50 +775,196 @@ export interface TenantPrincipalsResponse {
   principals: TenantPrincipalDetail[];
 }
 
-// ========== Application Types ==========
+// ========== Organization Types ==========
 
-export interface ApplicationResponse {
+export interface OrganizationResponse {
   id: string;
-  tenant_id: string;
   name: string;
+  slug: string;
   description?: string;
-  type: ApplicationTypeEnum;
-  config: Record<string, unknown>;
+  identity_provider: string;
+  identity_tenant_id: string;
+  subscription_tier: string;
   is_active: boolean;
-  tags: TagSummary[];
   created_at: string;
   updated_at: string;
   created_by?: string;
   updated_by?: string;
 }
 
-export interface CreateApplicationRequest {
-  name: string;
-  description?: string;
-  type: ApplicationTypeEnum;
-  config?: Record<string, unknown>;
-  is_active?: boolean;
+export interface OrganizationMemberRoleResponse {
+  id: string;
+  principal_id: string;
+  principal_type: string;
+  role: string;
+  created_at: string;
 }
 
-export interface UpdateApplicationRequest {
+export interface OrganizationPrincipalResponse {
+  principal_id: string;
+  principal_type: string;
+  display_name?: string;
+  principal_name?: string;
+  mail?: string;
+  roles: OrganizationMemberRoleResponse[];
+}
+
+export interface OrganizationPrincipalsQueryParams {
+  skip?: number;
+  limit?: number;
+  search?: string;
+  order_by?: 'display_name';
+  order_direction?: 'asc' | 'desc';
+}
+
+export interface OrganizationPrincipalsResponse {
+  organization_id: string;
+  principals: OrganizationPrincipalResponse[];
+  total_count: number;
+}
+
+export interface UpdateOrganizationRequest {
   name?: string;
   description?: string;
-  type?: ApplicationTypeEnum;
-  config?: Record<string, unknown>;
-  is_active?: boolean;
 }
 
-export interface SetApplicationPermissionRequest {
+export interface CreateOrganizationRequest {
+  name: string;
+  slug: string;
+  description?: string;
+  identity_provider: string;
+  identity_tenant_id: string;
+  subscription_tier?: string;
+}
+
+export interface SetOrganizationPrincipalRequest {
+  principal_id: string;
+  principal_type: PrincipalTypeEnum;
+  role: OrganizationRoleEnum;
+}
+
+export interface DeleteOrganizationPrincipalRequest {
+  principal_id: string;
+  principal_type: PrincipalTypeEnum;
+  role: OrganizationRoleEnum;
+}
+
+export interface CreateTenantInOrganizationRequest {
+  name: string;
+  description?: string;
+  environment_type: EnvironmentTypeEnum;
+  previous_stage_id?: string;
+  is_default?: boolean;
+}
+
+export interface TenantWithOrganizationResponse {
+  id: string;
+  name: string;
+  description?: string;
+  organization_id: string;
+  environment_type: EnvironmentTypeEnum;
+  previous_stage_id?: string;
+  is_default: boolean;
+  can_be_deleted: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+// ========== Chat Agent Types ==========
+
+export interface ChatAgentResponse {
+  id: string;
+  tenant_id: string;
+  name: string;
+  description?: string;
+  type: ChatAgentTypeEnum;
+  config: Record<string, unknown>;
+  is_active: boolean;
+  embed_allowed_origins?: string;
+  tags: TagSummary[];
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+  my_permission?: string;
+  current_version?: number;
+  ai_model_ids?: string[];
+  system_prompt?: string | null;
+  tool_ids?: string[];
+  security_prompt?: string | null;
+  tool_use_prompt?: string | null;
+  response_prompt?: string | null;
+  greeting_messages?: string[];
+}
+
+export interface CreateChatAgentRequest {
+  name: string;
+  description?: string;
+  type: ChatAgentTypeEnum;
+  config?: Record<string, unknown>;
+  is_active?: boolean;
+  embed_allowed_origins?: string;
+  current_version?: number;
+  ai_model_ids?: string[];
+  system_prompt?: string | null;
+  tool_ids?: string[];
+  security_prompt?: string | null;
+  tool_use_prompt?: string | null;
+  response_prompt?: string | null;
+  greeting_messages?: string[];
+}
+
+export interface UpdateChatAgentRequest {
+  name?: string;
+  description?: string;
+  type?: ChatAgentTypeEnum;
+  config?: Record<string, unknown>;
+  is_active?: boolean;
+  embed_allowed_origins?: string;
+}
+
+export interface SetChatAgentPermissionRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
   role: PermissionActionEnum;
+}
+
+export interface UpdateReActAgentVersionRequest {
+  ai_model_ids?: string[];
+  system_prompt?: string | null;
+  tool_ids?: string[];
+  security_prompt?: string | null;
+  tool_use_prompt?: string | null;
+  response_prompt?: string | null;
+  greeting_messages?: string[];
+  config?: Record<string, unknown>;
+}
+
+export interface ReActAgentVersionResponse {
+  id: string;
+  chat_agent_id: string;
+  version: number;
+  ai_model_ids: string[];
+  system_prompt: string | null;
+  tool_ids: string[];
+  security_prompt: string | null;
+  tool_use_prompt: string | null;
+  response_prompt: string | null;
+  greeting_messages: string[];
+  config: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 // ========== Unified Principal Response Types ==========
 
 /**
  * Unified response for a principal with their roles on a resource.
- * Used by all resource types (application, autonomous_agent, chat_widget, 
+ * Used by all resource types (chat_agent, autonomous_agent, chat_widget,
  * conversation, credential, custom_group).
  */
 export interface PrincipalWithRolesResponse {
@@ -708,7 +989,7 @@ export interface ResourcePrincipalsResponse {
 }
 
 // Legacy type aliases for backward compatibility
-export type ApplicationPrincipalsResponse = ResourcePrincipalsResponse;
+export type ChatAgentPrincipalsResponse = ResourcePrincipalsResponse;
 export type AutonomousAgentPrincipalsResponse = ResourcePrincipalsResponse;
 export type ChatWidgetPrincipalsResponse = ResourcePrincipalsResponse;
 export type ConversationPrincipalsResponse = ResourcePrincipalsResponse;
@@ -732,6 +1013,7 @@ export interface AutonomousAgentResponse {
   updated_at: string;
   created_by?: string;
   updated_by?: string;
+  my_permission?: string;
 }
 
 export interface CreateAutonomousAgentRequest {
@@ -767,7 +1049,7 @@ export interface AutonomousAgentKeyResponse {
 export interface ConversationResponse {
   id: string;
   tenant_id: string;
-  application_id: string;
+  chat_agent_id: string;
   name: string;
   description?: string;
   is_active: boolean;
@@ -776,10 +1058,11 @@ export interface ConversationResponse {
   updated_at: string;
   created_by?: string;
   updated_by?: string;
+  my_permission?: string;
 }
 
 export interface CreateConversationRequest {
-  application_id: string;
+  chat_agent_id: string;
   name: string;
   description?: string;
   is_active?: boolean;
@@ -813,6 +1096,7 @@ export interface CredentialResponse {
   updated_at: string;
   created_by?: string;
   updated_by?: string;
+  my_permission?: string;
 }
 
 export interface CreateCredentialRequest {
@@ -860,6 +1144,7 @@ export interface ChatWidgetResponse {
   updated_at: string;
   created_by?: string;
   updated_by?: string;
+  my_permission?: string;
 }
 
 export interface CreateChatWidgetRequest {
@@ -935,6 +1220,7 @@ export interface ToolResponse {
   updated_at: string;
   created_by?: string;
   updated_by?: string;
+  my_permission?: string;
 }
 
 export interface CreateToolRequest {
@@ -983,6 +1269,7 @@ export const AIModelProviderEnum = {
 export type AIModelProviderEnum = typeof AIModelProviderEnum[keyof typeof AIModelProviderEnum];
 
 export const AIModelPurposeGroupEnum = {
+  REACT_AGENT: 'REACT_AGENT',
   CONVERSATION_TITLE_GENERATION: 'CONVERSATION_TITLE_GENERATION',
   CONVERSATION_SUMMARIZATION: 'CONVERSATION_SUMMARIZATION',
   DESCRIPTION_GENERATION: 'DESCRIPTION_GENERATION',
@@ -1128,6 +1415,71 @@ export interface HealthCheckResponse {
   status: string;
   timestamp: string;
   version: string;
+}
+
+// ========== Dashboard Types ==========
+
+export interface EntityStatsResponse {
+  total: number;
+  active: number;
+  inactive: number;
+}
+
+export interface DashboardStatsResponse {
+  chat_agents: EntityStatsResponse;
+  autonomous_agents: EntityStatsResponse;
+  conversations: EntityStatsResponse;
+}
+
+// ========== Search Types ==========
+
+export interface SearchResultItem {
+  type: string;
+  id: string;
+  name: string;
+  description?: string;
+  match_field: string;
+  is_active?: boolean;
+  tags: string[];
+}
+
+export interface SearchResponse {
+  results: SearchResultItem[];
+  total: number;
+  query: string;
+}
+
+export interface GlobalSearchParams {
+  q: string;
+  types?: string;
+  limit?: number;
+}
+
+// ========== Recent Visits Types ==========
+
+export interface RecentVisitResponse {
+  id: string;
+  tenant_id: string;
+  user_id: string;
+  resource_type: string;
+  resource_id: string;
+  resource_name: string;
+  visited_at: string;
+}
+
+export interface RecentVisitListResponse {
+  visits: RecentVisitResponse[];
+  total: number;
+}
+
+export interface RecentVisitItem {
+  resource_type: string;
+  resource_id: string;
+  resource_name: string;
+}
+
+export interface SyncRecentVisitsRequest {
+  visits: RecentVisitItem[];
 }
 
 // ========== Query Parameters ==========

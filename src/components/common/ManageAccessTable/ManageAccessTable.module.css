@@ -22,8 +22,6 @@
   min-width: 700px;
 }
 
-
-
 .table thead tr th {
   border-bottom: 1px solid var(--border-default);
   text-align: left;
@@ -63,7 +61,7 @@
   color: var(--text-secondary);
 }
 
-[data-mantine-color-scheme='dark'] .principalIcon {
+[data-mantine-color-scheme="dark"] .principalIcon {
   background-color: var(--color-gray-700);
 }
 

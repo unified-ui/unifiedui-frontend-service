@@ -4,6 +4,7 @@
 
 import { type FC } from 'react';
 import { Group, Text, Badge, Box } from '@mantine/core';
+import { DelayedTooltip } from '../common/DelayedTooltip';
 import {
   IconCheck,
   IconX,
@@ -100,9 +101,11 @@ export const TracingSubHeader: FC = () => {
           <Text size="xs" c="dimmed">
             ID:
           </Text>
-          <Text size="xs" fw={500} className={classes.traceId}>
-            {selectedTrace.id}
-          </Text>
+          <DelayedTooltip label={selectedTrace.id}>
+            <Text size="xs" fw={500} className={classes.traceId}>
+              {selectedTrace.id}
+            </Text>
+          </DelayedTooltip>
         </Group>
 
         <div className={classes.divider} />
@@ -112,9 +115,11 @@ export const TracingSubHeader: FC = () => {
           <Text size="xs" c="dimmed">
             {isRoot ? 'View:' : 'Node:'}
           </Text>
-          <Text size="xs" fw={500} className={classes.nodeName}>
-            {displayName}
-          </Text>
+          <DelayedTooltip label={displayName}>
+            <Text size="xs" fw={500} className={classes.nodeName}>
+              {displayName}
+            </Text>
+          </DelayedTooltip>
         </Group>
 
         {/* Time Range */}

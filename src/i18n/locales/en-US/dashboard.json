@@ -1,0 +1,17 @@
+{
+  "title": "Dashboard",
+  "welcomeBack": "Welcome back, {{userName}}!",
+  "tenantSubtitle": "Here's what's happening in \"{{tenantName}}\"",
+  "loadingDashboard": "Loading dashboard...",
+  "quickStats": "Quick Stats",
+  "favorites": "Favorites",
+  "recentlyVisited": "Recently Visited",
+  "viewAll": "View All",
+  "chatAgents": "Chat Agents",
+  "autonomousAgents": "Autonomous Agents",
+  "conversations": "Conversations",
+  "activeCount": "{{count}} active",
+  "totalCount": "{{count}} total",
+  "noFavorites": "No favorites yet. Star items to see them here.",
+  "noRecentVisits": "No recent visits yet. Open items to track them here."
+}

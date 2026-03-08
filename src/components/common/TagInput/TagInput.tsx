@@ -72,7 +72,7 @@ export const TagInput: FC<TagInputProps> = ({
         const { query: lastQuery, hadResults: lastHadResults } = lastSearchRef.current;
         const isLonger = debouncedInput.length > lastQuery.length;
         const startsWithLast = debouncedInput.toLowerCase().startsWith(lastQuery.toLowerCase());
-        
+
         if (!lastHadResults && isLonger && startsWithLast) {
           // User added characters to a query that had no results
           // No need to fetch again, will still be empty
@@ -89,17 +89,17 @@ export const TagInput: FC<TagInputProps> = ({
         const tags = Array.isArray(response) ? response : (response?.tags || []);
         const filteredTags = tags
           .map((tag: { id: number; name: string }) => tag.name)
-          .filter((name: string) => 
+          .filter((name: string) =>
             name.toLowerCase().includes(debouncedInput.toLowerCase()) &&
             !valueRef.current.includes(name)
           );
-        
+
         // Cache this search result
         lastSearchRef.current = {
           query: debouncedInput,
           hadResults: filteredTags.length > 0,
         };
-        
+
         setSuggestions(filteredTags);
         setShowDropdown(filteredTags.length > 0);
         setHighlightedIndex(-1);
@@ -160,7 +160,7 @@ export const TagInput: FC<TagInputProps> = ({
       removeTag(value[value.length - 1]);
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setHighlightedIndex(prev => 
+      setHighlightedIndex(prev =>
         prev < suggestions.length - 1 ? prev + 1 : prev
       );
     } else if (e.key === 'ArrowUp') {
@@ -199,7 +199,7 @@ export const TagInput: FC<TagInputProps> = ({
           {description}
         </Text>
       )}
-      
+
       <Box
         className={`${classes.container} ${error ? classes.containerError : ''} ${disabled ? classes.containerDisabled : ''}`}
         onClick={handleContainerClick}
@@ -221,7 +221,7 @@ export const TagInput: FC<TagInputProps> = ({
               )}
             </Box>
           ))}
-          
+
           <input
             ref={inputRef}
             type="text"
@@ -241,7 +241,7 @@ export const TagInput: FC<TagInputProps> = ({
             disabled={disabled || (maxTags !== undefined && value.length >= maxTags)}
             className={classes.input}
           />
-          
+
           {isLoading && (
             <Loader size="xs" className={classes.loader} />
           )}
@@ -250,9 +250,9 @@ export const TagInput: FC<TagInputProps> = ({
 
       {showDropdown && suggestions.length > 0 && (
         <Portal>
-          <Paper 
-            className={classes.dropdown} 
-            shadow="md" 
+          <Paper
+            className={classes.dropdown}
+            shadow="md"
             withBorder
             p={4}
             style={{

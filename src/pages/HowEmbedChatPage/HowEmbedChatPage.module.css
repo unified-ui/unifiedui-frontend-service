@@ -1,0 +1,112 @@
+.scrollWrapper {
+  max-height: calc(100vh - 180px);
+  min-height: 200px;
+  overflow-y: auto;
+  padding-right: var(--spacing-md);
+}
+
+.sectionCard {
+  padding: var(--section-card-padding);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.configRow {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: flex-end;
+}
+
+.configRow > * {
+  flex: 1;
+}
+
+.contextParamRow {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-end;
+}
+
+.contextParamRow > *:first-child {
+  flex: 1;
+}
+
+.contextParamRow > *:nth-child(2) {
+  flex: 2;
+}
+
+.codeBlock {
+  position: relative;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  overflow-x: auto;
+}
+
+.codeBlock pre {
+  margin: 0;
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-sm);
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--text-primary);
+}
+
+.copyButton {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+}
+
+.previewBubble {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 200;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--mantine-primary-color-filled);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.previewBubble:hover {
+  transform: scale(1.08);
+}
+
+.previewWindow {
+  position: fixed;
+  bottom: 92px;
+  right: 24px;
+  z-index: 200;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-medium);
+}
+
+.previewWindow iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.previewOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+}

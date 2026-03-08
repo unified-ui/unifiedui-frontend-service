@@ -16,6 +16,7 @@ import {
 } from '../../../api/types';
 import type { QuickListItemResponse } from '../../../api/types';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
+import { useFormDirtyGuard } from '../../../hooks';
 import classes from './AIModelDialog.module.css';
 
 interface AIModelDialogProps {
@@ -53,6 +54,7 @@ const PROVIDERS = [
 ];
 
 const PURPOSE_GROUPS = [
+  { value: AIModelPurposeGroupEnum.REACT_AGENT, label: 'ReAct Agent' },
   { value: AIModelPurposeGroupEnum.CONVERSATION_TITLE_GENERATION, label: 'Title Generation' },
   { value: AIModelPurposeGroupEnum.CONVERSATION_SUMMARIZATION, label: 'Conversation Summarization' },
   { value: AIModelPurposeGroupEnum.DESCRIPTION_GENERATION, label: 'Description Generation' },
@@ -109,6 +111,8 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
     },
   });
 
+  useFormDirtyGuard(form.isDirty());
+
   const fetchCredentials = useCallback(async () => {
     if (!apiClient || !selectedTenant) return;
     try {
@@ -138,6 +142,7 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
         priority: model.priority,
         is_active: model.is_active,
       });
+      form.resetDirty();
     } catch {
       setError('Failed to load AI model');
     } finally {
@@ -479,7 +484,7 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
             <Button variant="default" onClick={handleClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" loading={isSubmitting}>
+            <Button type="submit" loading={isSubmitting} disabled={isEdit && !form.isDirty()}>
               {isEdit ? 'Save Changes' : 'Create'}
             </Button>
           </Group>

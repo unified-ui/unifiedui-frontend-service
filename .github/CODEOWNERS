@@ -1,0 +1,37 @@
+# CODEOWNERS for unified-ui Frontend Service
+# These owners will be requested for review on PRs
+
+# Default owners for everything in the repo
+*                           @enricogoerlitz
+
+# React application code
+/src/                       @enricogoerlitz
+
+# Components
+/src/components/            @enricogoerlitz
+
+# Pages
+/src/pages/                 @enricogoerlitz
+
+# API client
+/src/api/                   @enricogoerlitz
+
+# Authentication
+/src/auth/                  @enricogoerlitz
+
+# Contexts and hooks
+/src/contexts/              @enricogoerlitz
+/src/hooks/                 @enricogoerlitz
+
+# Tests
+/src/test/                  @enricogoerlitz
+
+# CI/CD workflows
+/.github/                   @enricogoerlitz
+
+# Documentation
+*.md                        @enricogoerlitz
+
+# Configuration
+*.json                      @enricogoerlitz
+*.ts                        @enricogoerlitz

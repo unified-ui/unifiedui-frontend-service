@@ -86,12 +86,12 @@ export const DataTableToolbar: FC<DataTableToolbarProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-      
+
       // Check if click is outside filterButtonRef
       if (filterButtonRef.current && !filterButtonRef.current.contains(target)) {
         // Check if click is on a Mantine portal element (dropdown, select options, etc.)
         const isPortalElement = (target as Element).closest?.('[data-portal]');
-        
+
         if (!isPortalElement) {
           setFilterOpened(false);
         }
@@ -107,8 +107,8 @@ export const DataTableToolbar: FC<DataTableToolbarProps> = ({
     };
   }, [filterOpened]);
 
-  const activeFilterCount = 
-    (filters.tags.length > 0 ? 1 : 0) + 
+  const activeFilterCount =
+    (filters.tags.length > 0 ? 1 : 0) +
     (filters.status !== 'all' ? 1 : 0);
 
   const handleFilterApply = useCallback(() => {
@@ -174,11 +174,11 @@ export const DataTableToolbar: FC<DataTableToolbarProps> = ({
                     <IconFilter size={18} />
                   </ActionIcon>
                   {activeFilterCount > 0 && (
-                    <Badge 
-                      size="xs" 
-                      circle 
-                      pos="absolute" 
-                      top={-4} 
+                    <Badge
+                      size="xs"
+                      circle
+                      pos="absolute"
+                      top={-4}
                       right={-4}
                       style={{ pointerEvents: 'none', zIndex: 1 }}
                     >

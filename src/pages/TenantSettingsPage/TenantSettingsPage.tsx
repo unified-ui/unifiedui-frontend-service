@@ -16,6 +16,7 @@ import {
   Loader,
   Center,
   Table,
+  Skeleton,
   ActionIcon,
   Menu,
   MultiSelect,
@@ -37,9 +38,10 @@ import {
   IconShieldLock,
   IconTool,
   IconBrain,
+  IconBuilding,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { PageContainer, ConfirmDeleteDialog, EditRolesDialog } from '../../components/common';
+import { ConfirmDeleteDialog, EditRolesDialog, OrganizationSettingsPanel, OrganizationAccessPanel } from '../../components/common';
 import { ManageTenantAccessTable, TENANT_ROLE_OPTIONS } from '../../components/common/ManageTenantAccessTable';
 import type { TenantPrincipalPermission } from '../../components/common/ManageTenantAccessTable';
 import { AddPrincipalDialog } from '../../components/common/AddPrincipalDialog';
@@ -56,20 +58,32 @@ import { AIModelDialog } from '../../components/dialogs/AIModelDialog';
 import type { EditDialogTab } from '../../components/dialogs';
 import { useIdentity } from '../../contexts';
 import type {
-  TenantPermissionEnum,
   PrincipalTypeEnum,
   CustomGroupResponse,
   CredentialResponse,
   ToolResponse,
   AIModelResponse,
 } from '../../api/types';
-import { ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum } from '../../api/types';
+import { TenantPermissionEnum, ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum } from '../../api/types';
+import { useDelayedLoading, usePermissions } from '../../hooks';
 import classes from './TenantSettingsPage.module.css';
 
-type TabValue = 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'ai-models' | 'billing-and-licence';
+type TabValue = 'organization' | 'org-iam' | 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'ai-models' | 'billing-and-licence';
 
-const TAB_VALUES: TabValue[] = ['settings', 'iam', 'custom-groups', 'tools', 'credentials', 'ai-models', 'billing-and-licence'];
+const TAB_VALUES: TabValue[] = ['organization', 'org-iam', 'settings', 'iam', 'custom-groups', 'tools', 'credentials', 'ai-models', 'billing-and-licence'];
 const DEFAULT_TAB: TabValue = 'settings';
+
+const PURPOSE_GROUP_COLORS: Record<string, string> = {
+  REACT_AGENT: 'violet',
+  CONVERSATION_TITLE_GENERATION: 'blue',
+  CONVERSATION_SUMMARIZATION: 'teal',
+  DESCRIPTION_GENERATION: 'orange',
+  TRACE_ANALYSIS: 'pink',
+  GENERAL: 'gray',
+};
+
+const purposeGroupColor = (group: string): string =>
+  PURPOSE_GROUP_COLORS[group] || 'gray';
 
 const isValidTab = (value: string | null): value is TabValue => {
   return value !== null && TAB_VALUES.includes(value as TabValue);
@@ -82,8 +96,9 @@ interface TenantSettingsFormValues {
 
 export const TenantSettingsPage: FC = () => {
   const { apiClient, selectedTenant, refreshIdentity } = useIdentity();
+  const { isGlobalAdmin, canCreate, hasRole, hasOrgBypass } = usePermissions();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   // Read initial tab from URL, default to 'settings'
   const tabFromUrl = searchParams.get('tab');
   const initialTab = isValidTab(tabFromUrl) ? tabFromUrl : DEFAULT_TAB;
@@ -132,7 +147,7 @@ export const TenantSettingsPage: FC = () => {
   const [principalsRoleFilter, setPrincipalsRoleFilter] = useState<string[]>([]);
   const [addPrincipalDialogOpen, setAddPrincipalDialogOpen] = useState(false);
   const [editPrincipal, setEditPrincipal] = useState<TenantPrincipalPermission | null>(null);
-  
+
   const PRINCIPALS_PAGE_SIZE = 50;
 
   // ===== Custom Groups State =====
@@ -154,7 +169,7 @@ export const TenantSettingsPage: FC = () => {
     name: string;
   }>({ open: false, id: '', name: '' });
   const [isDeletingGroup, setIsDeletingGroup] = useState(false);
-  
+
   const CUSTOM_GROUPS_PAGE_SIZE = 50;
   const customGroupsLoadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -177,7 +192,7 @@ export const TenantSettingsPage: FC = () => {
     name: string;
   }>({ open: false, id: '', name: '' });
   const [isDeletingCredential, setIsDeletingCredential] = useState(false);
-  
+
   const CREDENTIALS_PAGE_SIZE = 50;
   const credentialsLoadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -201,16 +216,16 @@ export const TenantSettingsPage: FC = () => {
     name: string;
   }>({ open: false, id: '', name: '' });
   const [isDeletingTool, setIsDeletingTool] = useState(false);
-  
+
   const TOOLS_PAGE_SIZE = 50;
   const toolsLoadMoreRef = useRef<HTMLDivElement>(null);
-  
+
   // Tool type options for filter
   const TOOL_TYPE_OPTIONS = [
     { value: ToolTypeEnum.MCP_SERVER, label: 'MCP Server' },
     { value: ToolTypeEnum.OPENAPI_DEFINITION, label: 'OpenAPI Definition' },
   ];
-  
+
   const getToolTypeBadgeColor = (type: string): string => {
     switch (type) {
       case ToolTypeEnum.MCP_SERVER:
@@ -245,6 +260,11 @@ export const TenantSettingsPage: FC = () => {
 
   const AI_MODELS_PAGE_SIZE = 50;
   const aiModelsLoadMoreRef = useRef<HTMLDivElement>(null);
+
+  const showCustomGroupsSkeleton = useDelayedLoading(customGroupsLoading && !customGroupsFetched);
+  const showCredentialsSkeleton = useDelayedLoading(credentialsLoading && !credentialsFetched);
+  const showToolsSkeleton = useDelayedLoading(toolsLoading && !toolsFetched);
+  const showAiModelsSkeleton = useDelayedLoading(aiModelsLoading && !aiModelsFetched);
 
   const AI_MODEL_TYPE_OPTIONS = [
     { value: AIModelTypeEnum.LLM_MODEL, label: 'LLM Model' },
@@ -306,7 +326,7 @@ export const TenantSettingsPage: FC = () => {
     setPrincipalsError(null);
 
     const skip = reset ? 0 : principalsSkip;
-    
+
     try {
       const response = await apiClient.getTenantPrincipals(selectedTenant.id, {
         skip,
@@ -316,7 +336,7 @@ export const TenantSettingsPage: FC = () => {
         order_by: 'display_name',
         order_direction: 'asc',
       });
-      
+
       // Transform response: use display_name, mail, principal_name from principal level
       const newPrincipals: TenantPrincipalPermission[] = response.principals.map(principal => ({
         id: `${principal.principal_id}-${principal.principal_type}`,
@@ -329,7 +349,7 @@ export const TenantSettingsPage: FC = () => {
         isActive: principal.is_active,
         roles: principal.roles.map(r => r.role),
       }));
-      
+
       if (reset) {
         setPrincipals(newPrincipals);
         setPrincipalsSkip(PRINCIPALS_PAGE_SIZE);
@@ -342,7 +362,7 @@ export const TenantSettingsPage: FC = () => {
         });
         setPrincipalsSkip(prev => prev + PRINCIPALS_PAGE_SIZE);
       }
-      
+
       // Determine if there are more items to load
       setPrincipalsHasMore(newPrincipals.length === PRINCIPALS_PAGE_SIZE);
       setPrincipalsFetched(true);
@@ -998,41 +1018,59 @@ export const TenantSettingsPage: FC = () => {
 
   return (
     <MainLayout>
-      <PageContainer>
-        <Stack gap="lg">
-          <Tabs
-            value={activeTab}
-            onChange={handleTabChange}
-            classNames={{
-              root: classes.tabs,
-              list: classes.tabsList,
-              tab: classes.tab,
-              panel: classes.tabPanel,
-            }}
-          >
-            <Tabs.List>
-              <Tabs.Tab value="settings" leftSection={<IconSettings size={20} />}>
-                Tenant Settings
-              </Tabs.Tab>
-              <Tabs.Tab value="iam" leftSection={<IconUsers size={20} />}>
-                Manage Access
-              </Tabs.Tab>
-              <Tabs.Tab value="custom-groups" leftSection={<IconUsersGroup size={20} />}>
-                Custom Groups
-              </Tabs.Tab>
-              <Tabs.Tab value="ai-models" leftSection={<IconBrain size={20} />}>
-                AI Models
-              </Tabs.Tab>
-              <Tabs.Tab value="tools" leftSection={<IconTool size={20} />}>
-                ReACT Agent Tools
-              </Tabs.Tab>
-              <Tabs.Tab value="credentials" leftSection={<IconKey size={20} />}>
-                Credentials
-              </Tabs.Tab>
-              <Tabs.Tab value="billing-and-licence" leftSection={<IconCreditCard size={20} />}>
-                Billing & Licence
-              </Tabs.Tab>
-            </Tabs.List>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          classNames={{
+            root: classes.settingsLayout,
+            list: classes.settingsTabList,
+            tab: classes.settingsTab,
+            panel: classes.settingsContent,
+          }}
+        >
+          <Tabs.List>
+            <Tabs.Tab value="organization" leftSection={<IconBuilding size={18} />}>
+              Organization
+            </Tabs.Tab>
+            {hasOrgBypass && (
+            <Tabs.Tab value="org-iam" leftSection={<IconShieldLock size={18} />}>
+              Organisation Access (IAM)
+            </Tabs.Tab>
+            )}
+            <Tabs.Tab value="settings" leftSection={<IconSettings size={18} />}>
+              Tenant
+            </Tabs.Tab>
+            {isGlobalAdmin && (
+            <Tabs.Tab value="iam" leftSection={<IconUsers size={18} />}>
+              Tenant Access (IAM)
+            </Tabs.Tab>
+            )}
+            <Tabs.Tab value="custom-groups" leftSection={<IconUsersGroup size={18} />}>
+              Groups
+            </Tabs.Tab>
+            <Tabs.Tab value="ai-models" leftSection={<IconBrain size={18} />}>
+              AI Models
+            </Tabs.Tab>
+            <Tabs.Tab value="tools" leftSection={<IconTool size={18} />}>
+              Tools
+            </Tabs.Tab>
+            <Tabs.Tab value="credentials" leftSection={<IconKey size={18} />}>
+              Credentials
+            </Tabs.Tab>
+            <Tabs.Tab value="billing-and-licence" leftSection={<IconCreditCard size={18} />}>
+              Billing
+            </Tabs.Tab>
+          </Tabs.List>
+
+            {/* Organization Settings Tab */}
+            <Tabs.Panel value="organization">
+              <OrganizationSettingsPanel isOrgAdmin={hasOrgBypass} />
+            </Tabs.Panel>
+
+            {/* Organisation Access (IAM) Tab */}
+            <Tabs.Panel value="org-iam">
+              <OrganizationAccessPanel isOrgAdmin={hasOrgBypass} />
+            </Tabs.Panel>
 
             {/* Tenant Settings Tab */}
             <Tabs.Panel value="settings">
@@ -1045,14 +1083,17 @@ export const TenantSettingsPage: FC = () => {
                         label="Name"
                         placeholder="Enter tenant name"
                         required
+                        disabled={!isGlobalAdmin}
                         {...tenantForm.getInputProps('name')}
                       />
                       <Textarea
                         label="Description"
                         placeholder="Enter tenant description (optional)"
                         minRows={3}
+                        disabled={!isGlobalAdmin}
                         {...tenantForm.getInputProps('description')}
                       />
+                      {isGlobalAdmin && (
                       <Group justify="flex-end">
                         <Button
                           type="submit"
@@ -1062,17 +1103,19 @@ export const TenantSettingsPage: FC = () => {
                           Save Changes
                         </Button>
                       </Group>
+                      )}
                     </Stack>
                   </form>
                 </Paper>
 
+                {isGlobalAdmin && (
                 <Paper p="lg" withBorder className={classes.dangerZone}>
                   <Stack gap="md">
                     <Title order={4} c="red">
                       Danger Zone
                     </Title>
                     <Text size="sm" c="dimmed">
-                      Deleting a tenant will permanently remove all data including applications,
+                      Deleting a tenant will permanently remove all data including chat agents,
                       credentials, conversations, and custom groups. This action cannot be undone.
                     </Text>
                     <Button
@@ -1085,6 +1128,7 @@ export const TenantSettingsPage: FC = () => {
                     </Button>
                   </Stack>
                 </Paper>
+                )}
               </Stack>
             </Tabs.Panel>
 
@@ -1137,12 +1181,14 @@ export const TenantSettingsPage: FC = () => {
                     onChange={(e) => setCustomGroupsSearch(e.currentTarget.value)}
                     style={{ flex: 1, maxWidth: 350 }}
                   />
+                  {canCreate('custom-groups') && (
                   <Button
                     leftSection={<IconUsersGroup size={16} />}
                     onClick={() => setCreateGroupDialogOpen(true)}
                   >
                     Create Group
                   </Button>
+                  )}
                 </Group>
 
                 {/* Table */}
@@ -1159,13 +1205,17 @@ export const TenantSettingsPage: FC = () => {
                       </Table.Thead>
                       <Table.Tbody>
                         {customGroupsLoading && !customGroupsFetched ? (
-                          <Table.Tr>
-                            <Table.Td colSpan={3}>
-                              <Center py="xl">
-                                <Loader size="lg" />
-                              </Center>
-                            </Table.Td>
-                          </Table.Tr>
+                          showCustomGroupsSkeleton ? (
+                            <>
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Table.Tr key={i}>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} width={60} radius="sm" /></Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </>
+                          ) : null
                         ) : customGroupsError ? (
                           <Table.Tr>
                             <Table.Td colSpan={3}>
@@ -1260,7 +1310,7 @@ export const TenantSettingsPage: FC = () => {
                       </Table.Tbody>
                     </Table>
                   </div>
-                    
+
                     {/* Infinite scroll trigger element */}
                     {customGroupsHasMore && (
                       <div ref={customGroupsLoadMoreRef} className={classes.loadMoreTrigger}>
@@ -1281,7 +1331,7 @@ export const TenantSettingsPage: FC = () => {
               <Stack gap="md">
                 <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
                   <Text size="sm">
-                    Manage tools for ReACT agents. Tools can be MCP servers or OpenAPI definitions 
+                    Manage tools for ReACT agents. Tools can be MCP servers or OpenAPI definitions
                     that agents use to interact with external services.
                   </Text>
                 </Alert>
@@ -1305,12 +1355,14 @@ export const TenantSettingsPage: FC = () => {
                       style={{ width: 220 }}
                     />
                   </Group>
+                  {canCreate('tools') && (
                   <Button
                     leftSection={<IconTool size={16} />}
                     onClick={() => setCreateToolDialogOpen(true)}
                   >
                     Create Tool
                   </Button>
+                  )}
                 </Group>
 
                 {/* Table */}
@@ -1328,13 +1380,18 @@ export const TenantSettingsPage: FC = () => {
                       </Table.Thead>
                       <Table.Tbody>
                         {toolsLoading && !toolsFetched ? (
-                          <Table.Tr>
-                            <Table.Td colSpan={4}>
-                              <Center py="xl">
-                                <Loader size="lg" />
-                              </Center>
-                            </Table.Td>
-                          </Table.Tr>
+                          showToolsSkeleton ? (
+                            <>
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Table.Tr key={i}>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} width={60} radius="sm" /></Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </>
+                          ) : null
                         ) : toolsError ? (
                           <Table.Tr>
                             <Table.Td colSpan={4}>
@@ -1391,6 +1448,7 @@ export const TenantSettingsPage: FC = () => {
                                       </ActionIcon>
                                     </Menu.Target>
                                     <Menu.Dropdown>
+                                      {(!tool.my_permission || tool.my_permission === 'ADMIN') && (
                                       <Menu.Item
                                         leftSection={<IconShieldLock size={14} />}
                                         onClick={(e) => {
@@ -1400,6 +1458,7 @@ export const TenantSettingsPage: FC = () => {
                                       >
                                         Manage Access
                                       </Menu.Item>
+                                      )}
                                       <Menu.Item
                                         leftSection={<IconEdit size={14} />}
                                         onClick={(e) => {
@@ -1409,6 +1468,8 @@ export const TenantSettingsPage: FC = () => {
                                       >
                                         Edit Details
                                       </Menu.Item>
+                                      {(!tool.my_permission || tool.my_permission === 'ADMIN') && (
+                                      <>
                                       <Menu.Divider />
                                       <Menu.Item
                                         color="red"
@@ -1424,6 +1485,8 @@ export const TenantSettingsPage: FC = () => {
                                       >
                                         Delete
                                       </Menu.Item>
+                                      </>
+                                      )}
                                     </Menu.Dropdown>
                                   </Menu>
                                 </Group>
@@ -1434,7 +1497,7 @@ export const TenantSettingsPage: FC = () => {
                       </Table.Tbody>
                     </Table>
                   </div>
-                    
+
                     {/* Infinite scroll trigger element */}
                     {toolsHasMore && (
                       <div ref={toolsLoadMoreRef} className={classes.loadMoreTrigger}>
@@ -1455,7 +1518,7 @@ export const TenantSettingsPage: FC = () => {
               <Stack gap="md">
                 <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
                   <Text size="sm">
-                    Manage credentials for connecting to external services and APIs. 
+                    Manage credentials for connecting to external services and APIs.
                     Click on a credential to view details or manage access permissions.
                   </Text>
                 </Alert>
@@ -1469,12 +1532,14 @@ export const TenantSettingsPage: FC = () => {
                     onChange={(e) => setCredentialsSearch(e.currentTarget.value)}
                     style={{ flex: 1, maxWidth: 350 }}
                   />
+                  {canCreate('credentials') && (
                   <Button
                     leftSection={<IconKey size={16} />}
                     onClick={() => setCreateCredentialDialogOpen(true)}
                   >
                     Create Credential
                   </Button>
+                  )}
                 </Group>
 
                 {/* Table */}
@@ -1492,13 +1557,18 @@ export const TenantSettingsPage: FC = () => {
                       </Table.Thead>
                       <Table.Tbody>
                         {credentialsLoading && !credentialsFetched ? (
-                          <Table.Tr>
-                            <Table.Td colSpan={4}>
-                              <Center py="xl">
-                                <Loader size="lg" />
-                              </Center>
-                            </Table.Td>
-                          </Table.Tr>
+                          showCredentialsSkeleton ? (
+                            <>
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Table.Tr key={i}>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} width={60} radius="sm" /></Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </>
+                          ) : null
                         ) : credentialsError ? (
                           <Table.Tr>
                             <Table.Td colSpan={4}>
@@ -1555,6 +1625,7 @@ export const TenantSettingsPage: FC = () => {
                                       </ActionIcon>
                                     </Menu.Target>
                                     <Menu.Dropdown>
+                                      {(!credential.my_permission || credential.my_permission === 'ADMIN') && (
                                       <Menu.Item
                                         leftSection={<IconShieldLock size={14} />}
                                         onClick={(e) => {
@@ -1564,6 +1635,7 @@ export const TenantSettingsPage: FC = () => {
                                       >
                                         Manage Access
                                       </Menu.Item>
+                                      )}
                                       <Menu.Item
                                         leftSection={<IconEdit size={14} />}
                                         onClick={(e) => {
@@ -1573,6 +1645,8 @@ export const TenantSettingsPage: FC = () => {
                                       >
                                         Edit Details
                                       </Menu.Item>
+                                      {(!credential.my_permission || credential.my_permission === 'ADMIN') && (
+                                      <>
                                       <Menu.Divider />
                                       <Menu.Item
                                         color="red"
@@ -1588,6 +1662,8 @@ export const TenantSettingsPage: FC = () => {
                                       >
                                         Delete
                                       </Menu.Item>
+                                      </>
+                                      )}
                                     </Menu.Dropdown>
                                   </Menu>
                                 </Group>
@@ -1598,7 +1674,7 @@ export const TenantSettingsPage: FC = () => {
                       </Table.Tbody>
                     </Table>
                   </div>
-                    
+
                     {/* Infinite scroll trigger element */}
                     {credentialsHasMore && (
                       <div ref={credentialsLoadMoreRef} className={classes.loadMoreTrigger}>
@@ -1649,12 +1725,14 @@ export const TenantSettingsPage: FC = () => {
                       style={{ maxWidth: 200 }}
                     />
                   </Group>
+                  {(isGlobalAdmin || hasRole(TenantPermissionEnum.TENANT_AI_MODELS_ADMIN)) && (
                   <Button
                     leftSection={<IconBrain size={16} />}
                     onClick={() => setCreateAiModelDialogOpen(true)}
                   >
                     Create AI Model
                   </Button>
+                  )}
                 </Group>
 
                 <div className={classes.tableScrollWrapper}>
@@ -1674,13 +1752,21 @@ export const TenantSettingsPage: FC = () => {
                       </Table.Thead>
                       <Table.Tbody>
                         {aiModelsLoading && !aiModelsFetched ? (
-                          <Table.Tr>
-                            <Table.Td colSpan={7}>
-                              <Center py="xl">
-                                <Loader size="lg" />
-                              </Center>
-                            </Table.Td>
-                          </Table.Tr>
+                          showAiModelsSkeleton ? (
+                            <>
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Table.Tr key={i}>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} width={60} radius="sm" /></Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </>
+                          ) : null
                         ) : aiModelsError ? (
                           <Table.Tr>
                             <Table.Td colSpan={7}>
@@ -1732,7 +1818,7 @@ export const TenantSettingsPage: FC = () => {
                               <Table.Td>
                                 <Group gap={4} wrap="wrap">
                                   {model.purpose_groups.length > 0 ? model.purpose_groups.map((pg) => (
-                                    <Badge key={pg} size="xs" variant="light" color="violet">
+                                    <Badge key={pg} size="xs" variant="light" color={purposeGroupColor(pg)}>
                                       {pg.replace(/_/g, ' ')}
                                     </Badge>
                                   )) : (
@@ -1837,9 +1923,7 @@ export const TenantSettingsPage: FC = () => {
                 </Paper>
               </Stack>
             </Tabs.Panel>
-          </Tabs>
-        </Stack>
-      </PageContainer>
+        </Tabs>
 
       {/* Delete Tenant - First Confirmation */}
       <ConfirmDeleteDialog
@@ -1849,7 +1933,7 @@ export const TenantSettingsPage: FC = () => {
         itemName={selectedTenant.name}
         itemType="Tenant"
         title="Delete Tenant (Step 1 of 2)"
-        message="Are you sure you want to delete this tenant? This will permanently remove all data including applications, credentials, conversations, and custom groups."
+        message="Are you sure you want to delete this tenant? This will permanently remove all data including chat agents, credentials, conversations, and custom groups."
       />
 
       {/* Delete Tenant - Second Confirmation */}

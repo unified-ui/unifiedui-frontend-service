@@ -25,12 +25,13 @@ import { useDebouncedValue } from '@mantine/hooks';
 import { IconAlertCircle, IconRobot, IconInfoCircle, IconShieldLock, IconPlus } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
-import { useEntityPermissions } from '../../../hooks';
+import { useEntityPermissions, usePermissions } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
 import type { AutonomousAgentResponse, PrincipalTypeEnum, CredentialResponse } from '../../../api/types';
 import { PermissionActionEnum, AutonomousAgentTypeEnum, CredentialTypeEnum } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
+import { useFormDirtyGuard } from '../../../hooks';
 import classes from './EditAutonomousAgentDialog.module.css';
 
 export type EditDialogTab = 'details' | 'iam';
@@ -71,6 +72,8 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
   onTabChange,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { isGlobalAdmin } = usePermissions();
+  const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission === 'ADMIN';
   const [autonomousAgent, setAutonomousAgent] = useState<AutonomousAgentResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -142,6 +145,8 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
     },
   });
 
+  useFormDirtyGuard(form.isDirty());
+
   // Load credentials
   const loadCredentials = useCallback(async (searchTerm?: string) => {
     if (!apiClient || !selectedTenant) return;
@@ -190,10 +195,10 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
   const initializeFromData = useCallback(
     (data: AutonomousAgentResponse) => {
       setAutonomousAgent(data);
-      
+
       // Extract N8N config if available
       const config = data.config || {};
-      
+
       form.setValues({
         name: data.name,
         description: data.description || '',
@@ -204,6 +209,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         n8n_workflow_endpoint: (config.workflow_endpoint as string) || '',
         n8n_api_api_key_credential_id: (config.api_api_key_credential_id as string) || '',
       });
+      form.resetDirty();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
@@ -283,6 +289,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         await apiClient.setAutonomousAgentTags(selectedTenant.id, autonomousAgentId, newTags);
       }
 
+      form.resetDirty();
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -395,6 +402,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         )}
 
         {/* Tab Navigation */}
+        {showIamTab && (
         <Box className={classes.tabContainer}>
           <SegmentedControl
             value={activeTab}
@@ -423,6 +431,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
             className={classes.segmentedControl}
           />
         </Box>
+        )}
 
         {/* Tab Content */}
         {activeTab === 'details' ? (
@@ -549,7 +558,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
                 <Button variant="default" onClick={handleClose} disabled={isSaving}>
                   Cancel
                 </Button>
-                <Button type="submit" loading={isSaving}>
+                <Button type="submit" loading={isSaving} disabled={!form.isDirty()}>
                   Save Changes
                 </Button>
               </Group>

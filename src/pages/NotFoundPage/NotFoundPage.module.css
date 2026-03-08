@@ -12,6 +12,6 @@
   color: var(--color-primary-600);
 }
 
-[data-mantine-color-scheme='dark'] .title {
+[data-mantine-color-scheme="dark"] .title {
   color: var(--color-primary-400);
 }

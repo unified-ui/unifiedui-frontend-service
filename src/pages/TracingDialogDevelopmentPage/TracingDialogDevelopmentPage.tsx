@@ -1,13 +1,13 @@
 /**
  * TracingDialogDevelopmentPage
- * 
+ *
  * Development page for testing tracing visualization as modal dialog.
  * Route: /dev/tracing
- * 
+ *
  * Query Parameters:
  * - conversationId: Load traces for a conversation
  * - autonomousAgentId: Load traces for an autonomous agent
- * 
+ *
  * Example URLs:
  * - /dev/tracing?conversationId=abc123
  * - /dev/tracing?autonomousAgentId=xyz789
@@ -15,6 +15,7 @@
  */
 
 import { type FC, useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import {
   Container,
@@ -37,6 +38,7 @@ import type { FullTraceResponse, FullTracesListResponse } from '../../api/types'
 
 export const TracingDialogDevelopmentPage: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t } = useTranslation();
   const { apiClient, selectedTenant } = useIdentity();
 
   // State
@@ -44,7 +46,7 @@ export const TracingDialogDevelopmentPage: FC = () => {
   const [_isLoading, setIsLoading] = useState(false);
   const [_error, setError] = useState<string | null>(null);
   const [dialogOpened, setDialogOpened] = useState(false);
-  
+
   // Input state
   const [conversationIdInput, setConversationIdInput] = useState(
     searchParams.get('conversationId') || ''
@@ -63,7 +65,7 @@ export const TracingDialogDevelopmentPage: FC = () => {
    */
   const fetchTraces = useCallback(async () => {
     if (!apiClient || !selectedTenant) {
-      setError('Kein API-Client oder Tenant verfügbar');
+      setError(t('tracing:noApiClientOrTenant'));
       return;
     }
 
@@ -203,7 +205,7 @@ export const TracingDialogDevelopmentPage: FC = () => {
               <Group gap="xs">
                 <Text size="sm" fw={500}>Active Query Parameters:</Text>
                 <Code>
-                  {conversationId 
+                  {conversationId
                     ? `conversationId=${conversationId}`
                     : `autonomousAgentId=${autonomousAgentId}`
                   }

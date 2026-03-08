@@ -1,7 +1,7 @@
 .sidebar {
   position: fixed;
-  top: 70px; /* Header height */
-  left: 100px; /* Main sidebar width */
+  top: var(--header-height);
+  left: var(--sidebar-width);
   bottom: 0;
   width: 280px;
   z-index: var(--z-dropdown);
@@ -55,6 +55,6 @@
   background-color: var(--bg-paper);
 }
 
-[data-mantine-color-scheme='dark'] .footer {
+[data-mantine-color-scheme="dark"] .footer {
   color: var(--color-primary-400);
 }

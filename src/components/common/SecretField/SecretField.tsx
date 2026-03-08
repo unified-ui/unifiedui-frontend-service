@@ -43,6 +43,7 @@ export const SecretField: FC<SecretFieldProps> = ({
 
   useEffect(() => {
     if (value === null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsVisible(false);
     }
   }, [value]);

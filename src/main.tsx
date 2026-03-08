@@ -1,53 +1,67 @@
 import { StrictMode } from 'react';
+import type { ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MantineProvider, ColorSchemeScript } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { MsalProvider } from '@azure/msal-react';
 import { PublicClientApplication } from '@azure/msal-browser';
-import { msalConfig } from './auth/authConfig';
-import { AuthProvider } from './auth';
+import { I18nextProvider } from 'react-i18next';
+import { msalConfig, authConfig } from './auth/authConfig';
+import { AuthProvider, GoogleAuthProvider, CognitoAuthProvider } from './auth';
 import { theme } from './theme';
-import { IdentityProvider, SidebarDataProvider, AICapabilitiesProvider } from './contexts';
+import { IdentityProvider, SidebarDataProvider, AICapabilitiesProvider, FavoritesProvider, RecentVisitsProvider } from './contexts';
+import i18n from './i18n';
 import App from './App.tsx';
 
-// Mantine Core Styles
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 
-// Custom Styles
 import './styles/variables.css';
 import './index.css';
 
-// Create MSAL instance
 const msalInstance = new PublicClientApplication(msalConfig);
 
-// Handle redirect after login
 msalInstance.initialize().then(() => {
-  msalInstance.handleRedirectPromise().then((response) => {
-    if (response) {
-      console.log('Login successful:', response);
-    }
-  }).catch((error) => {
+  msalInstance.handleRedirectPromise().catch((error) => {
     console.error('Redirect error:', error);
   });
 });
+
+// eslint-disable-next-line react-refresh/only-export-components
+const IdpWrapper = ({ children }: { children: ReactNode }) => {
+  switch (authConfig.provider) {
+    case 'google':
+      return <GoogleAuthProvider>{children}</GoogleAuthProvider>;
+    case 'aws_cognito':
+      return <CognitoAuthProvider>{children}</CognitoAuthProvider>;
+    case 'microsoft':
+    default:
+      return <MsalProvider instance={msalInstance}>{children}</MsalProvider>;
+  }
+};
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ColorSchemeScript defaultColorScheme="auto" />
     <MantineProvider theme={theme} defaultColorScheme="auto">
       <Notifications position="top-right" />
-      <MsalProvider instance={msalInstance}>
-        <AuthProvider>
-          <IdentityProvider>
-            <AICapabilitiesProvider>
-              <SidebarDataProvider>
-                <App />
-              </SidebarDataProvider>
-            </AICapabilitiesProvider>
-          </IdentityProvider>
-        </AuthProvider>
-      </MsalProvider>
+      <I18nextProvider i18n={i18n}>
+        <IdpWrapper>
+          <AuthProvider>
+            <IdentityProvider>
+              <AICapabilitiesProvider>
+                <FavoritesProvider>
+                    <RecentVisitsProvider>
+                      <SidebarDataProvider>
+                        <App />
+                      </SidebarDataProvider>
+                    </RecentVisitsProvider>
+                </FavoritesProvider>
+              </AICapabilitiesProvider>
+            </IdentityProvider>
+          </AuthProvider>
+        </IdpWrapper>
+      </I18nextProvider>
     </MantineProvider>
   </StrictMode>,
 );

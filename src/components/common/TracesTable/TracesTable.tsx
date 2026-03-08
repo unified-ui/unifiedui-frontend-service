@@ -11,6 +11,7 @@ import {
   ActionIcon,
   Tooltip,
   Menu,
+  Skeleton,
 } from '@mantine/core';
 import {
   IconSortAscending,
@@ -23,6 +24,8 @@ import {
   IconGitBranch,
 } from '@tabler/icons-react';
 import type { FullTraceResponse } from '../../../api/types';
+import { useDelayedLoading } from '../../../hooks';
+import { DelayedTooltip } from '../DelayedTooltip';
 import classes from './TracesTable.module.css';
 
 // ============================================================================
@@ -117,6 +120,7 @@ export const TracesTable: FC<TracesTableProps> = ({
 }) => {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const isLoadingRef = useRef(false);
+  const showLoadingSkeleton = useDelayedLoading(isLoading, 500);
 
   useEffect(() => {
     isLoadingRef.current = isLoadingMore;
@@ -214,20 +218,8 @@ export const TracesTable: FC<TracesTableProps> = ({
       {/* Table */}
       <div className={classes.scrollWrapper}>
         <div className={classes.scrollArea}>
-        {isLoading ? (
-          <Center py="xl">
-            <Loader size="md" />
-          </Center>
-        ) : traces.length === 0 ? (
-          <Center py="xl">
-            <Stack align="center" gap="xs">
-              <IconMoodEmpty size={48} stroke={1} color="var(--text-disabled)" />
-              <Text size="sm" c="dimmed">{emptyMessage}</Text>
-            </Stack>
-          </Center>
-        ) : (
           <div className={classes.tableWrapper}>
-            <Table striped highlightOnHover className={classes.table}>
+            <Table striped={!showLoadingSkeleton && !isLoading} highlightOnHover={!showLoadingSkeleton && !isLoading} className={classes.table}>
               <Table.Thead className={classes.thead}>
                 <Table.Tr>
                   <Table.Th className={classes.colRefId}>Reference ID</Table.Th>
@@ -238,6 +230,46 @@ export const TracesTable: FC<TracesTableProps> = ({
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
+                {showLoadingSkeleton ? (
+                  <>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Table.Tr key={i}>
+                        <Table.Td className={classes.colRefId}>
+                          <Group gap="sm" wrap="nowrap">
+                            <Skeleton circle width={32} height={32} />
+                            <Skeleton height={14} width="60%" radius="sm" />
+                          </Group>
+                        </Table.Td>
+                        <Table.Td className={classes.colRefName}>
+                          <Skeleton height={14} width="70%" radius="sm" />
+                        </Table.Td>
+                        <Table.Td className={classes.colCreated}>
+                          <Skeleton height={14} width={80} radius="sm" />
+                        </Table.Td>
+                        <Table.Td className={classes.colUpdated}>
+                          <Skeleton height={14} width={80} radius="sm" />
+                        </Table.Td>
+                        {hasActions && (
+                          <Table.Td className={classes.colActions}>
+                            <Skeleton height={20} width={20} radius="sm" />
+                          </Table.Td>
+                        )}
+                      </Table.Tr>
+                    ))}
+                  </>
+                ) : !isLoading && traces.length === 0 ? (
+                  <Table.Tr>
+                    <Table.Td colSpan={hasActions ? 5 : 4}>
+                      <Center py="xl">
+                        <Stack align="center" gap="xs">
+                          <IconMoodEmpty size={48} stroke={1} color="var(--text-disabled)" />
+                          <Text size="sm" c="dimmed">{emptyMessage}</Text>
+                        </Stack>
+                      </Center>
+                    </Table.Td>
+                  </Table.Tr>
+                ) : (
+                  <>
                 {traces.map((trace) => (
                   <Table.Tr
                     key={trace.id}
@@ -250,15 +282,19 @@ export const TracesTable: FC<TracesTableProps> = ({
                         <div className={classes.traceIcon}>
                           <IconGitBranch size={16} />
                         </div>
-                        <Text size="sm" ff="monospace" truncate>
-                          {trace.referenceId || '—'}
-                        </Text>
+                        <DelayedTooltip label={trace.referenceId || '—'}>
+                          <Text size="sm" ff="monospace" truncate>
+                            {trace.referenceId || '—'}
+                          </Text>
+                        </DelayedTooltip>
                       </Group>
                     </Table.Td>
                     <Table.Td className={classes.colRefName}>
-                      <Text size="sm" truncate>
-                        {trace.referenceName || '—'}
-                      </Text>
+                      <DelayedTooltip label={trace.referenceName || '—'}>
+                        <Text size="sm" truncate>
+                          {trace.referenceName || '—'}
+                        </Text>
+                      </DelayedTooltip>
                     </Table.Td>
                     <Table.Td className={classes.colCreated}>
                       <Tooltip label={new Date(trace.createdAt).toLocaleString()}>
@@ -311,10 +347,11 @@ export const TracesTable: FC<TracesTableProps> = ({
                     )}
                   </Table.Tr>
                 ))}
+                  </>
+                )}
               </Table.Tbody>
             </Table>
           </div>
-        )}
 
         {/* Infinite scroll sentinel */}
         <div ref={sentinelRef} style={{ height: 1 }} />

@@ -1,31 +1,36 @@
 import type { FC } from 'react';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Stack, Text, ScrollArea, Loader, Center, ActionIcon, Group } from '@mantine/core';
 import { IconMessages, IconPlus, IconChevronRight } from '@tabler/icons-react';
-import { useIdentity, useChatSidebar } from '../../../contexts';
-import type { ConversationResponse, ApplicationResponse } from '../../../api/types';
+import { useChatSidebar, useSidebarData } from '../../../contexts';
+import { DelayedTooltip } from '../../common/DelayedTooltip';
+import type { ConversationQuickListItemResponse } from '../../../api/types';
 import classes from './GlobalChatSidebar.module.css';
 
 interface ConversationPreviewItemProps {
-  conversation: ConversationResponse;
-  applicationName: string;
+  conversation: ConversationQuickListItemResponse;
+  chatAgentName: string;
   onClick: () => void;
 }
 
 const ConversationPreviewItem: FC<ConversationPreviewItemProps> = ({
   conversation,
-  applicationName,
+  chatAgentName,
   onClick,
 }) => {
   return (
     <Box className={classes.conversationItem} onClick={onClick}>
-      <Text size="sm" lineClamp={1} fw={500}>
-        {conversation.name}
-      </Text>
-      <Text size="xs" c="dimmed" lineClamp={1}>
-        {applicationName}
-      </Text>
+      <DelayedTooltip label={conversation.name}>
+        <Text size="sm" lineClamp={1} fw={500}>
+          {conversation.name}
+        </Text>
+      </DelayedTooltip>
+      <DelayedTooltip label={chatAgentName}>
+        <Text size="xs" c="dimmed" lineClamp={1}>
+          {chatAgentName}
+        </Text>
+      </DelayedTooltip>
     </Box>
   );
 };
@@ -33,42 +38,27 @@ const ConversationPreviewItem: FC<ConversationPreviewItemProps> = ({
 export const GlobalChatSidebar: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { apiClient, selectedTenant } = useIdentity();
   const { isVisible, onSidebarHoverEnter, onSidebarHoverLeave } = useChatSidebar();
-  
-  const [conversations, setConversations] = useState<ConversationResponse[]>([]);
-  const [applications, setApplications] = useState<ApplicationResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    conversations,
+    chatAgents,
+    loadingStates,
+    fetchConversations,
+    fetchChatAgents,
+  } = useSidebarData();
 
-  // Don't render on conversations page - that page has its own sidebar
   const isOnConversationsPage = location.pathname.startsWith('/conversations');
 
-  // Load conversations when becoming visible
   useEffect(() => {
-    if (isVisible && !isOnConversationsPage && selectedTenant && apiClient) {
-      const loadData = async () => {
-        setIsLoading(true);
-        try {
-          const [convsList, appsList] = await Promise.all([
-            apiClient.listConversations(selectedTenant.id),
-            apiClient.listApplications(selectedTenant.id) as Promise<ApplicationResponse[]>,
-          ]);
-          setConversations(convsList.slice(0, 10)); // Show only recent 10
-          setApplications(appsList);
-        } catch (error) {
-          console.error('Failed to load conversations:', error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      loadData();
+    if (isVisible && !isOnConversationsPage) {
+      fetchConversations();
+      fetchChatAgents();
     }
-  }, [isVisible, isOnConversationsPage, selectedTenant, apiClient]);
+  }, [isVisible, isOnConversationsPage, fetchConversations, fetchChatAgents]);
 
-  // Get application name by ID
-  const getApplicationName = (applicationId: string): string => {
-    const app = applications.find(a => a.id === applicationId);
-    return app?.name || 'Unknown Application';
+  const getChatAgentName = (chatAgentId: string): string => {
+    const app = chatAgents.find(a => a.id === chatAgentId);
+    return app?.name || 'Unknown Chat Agent';
   };
 
   // Handle conversation click - navigate to it
@@ -87,7 +77,7 @@ export const GlobalChatSidebar: FC = () => {
   }
 
   return (
-    <Box 
+    <Box
       className={classes.sidebar}
       onMouseEnter={onSidebarHoverEnter}
       onMouseLeave={onSidebarHoverLeave}
@@ -105,7 +95,7 @@ export const GlobalChatSidebar: FC = () => {
 
       {/* Content */}
       <ScrollArea className={classes.content}>
-        {isLoading ? (
+        {loadingStates.conversations ? (
           <Center py="xl">
             <Loader size="sm" />
           </Center>
@@ -115,11 +105,11 @@ export const GlobalChatSidebar: FC = () => {
           </Center>
         ) : (
           <Stack gap={0}>
-            {conversations.map(conv => (
+            {conversations.slice(0, 10).map(conv => (
               <ConversationPreviewItem
                 key={conv.id}
                 conversation={conv}
-                applicationName={getApplicationName(conv.application_id)}
+                  chatAgentName={getChatAgentName(conv.chat_agent_id)}
                 onClick={() => handleConversationClick(conv.id)}
               />
             ))}
@@ -128,8 +118,8 @@ export const GlobalChatSidebar: FC = () => {
       </ScrollArea>
 
       {/* Footer */}
-      <Box 
-        className={classes.footer} 
+      <Box
+        className={classes.footer}
         onClick={() => navigate('/conversations')}
       >
         <Group gap="xs">

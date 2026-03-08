@@ -1,11 +1,12 @@
-export { CreateApplicationDialog } from './CreateApplicationDialog';
+export { CreateChatAgentDialog } from './CreateChatAgentDialog';
 export { CreateAutonomousAgentDialog } from './CreateAutonomousAgentDialog';
 export { CreateChatWidgetDialog } from './CreateChatWidgetDialog';
 export { CreateCredentialDialog } from './CreateCredentialDialog';
 export { CreateCustomGroupDialog } from './CreateCustomGroupDialog';
+export { CreateOrganizationDialog } from './CreateOrganizationDialog';
 export { CreateTenantDialog } from './CreateTenantDialog';
 export { CreateToolDialog } from './CreateToolDialog';
-export { EditApplicationDialog, type EditDialogTab } from './EditApplicationDialog';
+export { EditChatAgentDialog, type EditDialogTab } from './EditChatAgentDialog';
 export { EditAutonomousAgentDialog } from './EditAutonomousAgentDialog';
 export { EditChatWidgetDialog } from './EditChatWidgetDialog';
 export { EditCredentialDialog } from './EditCredentialDialog';

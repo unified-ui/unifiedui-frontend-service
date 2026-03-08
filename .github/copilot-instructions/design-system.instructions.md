@@ -6,36 +6,36 @@ All styles reference tokens from `src/styles/variables.css`. **Never hardcode** 
 
 ### Token Categories
 
-| Category | Pattern | Example |
-|----------|---------|---------|
-| Primary Colors | `--color-primary-{50-900}` | `var(--color-primary-500)` |
-| Secondary Colors | `--color-secondary-{50-900}` | `var(--color-secondary-600)` |
-| Semantic Colors | `--color-{success,warning,error,info}-{50,500,600,700}` | `var(--color-error-500)` |
-| Gray Scale | `--color-gray-{0-900}` | `var(--color-gray-200)` |
-| Backgrounds | `--bg-{app,paper,elevated,overlay}` | `var(--bg-paper)` |
-| Text | `--text-{primary,secondary,disabled,link,link-hover}` | `var(--text-secondary)` |
-| Borders | `--border-{default,light,medium,focus,error}` | `var(--border-default)` |
-| Interactive | `--bg-{hover,selected,selected-hover}` | `var(--bg-hover)` |
-| Spacing | `--spacing-{xs,sm,md,lg,xl,2xl,3xl}` | `var(--spacing-md)` (16px) |
-| Font Size | `--font-size-{xs,sm,md,lg,xl,2xl,3xl}` | `var(--font-size-sm)` (14px) |
-| Font Weight | `--font-weight-{light,regular,medium,semibold,bold}` | `var(--font-weight-semibold)` |
-| Line Height | `--line-height-{tight,normal,relaxed}` | `var(--line-height-normal)` |
-| Radius | `--radius-{xs,sm,md,lg,xl,full}` | `var(--radius-md)` (8px) |
-| Shadows | `--shadow-{xs,sm,md,lg,xl}` | `var(--shadow-sm)` |
-| Transitions | `--transition-{fast,normal,slow}` | `var(--transition-fast)` (150ms) |
-| Z-Index | `--z-{base,dropdown,sticky,overlay,modal,notification,max}` | `var(--z-modal)` |
+| Category         | Pattern                                                 | Example                          |
+| ---------------- | ------------------------------------------------------- | -------------------------------- |
+| Primary Colors   | `--color-primary-{50-900}`                              | `var(--color-primary-500)`       |
+| Secondary Colors | `--color-secondary-{50-900}`                            | `var(--color-secondary-600)`     |
+| Semantic Colors  | `--color-{success,warning,error,info}-{50,500,600,700}` | `var(--color-error-500)`         |
+| Gray Scale       | `--color-gray-{0-900}`                                  | `var(--color-gray-200)`          |
+| Backgrounds      | `--bg-{app,paper,elevated,overlay}`                     | `var(--bg-paper)`                |
+| Text             | `--text-{primary,secondary,disabled,link,link-hover}`   | `var(--text-secondary)`          |
+| Borders          | `--border-{default,light,medium,focus,error}`           | `var(--border-default)`          |
+| Interactive      | `--bg-{hover,selected,selected-hover}`                  | `var(--bg-hover)`                |
+| Spacing          | `--spacing-{xs,sm,md,lg,xl,2xl,3xl}`                    | `var(--spacing-md)` (16px)       |
+| Font Size        | `--font-size-{xs,sm,md,lg,xl,2xl,3xl}`                  | `var(--font-size-sm)` (14px)     |
+| Font Weight      | `--font-weight-{light,regular,medium,semibold,bold}`    | `var(--font-weight-semibold)`    |
+| Line Height      | `--line-height-{tight,normal,relaxed}`                  | `var(--line-height-normal)`      |
+| Radius           | `--radius-{xs,sm,md,lg,xl,full}`                        | `var(--radius-md)` (8px)         |
+| Shadows          | `--shadow-{xs,sm,md,lg,xl}`                             | `var(--shadow-sm)`               |
+| Transitions      | `--transition-{fast,normal,slow}`                       | `var(--transition-fast)` (150ms) |
+| Z-Index          | `--z-{base,dropdown,sticky,overlay,modal,max}`          | `var(--z-modal)`                 |
 
 ### Spacing Scale
 
-| Token | Value |
-|-------|-------|
-| `--spacing-xs` | 4px |
-| `--spacing-sm` | 8px |
-| `--spacing-md` | 16px |
-| `--spacing-lg` | 24px |
-| `--spacing-xl` | 32px |
-| `--spacing-2xl` | 48px |
-| `--spacing-3xl` | 64px |
+| Token           | Value |
+| --------------- | ----- |
+| `--spacing-xs`  | 4px   |
+| `--spacing-sm`  | 8px   |
+| `--spacing-md`  | 16px  |
+| `--spacing-lg`  | 24px  |
+| `--spacing-xl`  | 32px  |
+| `--spacing-2xl` | 48px  |
+| `--spacing-3xl` | 64px  |
 
 ---
 
@@ -52,16 +52,16 @@ Dark mode is controlled by Mantine's `[data-mantine-color-scheme='dark']` attrib
 
 ### Semantic Variables (auto-switch)
 
-| Variable | Light | Dark |
-|----------|-------|------|
-| `--bg-app` | `#fafafa` | `#242424` |
-| `--bg-paper` | `#ffffff` | `gray-800` |
-| `--bg-elevated` | `#ffffff` | `gray-700` |
-| `--text-primary` | `gray-900` | `gray-50` |
-| `--text-secondary` | `gray-600` | `gray-400` |
-| `--border-default` | `gray-200` | `gray-700` |
-| `--bg-hover` | `gray-100` | `rgba(blue, 0.1)` |
-| `--bg-selected` | `primary-50` | `rgba(blue, 0.2)` |
+| Variable           | Light        | Dark              |
+| ------------------ | ------------ | ----------------- |
+| `--bg-app`         | `#fafafa`    | `#242424`         |
+| `--bg-paper`       | `#ffffff`    | `gray-800`        |
+| `--bg-elevated`    | `#ffffff`    | `gray-700`        |
+| `--text-primary`   | `gray-900`   | `gray-50`         |
+| `--text-secondary` | `gray-600`   | `gray-400`        |
+| `--border-default` | `gray-200`   | `gray-700`        |
+| `--bg-hover`       | `gray-100`   | `rgba(blue, 0.1)` |
+| `--bg-selected`    | `primary-50` | `rgba(blue, 0.2)` |
 
 ---
 
@@ -78,13 +78,13 @@ Defined in `src/theme/mantineTheme.ts`. Sets up Mantine component defaults that 
 
 ### Component Defaults
 
-| Component | Defaults |
-|-----------|----------|
-| Button | `radius: md` |
-| Paper | `shadow: sm, radius: md, p: md` |
-| Card | `shadow: sm, radius: md, padding: lg` |
-| Modal | `radius: lg, shadow: xl` |
-| Input | `radius: sm` |
+| Component | Defaults                              |
+| --------- | ------------------------------------- |
+| Button    | `radius: md`                          |
+| Paper     | `shadow: sm, radius: md, p: md`       |
+| Card      | `shadow: sm, radius: md, padding: lg` |
+| Modal     | `radius: lg, shadow: xl`              |
+| Input     | `radius: sm`                          |
 
 ---
 

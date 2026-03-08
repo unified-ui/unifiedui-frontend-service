@@ -15,12 +15,12 @@ import { IconBrandWechat } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
 import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
 import { TagInput } from '../common';
-import type { ChatWidgetTypeEnum } from '../../api/types';
+import type { ChatWidgetTypeEnum, ChatWidgetResponse } from '../../api/types';
 
 interface CreateChatWidgetDialogProps {
   opened: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (widget?: ChatWidgetResponse) => void;
 }
 
 interface FormValues {
@@ -95,9 +95,9 @@ export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
       }
 
       form.reset();
-      onSuccess?.();
+      onSuccess?.(widget as ChatWidgetResponse);
       onClose();
-    } catch (error) {
+    } catch {
       // Error handling is done by the API client
     } finally {
       setIsSubmitting(false);
@@ -119,7 +119,7 @@ export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
           <Text fw={600} size="lg">Create Chat Widget</Text>
         </Group>
       }
-      size="md"
+      size="lg"
       centered
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>

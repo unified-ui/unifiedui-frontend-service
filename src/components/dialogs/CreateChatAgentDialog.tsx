@@ -1,0 +1,621 @@
+import { type FC, useState, useEffect, useMemo, useCallback } from 'react';
+import {
+  Modal,
+  TextInput,
+  Textarea,
+  Button,
+  Group,
+  Stack,
+  Text,
+  Select,
+  NumberInput,
+  Switch,
+  Divider,
+  ActionIcon,
+  Tooltip,
+  Alert,
+  Loader,
+  Box,
+  TagsInput,
+} from '@mantine/core';
+import { useForm } from '@mantine/form';
+import { useDebouncedValue } from '@mantine/hooks';
+import { IconSparkles, IconPlus, IconAlertCircle } from '@tabler/icons-react';
+import { useIdentity } from '../../contexts';
+import { useTranslation } from 'react-i18next';
+import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
+import {
+  ChatAgentTypeEnum,
+  N8NApiVersionEnum,
+  N8NWorkflowTypeEnum,
+  FoundryAgentTypeEnum,
+  FoundryApiVersionEnum,
+  CredentialTypeEnum,
+  type CredentialResponse,
+  type N8NChatAgentConfig,
+  type FoundryChatAgentConfig,
+} from '../../api/types';
+import { TagInput } from '../common';
+import { CreateCredentialDialog } from './CreateCredentialDialog';
+
+const CHAT_AGENT_TYPES = [
+  { value: ChatAgentTypeEnum.REACT_AGENT, label: 'ReACT Agent' },
+  { value: ChatAgentTypeEnum.N8N, label: 'n8n' },
+  { value: ChatAgentTypeEnum.MICROSOFT_FOUNDRY, label: 'Microsoft Foundry' },
+  { value: ChatAgentTypeEnum.REST_API, label: 'REST API' },
+];
+
+const N8N_API_VERSIONS = [
+  { value: N8NApiVersionEnum.V1, label: 'v1' },
+];
+
+const N8N_WORKFLOW_TYPES = [
+  { value: N8NWorkflowTypeEnum.N8N_CHAT_AGENT_WORKFLOW, label: 'Chat Agent Workflow' },
+];
+
+const FOUNDRY_AGENT_TYPES = [
+  { value: FoundryAgentTypeEnum.AGENT, label: 'Agent' },
+  { value: FoundryAgentTypeEnum.MULTI_AGENT, label: 'Multi-Agent' },
+];
+
+const FOUNDRY_API_VERSIONS = [
+  { value: FoundryApiVersionEnum.V2025_11_15_PREVIEW, label: '2025-11-15-preview' },
+];
+
+interface CreateChatAgentDialogProps {
+  opened: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+  defaultType?: string;
+}
+
+interface FormValues {
+  name: string;
+  type: string;
+  description: string;
+  tags: string[];
+  embed_allowed_origins: string[];
+  // N8N Config
+  n8n_api_version: string;
+  n8n_workflow_type: string;
+  n8n_use_unified_chat_history: boolean;
+  n8n_chat_history_count: number;
+  n8n_chat_url: string;
+  n8n_workflow_endpoint: string;
+  n8n_api_api_key_credential_id: string;
+  n8n_chat_auth_credential_id: string;
+  // Foundry Config
+  foundry_agent_type: string;
+  foundry_api_version: string;
+  foundry_project_endpoint: string;
+  foundry_agent_name: string;
+}
+
+export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
+  opened,
+  onClose,
+  onSuccess,
+  defaultType,
+}) => {
+  const { apiClient, selectedTenant } = useIdentity();
+  const { t } = useTranslation('common');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
+  const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
+  const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
+  const [credentialFieldTarget, setCredentialFieldTarget] = useState<'api_key' | 'chat_auth' | null>(null);
+
+  // Server-side filtering for credentials
+  const [credentialSearch, setCredentialSearch] = useState('');
+  const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
+
+  const form = useForm<FormValues>({
+    initialValues: {
+      name: '',
+      type: defaultType || '',
+      description: '',
+      tags: [],
+      embed_allowed_origins: [],
+      // N8N Config defaults
+      n8n_api_version: N8NApiVersionEnum.V1,
+      n8n_workflow_type: N8NWorkflowTypeEnum.N8N_CHAT_AGENT_WORKFLOW,
+      n8n_use_unified_chat_history: true,
+      n8n_chat_history_count: 30,
+      n8n_chat_url: '',
+      n8n_workflow_endpoint: '',
+      n8n_api_api_key_credential_id: '',
+      n8n_chat_auth_credential_id: '',
+      // Foundry Config defaults
+      foundry_agent_type: FoundryAgentTypeEnum.AGENT,
+      foundry_api_version: FoundryApiVersionEnum.V2025_11_15_PREVIEW,
+      foundry_project_endpoint: '',
+      foundry_agent_name: '',
+    },
+    validate: {
+      name: (value) => {
+        if (!value || value.trim().length === 0) {
+          return 'Name is required';
+        }
+        if (value.length > 255) {
+          return 'Name cannot exceed 255 characters';
+        }
+        return null;
+      },
+      type: (value) => {
+        if (!value) {
+          return 'Type is required';
+        }
+        return null;
+      },
+      description: (value) => {
+        if (value && value.length > 2000) {
+          return 'Description cannot exceed 2000 characters';
+        }
+        return null;
+      },
+      n8n_chat_url: (value, values) => {
+        if (values.type === ChatAgentTypeEnum.N8N) {
+          if (!value || value.trim().length === 0) {
+            return 'Chat URL is required';
+          }
+          try {
+            new URL(value);
+          } catch {
+            return 'Invalid URL';
+          }
+        }
+        return null;
+      },
+      n8n_workflow_endpoint: (value, values) => {
+        if (values.type === ChatAgentTypeEnum.N8N) {
+          if (!value || value.trim().length === 0) {
+            return 'Workflow Endpoint is required';
+          }
+          try {
+            const url = new URL(value);
+            if (!url.pathname.includes('/workflow/')) {
+              return 'URL must contain "/workflow/"';
+            }
+          } catch {
+            return 'Invalid URL';
+          }
+        }
+        return null;
+      },
+      n8n_api_api_key_credential_id: (value, values) => {
+        if (values.type === ChatAgentTypeEnum.N8N) {
+          if (!value || value.trim().length === 0) {
+            return 'API Key Credential is required';
+          }
+        }
+        return null;
+      },
+      n8n_chat_history_count: (value, values) => {
+        if (values.type === ChatAgentTypeEnum.N8N && values.n8n_use_unified_chat_history) {
+          if (value < 1 || value > 100) {
+            return 'Chat History Count must be between 1 and 100';
+          }
+        }
+        return null;
+      },
+      foundry_project_endpoint: (value, values) => {
+        if (values.type === ChatAgentTypeEnum.MICROSOFT_FOUNDRY) {
+          if (!value || value.trim().length === 0) {
+            return 'Project Endpoint is required';
+          }
+          try {
+            new URL(value);
+          } catch {
+            return 'Invalid URL';
+          }
+        }
+        return null;
+      },
+      foundry_agent_name: (value, values) => {
+        if (values.type === ChatAgentTypeEnum.MICROSOFT_FOUNDRY) {
+          if (!value || value.trim().length === 0) {
+            return 'Agent Name is required';
+          }
+        }
+        return null;
+      },
+    },
+  });
+
+  // Load credentials when dialog opens or search changes
+  const loadCredentials = useCallback(async (searchTerm?: string) => {
+    if (!apiClient || !selectedTenant) return;
+
+    setIsLoadingCredentials(true);
+    try {
+      const response = await apiClient.listCredentials(selectedTenant.id, {
+        limit: 100,
+        order_by: 'name',
+        order_direction: 'asc',
+        name: searchTerm || undefined,
+      });
+      // listCredentials returns an array directly, not an object with items property
+      setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
+    } catch (error) {
+      console.error('Failed to load credentials:', error);
+    } finally {
+      setIsLoadingCredentials(false);
+    }
+  }, [apiClient, selectedTenant]);
+
+  // Load credentials when dialog opens
+  useEffect(() => {
+    if (opened) {
+      loadCredentials();
+    }
+  }, [opened, loadCredentials]);
+
+  // Reload credentials when search changes (debounced)
+  useEffect(() => {
+    if (opened && debouncedCredentialSearch !== undefined) {
+      loadCredentials(debouncedCredentialSearch);
+    }
+  }, [opened, debouncedCredentialSearch, loadCredentials]);
+
+  // Filter credentials by type for API Key dropdown (only API_KEY type)
+  const apiKeyCredentials = useMemo(() => {
+    return credentials
+      .filter((c) => c.type === CredentialTypeEnum.API_KEY)
+      .map((c) => ({ value: c.id, label: c.name }));
+  }, [credentials]);
+
+  // Filter credentials by type for Chat Auth dropdown (BASIC_AUTH type)
+  const chatAuthCredentials = useMemo(() => {
+    return credentials
+      .filter((c) => c.type === CredentialTypeEnum.BASIC_AUTH)
+      .map((c) => ({ value: c.id, label: c.name }));
+  }, [credentials]);
+
+  const handleSubmit = async (values: FormValues) => {
+    if (!apiClient || !selectedTenant) return;
+
+    setIsSubmitting(true);
+    try {
+      // Build config based on chat agent type
+      let config: N8NChatAgentConfig | FoundryChatAgentConfig | undefined;
+
+      if (values.type === ChatAgentTypeEnum.N8N) {
+        config = {
+          api_version: values.n8n_api_version as N8NApiVersionEnum,
+          workflow_type: values.n8n_workflow_type as N8NWorkflowTypeEnum,
+          use_unified_chat_history: values.n8n_use_unified_chat_history,
+          chat_history_count: values.n8n_use_unified_chat_history ? values.n8n_chat_history_count : undefined,
+          chat_url: values.n8n_chat_url.trim(),
+          workflow_endpoint: values.n8n_workflow_endpoint.trim(),
+          api_api_key_credential_id: values.n8n_api_api_key_credential_id,
+          chat_auth_credential_id: values.n8n_chat_auth_credential_id || undefined,
+        };
+      } else if (values.type === ChatAgentTypeEnum.MICROSOFT_FOUNDRY) {
+        config = {
+          agent_type: values.foundry_agent_type as FoundryAgentTypeEnum,
+          api_version: values.foundry_api_version as FoundryApiVersionEnum,
+          project_endpoint: values.foundry_project_endpoint.trim(),
+          agent_name: values.foundry_agent_name.trim(),
+        };
+      }
+
+      // Create the chat agent
+      const chatAgent = await apiClient.createChatAgent(selectedTenant.id, {
+        name: values.name.trim(),
+        type: values.type as ChatAgentTypeEnum,
+        description: values.description?.trim() || undefined,
+        config: config as Record<string, unknown> | undefined,
+        embed_allowed_origins: values.embed_allowed_origins.length > 0
+          ? values.embed_allowed_origins.join(';')
+          : undefined,
+      });
+
+      // If tags were added, save them to the chat agent
+      if (values.tags.length > 0) {
+        try {
+          await apiClient.setChatAgentTags(
+            selectedTenant.id,
+            chatAgent.id,
+            values.tags
+          );
+        } catch (tagError) {
+          console.error('Failed to save tags:', tagError);
+          // Chat agent was created successfully, just tags failed
+        }
+      }
+
+      form.reset();
+      onSuccess?.();
+      onClose();
+    } catch {
+      // Error handling is done by the API client
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    form.reset();
+    onClose();
+  };
+
+  const handleOpenCreateCredential = (target: 'api_key' | 'chat_auth') => {
+    setCredentialFieldTarget(target);
+    setCreateCredentialOpen(true);
+  };
+
+  const handleCredentialCreated = async (credential?: { id: string; name: string }) => {
+    // Refresh credentials list
+    if (apiClient && selectedTenant) {
+      try {
+        await loadCredentials();
+
+        // Auto-select the newly created credential
+        if (credential && credentialFieldTarget) {
+          if (credentialFieldTarget === 'api_key') {
+            form.setFieldValue('n8n_api_api_key_credential_id', credential.id);
+          } else if (credentialFieldTarget === 'chat_auth') {
+            form.setFieldValue('n8n_chat_auth_credential_id', credential.id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to refresh credentials:', error);
+      }
+    }
+    setCredentialFieldTarget(null);
+  };
+
+  const isN8N = form.values.type === ChatAgentTypeEnum.N8N;
+
+  return (
+    <>
+      <Modal
+        opened={opened}
+        onClose={handleClose}
+        title={
+          <Group gap="sm">
+            <IconSparkles size={24} />
+            <Text fw={600} size="lg">Create Chat Agent</Text>
+          </Group>
+        }
+        size="lg"
+        centered
+      >
+        <form onSubmit={form.onSubmit(handleSubmit)}>
+          <Stack gap="md">
+            <TextInput
+              label="Name"
+              placeholder="Enter a name"
+              required
+              withAsterisk
+              maxLength={255}
+              data-autofocus
+              {...form.getInputProps('name')}
+            />
+
+            <Select
+              label="Type"
+              placeholder="Select a type"
+              required
+              withAsterisk
+              data={CHAT_AGENT_TYPES}
+              {...form.getInputProps('type')}
+            />
+
+            {/* N8N Configuration Section */}
+            {isN8N && (
+              <>
+                <Divider label="N8N Configuration" labelPosition="center" />
+
+                <Group grow>
+                  <Select
+                    label="API Version"
+                    required
+                    withAsterisk
+                    data={N8N_API_VERSIONS}
+                    {...form.getInputProps('n8n_api_version')}
+                  />
+                  <Select
+                    label="Workflow Type"
+                    required
+                    withAsterisk
+                    data={N8N_WORKFLOW_TYPES}
+                    {...form.getInputProps('n8n_workflow_type')}
+                  />
+                </Group>
+
+                <TextInput
+                  label="Chat URL"
+                  placeholder="https://your-n8n-instance.com/webhook/..."
+                  required
+                  withAsterisk
+                  {...form.getInputProps('n8n_chat_url')}
+                />
+
+                <TextInput
+                  label="Workflow Endpoint"
+                  placeholder="https://your-n8n-instance.com/workflow/abc123"
+                  description="The URL to the N8N workflow (e.g. https://n8n.example.com/workflow/abc123)"
+                  required
+                  withAsterisk
+                  {...form.getInputProps('n8n_workflow_endpoint')}
+                />
+
+                {/* API Key Credential with Add Button */}
+                <Group gap="xs" align="flex-end">
+                  <Select
+                    label="API Key Credential"
+                    placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
+                    required
+                    withAsterisk
+                    data={apiKeyCredentials}
+                    rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
+                    disabled={isLoadingCredentials}
+                    searchable
+                    onSearchChange={setCredentialSearch}
+                    nothingFoundMessage="No credentials found"
+                    style={{ flex: 1 }}
+                    {...form.getInputProps('n8n_api_api_key_credential_id')}
+                  />
+                  <Tooltip label="Create new API Key Credential">
+                    <ActionIcon
+                      variant="light"
+                      color="blue"
+                      size="lg"
+                      onClick={() => handleOpenCreateCredential('api_key')}
+                    >
+                      <IconPlus size={18} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+
+                {apiKeyCredentials.length === 0 && !isLoadingCredentials && (
+                  <Alert icon={<IconAlertCircle size={16} />} color="yellow" variant="light">
+                    No API Key Credentials available. Please create a credential first.
+                  </Alert>
+                )}
+
+                {/* Chat Auth Credential (Optional) with Add Button */}
+                <Group gap="xs" align="flex-end">
+                  <Select
+                    label="Chat Auth Credential (Optional)"
+                    placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential (optional)'}
+                    data={chatAuthCredentials}
+                    rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
+                    disabled={isLoadingCredentials}
+                    clearable
+                    searchable
+                    onSearchChange={setCredentialSearch}
+                    nothingFoundMessage="No credentials found"
+                    style={{ flex: 1 }}
+                    {...form.getInputProps('n8n_chat_auth_credential_id')}
+                  />
+                  <Tooltip label="Create new Basic Auth Credential">
+                    <ActionIcon
+                      variant="light"
+                      color="blue"
+                      size="lg"
+                      onClick={() => handleOpenCreateCredential('chat_auth')}
+                    >
+                      <IconPlus size={18} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+
+                <Divider label="Chat History" labelPosition="center" />
+
+                <Switch
+                  label="Use Unified Chat History"
+                  description="When enabled, chat history is managed in the Agent Service"
+                  {...form.getInputProps('n8n_use_unified_chat_history', { type: 'checkbox' })}
+                />
+
+                {form.values.n8n_use_unified_chat_history && (
+                  <NumberInput
+                    label="Chat History Count"
+                    description="Number of messages in chat history (1-100)"
+                    min={1}
+                    max={100}
+                    {...form.getInputProps('n8n_chat_history_count')}
+                  />
+                )}
+              </>
+            )}
+
+            {/* Microsoft Foundry Configuration Section */}
+            {form.values.type === ChatAgentTypeEnum.MICROSOFT_FOUNDRY && (
+              <>
+                <Divider label="Microsoft Foundry Configuration" labelPosition="center" />
+
+                <Group grow>
+                  <Select
+                    label="Agent Type"
+                    required
+                    withAsterisk
+                    data={FOUNDRY_AGENT_TYPES}
+                    {...form.getInputProps('foundry_agent_type')}
+                  />
+                  <Select
+                    label="API Version"
+                    required
+                    withAsterisk
+                    data={FOUNDRY_API_VERSIONS}
+                    {...form.getInputProps('foundry_api_version')}
+                  />
+                </Group>
+
+                <TextInput
+                  label="Project Endpoint"
+                  placeholder="https://your-project.services.ai.azure.com"
+                  required
+                  withAsterisk
+                  {...form.getInputProps('foundry_project_endpoint')}
+                />
+
+                <TextInput
+                  label="Agent Name"
+                  placeholder="e.g. MyAssistantAgent"
+                  required
+                  withAsterisk
+                  {...form.getInputProps('foundry_agent_name')}
+                />
+              </>
+            )}
+
+            <TagInput
+              label="Tags"
+              placeholder="Enter tag and press Space to confirm..."
+              value={form.values.tags}
+              onChange={(tags) => form.setFieldValue('tags', tags)}
+            />
+
+            <TagsInput
+              label={t('embedAllowedOrigins')}
+              placeholder={t('embedAllowedOriginsPlaceholder')}
+              description={t('embedAllowedOriginsDescription')}
+              splitChars={[',', ' ']}
+              value={form.values.embed_allowed_origins}
+              onChange={(origins) => form.setFieldValue('embed_allowed_origins', origins)}
+            />
+
+            <Box pos="relative">
+              <Textarea
+                label="Description"
+                placeholder="Optional description"
+                maxLength={2000}
+                minRows={3}
+                maxRows={6}
+                autosize
+                {...form.getInputProps('description')}
+              />
+              <Box pos="absolute" top={0} right={0}>
+                <GenerateWithAIButton
+                  entityType="chat-agent"
+                  entityName={form.values.name}
+                  existingDescription={form.values.description || undefined}
+                  onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+                />
+              </Box>
+            </Box>
+
+            <Group justify="flex-end" mt="md">
+              <Button variant="default" onClick={handleClose} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" loading={isSubmitting}>
+                Create
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Modal>
+
+      {/* Create Credential Dialog */}
+      <CreateCredentialDialog
+        opened={createCredentialOpen}
+        onClose={() => setCreateCredentialOpen(false)}
+        onSuccess={handleCredentialCreated}
+      />
+    </>
+  );
+};

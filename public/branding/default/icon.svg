@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <!-- Large decorative brain/AI icon for right panel (default branding) -->
+  <!-- Stylized neural network / brain symbol -->
+  <g opacity="0.5">
+    <!-- Central brain shape -->
+    <path d="M200 60 C140 60 90 100 80 160 C70 220 100 270 140 290 C150 295 155 310 155 330 L155 340 L245 340 L245 330 C245 310 250 295 260 290 C300 270 330 220 320 160 C310 100 260 60 200 60Z" stroke="white" stroke-width="4" fill="none"/>
+    <!-- Brain divider -->
+    <path d="M200 60 L200 340" stroke="white" stroke-width="2.5" opacity="0.6"/>
+    <!-- Left brain wrinkles -->
+    <path d="M120 130 Q160 115 195 140" stroke="white" stroke-width="2.5" fill="none" opacity="0.7"/>
+    <path d="M100 180 Q150 160 195 185" stroke="white" stroke-width="2.5" fill="none" opacity="0.7"/>
+    <path d="M110 230 Q155 210 195 235" stroke="white" stroke-width="2.5" fill="none" opacity="0.7"/>
+    <!-- Right brain wrinkles -->
+    <path d="M280 130 Q240 115 205 140" stroke="white" stroke-width="2.5" fill="none" opacity="0.7"/>
+    <path d="M300 180 Q250 160 205 185" stroke="white" stroke-width="2.5" fill="none" opacity="0.7"/>
+    <path d="M290 230 Q245 210 205 235" stroke="white" stroke-width="2.5" fill="none" opacity="0.7"/>
+    <!-- Neural nodes -->
+    <circle cx="130" cy="120" r="6" fill="white" opacity="0.5"/>
+    <circle cx="270" cy="120" r="6" fill="white" opacity="0.5"/>
+    <circle cx="110" cy="180" r="6" fill="white" opacity="0.5"/>
+    <circle cx="290" cy="180" r="6" fill="white" opacity="0.5"/>
+    <circle cx="120" cy="240" r="6" fill="white" opacity="0.5"/>
+    <circle cx="280" cy="240" r="6" fill="white" opacity="0.5"/>
+    <circle cx="200" cy="100" r="6" fill="white" opacity="0.5"/>
+    <circle cx="200" cy="200" r="6" fill="white" opacity="0.5"/>
+    <!-- Neural connections -->
+    <line x1="130" y1="120" x2="200" y2="100" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <line x1="270" y1="120" x2="200" y2="100" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <line x1="110" y1="180" x2="200" y2="200" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <line x1="290" y1="180" x2="200" y2="200" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <line x1="130" y1="120" x2="110" y2="180" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <line x1="270" y1="120" x2="290" y2="180" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <line x1="110" y1="180" x2="120" y2="240" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <line x1="290" y1="180" x2="280" y2="240" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <!-- Base connector -->
+    <rect x="170" y="340" width="60" height="10" rx="3" fill="white" opacity="0.4"/>
+  </g>
+</svg>

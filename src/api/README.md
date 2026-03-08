@@ -16,21 +16,21 @@ src/api/
 ### API-Client initialisieren
 
 ```typescript
-import { UnifiedUIAPIClient } from './api';
+import { UnifiedUIAPIClient } from "./api";
 
 const apiClient = new UnifiedUIAPIClient({
-  baseURL: 'http://localhost:8000',
+  baseURL: "http://localhost:8000",
   getAccessToken: async () => {
     // MSAL Token abrufen
     return await getAccessToken();
   },
   onError: (error) => {
     // Fehlerbehandlung
-    console.error('API Error:', error);
+    console.error("API Error:", error);
   },
   onSuccess: (message) => {
     // Erfolgsbenachrichtigung
-    console.log('Success:', message);
+    console.log("Success:", message);
   },
 });
 ```
@@ -42,7 +42,7 @@ const apiClient = new UnifiedUIAPIClient({
 const meResponse = await apiClient.getMe();
 
 // Benutzer suchen
-const users = await apiClient.getUsers({ search: 'john', top: 10 });
+const users = await apiClient.getUsers({ search: "john", top: 10 });
 
 // Gruppen abrufen
 const groups = await apiClient.getGroups({ top: 20 });
@@ -56,13 +56,13 @@ const tenants = await apiClient.listTenants();
 
 // Tenant erstellen
 const newTenant = await apiClient.createTenant({
-  name: 'My Tenant',
-  description: 'Tenant description',
+  name: "My Tenant",
+  description: "Tenant description",
 });
 
 // Tenant aktualisieren
 const updatedTenant = await apiClient.updateTenant(tenantId, {
-  name: 'Updated Name',
+  name: "Updated Name",
 });
 
 // Tenant löschen
@@ -85,13 +85,13 @@ const apps = await apiClient.listApplications();
 
 // Application erstellen
 const newApp = await apiClient.createApplication({
-  name: 'My Application',
-  description: 'App description',
+  name: "My Application",
+  description: "App description",
 });
 
 // Application aktualisieren
 const updatedApp = await apiClient.updateApplication(appId, {
-  name: 'Updated Name',
+  name: "Updated Name",
 });
 
 // Application löschen
@@ -115,6 +115,7 @@ Der API-Client unterstützt alle folgenden Ressourcen:
 - **Custom Groups**: `listCustomGroups()`, `createCustomGroup()`, etc.
 
 Alle Methoden folgen einem einheitlichen Namensschema:
+
 - `list{Resource}()` - Alle Ressourcen auflisten
 - `get{Resource}(id)` - Eine Ressource abrufen
 - `create{Resource}(data)` - Ressource erstellen
@@ -133,7 +134,7 @@ import type {
   CreateTenantRequest,
   ApplicationResponse,
   // ... weitere Typen
-} from './api/types';
+} from "./api/types";
 ```
 
 ## Fehlerbehandlung

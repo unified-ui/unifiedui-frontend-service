@@ -1,4 +1,4 @@
-import { type FC, useState } from 'react';
+import { type FC, useState, useMemo } from 'react';
 import {
   Modal,
   TextInput,
@@ -9,13 +9,15 @@ import {
   Stack,
   Text,
   Box,
+  Alert,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconTool } from '@tabler/icons-react';
+import { IconTool, IconAlertCircle } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
 import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
 import { ToolTypeEnum } from '../../api/types';
 import { TagInput } from '../common';
+import { validateToolConfig, normalizeToolConfig } from '../../utils/toolConfigValidator';
 
 interface CreateToolDialogProps {
   opened: boolean;
@@ -28,6 +30,7 @@ interface FormValues {
   description: string;
   type: string;
   tags: string[];
+  configJson: string;
 }
 
 const TOOL_TYPES = [
@@ -49,6 +52,7 @@ export const CreateToolDialog: FC<CreateToolDialogProps> = ({
       description: '',
       type: '',
       tags: [],
+      configJson: '',
     },
     validate: {
       name: (value) => {
@@ -75,17 +79,30 @@ export const CreateToolDialog: FC<CreateToolDialogProps> = ({
     },
   });
 
+  const configValidation = useMemo(() => {
+    if (!form.values.configJson.trim() || !form.values.type) return null;
+    return validateToolConfig(form.values.type as ToolTypeEnum, form.values.configJson);
+  }, [form.values.configJson, form.values.type]);
+
   const handleSubmit = form.onSubmit(async (values) => {
     if (!apiClient || !selectedTenant) return;
+    if (configValidation && !configValidation.valid) return;
 
     setIsSubmitting(true);
 
     try {
+      let parsedConfig: Record<string, unknown> = {};
+      if (values.configJson.trim()) {
+        parsedConfig = JSON.parse(values.configJson);
+      }
+      parsedConfig = normalizeToolConfig(values.type as ToolTypeEnum, parsedConfig);
+
       const createdTool = await apiClient.createTool(selectedTenant.id, {
         name: values.name.trim(),
         description: values.description.trim() || undefined,
         type: values.type as ToolTypeEnum,
-        config: {}, // Always empty for now
+        config: parsedConfig,
+        is_active: true,
       });
 
       // Set tags if any were provided
@@ -118,7 +135,7 @@ export const CreateToolDialog: FC<CreateToolDialogProps> = ({
           <Text fw={600}>Create New Tool</Text>
         </Group>
       }
-      size="md"
+      size="lg"
       centered
       closeOnClickOutside={!isSubmitting}
       closeOnEscape={!isSubmitting}
@@ -141,6 +158,47 @@ export const CreateToolDialog: FC<CreateToolDialogProps> = ({
             {...form.getInputProps('type')}
             disabled={isSubmitting}
           />
+
+          {form.values.type && (
+            <Stack gap="xs">
+              <Textarea
+                label="Configuration (JSON)"
+                placeholder={form.values.type === ToolTypeEnum.MCP_SERVER
+                  ? '{\n  "server_url": "https://...",\n  "transport": "sse"\n}'
+                  : '{\n  "openapi": "3.0.0",\n  "info": { "title": "...", "version": "1.0" },\n  "paths": {}\n}'}
+                minRows={6}
+                maxRows={12}
+                autosize
+                styles={{ input: { fontFamily: 'monospace', fontSize: 12 } }}
+                {...form.getInputProps('configJson')}
+                disabled={isSubmitting}
+              />
+              {configValidation && !configValidation.valid && (
+                <Alert
+                  icon={<IconAlertCircle size={16} />}
+                  color="red"
+                  variant="light"
+                  title="Configuration Error"
+                >
+                  {configValidation.errors.map((err, i) => (
+                    <Text key={i} size="xs">{err}</Text>
+                  ))}
+                </Alert>
+              )}
+              {configValidation && configValidation.valid && configValidation.warnings.length > 0 && (
+                <Alert
+                  icon={<IconAlertCircle size={16} />}
+                  color="yellow"
+                  variant="light"
+                  title="Warning"
+                >
+                  {configValidation.warnings.map((w, i) => (
+                    <Text key={i} size="xs">{w}</Text>
+                  ))}
+                </Alert>
+              )}
+            </Stack>
+          )}
 
           <Box pos="relative">
             <Textarea

@@ -25,6 +25,7 @@ import {
   IconShieldLock,
 } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
+import { DelayedTooltip } from '../DelayedTooltip';
 import type {
   IdentityUser,
   IdentityGroup,
@@ -55,7 +56,7 @@ interface AddPrincipalDialogProps {
   onClose: () => void;
   /** Submit handler with selected principals and selected roles */
   onSubmit: (principals: SelectedPrincipal[], roles: string[]) => Promise<void>;
-  /** Entity name for labels (e.g., "application", "credential") */
+  /** Entity name for labels (e.g., "chat-agent", "credential") */
   entityName?: string;
   /** IDs of principals that already have access (to filter them out) */
   existingPrincipalIds?: string[];
@@ -534,9 +535,11 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
                                 <Box>
                                   <Text size="sm">{customGroup.name}</Text>
                                   {customGroup.description && (
-                                    <Text size="xs" c="dimmed" lineClamp={1}>
-                                      {customGroup.description}
-                                    </Text>
+                                    <DelayedTooltip label={customGroup.description}>
+                                      <Text size="xs" c="dimmed" lineClamp={1}>
+                                        {customGroup.description}
+                                      </Text>
+                                    </DelayedTooltip>
                                   )}
                                 </Box>
                               </Group>
@@ -556,7 +559,7 @@ export const AddPrincipalDialog: FC<AddPrincipalDialogProps> = ({
           <Text size="sm" fw={500} mb="xs">
             Select {multiSelect ? 'permissions' : 'permission level'}
           </Text>
-          
+
           <ScrollArea.Autosize mah={300} scrollbarSize={8}>
             {multiSelect ? (
               <Stack gap="sm" pr={8}>

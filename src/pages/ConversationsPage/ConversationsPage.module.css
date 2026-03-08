@@ -1,32 +1,43 @@
 .pageContainer {
   display: flex;
+  flex-direction: column;
   height: 100%;
   width: 100%;
   overflow: hidden;
   background-color: transparent;
 }
 
+.pageHeader {
+  flex-shrink: 0;
+  padding: var(--spacing-md) var(--spacing-md);
+}
+
+.pageTitle {
+  font-size: var(--font-size-2xl) !important;
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  letter-spacing: 0.15em;
+  margin: 0;
+}
+
+.pageContent {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .chatSidebarWrapper {
-  position: fixed;
-  top: 70px; /* Header height */
-  left: 100px; /* Main sidebar width */
-  bottom: 0;
-  width: 280px;
-  z-index: var(--z-dropdown);
-  background-color: var(--bg-app);
-  border-right: 1px solid var(--border-default);
-  transition: transform var(--transition-normal) var(--easing-ease-in-out),
-              opacity var(--transition-normal) var(--easing-ease-in-out);
+  width: 330px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  transition: width var(--transition-normal) var(--easing-ease-in-out);
+  overflow: hidden;
 }
 
 .chatSidebarWrapper.collapsed {
   width: 56px;
-}
-
-.chatSidebarWrapper.hidden {
-  transform: translateX(-100%);
-  opacity: 0;
-  pointer-events: none;
 }
 
 .mainArea {
@@ -35,12 +46,11 @@
   flex-direction: column;
   min-width: 0;
   background-color: transparent;
-  margin-left: 280px; /* Chat sidebar width */
   transition: margin-left var(--transition-normal) var(--easing-ease-in-out);
 }
 
 .mainArea.sidebarCollapsed {
-  margin-left: 56px;
+  /* no margin needed in flex layout */
 }
 
 .mainArea.sidebarHidden {
@@ -71,8 +81,6 @@
 .tracingSidebarWrapper {
   width: 320px;
   min-width: 320px;
-  border-left: 1px solid var(--border-default);
-  background-color: var(--bg-paper);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -113,8 +121,6 @@
   max-width: 400px;
 }
 
-
-
 /* Drop zone overlay for the main chat area */
 .dropZoneOverlay {
   position: absolute;
@@ -122,23 +128,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.08) 0%, rgba(33, 150, 243, 0.04) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(33, 150, 243, 0.08) 0%,
+    rgba(33, 150, 243, 0.04) 100%
+  );
   backdrop-filter: blur(12px);
   border: 3px dashed var(--color-primary-500);
   border-radius: var(--radius-xl);
   z-index: 100;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity var(--transition-normal);
 }
 
 .dropZoneOverlay.active {
   opacity: 1;
+  visibility: visible;
+  transition: opacity var(--transition-normal);
   animation: dropZonePulse 2s ease-in-out infinite;
 }
 
 @keyframes dropZonePulse {
-  0%, 100% {
+  0%,
+  100% {
     border-color: var(--color-primary-500);
     box-shadow: inset 0 0 0 0 rgba(33, 150, 243, 0.2);
   }
@@ -162,21 +175,24 @@
   filter: drop-shadow(0 4px 12px rgba(33, 150, 243, 0.3));
 }
 
-[data-mantine-color-scheme='dark'] .dropZoneOverlay {
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.12) 0%, rgba(33, 150, 243, 0.06) 100%);
+[data-mantine-color-scheme="dark"] .dropZoneOverlay {
+  background: linear-gradient(
+    135deg,
+    rgba(33, 150, 243, 0.12) 0%,
+    rgba(33, 150, 243, 0.06) 100%
+  );
 }
 
-[data-mantine-color-scheme='dark'] .dropZoneContent {
+[data-mantine-color-scheme="dark"] .dropZoneContent {
   color: var(--color-primary-400);
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .chatSidebarWrapper {
-    width: 100%;
-    left: 0;
+    display: none;
   }
-  
+
   .mainArea {
     margin-left: 0;
   }

@@ -171,6 +171,13 @@
   margin-bottom: var(--spacing-sm);
 }
 
+.codeBlock {
+  font-size: var(--font-size-xs);
+  background: var(--bg-app) !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* ============================================ */
 /* COLLAPSIBLE SECTION                          */
 /* ============================================ */
@@ -199,50 +206,6 @@
 .collapsibleContent {
   padding: var(--spacing-xs);
   padding-left: var(--spacing-md);
-}
-
-/* ============================================ */
-/* JSON VIEWER                                  */
-/* ============================================ */
-
-.jsonViewer {
-  display: flex;
-  flex-direction: column;
-}
-
-.jsonToggle {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background-color var(--transition-fast);
-}
-
-.jsonToggle:hover {
-  background: var(--bg-hover);
-}
-
-/* ============================================ */
-/* CODE BLOCKS                                  */
-/* ============================================ */
-
-.codeBlock {
-  font-size: var(--font-size-xs);
-  background: var(--bg-app) !important;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.codeBlockPreview {
-  font-size: var(--font-size-xs);
-  max-height: 60px;
-  overflow: hidden;
-  opacity: 0.7;
-  background: var(--bg-app) !important;
-  white-space: pre-wrap;
-  word-break: break-word;
 }
 
 /* ============================================ */

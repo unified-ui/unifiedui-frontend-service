@@ -9,11 +9,11 @@ import type {
 import type { PrincipalPermission } from '../components/common/ManageAccessTable/ManageAccessTable';
 import type { SelectedPrincipal } from '../components/common/AddPrincipalDialog/AddPrincipalDialog';
 
-export type EntityType = 
-  | 'application' 
-  | 'autonomous-agent' 
-  | 'credential' 
-  | 'chat-widget' 
+export type EntityType =
+  | 'chat-agent'
+  | 'autonomous-agent'
+  | 'credential'
+  | 'chat-widget'
   | 'conversation'
   | 'tool';
 
@@ -81,13 +81,13 @@ export const useEntityPermissions = ({
     const tenantId = selectedTenant.id;
 
     switch (entityType) {
-      case 'application':
+      case 'chat-agent':
         return {
-          getPrincipals: () => apiClient.getApplicationPrincipals(tenantId, entityId),
+          getPrincipals: () => apiClient.getChatAgentPrincipals(tenantId, entityId),
           setPermission: (data: { principal_id: string; principal_type: PrincipalTypeEnum; role: PermissionActionEnum }) =>
-            apiClient.setApplicationPermission(tenantId, entityId, data),
+            apiClient.setChatAgentPermission(tenantId, entityId, data),
           deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
-            apiClient.deleteApplicationPermission(tenantId, entityId, principalId, principalType, role),
+            apiClient.deleteChatAgentPermission(tenantId, entityId, principalId, principalType, role),
         };
       case 'autonomous-agent':
         return {

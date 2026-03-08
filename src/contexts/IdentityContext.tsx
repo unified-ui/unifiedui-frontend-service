@@ -1,14 +1,21 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode, FC } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth';
 import { UnifiedUIAPIClient } from '../api/client';
-import type { TenantResponse, IdentityUser } from '../api/types';
+import type { TenantResponse, IdentityUser, TenantPermissionEnum, OrganizationContextResponse } from '../api/types';
 import { notifications } from '@mantine/notifications';
+import { AuthProviderInternal, useAuthContext } from './AuthContext';
+import { TenantProvider, useTenantContext } from './TenantContext';
+import { ApiClientProvider, useApiClient } from './ApiClientContext';
 
 interface IdentityContextType {
   user: IdentityUser | null;
+  isSystemAdmin: boolean;
+  organization: OrganizationContextResponse | null;
   tenants: TenantResponse[];
   selectedTenant: TenantResponse | null;
+  selectedTenantRoles: TenantPermissionEnum[];
   isLoading: boolean;
   apiClient: UnifiedUIAPIClient | null;
   refreshIdentity: (noCache?: boolean) => Promise<void>;
@@ -18,7 +25,6 @@ interface IdentityContextType {
 
 const IdentityContext = createContext<IdentityContextType | undefined>(undefined);
 
-const SELECTED_TENANT_KEY = 'unified-ui-selected-tenant-id';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const AGENT_SERVICE_URL = import.meta.env.VITE_AGENT_SERVICE_URL || 'http://localhost:8085';
 
@@ -26,15 +32,15 @@ interface IdentityProviderProps {
   children: ReactNode;
 }
 
-export const IdentityProvider: FC<IdentityProviderProps> = ({ children }) => {
+const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
+  const { t } = useTranslation('common');
   const { isAuthenticated, getAccessToken, getFoundryToken } = useAuth();
-  const [user, setUser] = useState<IdentityUser | null>(null);
-  const [tenants, setTenants] = useState<TenantResponse[]>([]);
-  const [selectedTenant, setSelectedTenant] = useState<TenantResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiClient, setApiClient] = useState<UnifiedUIAPIClient | null>(null);
+  const { user, isLoading, setUser, setIsLoading } = useAuthContext();
+  const { tenants, selectedTenant, selectedTenantRoles, setTenantsWithRoles, selectTenant } = useTenantContext();
+  const { apiClient, setApiClient } = useApiClient();
+  const [organization, setOrganization] = useState<OrganizationContextResponse | null>(null);
+  const [isSystemAdmin, setIsSystemAdmin] = useState(false);
 
-  // Initialize API Client
   useEffect(() => {
     if (isAuthenticated) {
       const client = new UnifiedUIAPIClient({
@@ -46,66 +52,46 @@ export const IdentityProvider: FC<IdentityProviderProps> = ({ children }) => {
         onError: (error) => {
           console.error('API Error:', error);
           notifications.show({
-            title: 'Fehler',
-            message: error.message || 'Ein unerwarteter Fehler ist aufgetreten',
+            title: t('error'),
+            message: error.message || t('unexpectedError'),
             color: 'red',
             position: 'top-right',
           });
         },
         onSuccess: (message) => {
           notifications.show({
-            title: 'Erfolg',
+            title: t('success'),
             message,
             color: 'green',
             position: 'top-right',
           });
         },
       });
-      // Configure agent service URL
       client.setAgentServiceURL(AGENT_SERVICE_URL);
       setApiClient(client);
     } else {
       setApiClient(null);
       setUser(null);
-      setTenants([]);
-      setSelectedTenant(null);
+      setIsSystemAdmin(false);
+      setOrganization(null);
+      setTenantsWithRoles([]);
     }
   }, [isAuthenticated, getAccessToken]);
 
-  // Load identity when authenticated
   useEffect(() => {
     if (isAuthenticated && apiClient) {
       refreshIdentity();
     }
   }, [isAuthenticated, apiClient]);
 
-  // Restore selected tenant from localStorage
-  useEffect(() => {
-    if (tenants.length > 0) {
-      const savedTenantId = localStorage.getItem(SELECTED_TENANT_KEY);
-      
-      if (savedTenantId) {
-        const tenant = tenants.find(t => t.id === savedTenantId);
-        if (tenant) {
-          setSelectedTenant(tenant);
-          return;
-        }
-      }
-      
-      // If no saved tenant or tenant not found, select first one
-      setSelectedTenant(tenants[0]);
-    }
-  }, [tenants]);
-
   const refreshIdentity = async (noCache?: boolean): Promise<void> => {
     if (!apiClient) return;
 
     setIsLoading(true);
     try {
-      let meResponse = await apiClient.getMe({ noCache });
+      const meResponse = await apiClient.getMe({ noCache });
 
-      // Extract user info from response
-      const user: IdentityUser = {
+      const identityUser: IdentityUser = {
         id: meResponse.id,
         identity_provider: meResponse.identity_provider,
         identity_tenant_id: meResponse.identity_tenant_id,
@@ -115,27 +101,10 @@ export const IdentityProvider: FC<IdentityProviderProps> = ({ children }) => {
         mail: meResponse.mail,
       };
 
-      // Extract tenants from nested structure
-      const tenants = meResponse.tenants?.map(t => t.tenant) || [];
-
-      // If no tenants exist, create default tenant
-      if (tenants.length === 0) {
-        console.log('No tenants found, creating default tenant...');
-        
-        await apiClient.createTenant({
-          name: 'default',
-          description: 'Default tenant created automatically',
-        });
-
-        // Fetch /me again to get the newly created tenant
-        meResponse = await apiClient.getMe({ noCache });
-        const updatedTenants = meResponse.tenants?.map(t => t.tenant) || [];
-        setTenants(updatedTenants);
-      } else {
-        setTenants(tenants);
-      }
-
-      setUser(user);
+      setIsSystemAdmin(meResponse.is_system_admin ?? false);
+      setOrganization(meResponse.organization || null);
+      setTenantsWithRoles(meResponse.tenants || []);
+      setUser(identityUser);
     } catch (error) {
       console.error('Failed to load identity:', error);
     } finally {
@@ -143,19 +112,13 @@ export const IdentityProvider: FC<IdentityProviderProps> = ({ children }) => {
     }
   };
 
-  const selectTenant = (tenantId: string): void => {
-    const tenant = tenants.find(t => t.id === tenantId);
-    if (tenant && tenant.id !== selectedTenant?.id) {
-      localStorage.setItem(SELECTED_TENANT_KEY, tenantId);
-      // Reload the page to clear all context and fetch fresh data
-      window.location.reload();
-    }
-  };
-
   const value: IdentityContextType = {
     user,
+    isSystemAdmin,
+    organization,
     tenants,
     selectedTenant,
+    selectedTenantRoles,
     isLoading,
     apiClient,
     refreshIdentity,
@@ -170,6 +133,21 @@ export const IdentityProvider: FC<IdentityProviderProps> = ({ children }) => {
   );
 };
 
+export const IdentityProvider: FC<IdentityProviderProps> = ({ children }) => {
+  return (
+    <AuthProviderInternal>
+      <TenantProvider>
+        <ApiClientProvider>
+          <IdentityProviderInner>
+            {children}
+          </IdentityProviderInner>
+        </ApiClientProvider>
+      </TenantProvider>
+    </AuthProviderInternal>
+  );
+};
+
+// eslint-disable-next-line react-refresh/only-export-components
 export const useIdentity = (): IdentityContextType => {
   const context = useContext(IdentityContext);
   if (context === undefined) {

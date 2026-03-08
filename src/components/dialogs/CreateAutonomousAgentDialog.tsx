@@ -215,7 +215,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
       form.reset();
       onSuccess?.();
       onClose();
-    } catch (error) {
+    } catch {
       // Error handling is done by the API client
     } finally {
       setIsSubmitting(false);
@@ -254,7 +254,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
             <Text fw={600} size="lg">Create Autonomous Agent</Text>
           </Group>
         }
-        size="md"
+        size="lg"
         centered
       >
         <form onSubmit={form.onSubmit(handleSubmit)}>

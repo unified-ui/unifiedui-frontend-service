@@ -148,7 +148,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
       form.reset();
       onSuccess?.({ id: credential.id, name: credential.name });
       onClose();
-    } catch (error) {
+    } catch {
       // Error handling is done by the API client
     } finally {
       setIsSubmitting(false);
@@ -172,7 +172,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
           <Text fw={600} size="lg">Create Credential</Text>
         </Group>
       }
-      size="md"
+      size="lg"
       centered
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>

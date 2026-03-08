@@ -6,21 +6,17 @@
 ┌─────────────────────────────────────────────────────────┐
 │ MainLayout (.layout)                                    │
 │ ┌─────────────────────────────────────────────────────┐ │
-│ │ Header (.header)                  height: 70px      │ │
+│ │ Header (.header)                  height: 56px      │ │
 │ ├───────┬─────────────────────────────────────────────┤ │
 │ │       │                                             │ │
 │ │ Side  │  <main> (.content)                          │ │
-│ │ bar   │  margin-top: 70px                           │ │
-│ │       │  margin-left: 100px                         │ │
-│ │ 100px │  height: calc(100vh - 70px)                 │ │
+│ │ bar   │  margin-top: var(--header-height) [56px]    │ │
+│ │       │  margin-left: var(--sidebar-width) [80px]   │ │
+│ │  80px │  height: calc(100vh - var(--header-height)) │ │
 │ │       │  overflow: hidden                           │ │
+│ │       │  padding: var(--content-padding-y/x)        │ │
 │ │       │                                             │ │
-│ │       │  ┌───────────────────────────────────┐      │ │
-│ │       │  │ PageContainer (max-width: 1200px) │      │ │
-│ │       │  │ height: 100%, overflow: hidden    │      │ │
-│ │       │  │                                   │      │ │
-│ │       │  │ Children handle their own scroll  │      │ │
-│ │       │  └───────────────────────────────────┘      │ │
+│ │       │  Children handle their own scroll            │ │
 │ │       │                                             │ │
 │ └───────┴─────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────┘
@@ -28,7 +24,17 @@
 
 ### Key Rule: `overflow: hidden` Chain
 
-The layout chain (MainLayout → `.content` → PageContainer) keeps `overflow: hidden` at every level. **Page content must create its own scroll container** (e.g., DataTable's `.scrollArea` or the `tabPanelScrollArea` pattern).
+The layout chain (MainLayout → `.content`) keeps `overflow: hidden`. **Page content must create its own scroll container** (e.g., DataTable's `.scrollArea` or the `tabPanelScrollArea` pattern).
+
+### CSS Variables (defined in `src/styles/variables.css`)
+
+| Variable                 | Value  | Purpose                    |
+| ------------------------ | ------ | -------------------------- |
+| `--header-height`        | `56px` | Header fixed height        |
+| `--sidebar-width`        | `80px` | Sidebar fixed width        |
+| `--sidebar-width-mobile` | `56px` | Sidebar width on mobile    |
+| `--content-padding-y`    | `24px` | Content vertical padding   |
+| `--content-padding-x`    | `32px` | Content horizontal padding |
 
 ---
 
@@ -36,23 +42,23 @@ The layout chain (MainLayout → `.content` → PageContainer) keeps `overflow: 
 
 **File**: `src/components/layout/MainLayout/`
 
-| Prop | Type | Default | Purpose |
-|------|------|---------|---------|
-| `children` | `ReactNode` | — | Page content |
-| `noPadding` | `boolean` | `false` | Remove default `var(--spacing-xl)` padding from content area |
+| Prop        | Type        | Default | Purpose                                                      |
+| ----------- | ----------- | ------- | ------------------------------------------------------------ |
+| `children`  | `ReactNode` | —       | Page content                                                 |
+| `noPadding` | `boolean`   | `false` | Remove default `var(--spacing-xl)` padding from content area |
 
 ### CSS Classes
 
-| Class | Rules |
-|-------|-------|
-| `.layout` | `width: 100vw`, `height: 100vh`, `display: flex`, `flex-direction: column`, `overflow: hidden` |
-| `.content` | `margin-top: 70px`, `margin-left: 100px`, `height: calc(100vh - 70px)`, `overflow: hidden`, `display: flex`, `flex-direction: column`, `padding: var(--spacing-xl)` |
-| `.noPadding` | Removes padding from `.content` |
+| Class        | Rules                                                                                                                                                                                                                                              |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.layout`    | `width: 100vw`, `height: 100vh`, `display: flex`, `flex-direction: column`, `overflow: hidden`                                                                                                                                                     |
+| `.content`   | `margin-top: var(--header-height)`, `margin-left: var(--sidebar-width)`, `height: calc(100vh - var(--header-height))`, `overflow: hidden`, `display: flex`, `flex-direction: column`, `padding: var(--content-padding-y) var(--content-padding-x)` |
+| `.noPadding` | Removes padding from `.content`                                                                                                                                                                                                                    |
 
-### Mobile Breakpoint (`@576px`)
+### Tablet Breakpoint (`@768px`)
 
-- Sidebar narrows to `60px`
-- Content `margin-left: 60px`
+- Sidebar narrows to `var(--sidebar-width-mobile)` (56px), labels hidden
+- Content `margin-left: var(--sidebar-width-mobile)`
 - Padding shrinks to `var(--spacing-md)`
 
 ---
@@ -61,11 +67,23 @@ The layout chain (MainLayout → `.content` → PageContainer) keeps `overflow: 
 
 **File**: `src/components/layout/Header/` (~213 lines)
 
-Fixed top bar (`height: 70px`, `z-index: var(--z-sticky)`).
+Fixed top bar (`height: var(--header-height)` [56px], `z-index: var(--z-sticky)`).
 
-**Contains**: Logo, search icon, notification icon, theme toggle (sun/moon), user avatar dropdown with tenant selector.
+**Contains**: Logo, search icon (opens CommandPalette `⌘K`), notification bell (opens NotificationPanel), theme toggle (sun/moon), user avatar dropdown with tenant selector.
 
 **Click-outside**: Uses `useRef` + `mousedown` listener, explicitly excludes Mantine portal elements (`[data-portal]`).
+
+---
+
+## NotificationPanel
+
+**File**: `src/components/layout/NotificationPanel/`
+
+Right slide-out drawer (Mantine `Drawer`) displaying user notifications. Opened by clicking the notification bell in Header.
+
+- Uses `NotificationsContext` for data + actions
+- Shows unread count badge on the bell icon
+- Supports mark-as-read, mark-all-read, delete
 
 ---
 
@@ -73,22 +91,22 @@ Fixed top bar (`height: 70px`, `z-index: var(--z-sticky)`).
 
 **File**: `src/components/layout/Sidebar/` (~585 lines)
 
-Fixed left rail (`width: 100px`, `top: 70px`, `z-index: var(--z-dropdown)`).
+Fixed left rail (`width: var(--sidebar-width)` [80px], `top: var(--header-height)`, `z-index: var(--z-dropdown)`).
 
 ### Navigation Structure
 
 ```
-Top section:
+Top section (mainNavItemsTop):
   Home (Dashboard)
-  Conversations (has data list)
-  Chat Agents / Applications (has data list)
-  Autonomous Agents (has data list)
-  Traces
+  Chats / Conversations (data list, no entity type — special handling)
+  Agents / Chat Agents (has data list, entityType: chat-agents)
+  Auto / Autonomous Agents (has data list, entityType: autonomous-agents)
 ─── divider ───
-Bottom section:
-  ReACT-Agent Development (has data list)
-  Chat Widgets (has data list)
+Middle section (mainNavItemsBottom):
+  ReACT / ReACT Agents (has data list, entityType: re-act-agents)
+  Widgets / Chat Widgets (has data list, entityType: chat-widgets)
 ─── spacer ───
+Bottom section (bottomNavItems):
   Settings (Tenant Settings)
 ```
 
@@ -117,6 +135,26 @@ interface EntityConfig {
 
 When clicking a nav item with `hasDataList: true`, an expandable `SidebarDataList` slides out showing entity items with search. State is persisted to `localStorage` via `SIDEBAR_EXPAND_KEY`.
 
+### Favorites in Data Lists
+
+`SidebarDataList` supports toggleable favorites via `onToggleFavorite` prop. Each item shows a star icon — filled for favorites, outline for non-favorites. Clicking the star toggles the favorite state (optimistic update via `FavoritesContext`). Favorites sort to the top within each data list.
+
+The `ENTITY_TO_FAVORITE_TYPE` mapping in `Sidebar.tsx` maps entity types to `FavoriteResourceTypeEnum` values:
+
+```typescript
+{
+  'chat-agents': FavoriteResourceTypeEnum.CHAT_AGENT,
+  'autonomous-agents': FavoriteResourceTypeEnum.AUTONOMOUS_AGENT,
+  'chat-widgets': FavoriteResourceTypeEnum.CHAT_WIDGET,
+  conversations: FavoriteResourceTypeEnum.CONVERSATION,
+  're-act-agents': FavoriteResourceTypeEnum.RE_ACT_AGENT,
+}
+```
+
+### Conversations Data List
+
+Conversations use `order_by=updated_at, order_direction=desc` (most recently used first). Other entity types use `order_by=name, order_direction=asc`.
+
 ### Active Indicator
 
 Active nav item gets a blue left border (`border-left: 4px solid var(--color-primary-500)`) and bold label.
@@ -129,19 +167,19 @@ Active nav item gets a blue left border (`border-left: 4px solid var(--color-pri
 
 Width-constrained wrapper using Mantine `<Container>`.
 
-| Prop | Type | Default | Purpose |
-|------|------|---------|---------|
-| `children` | `ReactNode` | — | Page content |
-| `size` | `'sm' \| 'md' \| 'lg' \| 'xl'` | `'lg'` | Max width |
+| Prop       | Type                           | Default | Purpose      |
+| ---------- | ------------------------------ | ------- | ------------ |
+| `children` | `ReactNode`                    | —       | Page content |
+| `size`     | `'sm' \| 'md' \| 'lg' \| 'xl'` | `'lg'`  | Max width    |
 
 ### Size Map
 
 | Size | Max Width |
-|------|-----------|
-| sm | 800px |
-| md | 1000px |
-| lg | 1200px |
-| xl | 1400px |
+| ---- | --------- |
+| sm   | 800px     |
+| md   | 1000px    |
+| lg   | 1200px    |
+| xl   | 1400px    |
 
 ### CSS
 

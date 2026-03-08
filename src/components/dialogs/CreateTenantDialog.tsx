@@ -8,10 +8,14 @@ import {
   Stack,
   Text,
   Box,
+  Select,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { notifications } from '@mantine/notifications';
 import { IconBuilding } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 import { useIdentity } from '../../contexts';
+import { EnvironmentTypeEnum } from '../../api/types';
 import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
 
 interface CreateTenantDialogProps {
@@ -23,6 +27,7 @@ interface CreateTenantDialogProps {
 interface FormValues {
   name: string;
   description: string;
+  environment_type: string;
 }
 
 export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
@@ -30,27 +35,36 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const { apiClient, refreshIdentity } = useIdentity();
+  const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
+  const { apiClient, organization, refreshIdentity } = useIdentity();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     initialValues: {
       name: '',
       description: '',
+      environment_type: EnvironmentTypeEnum.SANDBOX,
     },
     validate: {
       name: (value) => {
         if (!value || value.trim().length === 0) {
-          return 'Name is required';
+          return tCommon('validation.required', { field: tCommon('name') });
         }
         if (value.length > 255) {
-          return 'Name cannot exceed 255 characters';
+          return tCommon('validation.maxLength', { field: tCommon('name'), max: 255 });
+        }
+        return null;
+      },
+      environment_type: (value) => {
+        if (!value || value.trim().length === 0) {
+          return tCommon('validation.required', { field: t('environmentType') });
         }
         return null;
       },
       description: (value) => {
         if (value && value.length > 2000) {
-          return 'Description cannot exceed 2000 characters';
+          return tCommon('validation.maxLength', { field: tCommon('description'), max: 2000 });
         }
         return null;
       },
@@ -60,18 +74,28 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
   const handleSubmit = async (values: FormValues) => {
     if (!apiClient) return;
 
+    if (!organization) {
+      notifications.show({
+        title: tCommon('error'),
+        message: t('noOrganization'),
+        color: 'red',
+        position: 'top-right',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      await apiClient.createTenant({
+      await apiClient.createTenantInOrganization(organization.id, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
+        environment_type: values.environment_type as EnvironmentTypeEnum,
       });
       form.reset();
-      // Refresh identity to get updated tenant list
       await refreshIdentity();
       onSuccess?.();
       onClose();
-    } catch (error) {
+    } catch {
       // Error handling is done by the API client
     } finally {
       setIsSubmitting(false);
@@ -83,6 +107,11 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
     onClose();
   };
 
+  const environmentOptions = [
+    { value: EnvironmentTypeEnum.SANDBOX, label: t('environmentSandbox') },
+    { value: EnvironmentTypeEnum.PRODUCTION, label: t('environmentProduction') },
+  ];
+
   return (
     <Modal
       opened={opened}
@@ -90,17 +119,17 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
       title={
         <Group gap="sm">
           <IconBuilding size={24} />
-          <Text fw={600} size="lg">Create Tenant</Text>
+          <Text fw={600} size="lg">{t('createTenant')}</Text>
         </Group>
       }
-      size="md"
+      size="lg"
       centered
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">
           <TextInput
-            label="Name"
-            placeholder="Enter a name"
+            label={tCommon('name')}
+            placeholder={tCommon('enterName')}
             required
             withAsterisk
             maxLength={255}
@@ -108,10 +137,18 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
             {...form.getInputProps('name')}
           />
 
+          <Select
+            label={t('environmentType')}
+            data={environmentOptions}
+            required
+            withAsterisk
+            {...form.getInputProps('environment_type')}
+          />
+
           <Box pos="relative">
             <Textarea
-              label="Description"
-              placeholder="Optional description"
+              label={tCommon('description')}
+              placeholder={tCommon('optionalDescription')}
               maxLength={2000}
               minRows={3}
               maxRows={6}
@@ -130,10 +167,10 @@ export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={handleClose} disabled={isSubmitting}>
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button type="submit" loading={isSubmitting}>
-              Create
+              {tCommon('create')}
             </Button>
           </Group>
         </Stack>

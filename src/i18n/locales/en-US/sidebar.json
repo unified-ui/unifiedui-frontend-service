@@ -1,0 +1,18 @@
+{
+  "home": "Home",
+  "chats": "Chats",
+  "agents": "Agents",
+  "reactAgents": "ReACT Agents",
+  "auto": "Workflows",
+  "widgets": "Widgets",
+  "settings": "Settings",
+  "chatAgents": "Chat Agents",
+  "addChatAgent": "Add Chat Agent",
+  "autonomousAgents": "Autonomous Agents",
+  "addAutonomousAgent": "Add Autonomous Agent",
+  "chatWidgets": "Chat Widgets",
+  "addChatWidget": "Add Chat Widget",
+  "conversations": "Conversations",
+  "newConversation": "New Conversation",
+  "failedToLoadConversations": "Failed to load conversations"
+}

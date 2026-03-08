@@ -1,0 +1,43 @@
+.header {
+  height: 40px;
+  min-height: 40px;
+  background-color: transparent;
+  display: flex;
+  align-items: flex-start;
+  padding: 0 var(--spacing-sm);
+}
+
+.headerContent {
+  width: 100%;
+}
+
+.leftSection {
+  flex: 1;
+  min-width: 0;
+  max-width: 400px;
+}
+
+.rightSection {
+  flex-shrink: 0;
+}
+
+.chatAgentSelect {
+  width: 100%;
+  max-width: 300px;
+}
+
+.chatAgentSelect input {
+  font-weight: var(--font-weight-medium);
+}
+
+.chatAgentInfo {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-app);
+  max-width: 350px;
+}
+
+.chatAgentIcon {
+  color: var(--color-primary-500);
+  flex-shrink: 0;
+}

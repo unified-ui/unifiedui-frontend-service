@@ -2,16 +2,16 @@
 
 ## Architecture
 
-The API client (`src/api/client.ts`) is a single class `UnifiedUIAPIClient` with ~110 methods organized by resource type.
+The API client (`src/api/client.ts`) is a single class `UnifiedUIAPIClient` with ~130 methods organized by resource type.
 
 ### Dual Base URL
 
 The client talks to **two backend services**:
 
-| Service | Purpose | Base URL Source |
-|---------|---------|----------------|
-| Platform Service | CRUD for tenants, applications, credentials, permissions, etc. | Constructor `baseURL` param |
-| Agent Service | Chat messages, SSE streaming, traces | `setAgentServiceBaseURL()` — set dynamically |
+| Service          | Purpose                                                       | Base URL Source                              |
+| ---------------- | ------------------------------------------------------------- | -------------------------------------------- |
+| Platform Service | CRUD for tenants, chat agents, credentials, permissions, etc. | Constructor `baseURL` param                  |
+| Agent Service    | Chat messages, SSE streaming, traces                          | `setAgentServiceBaseURL()` — set dynamically |
 
 Platform Service endpoints use `this.baseURL` directly. Agent Service endpoints call `this.getAgentServiceURL()` which throws if not yet configured.
 
@@ -30,7 +30,7 @@ The API client is instantiated once in `IdentityContext` and accessed via hook:
 
 ```typescript
 const { apiClient } = useIdentity();
-const apps = await apiClient.listApplications(tenantId, { skip: 0, limit: 50 });
+const apps = await apiClient.listChatAgents(tenantId, { skip: 0, limit: 50 });
 ```
 
 Never create a new `UnifiedUIAPIClient` instance — always use the one from context.
@@ -115,7 +115,7 @@ Methods are grouped by resource with comment headers:
 // ========== Health Check ==========
 // ========== Identity Endpoints ==========
 // ========== Tenant Endpoints ==========
-// ========== Application Endpoints ==========
+// ========== Chat Agent Endpoints ==========
 // ========== Autonomous Agent Endpoints ==========
 // ========== Conversation Endpoints ==========
 // ========== Credential Endpoints ==========
@@ -124,7 +124,12 @@ Methods are grouped by resource with comment headers:
 // ========== Custom Group Endpoints ==========
 // ========== Tags Endpoints ==========
 // ========== User Favorites Endpoints ==========
+// ========== Dashboard Endpoints ==========
+// ========== Search Endpoints ==========
+// ========== Notification Endpoints ==========
+// ========== Recent Visit Endpoints ==========
 // ========== AI Model Endpoints ==========
+// ========== ReACT Agent Endpoints ==========
 // ========== Agent Service ==========
 // ========== Trace Endpoints ==========
 ```
@@ -135,15 +140,15 @@ Methods are grouped by resource with comment headers:
 
 Most resources follow this pattern:
 
-| Method | HTTP | Path |
-|--------|------|------|
-| `list{Resource}s` | GET | `/{resource}s?skip=&limit=` |
-| `get{Resource}` | GET | `/{resource}s/{id}` |
-| `create{Resource}` | POST | `/{resource}s` |
-| `update{Resource}` | PUT | `/{resource}s/{id}` |
-| `delete{Resource}` | DELETE | `/{resource}s/{id}` |
-| `list{Resource}Principals` | GET | `/{resource}s/{id}/principals` |
-| `set{Resource}Permission` | PUT | `/{resource}s/{id}/principals/{principalId}` |
+| Method                       | HTTP   | Path                                         |
+| ---------------------------- | ------ | -------------------------------------------- |
+| `list{Resource}s`            | GET    | `/{resource}s?skip=&limit=`                  |
+| `get{Resource}`              | GET    | `/{resource}s/{id}`                          |
+| `create{Resource}`           | POST   | `/{resource}s`                               |
+| `update{Resource}`           | PUT    | `/{resource}s/{id}`                          |
+| `delete{Resource}`           | DELETE | `/{resource}s/{id}`                          |
+| `list{Resource}Principals`   | GET    | `/{resource}s/{id}/principals`               |
+| `set{Resource}Permission`    | PUT    | `/{resource}s/{id}/principals/{principalId}` |
 | `delete{Resource}Permission` | DELETE | `/{resource}s/{id}/principals/{principalId}` |
 
 ---
@@ -169,15 +174,15 @@ async *sendMessageStream(
 
 ### SSE Event Types
 
-| Type | Purpose |
-|------|--------|
-| `STREAM_START` | Stream begins, provides messageId and conversationId |
-| `TEXT_STREAM` | Text content chunk for typewriter effect |
-| `STREAM_NEW_MESSAGE` | New message in multi-message response |
-| `STREAM_END` | Stream complete |
-| `MESSAGE_COMPLETE` | Full message with metadata |
-| `TITLE_GENERATION` | AI-generated conversation title (streamed after first message) |
-| `ERROR` | Error in stream |
+| Type                 | Purpose                                                        |
+| -------------------- | -------------------------------------------------------------- |
+| `STREAM_START`       | Stream begins, provides messageId and conversationId           |
+| `TEXT_STREAM`        | Text content chunk for typewriter effect                       |
+| `STREAM_NEW_MESSAGE` | New message in multi-message response                          |
+| `STREAM_END`         | Stream complete                                                |
+| `MESSAGE_COMPLETE`   | Full message with metadata                                     |
+| `TITLE_GENERATION`   | AI-generated conversation title (streamed after first message) |
+| `ERROR`              | Error in stream                                                |
 
 The `onTitleGeneration` callback receives title text that can be displayed with typewriter animation in the conversations list.
 
@@ -185,18 +190,19 @@ The `onTitleGeneration` callback receives title text that can be displayed with 
 
 ## Types File
 
-`src/api/types.ts` contains all interfaces and enums (~1000 lines). Key patterns:
+`src/api/types.ts` contains all interfaces and enums (~1370 lines). Key patterns:
 
 - **Enums**: Defined as `const` objects with a derived type (not TypeScript `enum`)
-- **Responses**: Suffixed with `Response` (e.g., `ApplicationResponse`)
-- **Requests**: Suffixed with `Request` (e.g., `CreateApplicationRequest`)
+- **Responses**: Suffixed with `Response` (e.g., `ChatAgentResponse`)
+- **Requests**: Suffixed with `Request` (e.g., `CreateChatAgentRequest`)
 - **Params**: Suffixed with `Params` (e.g., `PaginationParams`)
 
 ```typescript
 export const PrincipalTypeEnum = {
-  USER: 'USER',
-  IDENTITY_GROUP: 'IDENTITY_GROUP',
-  CUSTOM_GROUP: 'CUSTOM_GROUP',
+  USER: "USER",
+  IDENTITY_GROUP: "IDENTITY_GROUP",
+  CUSTOM_GROUP: "CUSTOM_GROUP",
 } as const;
-export type PrincipalTypeEnum = typeof PrincipalTypeEnum[keyof typeof PrincipalTypeEnum];
+export type PrincipalTypeEnum =
+  (typeof PrincipalTypeEnum)[keyof typeof PrincipalTypeEnum];
 ```

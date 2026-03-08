@@ -27,7 +27,7 @@ export const ChatSidebarProvider: FC<ChatSidebarProviderProps> = ({ children }) 
   const location = useLocation();
   const [isHoveringNav, setIsHoveringNav] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
-  
+
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -40,18 +40,18 @@ export const ChatSidebarProvider: FC<ChatSidebarProviderProps> = ({ children }) 
   const onNavItemHoverEnter = useCallback(() => {
     // Don't trigger hover if already on conversations page
     if (isOnConversationsPage) return;
-    
+
     // Clear any pending close timeout
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
-    
+
     // Small delay before showing
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
-    
+
     hoverTimeoutRef.current = setTimeout(() => {
       setIsHoveringNav(true);
     }, 150);
@@ -62,7 +62,7 @@ export const ChatSidebarProvider: FC<ChatSidebarProviderProps> = ({ children }) 
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
     }
-    
+
     // Delay closing to allow moving to sidebar
     closeTimeoutRef.current = setTimeout(() => {
       if (!isHoveringSidebar) {
@@ -73,7 +73,7 @@ export const ChatSidebarProvider: FC<ChatSidebarProviderProps> = ({ children }) 
 
   const onSidebarHoverEnter = useCallback(() => {
     setIsHoveringSidebar(true);
-    
+
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
@@ -82,7 +82,7 @@ export const ChatSidebarProvider: FC<ChatSidebarProviderProps> = ({ children }) 
 
   const onSidebarHoverLeave = useCallback(() => {
     setIsHoveringSidebar(false);
-    
+
     closeTimeoutRef.current = setTimeout(() => {
       if (!isHoveringNav) {
         setIsHoveringNav(false);
@@ -106,6 +106,7 @@ export const ChatSidebarProvider: FC<ChatSidebarProviderProps> = ({ children }) 
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useChatSidebar = (): ChatSidebarContextType => {
   const context = useContext(ChatSidebarContext);
   if (!context) {
