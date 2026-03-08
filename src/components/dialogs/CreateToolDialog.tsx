@@ -102,6 +102,7 @@ export const CreateToolDialog: FC<CreateToolDialogProps> = ({
         description: values.description.trim() || undefined,
         type: values.type as ToolTypeEnum,
         config: parsedConfig,
+        is_active: true,
       });
 
       // Set tags if any were provided
