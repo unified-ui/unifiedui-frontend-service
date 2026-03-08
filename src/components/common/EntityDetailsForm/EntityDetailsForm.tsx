@@ -154,7 +154,7 @@ export function EntityDetailsForm<T extends object>({
             </Box>
           );
 
-        case 'tags':
+        case 'tags': {
           const tags = value as string[] | undefined;
           return (
             <Box className={classes.viewField}>
@@ -176,6 +176,7 @@ export function EntityDetailsForm<T extends object>({
               )}
             </Box>
           );
+        }
 
         case 'textarea':
           return (

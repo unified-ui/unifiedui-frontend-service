@@ -1,0 +1,93 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.toolbar {
+  padding: var(--spacing-sm) 0;
+  flex-shrink: 0;
+}
+
+.dateFilter {
+  width: 160px;
+}
+
+.sortSelect {
+  width: 140px;
+}
+
+.scrollWrapper {
+  margin-right: calc(-1 * var(--spacing-md));
+  overflow: hidden;
+}
+
+.scrollArea {
+  max-height: calc(100vh - 450px);
+  min-height: 200px;
+  overflow: auto;
+  padding-right: var(--spacing-md);
+}
+
+.tableWrapper {
+  min-width: 100%;
+}
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--bg-app);
+}
+
+.row {
+  transition: background-color var(--transition-fast);
+}
+
+.row:hover {
+  background-color: var(--bg-hover);
+}
+
+.colRefId {
+  min-width: 200px;
+  max-width: 260px;
+}
+
+.colRefName {
+  min-width: 200px;
+}
+
+.colCreated {
+  min-width: 120px;
+}
+
+.colUpdated {
+  min-width: 120px;
+}
+
+.colActions {
+  width: 48px;
+}
+
+.traceIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-600);
+  flex-shrink: 0;
+}
+
+[data-mantine-color-scheme="dark"] .traceIcon {
+  background-color: var(--color-gray-800);
+  color: var(--color-gray-400);
+}

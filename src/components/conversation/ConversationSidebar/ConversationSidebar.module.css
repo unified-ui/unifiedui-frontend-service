@@ -1,0 +1,343 @@
+/* Light mode sidebar variables (default) */
+.sidebar,
+.sidebarCollapsed {
+  --sidebar-bg: var(--bg-paper);
+  --sidebar-text: var(--text-primary);
+  --sidebar-text-secondary: var(--text-secondary);
+  --sidebar-text-disabled: var(--text-disabled);
+  --sidebar-border: var(--border-default);
+  --sidebar-border-light: var(--border-light);
+  --sidebar-hover: var(--bg-hover);
+  --sidebar-selected: var(--bg-selected);
+  --sidebar-input-bg: var(--bg-elevated);
+  --sidebar-scrollbar: rgba(0, 0, 0, 0.15);
+  --sidebar-scrollbar-hover: rgba(0, 0, 0, 0.25);
+  --sidebar-segmented-bg: var(--bg-elevated);
+  --sidebar-segmented-indicator: var(--color-gray-300);
+}
+
+/* Dark mode sidebar variables */
+:global([data-mantine-color-scheme="dark"]) .sidebar,
+:global([data-mantine-color-scheme="dark"]) .sidebarCollapsed {
+  --sidebar-bg: #1a1a1a;
+  --sidebar-text: #ffffff;
+  --sidebar-text-secondary: rgba(255, 255, 255, 0.7);
+  --sidebar-text-disabled: rgba(255, 255, 255, 0.4);
+  --sidebar-border: rgba(255, 255, 255, 0.25);
+  --sidebar-border-light: rgba(255, 255, 255, 0.12);
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-selected: rgba(255, 255, 255, 0.14);
+  --sidebar-input-bg: rgba(255, 255, 255, 0.06);
+  --sidebar-scrollbar: rgba(255, 255, 255, 0.15);
+  --sidebar-scrollbar-hover: rgba(255, 255, 255, 0.25);
+  --sidebar-segmented-bg: rgba(255, 255, 255, 0.06);
+  --sidebar-segmented-indicator: rgba(255, 255, 255, 0.15);
+}
+
+.sidebar {
+  width: 100%;
+  height: 100%;
+  background-color: var(--sidebar-bg);
+  border-top-right-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  transition: width var(--transition-normal) var(--easing-ease-in-out);
+  overflow: hidden;
+}
+
+.sidebarCollapsed {
+  width: 100%;
+  height: 100%;
+  background-color: var(--sidebar-bg);
+  border-top-right-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: var(--spacing-md);
+  gap: var(--spacing-md);
+}
+
+.expandButton {
+  color: var(--sidebar-text-secondary);
+}
+
+.expandButton:hover {
+  color: var(--sidebar-text);
+  background-color: var(--sidebar-hover);
+}
+
+.newChatButtonCollapsed {
+  border-radius: var(--radius-md);
+}
+
+.header {
+  padding: var(--spacing-md) var(--spacing-md) var(--spacing-xs);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.headerButton {
+  color: var(--sidebar-text-secondary);
+}
+
+.headerButton:hover {
+  color: var(--sidebar-text);
+  background-color: var(--sidebar-hover);
+}
+
+.actions {
+  padding: var(--spacing-lg) var(--spacing-md) var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.newChatButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--sidebar-border);
+  color: var(--sidebar-text-secondary);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast) var(--easing-ease-in-out);
+}
+
+.newChatButton:hover {
+  background-color: var(--sidebar-hover);
+  border-color: var(--sidebar-text-secondary);
+  color: var(--sidebar-text);
+}
+
+.searchContainer {
+  padding: 0 var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+}
+
+.searchInput input {
+  background-color: var(--sidebar-input-bg);
+  border: 1px solid var(--sidebar-border-light);
+  color: var(--sidebar-text);
+}
+
+.searchInput input::placeholder {
+  color: var(--sidebar-text-disabled);
+}
+
+.searchInput input:focus {
+  border-color: var(--color-primary-400);
+}
+
+.groupToggle {
+  padding: var(--spacing-xs) var(--spacing-md);
+}
+
+.customSegmentedControl {
+  display: flex;
+  gap: 4px;
+  background-color: var(--sidebar-segmented-bg);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+}
+
+.segmentedTab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-md) !important;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--sidebar-text-secondary);
+  transition: all var(--transition-fast) var(--easing-ease-in-out);
+  cursor: pointer;
+}
+
+.segmentedTab:hover {
+  color: var(--sidebar-text);
+}
+
+.segmentedTabActive {
+  background-color: var(--sidebar-segmented-indicator) !important;
+  color: var(--sidebar-text);
+}
+
+.segmentedTabFilter {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-primary-300);
+  background-color: transparent;
+  gap: var(--spacing-xs);
+}
+
+.clearFilterButton {
+  color: var(--sidebar-text-secondary);
+  flex-shrink: 0;
+}
+
+.clearFilterButton:hover {
+  color: var(--sidebar-text);
+  background-color: var(--sidebar-hover);
+}
+
+.dropdownArrow {
+  color: var(--sidebar-text-secondary);
+  flex-shrink: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--mantine-radius-xs);
+}
+
+.dropdownArrow:hover {
+  color: var(--sidebar-text);
+  background-color: var(--sidebar-hover);
+}
+
+.conversationList {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.group {
+  padding: var(--spacing-xs) 0;
+}
+
+.groupLabelWrapper {
+  padding: calc(var(--spacing-2xl) * 4) 0 var(--spacing-md) var(--spacing-md);
+  margin-right: var(--spacing-xs);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--sidebar-bg);
+}
+
+.groupLabelWrapper:first-of-type {
+  padding-top: var(--spacing-lg);
+}
+
+.groupLabel {
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: 10px;
+  color: var(--sidebar-text);
+}
+
+.conversationItem {
+  width: calc(100% - var(--spacing-lg) * 2);
+  margin: 0 var(--spacing-lg) var(--spacing-xs);
+  padding: var(--spacing-md) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border-bottom: 1px solid var(--sidebar-border-light);
+  transition: background-color var(--transition-fast) var(--easing-ease-in-out);
+  cursor: pointer;
+  user-select: none;
+}
+
+.conversationItem:hover {
+  background-color: var(--sidebar-hover);
+}
+
+.conversationItem.selected {
+  background-color: var(--sidebar-selected);
+}
+
+.conversationContent {
+  width: 100%;
+}
+
+.conversationIcon {
+  color: var(--sidebar-text-disabled);
+  flex-shrink: 0;
+}
+
+.conversationInfo {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.conversationName {
+  font-weight: 600 !important;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--sidebar-text);
+}
+
+.pinnedIcon {
+  color: var(--color-primary-400);
+  flex-shrink: 0;
+}
+
+.menuButton {
+  opacity: 0;
+  transition: opacity var(--transition-fast) var(--easing-ease-in-out);
+  color: var(--sidebar-text-secondary);
+}
+
+.conversationItem:hover .menuButton {
+  opacity: 1;
+}
+
+.editingContainer {
+  flex: 1;
+  padding: var(--spacing-xs);
+}
+
+.editInput {
+  flex: 1;
+}
+
+.menuButton:hover {
+  background-color: var(--sidebar-hover);
+}
+
+/* Empty state text */
+.emptyStateText {
+  color: var(--sidebar-text-disabled);
+}
+
+.emptyStateSubtext {
+  color: var(--sidebar-text-disabled);
+  opacity: 0.7;
+}
+
+/* Chat agent name subtext */
+.chatAgentName {
+  color: var(--sidebar-text-disabled);
+}
+
+/* Scrollbar styling */
+.conversationList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.conversationList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.conversationList::-webkit-scrollbar-thumb {
+  background-color: var(--sidebar-scrollbar);
+  border-radius: var(--radius-full);
+}
+
+.conversationList::-webkit-scrollbar-thumb:hover {
+  background-color: var(--sidebar-scrollbar-hover);
+}

@@ -1,0 +1,88 @@
+.header {
+  padding: var(--spacing-lg) 0 var(--spacing-md);
+}
+
+.title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.description {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 600px;
+}
+
+/* Tabs (Mantine Tabs matching TenantSettingsPage) */
+.tabs {
+  margin-bottom: var(--spacing-md);
+}
+
+.tabsList {
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.tab {
+  font-size: var(--mantine-font-size-md);
+  font-weight: 500;
+  padding: var(--spacing-md) var(--spacing-lg);
+  min-height: 52px;
+}
+
+.tabPanel {
+  padding-top: var(--spacing-xl);
+}
+
+.tabPanelScrollWrapper {
+  margin-right: calc(-1 * var(--spacing-md));
+  overflow: hidden;
+}
+
+.tabPanelScrollArea {
+  max-height: calc(100vh - 400px);
+  min-height: 200px;
+  overflow-y: auto;
+  padding-right: var(--spacing-md);
+}
+
+/* Details Tab */
+.detailsSection {
+  padding-bottom: var(--spacing-xl);
+}
+
+.sectionCard {
+  padding: var(--spacing-lg);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.sectionCard :global(.mantine-TextInput-root),
+.sectionCard :global(.mantine-InputWrapper-root) {
+  gap: var(--spacing-sm);
+}
+
+.sectionCard :global(.mantine-InputWrapper-label) {
+  margin-bottom: var(--spacing-xs);
+}
+
+/* Trace loading overlay */
+.traceLoadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: var(--z-overlay);
+}

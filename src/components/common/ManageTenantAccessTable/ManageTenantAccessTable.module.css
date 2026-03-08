@@ -24,15 +24,22 @@
 }
 
 /* Dark mode adjustments */
-[data-mantine-color-scheme='dark'] .principalIcon {
+[data-mantine-color-scheme="dark"] .principalIcon {
   background-color: var(--color-gray-800);
   color: var(--color-gray-400);
+}
+
+.tableScrollWrapper {
+  margin-right: calc(-1 * var(--spacing-md));
+  overflow: hidden;
 }
 
 .tableScrollArea {
   /* Dynamic height: fills remaining viewport space with bottom padding */
   max-height: calc(100vh - 380px);
   min-height: 200px;
+  overflow: auto;
+  padding-right: var(--spacing-md);
 }
 
 .tableHeader {
@@ -40,6 +47,30 @@
   top: 0;
   z-index: 1;
   background-color: var(--bg-app);
+}
+
+.tableWrapper {
+  min-width: 100%;
+}
+
+.colPrincipal {
+  min-width: 280px;
+}
+
+.colType {
+  min-width: 120px;
+}
+
+.colStatus {
+  min-width: 100px;
+}
+
+.colRoles {
+  min-width: 200px;
+}
+
+.colActions {
+  width: 60px;
 }
 
 .loadMoreTrigger {

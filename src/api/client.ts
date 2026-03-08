@@ -22,18 +22,30 @@ import type {
   TenantPrincipalsQueryParams,
   SetPrincipalRequest,
   DeletePrincipalRequest,
-  // Application Types
-  ApplicationResponse,
-  CreateApplicationRequest,
-  UpdateApplicationRequest,
-  SetApplicationPermissionRequest,
+  // Organization Types
+  OrganizationResponse,
+  CreateOrganizationRequest,
+  UpdateOrganizationRequest,
+  OrganizationPrincipalsResponse,
+  OrganizationPrincipalsQueryParams,
+  SetOrganizationPrincipalRequest,
+  DeleteOrganizationPrincipalRequest,
+  TenantWithOrganizationResponse,
+  CreateTenantInOrganizationRequest,
+  // Chat Agent Types
+  ChatAgentResponse,
+  CreateChatAgentRequest,
+  UpdateChatAgentRequest,
+  SetChatAgentPermissionRequest,
   // Autonomous Agent Types
   AutonomousAgentResponse,
   CreateAutonomousAgentRequest,
   UpdateAutonomousAgentRequest,
   SetAutonomousAgentPermissionRequest,
+  AutonomousAgentKeyResponse,
   // Conversation Types
   ConversationResponse,
+  ConversationQuickListItemResponse,
   CreateConversationRequest,
   UpdateConversationRequest,
   SetConversationPermissionRequest,
@@ -42,16 +54,20 @@ import type {
   CreateCredentialRequest,
   UpdateCredentialRequest,
   SetCredentialPermissionRequest,
-  // Development Platform Types
-  DevelopmentPlatformResponse,
-  CreateDevelopmentPlatformRequest,
-  UpdateDevelopmentPlatformRequest,
-  SetDevelopmentPlatformPermissionRequest,
+  CredentialSecretResponse,
   // Chat Widget Types
   ChatWidgetResponse,
   CreateChatWidgetRequest,
   UpdateChatWidgetRequest,
   SetChatWidgetPermissionRequest,
+  // Tool Types
+  ToolResponse,
+  CreateToolRequest,
+  UpdateToolRequest,
+  SetToolPermissionRequest,
+  // ReACT Agent Version Types
+  UpdateReActAgentVersionRequest,
+  ReActAgentVersionResponse,
   // Custom Group Types
   CustomGroupResponse,
   CreateCustomGroupRequest,
@@ -69,12 +85,56 @@ import type {
   // User Favorites Types
   UserFavoriteResponse,
   UserFavoritesListResponse,
-  FavoriteResourceTypeEnum,
+  // Dashboard Types
+  DashboardStatsResponse,
+  // Search Types
+  SearchResponse,
+  GlobalSearchParams,
+  // Recent Visits Types
+  RecentVisitListResponse,
+  SyncRecentVisitsRequest,
+  // Agent Service Types
+  GetMessagesResponse,
+  SearchMessagesResponse,
+  MessageResponse,
+  SendMessageRequest,
+  EditMessageRequest,
+  UpsertReactionRequest,
+  ReactionResponse,
+  ListReactionsResponse,
+  GetTracesResponse,
+  BatchUpdateTracesRequest,
+  UpdateTracesResponse,
+  SSEEvent,
+  SSEStreamMessage,
+  // Full Trace Types (hierarchical)
+  FullTraceResponse,
+  FullTracesListResponse,
+  TracesListParams,
+  // AI Model Types
+  AIModelResponse,
+  CreateAIModelRequest,
+  UpdateAIModelRequest,
+  // AI Feature Types
+  GenerateDescriptionRequest,
+  GenerateDescriptionResponse,
+  AnalyzeTraceRequest,
+  AnalyzeTraceResponse,
+  SummarizeTraceRequest,
+  SummarizeTraceResponse,
+  TestModelRequest,
+  TestModelResponse,
+  AICapabilitiesResponse,
+  TraceChatRequest,
+  TraceChatResponse,
   // Misc Types
   HealthCheckResponse,
   PrincipalTypeEnum,
   PermissionActionEnum,
 } from './types';
+
+// Import enums as values (not type-only)
+import { FavoriteResourceTypeEnum } from './types';
 
 // ========== API Client Configuration ==========
 
@@ -107,7 +167,7 @@ export class UnifiedUIAPIClient {
     path: string,
     body?: unknown,
     successMessage?: string,
-    options?: { noCache?: boolean }
+    options?: { noCache?: boolean; additionalHeaders?: Record<string, string> }
   ): Promise<T> {
     try {
       const token = await this.getAccessToken();
@@ -122,6 +182,11 @@ export class UnifiedUIAPIClient {
       // Add X-Use-Cache header when noCache is true
       if (options?.noCache) {
         headers['X-Use-Cache'] = 'false';
+      }
+
+      // Add any additional headers
+      if (options?.additionalHeaders) {
+        Object.assign(headers, options.additionalHeaders);
       }
 
       const response = await fetch(`${this.baseURL}${path}`, {
@@ -172,117 +237,156 @@ export class UnifiedUIAPIClient {
   // ========== Health Check ==========
 
   async getHealth(): Promise<HealthCheckResponse> {
-    return this.request<HealthCheckResponse>('GET', '/api/v1/health');
+    return this.request<HealthCheckResponse>('GET', '/api/v1/platform-service/health');
   }
 
   // ========== Identity Endpoints ==========
 
-  async getMe(): Promise<MeResponse> {
-    return this.request<MeResponse>('GET', '/api/v1/identity/me');
+  async getMe(options?: { noCache?: boolean }): Promise<MeResponse> {
+    return this.request<MeResponse>('GET', '/api/v1/platform-service/identity/me', undefined, undefined, options);
   }
 
   async getUsers(params?: SearchParams): Promise<IdentityUsersResponse> {
     const query = this.buildQueryString(params || {});
-    return this.request<IdentityUsersResponse>('GET', `/api/v1/identity/users${query}`);
+    return this.request<IdentityUsersResponse>('GET', `/api/v1/platform-service/identity/users${query}`);
   }
 
   async getGroups(params?: SearchParams): Promise<IdentityGroupsResponse> {
     const query = this.buildQueryString(params || {});
-    return this.request<IdentityGroupsResponse>('GET', `/api/v1/identity/groups${query}`);
+    return this.request<IdentityGroupsResponse>('GET', `/api/v1/platform-service/identity/groups${query}`);
   }
 
   async refreshPrincipal(principalId: string, data: RefreshPrincipalRequest): Promise<PrincipalResponse> {
-    return this.request<PrincipalResponse>('PUT', `/api/v1/identity/principals/${principalId}/refresh`, data, 'Principal refreshed successfully');
+    return this.request<PrincipalResponse>('PUT', `/api/v1/platform-service/identity/principals/${principalId}`, data, 'Principal refreshed successfully');
   }
 
   // ========== Tenant Endpoints ==========
 
   async listTenants(): Promise<TenantResponse[]> {
-    return this.request<TenantResponse[]>('GET', '/api/v1/tenants');
+    return this.request<TenantResponse[]>('GET', '/api/v1/platform-service/tenants');
   }
 
   async getTenant(tenantId: string): Promise<TenantResponse> {
-    return this.request<TenantResponse>('GET', `/api/v1/tenants/${tenantId}`);
+    return this.request<TenantResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}`);
   }
 
   async createTenant(data: CreateTenantRequest): Promise<TenantResponse> {
-    return this.request<TenantResponse>('POST', '/api/v1/tenants', data, 'Tenant created successfully');
+    return this.request<TenantResponse>('POST', '/api/v1/platform-service/tenants', data, 'Tenant created successfully');
   }
 
   async updateTenant(tenantId: string, data: UpdateTenantRequest): Promise<TenantResponse> {
-    return this.request<TenantResponse>('PATCH', `/api/v1/tenants/${tenantId}`, data, 'Tenant updated successfully');
+    return this.request<TenantResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}`, data, 'Tenant updated successfully');
   }
 
   async deleteTenant(tenantId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/tenants/${tenantId}`, undefined, 'Tenant deleted successfully');
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}`, undefined, 'Tenant deleted successfully');
   }
 
   // ========== Tenant Principals ==========
 
   async getTenantPrincipals(tenantId: string, params?: TenantPrincipalsQueryParams): Promise<TenantPrincipalsResponse> {
     const query = this.buildQueryString(params || {});
-    return this.request<TenantPrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/principals${query}`);
+    return this.request<TenantPrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/principals${query}`);
   }
 
   async setTenantPrincipal(tenantId: string, data: SetPrincipalRequest): Promise<void> {
-    return this.request<void>('PUT', `/api/v1/tenants/${tenantId}/principals`, data, 'Principal added successfully');
+    return this.request<void>('PUT', `/api/v1/platform-service/tenants/${tenantId}/principals`, data, 'Principal added successfully');
   }
 
   async deleteTenantPrincipal(tenantId: string, data: DeletePrincipalRequest): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/tenants/${tenantId}/principals`, data, 'Principal removed successfully');
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/principals`, data, 'Principal removed successfully');
   }
 
   async updatePrincipalStatus(tenantId: string, principalId: string, principalType: PrincipalTypeEnum, isActive: boolean): Promise<void> {
-    return this.request<void>('PATCH', `/api/v1/tenants/${tenantId}/principals/${principalId}/status`, { principal_type: principalType, is_active: isActive }, isActive ? 'Principal activated' : 'Principal deactivated');
+    return this.request<void>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/principals/${principalId}/status`, { principal_type: principalType, is_active: isActive }, isActive ? 'Principal activated' : 'Principal deactivated');
   }
 
-  // ========== Application Endpoints ==========
+  // ========== Organization Endpoints ==========
 
-  async listApplications(
-    tenantId: string, 
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' }, 
-    options?: { noCache?: boolean }
-  ): Promise<ApplicationResponse[] | QuickListItemResponse[]> {
+  async createOrganization(data: CreateOrganizationRequest): Promise<OrganizationResponse> {
+    return this.request<OrganizationResponse>('POST', '/api/v1/platform-service/organizations', data, 'Organization created successfully');
+  }
+
+  async getOrganization(organizationId: string): Promise<OrganizationResponse> {
+    return this.request<OrganizationResponse>('GET', `/api/v1/platform-service/organizations/${organizationId}`);
+  }
+
+  async updateOrganization(organizationId: string, data: UpdateOrganizationRequest): Promise<OrganizationResponse> {
+    return this.request<OrganizationResponse>('PATCH', `/api/v1/platform-service/organizations/${organizationId}`, data, 'Organization updated successfully');
+  }
+
+  async listOrganizationPrincipals(organizationId: string, params?: OrganizationPrincipalsQueryParams): Promise<OrganizationPrincipalsResponse> {
     const query = this.buildQueryString(params || {});
-    return this.request<ApplicationResponse[] | QuickListItemResponse[]>('GET', `/api/v1/tenants/${tenantId}/applications${query}`, undefined, undefined, options);
+    return this.request<OrganizationPrincipalsResponse>('GET', `/api/v1/platform-service/organizations/${organizationId}/principals${query}`);
   }
 
-  async getApplication(tenantId: string, applicationId: string): Promise<ApplicationResponse> {
-    return this.request<ApplicationResponse>('GET', `/api/v1/tenants/${tenantId}/applications/${applicationId}`);
+  async setOrganizationPrincipal(organizationId: string, data: SetOrganizationPrincipalRequest): Promise<void> {
+    return this.request<void>('POST', `/api/v1/platform-service/organizations/${organizationId}/principals`, data, 'Principal role set successfully');
   }
 
-  async createApplication(tenantId: string, data: CreateApplicationRequest): Promise<ApplicationResponse> {
-    return this.request<ApplicationResponse>('POST', `/api/v1/tenants/${tenantId}/applications`, data, 'Application created successfully');
+  async deleteOrganizationPrincipal(organizationId: string, data: DeleteOrganizationPrincipalRequest): Promise<void> {
+    return this.request<void>('DELETE', `/api/v1/platform-service/organizations/${organizationId}/principals`, data, 'Principal role removed successfully');
   }
 
-  async updateApplication(tenantId: string, applicationId: string, data: UpdateApplicationRequest): Promise<ApplicationResponse> {
-    return this.request<ApplicationResponse>('PATCH', `/api/v1/tenants/${tenantId}/applications/${applicationId}`, data, 'Application updated successfully');
+  async listOrganizationTenants(organizationId: string): Promise<TenantWithOrganizationResponse[]> {
+    return this.request<TenantWithOrganizationResponse[]>('GET', `/api/v1/platform-service/organizations/${organizationId}/tenants`);
   }
 
-  async deleteApplication(tenantId: string, applicationId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/tenants/${tenantId}/applications/${applicationId}`, undefined, 'Application deleted successfully');
+  async createTenantInOrganization(organizationId: string, data: CreateTenantInOrganizationRequest): Promise<TenantWithOrganizationResponse> {
+    return this.request<TenantWithOrganizationResponse>('POST', `/api/v1/platform-service/organizations/${organizationId}/tenants`, data, 'Tenant created successfully');
   }
 
-  // ========== Application Permissions ==========
-
-  async getApplicationPrincipals(tenantId: string, applicationId: string): Promise<ResourcePrincipalsResponse> {
-    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/applications/${applicationId}/principals`);
+  async deleteTenantInOrganization(organizationId: string, tenantId: string): Promise<void> {
+    return this.request<void>('DELETE', `/api/v1/platform-service/organizations/${organizationId}/tenants/${tenantId}`, undefined, 'Tenant deleted successfully');
   }
 
-  async setApplicationPermission(tenantId: string, applicationId: string, data: SetApplicationPermissionRequest): Promise<PrincipalWithRolesResponse> {
-    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/tenants/${tenantId}/applications/${applicationId}/principals`, data, 'Permission updated successfully');
-  }
+  // ========== Chat Agent Endpoints ==========
 
-  async deleteApplicationPermission(
+  async listChatAgents(
     tenantId: string,
-    applicationId: string,
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
+    options?: { noCache?: boolean }
+  ): Promise<ChatAgentResponse[] | QuickListItemResponse[]> {
+    const query = this.buildQueryString(params || {});
+    return this.request<ChatAgentResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents${query}`, undefined, undefined, options);
+  }
+
+  async getChatAgent(tenantId: string, chatAgentId: string): Promise<ChatAgentResponse> {
+    return this.request<ChatAgentResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}`);
+  }
+
+  async createChatAgent(tenantId: string, data: CreateChatAgentRequest): Promise<ChatAgentResponse> {
+    return this.request<ChatAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/chat-agents`, data, 'Chat agent created successfully');
+  }
+
+  async updateChatAgent(tenantId: string, chatAgentId: string, data: UpdateChatAgentRequest): Promise<ChatAgentResponse> {
+    return this.request<ChatAgentResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}`, data, 'Chat agent updated successfully');
+  }
+
+  async deleteChatAgent(tenantId: string, chatAgentId: string): Promise<void> {
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}`, undefined, 'Chat agent deleted successfully');
+  }
+
+  // ========== Chat Agent Permissions ==========
+
+  async getChatAgentPrincipals(tenantId: string, chatAgentId: string): Promise<ResourcePrincipalsResponse> {
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/principals`);
+  }
+
+  async setChatAgentPermission(tenantId: string, chatAgentId: string, data: SetChatAgentPermissionRequest): Promise<PrincipalWithRolesResponse> {
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/principals`, data, 'Permission updated successfully');
+  }
+
+  async deleteChatAgentPermission(
+    tenantId: string,
+    chatAgentId: string,
     principalId: string,
     principalType: PrincipalTypeEnum,
     role: PermissionActionEnum
   ): Promise<void> {
     return this.request<void>(
       'DELETE',
-      `/api/v1/tenants/${tenantId}/applications/${applicationId}/principals`,
+      `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/principals`,
       { principal_id: principalId, principal_type: principalType, role },
       'Permission removed successfully'
     );
@@ -291,38 +395,38 @@ export class UnifiedUIAPIClient {
   // ========== Autonomous Agent Endpoints ==========
 
   async listAutonomousAgents(
-    tenantId: string, 
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' }, 
+    tenantId: string,
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise<AutonomousAgentResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
-    return this.request<AutonomousAgentResponse[] | QuickListItemResponse[]>('GET', `/api/v1/tenants/${tenantId}/autonomous-agents${query}`, undefined, undefined, options);
+    return this.request<AutonomousAgentResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents${query}`, undefined, undefined, options);
   }
 
   async getAutonomousAgent(tenantId: string, agentId: string): Promise<AutonomousAgentResponse> {
-    return this.request<AutonomousAgentResponse>('GET', `/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}`);
+    return this.request<AutonomousAgentResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}`);
   }
 
   async createAutonomousAgent(tenantId: string, data: CreateAutonomousAgentRequest): Promise<AutonomousAgentResponse> {
-    return this.request<AutonomousAgentResponse>('POST', `/api/v1/tenants/${tenantId}/autonomous-agents`, data, 'Autonomous agent created successfully');
+    return this.request<AutonomousAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents`, data, 'Autonomous agent created successfully');
   }
 
   async updateAutonomousAgent(tenantId: string, agentId: string, data: UpdateAutonomousAgentRequest): Promise<AutonomousAgentResponse> {
-    return this.request<AutonomousAgentResponse>('PATCH', `/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}`, data, 'Autonomous agent updated successfully');
+    return this.request<AutonomousAgentResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}`, data, 'Autonomous agent updated successfully');
   }
 
   async deleteAutonomousAgent(tenantId: string, agentId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}`, undefined, 'Autonomous agent deleted successfully');
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}`, undefined, 'Autonomous agent deleted successfully');
   }
 
   // ========== Autonomous Agent Permissions ==========
 
   async getAutonomousAgentPrincipals(tenantId: string, agentId: string): Promise<ResourcePrincipalsResponse> {
-    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}/principals`);
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/principals`);
   }
 
   async setAutonomousAgentPermission(tenantId: string, agentId: string, data: SetAutonomousAgentPermissionRequest): Promise<PrincipalWithRolesResponse> {
-    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}/principals`, data, 'Permission added successfully');
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/principals`, data, 'Permission added successfully');
   }
 
   async deleteAutonomousAgentPermission(
@@ -334,43 +438,62 @@ export class UnifiedUIAPIClient {
   ): Promise<void> {
     return this.request<void>(
       'DELETE',
-      `/api/v1/tenants/${tenantId}/autonomous-agents/${agentId}/principals`,
+      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/principals`,
       { principal_id: principalId, principal_type: principalType, role },
       'Permission removed successfully'
     );
   }
 
+  // ========== Autonomous Agent Keys ==========
+
+  async getAutonomousAgentKey(tenantId: string, agentId: string, keyNumber: 1 | 2): Promise<AutonomousAgentKeyResponse> {
+    return this.request<AutonomousAgentKeyResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/keys/${keyNumber}`
+    );
+  }
+
+  async rotateAutonomousAgentKey(tenantId: string, agentId: string, keyNumber: 1 | 2): Promise<AutonomousAgentKeyResponse> {
+    return this.request<AutonomousAgentKeyResponse>(
+      'PUT',
+      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/keys/${keyNumber}/rotate`,
+      undefined,
+      'API key rotated successfully'
+    );
+  }
+
   // ========== Conversation Endpoints ==========
 
-  async listConversations(tenantId: string, params?: PaginationParams): Promise<ConversationResponse[]> {
+  async listConversations(tenantId: string, params?: PaginationParams & OrderParams & { name?: string; view?: 'quick-list' }, options?: { noCache?: boolean }): Promise<ConversationResponse[] | ConversationQuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
-    return this.request<ConversationResponse[]>('GET', `/api/v1/tenants/${tenantId}/conversations${query}`);
+    return this.request<ConversationResponse[] | ConversationQuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/conversations${query}`, undefined, undefined, options);
   }
 
   async getConversation(tenantId: string, conversationId: string): Promise<ConversationResponse> {
-    return this.request<ConversationResponse>('GET', `/api/v1/tenants/${tenantId}/conversations/${conversationId}`);
+    return this.request<ConversationResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/conversations/${conversationId}`);
   }
 
-  async createConversation(tenantId: string, data: CreateConversationRequest): Promise<ConversationResponse> {
-    return this.request<ConversationResponse>('POST', `/api/v1/tenants/${tenantId}/conversations`, data, 'Conversation created successfully');
+  async createConversation(tenantId: string, data: CreateConversationRequest, foundryToken?: string): Promise<ConversationResponse> {
+    const options = foundryToken ? { additionalHeaders: { 'X-Microsoft-Foundry-API-Key': foundryToken } } : undefined;
+    return this.request<ConversationResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/conversations`, data, 'Conversation created successfully', options);
   }
 
   async updateConversation(tenantId: string, conversationId: string, data: UpdateConversationRequest): Promise<ConversationResponse> {
-    return this.request<ConversationResponse>('PATCH', `/api/v1/tenants/${tenantId}/conversations/${conversationId}`, data, 'Conversation updated successfully');
+    return this.request<ConversationResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/conversations/${conversationId}`, data, 'Conversation updated successfully');
   }
 
   async deleteConversation(tenantId: string, conversationId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/tenants/${tenantId}/conversations/${conversationId}`, undefined, 'Conversation deleted successfully');
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/conversations/${conversationId}`, undefined, 'Conversation deleted successfully');
   }
 
   // ========== Conversation Permissions ==========
 
   async getConversationPrincipals(tenantId: string, conversationId: string): Promise<ResourcePrincipalsResponse> {
-    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/conversations/${conversationId}/principals`);
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/conversations/${conversationId}/principals`);
   }
 
   async setConversationPermission(tenantId: string, conversationId: string, data: SetConversationPermissionRequest): Promise<PrincipalWithRolesResponse> {
-    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/tenants/${tenantId}/conversations/${conversationId}/principals`, data, 'Permission added successfully');
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/conversations/${conversationId}/principals`, data, 'Permission added successfully');
   }
 
   async deleteConversationPermission(
@@ -382,7 +505,7 @@ export class UnifiedUIAPIClient {
   ): Promise<void> {
     return this.request<void>(
       'DELETE',
-      `/api/v1/tenants/${tenantId}/conversations/${conversationId}/principals`,
+      `/api/v1/platform-service/tenants/${tenantId}/conversations/${conversationId}/principals`,
       { principal_id: principalId, principal_type: principalType, role },
       'Permission removed successfully'
     );
@@ -391,38 +514,47 @@ export class UnifiedUIAPIClient {
   // ========== Credential Endpoints ==========
 
   async listCredentials(
-    tenantId: string, 
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' }, 
+    tenantId: string,
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise<CredentialResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
-    return this.request<CredentialResponse[] | QuickListItemResponse[]>('GET', `/api/v1/tenants/${tenantId}/credentials${query}`, undefined, undefined, options);
+    return this.request<CredentialResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/credentials${query}`, undefined, undefined, options);
   }
 
   async getCredential(tenantId: string, credentialId: string): Promise<CredentialResponse> {
-    return this.request<CredentialResponse>('GET', `/api/v1/tenants/${tenantId}/credentials/${credentialId}`);
+    return this.request<CredentialResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/credentials/${credentialId}`);
   }
 
   async createCredential(tenantId: string, data: CreateCredentialRequest): Promise<CredentialResponse> {
-    return this.request<CredentialResponse>('POST', `/api/v1/tenants/${tenantId}/credentials`, data, 'Credential created successfully');
+    return this.request<CredentialResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/credentials`, data, 'Credential created successfully');
   }
 
   async updateCredential(tenantId: string, credentialId: string, data: UpdateCredentialRequest): Promise<CredentialResponse> {
-    return this.request<CredentialResponse>('PATCH', `/api/v1/tenants/${tenantId}/credentials/${credentialId}`, data, 'Credential updated successfully');
+    return this.request<CredentialResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/credentials/${credentialId}`, data, 'Credential updated successfully');
   }
 
   async deleteCredential(tenantId: string, credentialId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/tenants/${tenantId}/credentials/${credentialId}`, undefined, 'Credential deleted successfully');
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/credentials/${credentialId}`, undefined, 'Credential deleted successfully');
+  }
+
+  // ========== Credential Secret ==========
+
+  async getCredentialSecret(tenantId: string, credentialId: string): Promise<CredentialSecretResponse> {
+    return this.request<CredentialSecretResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/credentials/${credentialId}/secret`
+    );
   }
 
   // ========== Credential Permissions ==========
 
   async getCredentialPrincipals(tenantId: string, credentialId: string): Promise<ResourcePrincipalsResponse> {
-    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/credentials/${credentialId}/principals`);
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/credentials/${credentialId}/principals`);
   }
 
   async setCredentialPermission(tenantId: string, credentialId: string, data: SetCredentialPermissionRequest): Promise<PrincipalWithRolesResponse> {
-    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/tenants/${tenantId}/credentials/${credentialId}/principals`, data, 'Permission added successfully');
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/credentials/${credentialId}/principals`, data, 'Permission added successfully');
   }
 
   async deleteCredentialPermission(
@@ -434,59 +566,7 @@ export class UnifiedUIAPIClient {
   ): Promise<void> {
     return this.request<void>(
       'DELETE',
-      `/api/v1/tenants/${tenantId}/credentials/${credentialId}/principals`,
-      { principal_id: principalId, principal_type: principalType, role },
-      'Permission removed successfully'
-    );
-  }
-
-  // ========== Development Platform Endpoints ==========
-
-  async listDevelopmentPlatforms(
-    tenantId: string, 
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
-    options?: { noCache?: boolean }
-  ): Promise<DevelopmentPlatformResponse[] | QuickListItemResponse[]> {
-    const query = this.buildQueryString(params || {});
-    return this.request<DevelopmentPlatformResponse[] | QuickListItemResponse[]>('GET', `/api/v1/tenants/${tenantId}/development-platforms${query}`, undefined, undefined, options);
-  }
-
-  async getDevelopmentPlatform(tenantId: string, platformId: string): Promise<DevelopmentPlatformResponse> {
-    return this.request<DevelopmentPlatformResponse>('GET', `/api/v1/tenants/${tenantId}/development-platforms/${platformId}`);
-  }
-
-  async createDevelopmentPlatform(tenantId: string, data: CreateDevelopmentPlatformRequest): Promise<DevelopmentPlatformResponse> {
-    return this.request<DevelopmentPlatformResponse>('POST', `/api/v1/tenants/${tenantId}/development-platforms`, data, 'Development platform created successfully');
-  }
-
-  async updateDevelopmentPlatform(tenantId: string, platformId: string, data: UpdateDevelopmentPlatformRequest): Promise<DevelopmentPlatformResponse> {
-    return this.request<DevelopmentPlatformResponse>('PATCH', `/api/v1/tenants/${tenantId}/development-platforms/${platformId}`, data, 'Development platform updated successfully');
-  }
-
-  async deleteDevelopmentPlatform(tenantId: string, platformId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/tenants/${tenantId}/development-platforms/${platformId}`, undefined, 'Development platform deleted successfully');
-  }
-
-  // ========== Development Platform Permissions ==========
-
-  async getDevelopmentPlatformPrincipals(tenantId: string, platformId: string): Promise<ResourcePrincipalsResponse> {
-    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/development-platforms/${platformId}/principals`);
-  }
-
-  async setDevelopmentPlatformPermission(tenantId: string, platformId: string, data: SetDevelopmentPlatformPermissionRequest): Promise<PrincipalWithRolesResponse> {
-    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/tenants/${tenantId}/development-platforms/${platformId}/principals`, data, 'Permission added successfully');
-  }
-
-  async deleteDevelopmentPlatformPermission(
-    tenantId: string,
-    platformId: string,
-    principalId: string,
-    principalType: PrincipalTypeEnum,
-    role: PermissionActionEnum
-  ): Promise<void> {
-    return this.request<void>(
-      'DELETE',
-      `/api/v1/tenants/${tenantId}/development-platforms/${platformId}/principals`,
+      `/api/v1/platform-service/tenants/${tenantId}/credentials/${credentialId}/principals`,
       { principal_id: principalId, principal_type: principalType, role },
       'Permission removed successfully'
     );
@@ -495,38 +575,38 @@ export class UnifiedUIAPIClient {
   // ========== Chat Widget Endpoints ==========
 
   async listChatWidgets(
-    tenantId: string, 
+    tenantId: string,
     params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise<ChatWidgetResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
-    return this.request<ChatWidgetResponse[] | QuickListItemResponse[]>('GET', `/api/v1/tenants/${tenantId}/chat-widgets${query}`, undefined, undefined, options);
+    return this.request<ChatWidgetResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-widgets${query}`, undefined, undefined, options);
   }
 
   async getChatWidget(tenantId: string, widgetId: string): Promise<ChatWidgetResponse> {
-    return this.request<ChatWidgetResponse>('GET', `/api/v1/tenants/${tenantId}/chat-widgets/${widgetId}`);
+    return this.request<ChatWidgetResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-widgets/${widgetId}`);
   }
 
   async createChatWidget(tenantId: string, data: CreateChatWidgetRequest): Promise<ChatWidgetResponse> {
-    return this.request<ChatWidgetResponse>('POST', `/api/v1/tenants/${tenantId}/chat-widgets`, data, 'Chat widget created successfully');
+    return this.request<ChatWidgetResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/chat-widgets`, data, 'Chat widget created successfully');
   }
 
   async updateChatWidget(tenantId: string, widgetId: string, data: UpdateChatWidgetRequest): Promise<ChatWidgetResponse> {
-    return this.request<ChatWidgetResponse>('PATCH', `/api/v1/tenants/${tenantId}/chat-widgets/${widgetId}`, data, 'Chat widget updated successfully');
+    return this.request<ChatWidgetResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/chat-widgets/${widgetId}`, data, 'Chat widget updated successfully');
   }
 
   async deleteChatWidget(tenantId: string, widgetId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/tenants/${tenantId}/chat-widgets/${widgetId}`, undefined, 'Chat widget deleted successfully');
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/chat-widgets/${widgetId}`, undefined, 'Chat widget deleted successfully');
   }
 
   // ========== Chat Widget Permissions ==========
 
   async getChatWidgetPrincipals(tenantId: string, widgetId: string): Promise<ResourcePrincipalsResponse> {
-    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/chat-widgets/${widgetId}/principals`);
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-widgets/${widgetId}/principals`);
   }
 
   async setChatWidgetPermission(tenantId: string, widgetId: string, data: SetChatWidgetPermissionRequest): Promise<PrincipalWithRolesResponse> {
-    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/tenants/${tenantId}/chat-widgets/${widgetId}/principals`, data, 'Permission added successfully');
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/chat-widgets/${widgetId}/principals`, data, 'Permission added successfully');
   }
 
   async deleteChatWidgetPermission(
@@ -538,66 +618,150 @@ export class UnifiedUIAPIClient {
   ): Promise<void> {
     return this.request<void>(
       'DELETE',
-      `/api/v1/tenants/${tenantId}/chat-widgets/${widgetId}/principals`,
+      `/api/v1/platform-service/tenants/${tenantId}/chat-widgets/${widgetId}/principals`,
       { principal_id: principalId, principal_type: principalType, role },
       'Permission removed successfully'
     );
+  }
+
+  // ========== Tool Endpoints ==========
+
+  async listTools(
+    tenantId: string,
+    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
+    options?: { noCache?: boolean }
+  ): Promise<ToolResponse[] | QuickListItemResponse[]> {
+    const query = this.buildQueryString(params || {});
+    return this.request<ToolResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/tools${query}`, undefined, undefined, options);
+  }
+
+  async getTool(tenantId: string, toolId: string): Promise<ToolResponse> {
+    return this.request<ToolResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}`);
+  }
+
+  async createTool(tenantId: string, data: CreateToolRequest): Promise<ToolResponse> {
+    return this.request<ToolResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/tools`, data, 'Tool created successfully');
+  }
+
+  async updateTool(tenantId: string, toolId: string, data: UpdateToolRequest): Promise<ToolResponse> {
+    return this.request<ToolResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}`, data, 'Tool updated successfully');
+  }
+
+  async deleteTool(tenantId: string, toolId: string): Promise<void> {
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}`, undefined, 'Tool deleted successfully');
+  }
+
+  // ========== Tool Permissions ==========
+
+  async getToolPrincipals(tenantId: string, toolId: string): Promise<ResourcePrincipalsResponse> {
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}/principals`);
+  }
+
+  async setToolPermission(tenantId: string, toolId: string, data: SetToolPermissionRequest): Promise<PrincipalWithRolesResponse> {
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}/principals`, data, 'Permission added successfully');
+  }
+
+  async deleteToolPermission(
+    tenantId: string,
+    toolId: string,
+    principalId: string,
+    principalType: PrincipalTypeEnum,
+    role: PermissionActionEnum
+  ): Promise<void> {
+    return this.request<void>(
+      'DELETE',
+      `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}/principals`,
+      { principal_id: principalId, principal_type: principalType, role },
+      'Permission removed successfully'
+    );
+  }
+
+  // ========== Tool Tags ==========
+
+  async listToolTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
+    return this.listResourceTypeTags(tenantId, 'tools', params);
+  }
+
+  async getToolTags(tenantId: string, toolId: string): Promise<ResourceTagsResponse> {
+    return this.getResourceTags(tenantId, 'tools', toolId);
+  }
+
+  async setToolTags(tenantId: string, toolId: string, tags: string[]): Promise<ResourceTagsResponse> {
+    return this.setResourceTags(tenantId, 'tools', toolId, { tags });
+  }
+
+  // ========== Chat Agent Version Methods (REACT_AGENT) ==========
+
+  async updateChatAgentVersion(tenantId: string, chatAgentId: string, data: UpdateReActAgentVersionRequest): Promise<ChatAgentResponse> {
+    return this.request<ChatAgentResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions`, data);
+  }
+
+  async listChatAgentVersions(tenantId: string, chatAgentId: string, skip = 0, limit = 50): Promise<ReActAgentVersionResponse[]> {
+    return this.request<ReActAgentVersionResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions?skip=${skip}&limit=${limit}`);
+  }
+
+  async getChatAgentVersion(tenantId: string, chatAgentId: string, version: number): Promise<ReActAgentVersionResponse> {
+    return this.request<ReActAgentVersionResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions/${version}`);
+  }
+
+  async restoreChatAgentVersion(tenantId: string, chatAgentId: string, version: number): Promise<ChatAgentResponse> {
+    return this.request<ChatAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions/${version}/restore`);
   }
 
   // ========== Custom Group Endpoints ==========
 
   async listCustomGroups(tenantId: string, params?: PaginationParams & { name?: string }): Promise<CustomGroupResponse[]> {
     const query = this.buildQueryString(params || {});
-    return this.request<CustomGroupResponse[]>('GET', `/api/v1/tenants/${tenantId}/custom-groups${query}`);
+    return this.request<CustomGroupResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/custom-groups${query}`);
   }
 
   async getCustomGroup(tenantId: string, groupId: string): Promise<CustomGroupResponse> {
-    return this.request<CustomGroupResponse>('GET', `/api/v1/tenants/${tenantId}/custom-groups/${groupId}`);
+    return this.request<CustomGroupResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/custom-groups/${groupId}`);
   }
 
   async createCustomGroup(tenantId: string, data: CreateCustomGroupRequest): Promise<CustomGroupResponse> {
-    return this.request<CustomGroupResponse>('POST', `/api/v1/tenants/${tenantId}/custom-groups`, data, 'Custom group created successfully');
+    return this.request<CustomGroupResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/custom-groups`, data, 'Custom group created successfully');
   }
 
   async updateCustomGroup(tenantId: string, groupId: string, data: UpdateCustomGroupRequest): Promise<CustomGroupResponse> {
-    return this.request<CustomGroupResponse>('PATCH', `/api/v1/tenants/${tenantId}/custom-groups/${groupId}`, data, 'Custom group updated successfully');
+    return this.request<CustomGroupResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/custom-groups/${groupId}`, data, 'Custom group updated successfully');
   }
 
   async deleteCustomGroup(tenantId: string, groupId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/tenants/${tenantId}/custom-groups/${groupId}`, undefined, 'Custom group deleted successfully');
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/custom-groups/${groupId}`, undefined, 'Custom group deleted successfully');
   }
 
   // ========== Custom Group Principals ==========
 
   async getCustomGroupPrincipals(tenantId: string, groupId: string): Promise<ResourcePrincipalsResponse> {
-    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/tenants/${tenantId}/custom-groups/${groupId}/principals`);
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/custom-groups/${groupId}/principals`);
   }
 
   async setCustomGroupPrincipal(tenantId: string, groupId: string, data: SetPrincipalRoleRequest): Promise<PrincipalWithRolesResponse> {
-    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/tenants/${tenantId}/custom-groups/${groupId}/principals`, data, 'Principal added successfully');
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/custom-groups/${groupId}/principals`, data, 'Principal added successfully');
   }
 
   async deleteCustomGroupPrincipal(tenantId: string, groupId: string, data: DeletePrincipalRoleRequest): Promise<PrincipalWithRolesResponse> {
-    return this.request<PrincipalWithRolesResponse>('DELETE', `/api/v1/tenants/${tenantId}/custom-groups/${groupId}/principals`, data, 'Principal removed successfully');
+    return this.request<PrincipalWithRolesResponse>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/custom-groups/${groupId}/principals`, data, 'Principal removed successfully');
   }
 
   // ========== Tag Endpoints ==========
 
   async listTags(tenantId: string, params?: PaginationParams & { name?: string }): Promise<TagListResponse> {
     const query = this.buildQueryString(params || {});
-    return this.request<TagListResponse>('GET', `/api/v1/tenants/${tenantId}/tags${query}`);
+    return this.request<TagListResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/tags${query}`);
   }
 
   async getTag(tenantId: string, tagId: number): Promise<TagResponse> {
-    return this.request<TagResponse>('GET', `/api/v1/tenants/${tenantId}/tags/${tagId}`);
+    return this.request<TagResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/tags/${tagId}`);
   }
 
   async createTag(tenantId: string, data: CreateTagRequest): Promise<TagResponse> {
-    return this.request<TagResponse>('POST', `/api/v1/tenants/${tenantId}/tags`, data, 'Tag created successfully');
+    return this.request<TagResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/tags`, data, 'Tag created successfully');
   }
 
   async deleteTag(tenantId: string, tagId: number): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/tenants/${tenantId}/tags/${tagId}`, undefined, 'Tag deleted successfully');
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/tags/${tagId}`, undefined, 'Tag deleted successfully');
   }
 
   // ========== Resource Type Tags (for filter dropdowns) ==========
@@ -608,11 +772,11 @@ export class UnifiedUIAPIClient {
    */
   async listResourceTypeTags(tenantId: string, resourceType: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
     const query = this.buildQueryString(params || {});
-    return this.request<ResourceTypeTagsResponse>('GET', `/api/v1/tenants/${tenantId}/${resourceType}/tags${query}`);
+    return this.request<ResourceTypeTagsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/${resourceType}/tags${query}`);
   }
 
-  async listApplicationTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
-    return this.listResourceTypeTags(tenantId, 'applications', params);
+  async listChatAgentTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
+    return this.listResourceTypeTags(tenantId, 'chat-agents', params);
   }
 
   async listAutonomousAgentTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
@@ -627,28 +791,24 @@ export class UnifiedUIAPIClient {
     return this.listResourceTypeTags(tenantId, 'chat-widgets', params);
   }
 
-  async listDevelopmentPlatformTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
-    return this.listResourceTypeTags(tenantId, 'development-platforms', params);
-  }
-
   // ========== Resource Tags ==========
 
   async getResourceTags(tenantId: string, resourceType: string, resourceId: string): Promise<ResourceTagsResponse> {
-    return this.request<ResourceTagsResponse>('GET', `/api/v1/tenants/${tenantId}/${resourceType}/${resourceId}/tags`);
+    return this.request<ResourceTagsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/${resourceType}/${resourceId}/tags`);
   }
 
   async setResourceTags(tenantId: string, resourceType: string, resourceId: string, data: SetResourceTagsRequest): Promise<ResourceTagsResponse> {
-    return this.request<ResourceTagsResponse>('PUT', `/api/v1/tenants/${tenantId}/${resourceType}/${resourceId}/tags`, data, 'Tags updated successfully');
+    return this.request<ResourceTagsResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/${resourceType}/${resourceId}/tags`, data, 'Tags updated successfully');
   }
 
   // ========== Convenience Methods for Resource Tags ==========
 
-  async getApplicationTags(tenantId: string, applicationId: string): Promise<ResourceTagsResponse> {
-    return this.getResourceTags(tenantId, 'applications', applicationId);
+  async getChatAgentTags(tenantId: string, chatAgentId: string): Promise<ResourceTagsResponse> {
+    return this.getResourceTags(tenantId, 'chat-agents', chatAgentId);
   }
 
-  async setApplicationTags(tenantId: string, applicationId: string, tags: string[]): Promise<ResourceTagsResponse> {
-    return this.setResourceTags(tenantId, 'applications', applicationId, { tags });
+  async setChatAgentTags(tenantId: string, chatAgentId: string, tags: string[]): Promise<ResourceTagsResponse> {
+    return this.setResourceTags(tenantId, 'chat-agents', chatAgentId, { tags });
   }
 
   async getAutonomousAgentTags(tenantId: string, agentId: string): Promise<ResourceTagsResponse> {
@@ -667,14 +827,6 @@ export class UnifiedUIAPIClient {
     return this.setResourceTags(tenantId, 'credentials', credentialId, { tags });
   }
 
-  async getDevelopmentPlatformTags(tenantId: string, platformId: string): Promise<ResourceTagsResponse> {
-    return this.getResourceTags(tenantId, 'development-platforms', platformId);
-  }
-
-  async setDevelopmentPlatformTags(tenantId: string, platformId: string, tags: string[]): Promise<ResourceTagsResponse> {
-    return this.setResourceTags(tenantId, 'development-platforms', platformId, { tags });
-  }
-
   async getChatWidgetTags(tenantId: string, widgetId: string): Promise<ResourceTagsResponse> {
     return this.getResourceTags(tenantId, 'chat-widgets', widgetId);
   }
@@ -686,37 +838,33 @@ export class UnifiedUIAPIClient {
   // ========== User Favorites Endpoints ==========
 
   async listUserFavorites(tenantId: string, userId: string, resourceType: FavoriteResourceTypeEnum): Promise<UserFavoritesListResponse> {
-    return this.request<UserFavoritesListResponse>('GET', `/api/v1/tenants/${tenantId}/users/${userId}/favorites/${resourceType}`);
+    return this.request<UserFavoritesListResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/favorites/${resourceType}`);
   }
 
   async getUserFavorite(tenantId: string, userId: string, resourceType: FavoriteResourceTypeEnum, resourceId: string): Promise<UserFavoriteResponse> {
-    return this.request<UserFavoriteResponse>('GET', `/api/v1/tenants/${tenantId}/users/${userId}/favorites/${resourceType}/${resourceId}`);
+    return this.request<UserFavoriteResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/favorites/${resourceType}/${resourceId}`);
   }
 
   async addUserFavorite(tenantId: string, userId: string, resourceType: FavoriteResourceTypeEnum, resourceId: string): Promise<UserFavoriteResponse> {
-    return this.request<UserFavoriteResponse>('POST', `/api/v1/tenants/${tenantId}/users/${userId}/favorites/${resourceType}/${resourceId}`, undefined, 'Added to favorites');
+    return this.request<UserFavoriteResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/favorites/${resourceType}/${resourceId}`, undefined, 'Added to favorites');
   }
 
   async removeUserFavorite(tenantId: string, userId: string, resourceType: FavoriteResourceTypeEnum, resourceId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/tenants/${tenantId}/users/${userId}/favorites/${resourceType}/${resourceId}`, undefined, 'Removed from favorites');
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/favorites/${resourceType}/${resourceId}`, undefined, 'Removed from favorites');
   }
 
   // ========== Convenience Methods for Favorites ==========
 
-  async listApplicationFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
-    return this.listUserFavorites(tenantId, userId, 'application' as FavoriteResourceTypeEnum);
+  async listChatAgentFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
+    return this.listUserFavorites(tenantId, userId, FavoriteResourceTypeEnum.CHAT_AGENT);
   }
 
   async listAutonomousAgentFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
-    return this.listUserFavorites(tenantId, userId, 'autonomous_agent' as FavoriteResourceTypeEnum);
+    return this.listUserFavorites(tenantId, userId, FavoriteResourceTypeEnum.AUTONOMOUS_AGENT);
   }
 
   async listConversationFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
-    return this.listUserFavorites(tenantId, userId, 'conversation' as FavoriteResourceTypeEnum);
-  }
-
-  async listDevelopmentPlatformFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
-    return this.listUserFavorites(tenantId, userId, 'development_platform' as FavoriteResourceTypeEnum);
+    return this.listUserFavorites(tenantId, userId, FavoriteResourceTypeEnum.CONVERSATION);
   }
 
   async toggleFavorite(tenantId: string, userId: string, resourceType: FavoriteResourceTypeEnum, resourceId: string, isFavorite: boolean): Promise<void> {
@@ -725,5 +873,643 @@ export class UnifiedUIAPIClient {
     } else {
       await this.addUserFavorite(tenantId, userId, resourceType, resourceId);
     }
+  }
+
+  // ========== Dashboard Endpoints ==========
+
+  async getDashboardStats(tenantId: string, noCache?: boolean): Promise<DashboardStatsResponse> {
+    return this.request<DashboardStatsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/dashboard/stats`, undefined, undefined, noCache ? { noCache: true } : undefined);
+  }
+
+  // ========== Search Endpoints ==========
+
+  async globalSearch(tenantId: string, params: GlobalSearchParams): Promise<SearchResponse> {
+    const query = this.buildQueryString(params);
+    return this.request<SearchResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/search${query}`);
+  }
+
+  // ========== Recent Visits Endpoints ==========
+
+  async listRecentVisits(tenantId: string, userId: string, limit?: number): Promise<RecentVisitListResponse> {
+    const query = limit ? this.buildQueryString({ limit }) : '';
+    return this.request<RecentVisitListResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/recent-visits${query}`);
+  }
+
+  async syncRecentVisits(tenantId: string, userId: string, data: SyncRecentVisitsRequest): Promise<RecentVisitListResponse> {
+    return this.request<RecentVisitListResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/recent-visits/sync`, data);
+  }
+
+  // ========== Agent Service Endpoints ==========
+
+  private agentServiceBaseURL: string | null = null;
+
+  /**
+   * Set the agent service base URL for message/trace endpoints.
+   * Must be called before using agent service methods.
+   */
+  setAgentServiceURL(url: string): void {
+    this.agentServiceBaseURL = url;
+  }
+
+  /**
+   * Get the configured agent service URL or throw error if not set.
+   */
+  private getAgentServiceURL(): string {
+    if (!this.agentServiceBaseURL) {
+      throw new Error('Agent service URL not configured. Call setAgentServiceURL() first.');
+    }
+    return this.agentServiceBaseURL;
+  }
+
+  /**
+   * Helper method for agent service requests.
+   */
+  private async agentServiceRequest<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+    successMessage?: string,
+    additionalHeaders?: Record<string, string>
+  ): Promise<T> {
+    try {
+      const token = await this.getAccessToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...additionalHeaders,
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${this.getAgentServiceURL()}${path}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      if (response.status === 204) {
+        if (successMessage && this.onSuccess) {
+          this.onSuccess(successMessage);
+        }
+        return undefined as T;
+      }
+
+      const data = await response.json();
+
+      if (successMessage && this.onSuccess) {
+        this.onSuccess(successMessage);
+      }
+
+      return data;
+    } catch (error) {
+      if (this.onError && error instanceof Error) {
+        this.onError(error);
+      }
+      throw error;
+    }
+  }
+
+  // ========== Messages Endpoints ==========
+
+  /**
+   * Get messages for a conversation.
+   */
+  async getMessages(
+    tenantId: string,
+    conversationId: string,
+    params?: { skip?: number; limit?: number }
+  ): Promise<GetMessagesResponse> {
+    const query = this.buildQueryString({ conversationId, ...params });
+    return this.agentServiceRequest<GetMessagesResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/conversation/messages${query}`
+    );
+  }
+
+  /**
+   * Search messages by content text across all conversations.
+   */
+  async searchMessages(
+    tenantId: string,
+    params: { query: string; limit?: number; skip?: number }
+  ): Promise<SearchMessagesResponse> {
+    const queryStr = this.buildQueryString(params);
+    return this.agentServiceRequest<SearchMessagesResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/conversation/messages/search${queryStr}`
+    );
+  }
+
+  /**
+   * Edit a user message.
+   */
+  async editMessage(
+    tenantId: string,
+    conversationId: string,
+    messageId: string,
+    data: EditMessageRequest
+  ): Promise<MessageResponse> {
+    return this.agentServiceRequest<MessageResponse>(
+      'PUT',
+      `/api/v1/agent-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}`,
+      data
+    );
+  }
+
+  /**
+   * Delete a message and its associated assistant response.
+   */
+  async deleteMessage(
+    tenantId: string,
+    conversationId: string,
+    messageId: string
+  ): Promise<void> {
+    return this.agentServiceRequest<void>(
+      'DELETE',
+      `/api/v1/agent-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}`
+    );
+  }
+
+  // ========== Reactions Endpoints ==========
+
+  /**
+   * Create or update a reaction on a message.
+   */
+  async upsertReaction(
+    tenantId: string,
+    conversationId: string,
+    messageId: string,
+    data: UpsertReactionRequest
+  ): Promise<ReactionResponse> {
+    return this.agentServiceRequest<ReactionResponse>(
+      'POST',
+      `/api/v1/agent-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}/reactions`,
+      data
+    );
+  }
+
+  /**
+   * Delete the current user's reaction from a message.
+   */
+  async deleteReaction(
+    tenantId: string,
+    conversationId: string,
+    messageId: string
+  ): Promise<void> {
+    return this.agentServiceRequest<void>(
+      'DELETE',
+      `/api/v1/agent-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}/reactions`
+    );
+  }
+
+  /**
+   * Get all reactions for a message.
+   */
+  async getReactions(
+    tenantId: string,
+    conversationId: string,
+    messageId: string
+  ): Promise<ListReactionsResponse> {
+    return this.agentServiceRequest<ListReactionsResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}/reactions`
+    );
+  }
+
+  /**
+   * Send a message with SSE streaming.
+   * Returns an async generator that yields SSE events.
+   */
+  async *sendMessageStream(
+    tenantId: string,
+    data: SendMessageRequest,
+    onStreamStart?: (messageId: string, conversationId: string, isNewMessage: boolean) => void,
+    onTextChunk?: (content: string) => void,
+    onNewMessage?: () => void,
+    onStreamEnd?: () => void,
+    onError?: (code: string, message: string, details: string) => void,
+    onMessageComplete?: (message: MessageResponse) => void,
+    onTitleGeneration?: (title: string) => void,
+    onReasoningStart?: (config?: SSEStreamMessage['config']) => void,
+    onReasoningStream?: (content: string) => void,
+    onReasoningEnd?: () => void,
+    onToolCallStart?: (config?: SSEStreamMessage['config']) => void,
+    onToolCallStream?: (content: string) => void,
+    onToolCallEnd?: (config?: SSEStreamMessage['config']) => void,
+    onPlanStart?: (config?: SSEStreamMessage['config']) => void,
+    onPlanStream?: (content: string) => void,
+    onPlanComplete?: (config?: SSEStreamMessage['config']) => void,
+    onSubAgentStart?: (config?: SSEStreamMessage['config']) => void,
+    onSubAgentStream?: (content: string) => void,
+    onSubAgentEnd?: (config?: SSEStreamMessage['config']) => void,
+    onSynthesisStart?: (config?: SSEStreamMessage['config']) => void,
+    onSynthesisStream?: (content: string) => void,
+    onTrace?: (config?: SSEStreamMessage['config']) => void,
+    foundryToken?: string,
+    signal?: AbortSignal
+  ): AsyncGenerator<SSEEvent, void, unknown> {
+    const token = await this.getAccessToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'text/event-stream',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // Add Foundry token header if provided
+    if (foundryToken) {
+      headers['X-Microsoft-Foundry-API-Key'] = foundryToken;
+    }
+
+    // Build request body with camelCase field names (matching Go backend)
+    const requestBody = {
+      conversationId: data.conversationId,
+      chatAgentId: data.chatAgentId,
+      message: data.message,
+      invokeConfig: data.invokeConfig,
+      extConversationId: data.extConversationId,
+    };
+
+    const response = await fetch(
+      `${this.getAgentServiceURL()}/api/v1/agent-service/tenants/${tenantId}/conversation/messages`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(requestBody),
+        signal,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Response body is not readable');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let pendingNewMessage = false; // Track if STREAM_NEW_MESSAGE was received
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        let currentEvent = '';
+        let currentData = '';
+
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            currentEvent = line.slice(7).trim();
+          } else if (line.startsWith('data: ')) {
+            currentData = line.slice(6);
+          } else if (line === '' && currentEvent && currentData) {
+            try {
+              const parsed = JSON.parse(currentData);
+
+              // Handle unified stream message format
+              if (currentEvent === 'message' && parsed.type) {
+                const streamMsg = parsed as SSEStreamMessage;
+                switch (streamMsg.type) {
+                  case 'STREAM_START':
+                    if (onStreamStart && streamMsg.config) {
+                      // Pass isNewMessage flag to indicate if this is a new message after STREAM_NEW_MESSAGE
+                      onStreamStart(
+                        streamMsg.config.messageId || '',
+                        streamMsg.config.conversationId || '',
+                        pendingNewMessage
+                      );
+                      pendingNewMessage = false; // Reset the flag
+                    }
+                    break;
+                  case 'TEXT_STREAM':
+                    if (onTextChunk && streamMsg.content) {
+                      onTextChunk(streamMsg.content);
+                    }
+                    break;
+                  case 'STREAM_NEW_MESSAGE':
+                    // Signal that a new message is starting (for multi-message responses)
+                    // The next STREAM_START will contain the new messageId
+                    pendingNewMessage = true;
+                    if (onNewMessage) {
+                      onNewMessage();
+                    }
+                    break;
+                  case 'STREAM_END':
+                    if (onStreamEnd) {
+                      onStreamEnd();
+                    }
+                    break;
+                  case 'MESSAGE_COMPLETE':
+                    if (onMessageComplete && streamMsg.config?.message && typeof streamMsg.config.message === 'object') {
+                      onMessageComplete(streamMsg.config.message as MessageResponse);
+                    }
+                    break;
+                  case 'ERROR':
+                    if (onError && streamMsg.config) {
+                      const errorMessage = typeof streamMsg.config.message === 'string'
+                        ? streamMsg.config.message
+                        : 'An error occurred';
+                      onError(
+                        streamMsg.config.code || 'UNKNOWN_ERROR',
+                        errorMessage,
+                        streamMsg.config.details || ''
+                      );
+                    }
+                    break;
+                  case 'TITLE_GENERATION':
+                    if (onTitleGeneration && streamMsg.content) {
+                      onTitleGeneration(streamMsg.content);
+                    }
+                    break;
+                  case 'REASONING_START':
+                    if (onReasoningStart) onReasoningStart(streamMsg.config);
+                    break;
+                  case 'REASONING_STREAM':
+                    if (onReasoningStream && streamMsg.content) onReasoningStream(streamMsg.content);
+                    break;
+                  case 'REASONING_END':
+                    if (onReasoningEnd) onReasoningEnd();
+                    break;
+                  case 'TOOL_CALL_START':
+                    if (onToolCallStart) onToolCallStart(streamMsg.config);
+                    break;
+                  case 'TOOL_CALL_STREAM':
+                    if (onToolCallStream && streamMsg.content) onToolCallStream(streamMsg.content);
+                    break;
+                  case 'TOOL_CALL_END':
+                    if (onToolCallEnd) onToolCallEnd(streamMsg.config);
+                    break;
+                  case 'PLAN_START':
+                    if (onPlanStart) onPlanStart(streamMsg.config);
+                    break;
+                  case 'PLAN_STREAM':
+                    if (onPlanStream && streamMsg.content) onPlanStream(streamMsg.content);
+                    break;
+                  case 'PLAN_COMPLETE':
+                    if (onPlanComplete) onPlanComplete(streamMsg.config);
+                    break;
+                  case 'SUB_AGENT_START':
+                    if (onSubAgentStart) onSubAgentStart(streamMsg.config);
+                    break;
+                  case 'SUB_AGENT_STREAM':
+                    if (onSubAgentStream && streamMsg.content) onSubAgentStream(streamMsg.content);
+                    break;
+                  case 'SUB_AGENT_END':
+                    if (onSubAgentEnd) onSubAgentEnd(streamMsg.config);
+                    break;
+                  case 'SYNTHESIS_START':
+                    if (onSynthesisStart) onSynthesisStart(streamMsg.config);
+                    break;
+                  case 'SYNTHESIS_STREAM':
+                    if (onSynthesisStream && streamMsg.content) onSynthesisStream(streamMsg.content);
+                    break;
+                  case 'TRACE':
+                    if (onTrace) onTrace(streamMsg.config);
+                    break;
+                }
+              }
+
+              yield {
+                type: currentEvent as SSEEvent['type'],
+                data: parsed,
+              };
+            } catch {
+              // Skip malformed JSON
+            }
+            currentEvent = '';
+            currentData = '';
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
+
+  // ========== Trace Endpoints ==========
+
+  /**
+   * Get traces for a message.
+   */
+  async getMessageTraces(
+    tenantId: string,
+    messageId: string
+  ): Promise<GetTracesResponse> {
+    return this.agentServiceRequest<GetTracesResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/conversation/messages/${messageId}/traces`
+    );
+  }
+
+  /**
+   * Update traces for an autonomous agent.
+   */
+  async updateAgentTraces(
+    tenantId: string,
+    agentId: string,
+    data: BatchUpdateTracesRequest
+  ): Promise<UpdateTracesResponse> {
+    return this.agentServiceRequest<UpdateTracesResponse>(
+      'PUT',
+      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces`,
+      data
+    );
+  }
+
+  // ========== Full Trace Endpoints (Hierarchical Traces) ==========
+
+  /**
+   * Get traces for a conversation.
+   * Returns hierarchical traces with nodes.
+   */
+  async getConversationTraces(
+    tenantId: string,
+    conversationId: string
+  ): Promise<FullTracesListResponse> {
+    return this.agentServiceRequest<FullTracesListResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/conversations/${conversationId}/traces`
+    );
+  }
+
+  /**
+   * Get traces for an autonomous agent with pagination and filtering.
+   */
+  async getAutonomousAgentTraces(
+    tenantId: string,
+    agentId: string,
+    params?: TracesListParams
+  ): Promise<FullTracesListResponse> {
+    const query = params ? this.buildQueryString(params) : '';
+    return this.agentServiceRequest<FullTracesListResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces${query}`
+    );
+  }
+
+  /**
+   * Get a single trace by ID (full data with nodes/logs).
+   */
+  async getTrace(
+    tenantId: string,
+    traceId: string
+  ): Promise<FullTraceResponse> {
+    return this.agentServiceRequest<FullTraceResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/traces/${traceId}`
+    );
+  }
+
+  /**
+   * Refresh/re-import trace for an autonomous agent.
+   */
+  async refreshAutonomousAgentTraceImport(
+    tenantId: string,
+    agentId: string,
+    traceId: string
+  ): Promise<FullTraceResponse> {
+    return this.agentServiceRequest<FullTraceResponse>(
+      'PUT',
+      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces/${traceId}/import/refresh`
+    );
+  }
+
+  async deleteTrace(tenantId: string, traceId: string): Promise<void> {
+    return this.agentServiceRequest<void>(
+      'DELETE',
+      `/api/v1/agent-service/tenants/${tenantId}/traces/${traceId}`
+    );
+  }
+
+  // ========== AI Model Endpoints ==========
+
+  async listAIModels(
+    tenantId: string,
+    params?: PaginationParams & OrderParams & FilterParams,
+    options?: { noCache?: boolean }
+  ): Promise<AIModelResponse[]> {
+    const query = this.buildQueryString(params || {});
+    return this.request<AIModelResponse[]>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/ai-models${query}`,
+      undefined,
+      undefined,
+      options
+    );
+  }
+
+  async getAIModel(tenantId: string, modelId: string): Promise<AIModelResponse> {
+    return this.request<AIModelResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/ai-models/${modelId}`
+    );
+  }
+
+  async createAIModel(tenantId: string, data: CreateAIModelRequest): Promise<AIModelResponse> {
+    return this.request<AIModelResponse>(
+      'POST',
+      `/api/v1/platform-service/tenants/${tenantId}/ai-models`,
+      data,
+      'AI Model created successfully'
+    );
+  }
+
+  async updateAIModel(tenantId: string, modelId: string, data: UpdateAIModelRequest): Promise<AIModelResponse> {
+    return this.request<AIModelResponse>(
+      'PATCH',
+      `/api/v1/platform-service/tenants/${tenantId}/ai-models/${modelId}`,
+      data,
+      'AI Model updated successfully'
+    );
+  }
+
+  async deleteAIModel(tenantId: string, modelId: string): Promise<void> {
+    return this.request<void>(
+      'DELETE',
+      `/api/v1/platform-service/tenants/${tenantId}/ai-models/${modelId}`,
+      undefined,
+      'AI Model deleted successfully'
+    );
+  }
+
+  // ========== AI Feature Endpoints ==========
+
+  async generateDescription(
+    tenantId: string,
+    data: GenerateDescriptionRequest
+  ): Promise<GenerateDescriptionResponse> {
+    return this.agentServiceRequest<GenerateDescriptionResponse>(
+      'POST',
+      `/api/v1/agent-service/tenants/${tenantId}/ai/generate-description`,
+      data
+    );
+  }
+
+  async analyzeTrace(
+    tenantId: string,
+    data: AnalyzeTraceRequest
+  ): Promise<AnalyzeTraceResponse> {
+    return this.agentServiceRequest<AnalyzeTraceResponse>(
+      'POST',
+      `/api/v1/agent-service/tenants/${tenantId}/ai/analyze-trace`,
+      data
+    );
+  }
+
+  async summarizeTrace(
+    tenantId: string,
+    data: SummarizeTraceRequest
+  ): Promise<SummarizeTraceResponse> {
+    return this.agentServiceRequest<SummarizeTraceResponse>(
+      'POST',
+      `/api/v1/agent-service/tenants/${tenantId}/ai/summarize-trace`,
+      data
+    );
+  }
+
+  async testAIModel(
+    tenantId: string,
+    data: TestModelRequest
+  ): Promise<TestModelResponse> {
+    return this.agentServiceRequest<TestModelResponse>(
+      'POST',
+      `/api/v1/agent-service/tenants/${tenantId}/ai/test-model`,
+      data
+    );
+  }
+
+  async getAICapabilities(tenantId: string): Promise<AICapabilitiesResponse> {
+    return this.agentServiceRequest<AICapabilitiesResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/ai/capabilities`
+    );
+  }
+
+  async traceChat(
+    tenantId: string,
+    data: TraceChatRequest
+  ): Promise<TraceChatResponse> {
+    return this.agentServiceRequest<TraceChatResponse>(
+      'POST',
+      `/api/v1/agent-service/tenants/${tenantId}/ai/trace-chat`,
+      data
+    );
   }
 }

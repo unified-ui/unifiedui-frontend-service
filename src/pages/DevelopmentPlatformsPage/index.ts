@@ -1,1 +1,0 @@
-export { DevelopmentPlatformsPage } from './DevelopmentPlatformsPage';

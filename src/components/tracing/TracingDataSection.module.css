@@ -1,0 +1,219 @@
+/**
+ * TracingDataSection - CSS Module
+ */
+
+.container {
+  display: flex;
+  height: 100%;
+  background: var(--bg-app);
+  border-top: 1px solid var(--border-default);
+  overflow: hidden;
+}
+
+.emptyContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: var(--bg-app);
+}
+
+/* ============================================ */
+/* LOGS PANEL (Left)                            */
+/* ============================================ */
+
+.logsContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 150px;
+  border-right: 1px solid var(--border-default);
+}
+
+.logsPanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.logsPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-app);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.logsPanelContent {
+  flex: 1;
+  padding: var(--spacing-sm);
+}
+
+.logsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.logEntry {
+  padding: var(--spacing-xs);
+  background: var(--bg-app);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+}
+
+.logText {
+  word-break: break-word;
+  font-family: var(--font-family-mono);
+}
+
+/* ============================================ */
+/* RESIZE HANDLE                                */
+/* ============================================ */
+
+.resizeHandle {
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background-color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.resizeHandle:hover {
+  background: var(--color-primary-200);
+}
+
+.resizeHandle:active {
+  background: var(--color-primary-400);
+}
+
+/* ============================================ */
+/* CONTENT PANEL (Right)                        */
+/* ============================================ */
+
+.contentContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 300px;
+  overflow: hidden;
+}
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tabs :global(.mantine-Tabs-tab) {
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.tabs :global(.mantine-Tabs-panel) {
+  height: 90%;
+  overflow: hidden;
+}
+
+.tabPanel {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ============================================ */
+/* INPUT/OUTPUT CONTAINER                       */
+/* ============================================ */
+
+.ioContainer {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+}
+
+.ioDivider {
+  width: 1px;
+  background: var(--border-default);
+  flex-shrink: 0;
+}
+
+.dataPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.dataPanelHeader {
+  padding: var(--spacing-sm);
+  background: var(--bg-app);
+  /* border-bottom: 1px solid var(--border-default); */
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.dataPanelContent {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--spacing-sm);
+}
+
+/* ============================================ */
+/* TEXT SECTION                                 */
+/* ============================================ */
+
+.textSection {
+  margin-bottom: var(--spacing-sm);
+}
+
+.codeBlock {
+  font-size: var(--font-size-xs);
+  background: var(--bg-app) !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ============================================ */
+/* COLLAPSIBLE SECTION                          */
+/* ============================================ */
+
+.collapsibleSection {
+  margin-bottom: var(--spacing-xs);
+}
+
+.collapsibleHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  width: 100%;
+  color: var(--text-secondary);
+  transition: background-color var(--transition-fast);
+}
+
+.collapsibleHeader:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.collapsibleContent {
+  padding: var(--spacing-xs);
+  padding-left: var(--spacing-md);
+}
+
+/* ============================================ */
+/* METADATA PANEL                               */
+/* ============================================ */
+
+.metadataPanel {
+  height: 100%;
+  padding: var(--spacing-sm);
+  overflow: hidden;
+}

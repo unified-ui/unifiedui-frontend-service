@@ -14,6 +14,7 @@ import {
   LoadingOverlay,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { DelayedTooltip } from '../../common';
 import {
   IconInfoCircle,
   IconUsersGroup,
@@ -21,6 +22,7 @@ import {
   IconAlertCircle,
 } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
+import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import { ManageAccessTable } from '../../common/ManageAccessTable';
 import type { PrincipalPermission } from '../../common/ManageAccessTable';
 import { AddPrincipalDialog } from '../../common/AddPrincipalDialog';
@@ -37,6 +39,7 @@ interface EditCustomGroupDialogProps {
   onClose: () => void;
   customGroupId: string | null;
   initialTab?: 'members' | 'details';
+  onTabChange?: (tab: 'members' | 'details') => void;
   onSuccess?: () => void;
 }
 
@@ -66,7 +69,8 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
   opened,
   onClose,
   customGroupId,
-  initialTab = 'members',
+  initialTab = 'details',
+  onTabChange,
   onSuccess,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
@@ -152,15 +156,24 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
     }
   }, [apiClient, selectedTenant, customGroupId]);
 
+  // Update activeTab when initialTab changes (separate from data loading)
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
   // Load data when dialog opens
   useEffect(() => {
     if (opened && customGroupId) {
-      setActiveTab(initialTab);
+      // Fetch custom group details
       fetchCustomGroup();
+      // Reset principals state so they can be fetched fresh
       setPrincipalsFetched(false);
       setPrincipals([]);
+    } else if (!opened) {
+      // Reset state when dialog closes
+      setPrincipalsFetched(false);
     }
-  }, [opened, customGroupId, initialTab, fetchCustomGroup]);
+  }, [opened, customGroupId, fetchCustomGroup]);
 
   // Fetch principals when switching to members tab
   useEffect(() => {
@@ -288,9 +301,11 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
               <Text fw={600} size="lg">
                 {customGroup?.name || 'Custom Group'}
               </Text>
-              <Text size="xs" c="dimmed" lineClamp={1}>
-                {customGroup?.description || 'No description'}
-              </Text>
+              <DelayedTooltip label={customGroup?.description || 'No description'}>
+                <Text size="xs" c="dimmed" lineClamp={1}>
+                  {customGroup?.description || 'No description'}
+                </Text>
+              </DelayedTooltip>
             </Stack>
           </Group>
         }
@@ -322,23 +337,27 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
             <Box className={classes.tabContainer}>
               <SegmentedControl
                 value={activeTab}
-                onChange={(value) => setActiveTab(value as TabValue)}
+                onChange={(value) => {
+                  const tab = value as TabValue;
+                  setActiveTab(tab);
+                  onTabChange?.(tab);
+                }}
                 data={[
-                  {
-                    value: 'members',
-                    label: (
-                      <Group gap="xs" wrap="nowrap">
-                        <IconUsers size={16} />
-                        <span>Manage Members</span>
-                      </Group>
-                    ),
-                  },
                   {
                     value: 'details',
                     label: (
                       <Group gap="xs" wrap="nowrap">
                         <IconInfoCircle size={16} />
                         <span>Details</span>
+                      </Group>
+                    ),
+                  },
+                  {
+                    value: 'members',
+                    label: (
+                      <Group gap="xs" wrap="nowrap">
+                        <IconUsers size={16} />
+                        <span>Manage Members</span>
                       </Group>
                     ),
                   },
@@ -389,12 +408,22 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
                     required
                     {...form.getInputProps('name')}
                   />
-                  <Textarea
-                    label="Description"
-                    placeholder="Enter group description (optional)"
-                    minRows={3}
-                    {...form.getInputProps('description')}
-                  />
+                  <Box pos="relative">
+                    <Textarea
+                      label="Description"
+                      placeholder="Enter group description (optional)"
+                      minRows={3}
+                      {...form.getInputProps('description')}
+                    />
+                    <Box pos="absolute" top={0} right={0}>
+                      <GenerateWithAIButton
+                        entityType="custom_group"
+                        entityName={form.values.name}
+                        existingDescription={form.values.description || undefined}
+                        onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+                      />
+                    </Box>
+                  </Box>
                   <Group justify="flex-end" mt="md">
                     <Button variant="default" onClick={handleClose}>
                       Close

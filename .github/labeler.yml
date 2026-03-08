@@ -1,0 +1,70 @@
+# Labels PRs based on files changed
+
+# Components
+components:
+  - changed-files:
+      - any-glob-to-any-file: "src/components/**/*"
+
+# Pages
+pages:
+  - changed-files:
+      - any-glob-to-any-file: "src/pages/**/*"
+
+# API client
+api:
+  - changed-files:
+      - any-glob-to-any-file: "src/api/**/*"
+
+# Auth
+auth:
+  - changed-files:
+      - any-glob-to-any-file: "src/auth/**/*"
+
+# Contexts & Hooks
+state:
+  - changed-files:
+      - any-glob-to-any-file: "src/contexts/**/*"
+      - any-glob-to-any-file: "src/hooks/**/*"
+
+# Styling
+styling:
+  - changed-files:
+      - any-glob-to-any-file: "src/styles/**/*"
+      - any-glob-to-any-file: "src/theme/**/*"
+      - any-glob-to-any-file: "**/*.css"
+      - any-glob-to-any-file: "**/*.module.css"
+
+# i18n
+i18n:
+  - changed-files:
+      - any-glob-to-any-file: "src/i18n/**/*"
+
+# Tests
+tests:
+  - changed-files:
+      - any-glob-to-any-file: "src/test/**/*"
+      - any-glob-to-any-file: "**/*.test.tsx"
+      - any-glob-to-any-file: "**/*.test.ts"
+
+# Documentation
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: "**/*.md"
+
+# CI/CD
+ci:
+  - changed-files:
+      - any-glob-to-any-file: ".github/**/*"
+
+# Dependencies
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file: "package.json"
+      - any-glob-to-any-file: "package-lock.json"
+
+# Config
+config:
+  - changed-files:
+      - any-glob-to-any-file: "vite.config.ts"
+      - any-glob-to-any-file: "tsconfig*.json"
+      - any-glob-to-any-file: "eslint.config.js"

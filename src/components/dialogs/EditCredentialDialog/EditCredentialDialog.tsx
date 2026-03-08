@@ -1,9 +1,11 @@
 import type { FC } from 'react';
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Modal,
   TextInput,
   Textarea,
+  PasswordInput,
   Button,
   Stack,
   Group,
@@ -18,10 +20,12 @@ import {
 import { useForm } from '@mantine/form';
 import { IconAlertCircle, IconKey, IconInfoCircle, IconShieldLock } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
-import { useEntityPermissions } from '../../../hooks';
+import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
+import { useEntityPermissions, usePermissions } from '../../../hooks';
+import { useFormDirtyGuard } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
 import type { CredentialResponse, PrincipalTypeEnum } from '../../../api/types';
-import { PermissionActionEnum } from '../../../api/types';
+import { PermissionActionEnum, CredentialTypeEnum } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
 import classes from './EditCredentialDialog.module.css';
 
@@ -32,6 +36,10 @@ interface FormValues {
   description: string;
   tags: string[];
   is_active: boolean;
+  // Optional credential value fields (only submitted if user enters a new value)
+  secret_value: string;
+  username: string;
+  password: string;
 }
 
 export interface EditCredentialDialogProps {
@@ -54,6 +62,9 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
   onTabChange,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { t } = useTranslation();
+  const { isGlobalAdmin } = usePermissions();
+  const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission === 'ADMIN';
   const [credential, setCredential] = useState<CredentialResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -82,6 +93,9 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
       description: '',
       tags: [],
       is_active: true,
+      secret_value: '',
+      username: '',
+      password: '',
     },
     validate: {
       name: (value) => {
@@ -92,6 +106,8 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
     },
   });
 
+  useFormDirtyGuard(form.isDirty());
+
   // Initialize form from data
   const initializeFromData = useCallback(
     (data: CredentialResponse) => {
@@ -101,7 +117,11 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
         description: data.description || '',
         tags: data.tags?.map((t) => t.name) || [],
         is_active: data.is_active,
+        secret_value: '',
+        username: '',
+        password: '',
       });
+      form.resetDirty();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
@@ -154,11 +174,27 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
     setError(null);
 
     try {
+      // Build secret_value if user entered new credentials
+      let secretValue: string | undefined;
+      if (credential?.type === CredentialTypeEnum.BASIC_AUTH) {
+        if (values.username.trim() || values.password.trim()) {
+          secretValue = JSON.stringify({
+            username: values.username.trim(),
+            password: values.password.trim(),
+          });
+        }
+      } else if (credential?.type === CredentialTypeEnum.API_KEY) {
+        if (values.secret_value.trim()) {
+          secretValue = values.secret_value.trim();
+        }
+      }
+
       // Update credential
       await apiClient.updateCredential(selectedTenant.id, credentialId, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
         is_active: values.is_active,
+        ...(secretValue && { secret_value: secretValue }),
       });
 
       // Update tags if changed
@@ -169,6 +205,7 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
         await apiClient.setCredentialTags(selectedTenant.id, credentialId, newTags);
       }
 
+      form.resetDirty();
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -262,6 +299,7 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
         )}
 
         {/* Tab Navigation */}
+        {showIamTab && (
         <Box className={classes.tabContainer}>
           <SegmentedControl
             value={activeTab}
@@ -290,6 +328,7 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
             className={classes.segmentedControl}
           />
         </Box>
+        )}
 
         {/* Tab Content */}
         {activeTab === 'details' ? (
@@ -319,6 +358,33 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
                 </Group>
               )}
 
+              {/* Credential value fields - type specific */}
+              {credential?.type === CredentialTypeEnum.API_KEY && (
+                <PasswordInput
+                  label={t('credentials:newApiKey')}
+                  placeholder={t('credentials:leaveEmptyToKeep')}
+                  description={t('credentials:fillOnlyToChangeApiKey')}
+                  {...form.getInputProps('secret_value')}
+                />
+              )}
+
+              {credential?.type === CredentialTypeEnum.BASIC_AUTH && (
+                <>
+                  <TextInput
+                    label={t('credentials:newUsername')}
+                    placeholder={t('credentials:leaveEmptyToKeep')}
+                    description={t('credentials:fillOnlyToChangeUsername')}
+                    {...form.getInputProps('username')}
+                  />
+                  <PasswordInput
+                    label={t('credentials:newPassword')}
+                    placeholder={t('credentials:leaveEmptyToKeep')}
+                    description={t('credentials:fillOnlyToChangePassword')}
+                    {...form.getInputProps('password')}
+                  />
+                </>
+              )}
+
               <TagInput
                 label="Tags"
                 placeholder="Enter a tag and press Space to add..."
@@ -326,15 +392,25 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
                 onChange={(tags) => form.setFieldValue('tags', tags)}
               />
 
-              <Textarea
-                label="Description"
-                placeholder="Optional description"
-                maxLength={2000}
-                minRows={3}
-                maxRows={6}
-                autosize
-                {...form.getInputProps('description')}
-              />
+              <Box pos="relative">
+                <Textarea
+                  label="Description"
+                  placeholder="Optional description"
+                  maxLength={2000}
+                  minRows={3}
+                  maxRows={6}
+                  autosize
+                  {...form.getInputProps('description')}
+                />
+                <Box pos="absolute" top={0} right={0}>
+                  <GenerateWithAIButton
+                    entityType="credential"
+                    entityName={form.values.name}
+                    existingDescription={form.values.description || undefined}
+                    onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+                  />
+                </Box>
+              </Box>
 
               <Divider />
 
@@ -342,7 +418,7 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
                 <Button variant="default" onClick={handleClose} disabled={isSaving}>
                   Cancel
                 </Button>
-                <Button type="submit" loading={isSaving}>
+                <Button type="submit" loading={isSaving} disabled={!form.isDirty()}>
                   Save Changes
                 </Button>
               </Group>

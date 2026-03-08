@@ -20,7 +20,9 @@
 
 .row {
   background: var(--bg-paper);
-  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  transition:
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
   cursor: pointer;
 }
 
@@ -28,7 +30,7 @@
   border-color: var(--color-primary-300);
 }
 
-[data-mantine-color-scheme='dark'] .row:hover {
+[data-mantine-color-scheme="dark"] .row:hover {
   border-color: var(--color-primary-700);
 }
 
@@ -44,7 +46,7 @@
   flex-shrink: 0;
 }
 
-[data-mantine-color-scheme='dark'] .rowIcon {
+[data-mantine-color-scheme="dark"] .rowIcon {
   background: var(--color-gray-800);
   color: var(--color-gray-400);
 }
@@ -55,6 +57,12 @@
 
 .itemDescription {
   max-width: 400px;
+}
+
+.nameDescriptionColumn {
+  min-width: 0;
+  flex: 1;
+  max-width: 500px;
 }
 
 .typeColumn {
@@ -73,11 +81,15 @@
   flex-shrink: 0;
 }
 
+.favoriteButton {
+  flex-shrink: 0;
+}
+
 .emptyIcon {
   color: var(--color-gray-400);
 }
 
-[data-mantine-color-scheme='dark'] .emptyIcon {
+[data-mantine-color-scheme="dark"] .emptyIcon {
   color: var(--color-gray-600);
 }
 
@@ -85,12 +97,54 @@
   min-height: 1px;
 }
 
+.bulkActionBar {
+  background: var(--color-primary-50);
+  border: 1px solid var(--color-primary-200);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-xs);
+  align-items: center;
+}
+
+[data-mantine-color-scheme="dark"] .bulkActionBar {
+  background: var(--color-primary-900);
+  border-color: var(--color-primary-700);
+}
+
+.rowSelected {
+  border-color: var(--color-primary-300) !important;
+  background: var(--color-primary-50) !important;
+}
+
+[data-mantine-color-scheme="dark"] .rowSelected {
+  border-color: var(--color-primary-700) !important;
+  background: var(--color-primary-900) !important;
+}
+
+.rowCheckbox {
+  flex-shrink: 0;
+}
+
+.rowDeleting {
+  opacity: 0;
+  transform: translateX(-20px);
+  max-height: 0;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden;
+  transition:
+    opacity 200ms ease-out,
+    transform 200ms ease-out,
+    max-height 300ms ease-out 100ms,
+    padding 300ms ease-out 100ms,
+    margin 300ms ease-out 100ms;
+}
+
 /* Responsive adjustments */
 @media (max-width: 992px) {
   .typeColumn {
     display: none;
   }
-  
+
   .tagsColumn {
     width: 150px;
   }
@@ -100,7 +154,7 @@
   .tagsColumn {
     display: none;
   }
-  
+
   .itemDescription {
     display: none;
   }

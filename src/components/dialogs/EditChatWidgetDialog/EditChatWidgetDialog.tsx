@@ -20,7 +20,9 @@ import {
 import { useForm } from '@mantine/form';
 import { IconAlertCircle, IconBrandWechat, IconInfoCircle, IconShieldLock } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
-import { useEntityPermissions } from '../../../hooks';
+import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
+import { useEntityPermissions, usePermissions } from '../../../hooks';
+import { useFormDirtyGuard } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
 import type { ChatWidgetResponse, ChatWidgetTypeEnum, PrincipalTypeEnum } from '../../../api/types';
 import { PermissionActionEnum } from '../../../api/types';
@@ -62,6 +64,8 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
   onTabChange,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { isGlobalAdmin } = usePermissions();
+  const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission === 'ADMIN';
   const [chatWidget, setChatWidget] = useState<ChatWidgetResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -101,6 +105,8 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
     },
   });
 
+  useFormDirtyGuard(form.isDirty());
+
   // Initialize form from data
   const initializeFromData = useCallback(
     (data: ChatWidgetResponse) => {
@@ -112,6 +118,7 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
         tags: data.tags?.map((t) => t.name) || [],
         is_active: data.is_active,
       });
+      form.resetDirty();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
@@ -180,6 +187,7 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
         await apiClient.setChatWidgetTags(selectedTenant.id, chatWidgetId, newTags);
       }
 
+      form.resetDirty();
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -273,6 +281,7 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
         )}
 
         {/* Tab Navigation */}
+        {showIamTab && (
         <Box className={classes.tabContainer}>
           <SegmentedControl
             value={activeTab}
@@ -301,6 +310,7 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
             className={classes.segmentedControl}
           />
         </Box>
+        )}
 
         {/* Tab Content */}
         {activeTab === 'details' ? (
@@ -339,15 +349,25 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
                 onChange={(tags) => form.setFieldValue('tags', tags)}
               />
 
-              <Textarea
-                label="Description"
-                placeholder="Optional description"
-                maxLength={2000}
-                minRows={3}
-                maxRows={6}
-                autosize
-                {...form.getInputProps('description')}
-              />
+              <Box pos="relative">
+                <Textarea
+                  label="Description"
+                  placeholder="Optional description"
+                  maxLength={2000}
+                  minRows={3}
+                  maxRows={6}
+                  autosize
+                  {...form.getInputProps('description')}
+                />
+                <Box pos="absolute" top={0} right={0}>
+                  <GenerateWithAIButton
+                    entityType="chat_widget"
+                    entityName={form.values.name}
+                    existingDescription={form.values.description || undefined}
+                    onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+                  />
+                </Box>
+              </Box>
 
               <Divider />
 
@@ -355,7 +375,7 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
                 <Button variant="default" onClick={handleClose} disabled={isSaving}>
                   Cancel
                 </Button>
-                <Button type="submit" loading={isSaving}>
+                <Button type="submit" loading={isSaving} disabled={!form.isDirty()}>
                   Save Changes
                 </Button>
               </Group>

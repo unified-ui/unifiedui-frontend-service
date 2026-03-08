@@ -1,0 +1,142 @@
+/**
+ * TracingVisualDialog - CSS Module
+ */
+
+/* Override Mantine Modal padding via CSS Custom Properties */
+.modal {
+  --mantine-spacing-md: 0;
+  --mantine-spacing-xl: 0;
+}
+
+.modal :global(.mantine-Modal-content) {
+  padding: 0 !important;
+}
+
+.modal :global(.mantine-Modal-header) {
+  display: none;
+}
+
+.modal :global(.mantine-Modal-body) {
+  padding: 0 !important;
+}
+
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-app);
+}
+
+/* Header */
+.header {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
+}
+
+.headerIcon {
+  color: var(--color-primary-500);
+}
+
+.headerTitle {
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+/* Body */
+.body {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Main Content (Canvas + Data) */
+.mainContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Canvas Container */
+.canvasContainer {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-app);
+}
+
+/* Data Container */
+.dataContainer {
+  overflow: hidden;
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-app);
+}
+
+/* Hierarchy Container */
+.hierarchyContainer {
+  height: 100%;
+  overflow: hidden;
+  border-left: 1px solid var(--border-default);
+  background: var(--bg-app);
+}
+
+/* Chat Container */
+.chatContainer {
+  height: 100%;
+  overflow: hidden;
+  border-left: 1px solid var(--border-default);
+  background: var(--bg-app);
+}
+
+/* Resize Handles */
+.resizeHandleVertical {
+  height: 4px;
+  cursor: ns-resize;
+  background: transparent;
+  position: relative;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+}
+
+.resizeHandleVertical:hover {
+  background: var(--color-primary-200);
+}
+
+.resizeHandleVertical::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 4px;
+  background: var(--border-default);
+  border-radius: var(--radius-full);
+}
+
+.resizeHandleHorizontal {
+  width: 4px;
+  cursor: ew-resize;
+  background: transparent;
+  position: relative;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+}
+
+.resizeHandleHorizontal:hover {
+  background: var(--color-primary-200);
+}
+
+.resizeHandleHorizontal::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 40px;
+  background: var(--border-default);
+  border-radius: var(--radius-full);
+}

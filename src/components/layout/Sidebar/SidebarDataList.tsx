@@ -1,4 +1,5 @@
 import { type FC, useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Stack,
   Group,
@@ -12,6 +13,7 @@ import {
   ScrollArea,
   Box,
 } from '@mantine/core';
+import { DelayedTooltip } from '../../common/DelayedTooltip';
 import {
   IconSearch,
   IconSquareArrowRight,
@@ -20,13 +22,17 @@ import {
   IconPlus,
   IconInbox,
   IconRefresh,
+  IconStar,
+  IconStarFilled,
 } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import classes from './SidebarDataList.module.css';
 
 export interface DataListItem {
   id: string;
   name: string;
+  /** Optional subtitle displayed below the name */
+  subtitle?: string;
   link: string;
   icon?: React.ReactNode;
 }
@@ -60,6 +66,10 @@ export interface SidebarDataListProps {
   onRefresh?: () => void;
   /** Whether refresh is in progress */
   isRefreshing?: boolean;
+  /** Check if an item is a favorite */
+  isFavorite?: (id: string) => boolean;
+  /** Callback when favorite is toggled */
+  onToggleFavorite?: (id: string) => void;
 }
 
 const ITEMS_PER_PAGE = 20;
@@ -79,8 +89,12 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
   addButtonLabel = 'Add',
   onRefresh,
   isRefreshing = false,
+  isFavorite,
+  onToggleFavorite,
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { t } = useTranslation('common');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [showLoading, setShowLoading] = useState(false);
@@ -98,6 +112,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
         clearTimeout(loadingTimeoutRef.current);
         loadingTimeoutRef.current = null;
       }
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowLoading(false);
     }
 
@@ -110,14 +125,20 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
 
   // Filter items based on search query
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return items;
+    let result = items;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter((item) =>
+        item.name.toLowerCase().includes(query)
+      );
     }
-    const query = searchQuery.toLowerCase().trim();
-    return items.filter((item) =>
-      item.name.toLowerCase().includes(query)
-    );
-  }, [items, searchQuery]);
+    if (isFavorite) {
+      const favorites = result.filter(item => isFavorite(item.id));
+      const nonFavorites = result.filter(item => !isFavorite(item.id));
+      return [...favorites, ...nonFavorites];
+    }
+    return result;
+  }, [items, searchQuery, isFavorite]);
 
   // Get visible items (pagination)
   const visibleItems = useMemo(() => {
@@ -129,6 +150,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
 
   // Reset visible count when search changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisibleCount(ITEMS_PER_PAGE);
   }, [searchQuery]);
 
@@ -151,10 +173,18 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
   // Handle item click
   const handleItemClick = useCallback(
     (item: DataListItem) => {
-      navigate(item.link);
+      const [targetPath] = item.link.split('?');
+      const currentPath = location.pathname;
+
+      // If we're on the same path, use replace to force query param update
+      if (currentPath === targetPath) {
+        navigate(item.link, { replace: true });
+      } else {
+        navigate(item.link);
+      }
       onClose();
     },
-    [navigate, onClose]
+    [navigate, onClose, location.pathname]
   );
 
   // Handle search change
@@ -189,7 +219,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
             variant="subtle"
             color="gray"
             onClick={onToggleExpand}
-            title={isExpanded ? 'Verkleinern' : 'Erweitern'}
+            title={isExpanded ? 'Collapse' : 'Expand'}
           >
             {isExpanded ? <IconSquareArrowLeft size={18} /> : <IconSquareArrowRight size={18} />}
           </ActionIcon>
@@ -197,7 +227,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
             variant="subtle"
             color="gray"
             onClick={onClose}
-            title="Schließen"
+            title="Close"
           >
             <IconX size={18} />
           </ActionIcon>
@@ -210,7 +240,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
       <div className={classes.searchContainer}>
         <Group gap="xs" wrap="nowrap">
           <TextInput
-            placeholder="Suchen..."
+            placeholder={t('common:search')}
             value={searchQuery}
             onChange={handleSearchChange}
             leftSection={<IconSearch size={16} />}
@@ -235,7 +265,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
               color="gray"
               onClick={onRefresh}
               loading={isRefreshing}
-              title="Daten neu laden"
+              title="Refresh data"
             >
               <IconRefresh size={18} />
             </ActionIcon>
@@ -250,7 +280,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
             <Stack align="center" gap="sm">
               <Loader size="md" />
               <Text size="sm" c="dimmed">
-                Lade Daten...
+                Loading...
               </Text>
             </Stack>
           </Center>
@@ -272,8 +302,8 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
               <IconInbox size={48} stroke={1} className={classes.emptyIcon} />
               <Text size="sm" c="dimmed" ta="center">
                 {searchQuery
-                  ? 'Keine Einträge gefunden'
-                  : 'Keine Einträge vorhanden'}
+                  ? 'No entries found'
+                  : 'No entries available'}
               </Text>
             </Stack>
           </Center>
@@ -295,9 +325,34 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
                     {item.icon && (
                       <span className={classes.itemIcon}>{item.icon}</span>
                     )}
-                    <Text size="sm" truncate className={classes.itemName}>
-                      {item.name}
-                    </Text>
+                    <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
+                      <DelayedTooltip label={item.name}>
+                        <Text size="sm" truncate className={classes.itemName}>
+                          {item.name}
+                        </Text>
+                      </DelayedTooltip>
+                      {item.subtitle && (
+                        <DelayedTooltip label={item.subtitle}>
+                          <Text size="xs" c="dimmed" truncate className={classes.itemSubtitle}>
+                            {item.subtitle}
+                          </Text>
+                        </DelayedTooltip>
+                      )}
+                    </Stack>
+                    {isFavorite && (
+                      <ActionIcon
+                        variant="subtle"
+                        color={isFavorite(item.id) ? 'yellow' : 'gray'}
+                        size="xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleFavorite?.(item.id);
+                        }}
+                        className={classes.favoriteIndicator}
+                      >
+                        {isFavorite(item.id) ? <IconStarFilled size={14} /> : <IconStar size={14} />}
+                      </ActionIcon>
+                    )}
                   </Group>
                 </Box>
               ))}
@@ -313,18 +368,18 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
 
       <Divider className={classes.divider} />
 
-      {/* Footer with Add Button */}
-      <div className={classes.footer}>
-        <Button
-          leftSection={<IconPlus size={16} />}
-          variant="light"
-          fullWidth
-          onClick={onAdd}
-          disabled={!onAdd}
-        >
-          {addButtonLabel}
-        </Button>
-      </div>
+      {onAdd && (
+        <div className={classes.footer}>
+          <Button
+            leftSection={<IconPlus size={16} />}
+            variant="light"
+            fullWidth
+            onClick={onAdd}
+          >
+            {addButtonLabel}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

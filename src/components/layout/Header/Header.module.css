@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 70px;
+  height: var(--header-height);
   padding: 0 var(--spacing-lg);
   background: var(--bg-paper);
   border-bottom: 1px solid var(--border-default);
@@ -28,25 +28,33 @@
   width: 36px;
   height: 36px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-500),
+    var(--color-secondary-500)
+  );
   color: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .logoText {
   font-weight: 700;
-  background: linear-gradient(135deg, 
-    var(--color-primary-600) 0%, 
-    var(--color-secondary-600) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-600) 0%,
+    var(--color-secondary-600) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-[data-mantine-color-scheme='dark'] .logoText {
-  background: linear-gradient(135deg, 
-    var(--color-primary-400) 0%, 
-    var(--color-secondary-400) 100%);
+[data-mantine-color-scheme="dark"] .logoText {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-400) 0%,
+    var(--color-secondary-400) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -56,6 +64,23 @@
 .search {
   flex: 1;
   max-width: 600px;
+}
+
+.searchKbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 20px;
+  padding: 0 4px;
+  margin-right: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
 }
 
 /* User Account */
@@ -74,7 +99,7 @@
   background-color: var(--gray-100);
 }
 
-[data-mantine-color-scheme='dark'] .userAccount:hover {
+[data-mantine-color-scheme="dark"] .userAccount:hover {
   background-color: var(--gray-800);
 }
 
@@ -99,7 +124,7 @@
   background-color: var(--gray-100);
 }
 
-[data-mantine-color-scheme='dark'] .menuLink:hover {
+[data-mantine-color-scheme="dark"] .menuLink:hover {
   background-color: var(--gray-800);
 }
 
@@ -108,7 +133,7 @@
   .search {
     max-width: 300px;
   }
-  
+
   .logoText {
     display: none;
   }

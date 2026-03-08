@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Container, Text, Button, Paper, Stack, CopyButton, ActionIcon, Tooltip, Group, Code, Loader } from '@mantine/core';
 import { IconCopy, IconCheck, IconArrowLeft, IconKey } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
@@ -7,16 +8,21 @@ import { useIdentity } from '../../contexts';
 import classes from './LoginTokenPage.module.css';
 
 export const LoginTokenPage = () => {
-  const { isAuthenticated, getAccessToken, account } = useAuth();
+  const { t } = useTranslation('token');
+  const { isAuthenticated, getAccessToken, getFoundryToken, account } = useAuth();
   const { user, selectedTenant, isLoading: identityLoading } = useIdentity();
   const [token, setToken] = useState<string | null>(null);
+  const [foundryToken, setFoundryToken] = useState<string | null>(null);
+  const [foundryError, setFoundryError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFoundryLoading, setIsFoundryLoading] = useState(false);
   const navigate = useNavigate();
 
-  // NO automatic redirect - just fetch token if authenticated
+  // NO automatic redirect - just fetch tokens if authenticated
   useEffect(() => {
     if (isAuthenticated) {
       fetchToken();
+      fetchFoundryToken();
     }
   }, [isAuthenticated]);
 
@@ -29,6 +35,20 @@ export const LoginTokenPage = () => {
       console.error('Failed to fetch token:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchFoundryToken = async () => {
+    setIsFoundryLoading(true);
+    setFoundryError(null);
+    try {
+      const accessToken = await getFoundryToken();
+      setFoundryToken(accessToken);
+    } catch (error) {
+      console.error('Failed to fetch Foundry token:', error);
+      setFoundryError('Consent required. Please allow popups or try again.');
+    } finally {
+      setIsFoundryLoading(false);
     }
   };
 
@@ -56,7 +76,7 @@ export const LoginTokenPage = () => {
             onClick={() => navigate(isAuthenticated ? '/dashboard' : '/login')}
             className={classes.backButton}
           >
-            {isAuthenticated ? 'Zurück zum Dashboard' : 'Zur Login-Seite'}
+            {isAuthenticated ? t('backToDashboard') : t('backToLogin')}
           </Button>
 
           {/* Show login prompt if not authenticated */}
@@ -65,17 +85,17 @@ export const LoginTokenPage = () => {
               <Stack gap="md" align="center">
                 <IconKey size={48} />
                 <Text size="lg" fw={600} ta="center">
-                  Nicht angemeldet
+                  {t('notAuthenticated')}
                 </Text>
                 <Text size="sm" c="dimmed" ta="center">
-                  Du musst angemeldet sein, um deinen Access Token zu sehen.
+                  {t('mustBeLoggedIn')}
                 </Text>
                 <Button
                   leftSection={<IconArrowLeft size={18} />}
                   onClick={() => navigate('/login')}
                   fullWidth
                 >
-                  Zur Login-Seite
+                  {t('goToLogin')}
                 </Button>
               </Stack>
             </Paper>
@@ -88,7 +108,7 @@ export const LoginTokenPage = () => {
                 <Stack gap="md" align="center">
                   <Loader size="lg" />
                   <Text size="md" c="dimmed">
-                    Identity-Daten werden geladen...
+                    {t('loadingIdentity')}
                   </Text>
                 </Stack>
               </Paper>
@@ -102,11 +122,11 @@ export const LoginTokenPage = () => {
                     </Text>
                   </Group>
                   <Text size="sm" c="dimmed">
-                    Angemeldet als: {user?.mail || user?.display_name || account?.username || 'Unbekannt'}
+                    {t('loggedInAs', { email: user?.mail || user?.display_name || account?.username || t('unknown') })}
                   </Text>
                   {selectedTenant && (
                     <Text size="sm" c="dimmed">
-                      Aktueller Tenant: {selectedTenant.name}
+                      {t('currentTenant', { name: selectedTenant.name })}
                     </Text>
                   )}
                 </Stack>
@@ -120,7 +140,7 @@ export const LoginTokenPage = () => {
               <Stack gap="md">
                 <Group justify="space-between">
                   <Text size="md" fw={500}>
-                    Token
+                    Graph API Token
                   </Text>
                   <CopyButton value={token} timeout={2000}>
                     {({ copied, copy }) => (
@@ -141,7 +161,7 @@ export const LoginTokenPage = () => {
                   {getTokenPreview(token)}
                 </Code>
                 <Text size="xs" c="dimmed" ta="center">
-                  Klicke auf das Kopier-Symbol, um den vollständigen Token zu kopieren
+                  {t('clickCopyIcon')}
                 </Text>
                 <Button
                   onClick={fetchToken}
@@ -149,7 +169,7 @@ export const LoginTokenPage = () => {
                   variant="light"
                   fullWidth
                 >
-                  Token neu laden
+                  {t('reloadToken')}
                 </Button>
               </Stack>
             </Paper>
@@ -158,10 +178,71 @@ export const LoginTokenPage = () => {
               <Stack gap="md" align="center">
                 <Loader size="lg" />
                 <Text size="md" c="dimmed">
-                  Token wird geladen...
+                  {t('loadingToken')}
                 </Text>
                 <Button onClick={fetchToken} loading={isLoading}>
-                  Token neu laden
+                  {t('reloadToken')}
+                </Button>
+              </Stack>
+            </Paper>
+          ) : null}
+
+          {/* Foundry Token Card - only show if authenticated */}
+          {isAuthenticated && foundryToken ? (
+            <Paper shadow="md" radius="md" p="xl" className={classes.tokenCard}>
+              <Stack gap="md">
+                <Group justify="space-between">
+                  <Text size="md" fw={500}>
+                    {t('foundryTokenTitle')}
+                  </Text>
+                  <CopyButton value={foundryToken} timeout={2000}>
+                    {({ copied, copy }) => (
+                      <Tooltip label={copied ? t('copied') : t('copyToken')} position="left">
+                        <ActionIcon
+                          color={copied ? 'teal' : 'gray'}
+                          variant="subtle"
+                          onClick={copy}
+                          size="lg"
+                        >
+                          {copied ? <IconCheck size={18} /> : <IconCopy size={18} />}
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
+                  </CopyButton>
+                </Group>
+                <Code block className={classes.tokenDisplay}>
+                  {getTokenPreview(foundryToken)}
+                </Code>
+                <Text size="xs" c="dimmed" ta="center">
+                  {t('clickCopyFoundryIcon')}
+                </Text>
+                <Button
+                  onClick={fetchFoundryToken}
+                  loading={isFoundryLoading}
+                  variant="light"
+                  fullWidth
+                >
+                  {t('reloadFoundryToken')}
+                </Button>
+              </Stack>
+            </Paper>
+          ) : isAuthenticated ? (
+            <Paper shadow="md" radius="md" p="xl" className={classes.tokenCard}>
+              <Stack gap="md" align="center">
+                <IconKey size={32} />
+                <Text size="md" fw={500}>
+                  {t('foundryTokenTitle')}
+                </Text>
+                <Text size="sm" c="dimmed" ta="center">
+                  {t('fetchFoundryTokenDescription')}
+                  {foundryError && <Text c="red" size="xs" mt="xs">{foundryError}</Text>}
+                </Text>
+                <Button
+                  onClick={fetchFoundryToken}
+                  loading={isFoundryLoading}
+                  fullWidth
+                >
+                  {t('fetchFoundryToken')}
                 </Button>
               </Stack>
             </Paper>

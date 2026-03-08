@@ -1,0 +1,35 @@
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.toggle:hover {
+  background: var(--bg-hover);
+}
+
+.codeBlock {
+  font-size: var(--font-size-xs);
+  background: var(--bg-paper) !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.codeBlockPreview {
+  font-size: var(--font-size-xs);
+  max-height: 60px;
+  overflow: hidden;
+  opacity: 0.7;
+  background: var(--bg-paper) !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -11,7 +11,9 @@ import {
   Stack,
   Paper,
   Box,
+  Checkbox,
 } from '@mantine/core';
+import { DelayedTooltip } from '../DelayedTooltip';
 import {
   IconDots,
   IconExternalLink,
@@ -21,6 +23,9 @@ import {
   IconPin,
   IconPinned,
   IconTrash,
+  IconStar,
+  IconStarFilled,
+  IconCode,
 } from '@tabler/icons-react';
 import classes from './DataTable.module.css';
 
@@ -32,32 +37,28 @@ export interface DataTableItem {
   tags?: string[];
   isActive?: boolean;
   isPinned?: boolean;
+  my_permission?: string;
 }
 
 interface DataTableRowProps {
   item: DataTableItem;
-  /** Show the status toggle */
   showStatus?: boolean;
-  /** Status toggle change handler */
   onStatusChange?: (id: string, isActive: boolean) => void;
-  /** Open item handler */
   onOpen?: (id: string) => void;
-  /** Edit item handler */
   onEdit?: (id: string) => void;
-  /** Share item handler */
   onShare?: (id: string) => void;
-  /** Manage access/IAM handler */
   onManageAccess?: (id: string) => void;
-  /** Duplicate item handler */
   onDuplicate?: (id: string) => void;
-  /** Pin/Unpin item handler */
+  onEmbedSetup?: (id: string) => void;
   onPin?: (id: string, isPinned: boolean) => void;
-  /** Delete item handler */
   onDelete?: (id: string) => void;
-  /** Row click handler (clicking the row itself) */
   onRowClick?: (id: string) => void;
-  /** Custom row icon */
   icon?: ReactNode;
+  isFavorite?: boolean;
+  onToggleFavorite?: (id: string) => void;
+  isSelected?: boolean;
+  showCheckbox?: boolean;
+  onSelect?: (id: string) => void;
 }
 
 const MAX_VISIBLE_TAGS = 3;
@@ -71,48 +72,91 @@ export const DataTableRow: FC<DataTableRowProps> = ({
   onShare: _onShare,
   onManageAccess,
   onDuplicate,
+  onEmbedSetup,
   onPin,
   onDelete,
   onRowClick,
   icon,
+  isFavorite = false,
+  onToggleFavorite,
+  isSelected = false,
+  showCheckbox = false,
+  onSelect,
 }) => {
   const visibleTags = item.tags?.slice(0, MAX_VISIBLE_TAGS) || [];
   const hiddenTags = item.tags?.slice(MAX_VISIBLE_TAGS) || [];
   const hasHiddenTags = hiddenTags.length > 0;
   const [popoverOpened, setPopoverOpened] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const perm = item.my_permission;
+  const canWriteItem = perm === 'ADMIN' || perm === 'WRITE';
+  const canAdminItem = perm === 'ADMIN';
+  const hasPermission = perm != null;
+
+  const handleDelete = () => {
+    if (!onDelete) return;
+    setIsDeleting(true);
+    setTimeout(() => {
+      onDelete(item.id);
+    }, 350);
+  };
 
   return (
-    <Paper 
-      className={`${classes.row} ${onRowClick ? classes.clickable : ''}`} 
-      p="md" 
+    <Paper
+      className={`${classes.row} ${onRowClick ? classes.clickable : ''} ${isDeleting ? classes.rowDeleting : ''} ${isSelected ? classes.rowSelected : ''}`}
+      p="md"
       withBorder
       onClick={() => onRowClick?.(item.id)}
       style={onRowClick ? { cursor: 'pointer' } : undefined}
     >
-      <Group justify="space-between" wrap="nowrap" gap="lg">
-        {/* Left: Name & Description */}
-        <Group gap="md" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+      <Group wrap="nowrap" gap="lg">
+        <Group gap="md" wrap="nowrap" style={{ flex: 1, minWidth: 0, maxWidth: 600 }}>
+          {showCheckbox && onSelect && (
+            <Checkbox
+              checked={isSelected}
+              onChange={() => onSelect(item.id)}
+              onClick={(e) => e.stopPropagation()}
+              size="sm"
+              className={classes.rowCheckbox}
+            />
+          )}
+          {onToggleFavorite && (
+            <ActionIcon
+              variant="subtle"
+              color={isFavorite ? 'yellow' : 'gray'}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite(item.id);
+              }}
+              className={classes.favoriteButton}
+            >
+              {isFavorite ? <IconStarFilled size={18} /> : <IconStar size={18} />}
+            </ActionIcon>
+          )}
           {icon && <Box className={classes.rowIcon}>{icon}</Box>}
-          <Stack gap={2} style={{ minWidth: 0, flex: 1 }}>
-            <Text fw={600} size="md" truncate className={classes.itemName}>
-              {item.name}
-            </Text>
-            {item.description && (
-              <Text size="sm" c="dimmed" truncate className={classes.itemDescription}>
-                {item.description}
+          <Stack gap={2} className={classes.nameDescriptionColumn}>
+            <DelayedTooltip label={item.name} position="top-start">
+              <Text fw={600} size="md" truncate className={classes.itemName}>
+                {item.name}
               </Text>
+            </DelayedTooltip>
+            {item.description && (
+              <DelayedTooltip label={item.description} position="top-start">
+                <Text size="sm" c="dimmed" truncate className={classes.itemDescription}>
+                  {item.description}
+                </Text>
+              </DelayedTooltip>
             )}
           </Stack>
         </Group>
 
-        {/* Type Column */}
         {item.type && (
           <Text size="sm" c="dimmed" className={classes.typeColumn}>
             {item.type}
           </Text>
         )}
 
-        {/* Tags Column */}
         <Group gap={4} wrap="wrap" className={classes.tagsColumn}>
           {visibleTags.map((tag) => (
             <Badge key={tag} size="sm" variant="light" radius="sm">
@@ -120,10 +164,10 @@ export const DataTableRow: FC<DataTableRowProps> = ({
             </Badge>
           ))}
           {hasHiddenTags && (
-            <Popover 
-              position="top" 
-              withArrow 
-              shadow="md" 
+            <Popover
+              position="top"
+              withArrow
+              shadow="md"
               withinPortal
               opened={popoverOpened}
               onChange={setPopoverOpened}
@@ -155,67 +199,106 @@ export const DataTableRow: FC<DataTableRowProps> = ({
           )}
         </Group>
 
-        {/* Status Toggle */}
-        {showStatus && item.isActive !== undefined && (
-          <Switch
-            checked={item.isActive}
-            onChange={(e) => onStatusChange?.(item.id, e.currentTarget.checked)}
-            onClick={(e) => e.stopPropagation()}
-            size="sm"
-            className={classes.statusSwitch}
-          />
-        )}
+        <Group gap="lg" wrap="nowrap" style={{ marginLeft: 'auto', flexShrink: 0 }}>
+          {showStatus && item.isActive !== undefined && (
+            <div onClick={(e) => e.stopPropagation()}>
+              <Switch
+                checked={item.isActive}
+                onChange={(e) => onStatusChange?.(item.id, e.currentTarget.checked)}
+                size="sm"
+                className={classes.statusSwitch}
+                disabled={hasPermission && !canWriteItem}
+              />
+            </div>
+          )}
 
-        {/* Actions Menu */}
-        <Menu shadow="md" position="bottom-end" withinPortal>
+          <Menu shadow="md" position="bottom-end" withinPortal>
           <Menu.Target>
             <ActionIcon variant="subtle" color="gray" onClick={(e) => e.stopPropagation()}>
               <IconDots size={18} />
             </ActionIcon>
           </Menu.Target>
 
-          <Menu.Dropdown>
+          <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
             <Menu.Item
               leftSection={<IconExternalLink size={14} />}
-              onClick={() => onOpen?.(item.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpen?.(item.id);
+              }}
             >
               Open
             </Menu.Item>
-            <Menu.Item
-              leftSection={<IconEdit size={14} />}
-              onClick={() => onEdit?.(item.id)}
-            >
-              Edit
-            </Menu.Item>
-            <Menu.Item
-              leftSection={<IconUserCog size={14} />}
-              onClick={() => onManageAccess?.(item.id)}
-            >
-              Manage access
-            </Menu.Item>
-            <Menu.Item
-              leftSection={<IconCopy size={14} />}
-              onClick={() => onDuplicate?.(item.id)}
-            >
-              Duplicate
-            </Menu.Item>
-            <Menu.Divider />
+            {(!hasPermission || canWriteItem) && (
+              <Menu.Item
+                leftSection={<IconEdit size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.(item.id);
+                }}
+              >
+                Edit
+              </Menu.Item>
+            )}
+            {(!hasPermission || canAdminItem) && (
+              <Menu.Item
+                leftSection={<IconUserCog size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onManageAccess?.(item.id);
+                }}
+              >
+                Manage access
+              </Menu.Item>
+            )}
+            {(!hasPermission || canWriteItem) && (
+              <Menu.Item
+                leftSection={<IconCopy size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDuplicate?.(item.id);
+                }}
+              >
+                Duplicate
+              </Menu.Item>
+            )}            {onEmbedSetup && (!hasPermission || canWriteItem) && (
+              <Menu.Item
+                leftSection={<IconCode size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEmbedSetup(item.id);
+                }}
+              >
+                Embed Agent
+              </Menu.Item>
+            )}            <Menu.Divider />
             <Menu.Item
               leftSection={item.isPinned ? <IconPinned size={14} /> : <IconPin size={14} />}
-              onClick={() => onPin?.(item.id, !item.isPinned)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onPin?.(item.id, !item.isPinned);
+              }}
             >
               {item.isPinned ? 'Unpin' : 'Pin'}
             </Menu.Item>
-            <Menu.Divider />
-            <Menu.Item
-              leftSection={<IconTrash size={14} />}
-              color="red"
-              onClick={() => onDelete?.(item.id)}
-            >
-              Delete
-            </Menu.Item>
+            {(!hasPermission || canAdminItem) && (
+              <>
+                <Menu.Divider />
+                <Menu.Item
+                  leftSection={<IconTrash size={14} />}
+                  color="red"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete();
+                  }}
+                >
+                  Delete
+                </Menu.Item>
+              </>
+            )}
           </Menu.Dropdown>
         </Menu>
+        </Group>
       </Group>
     </Paper>
   );

@@ -1,0 +1,80 @@
+.titleIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-selected);
+  color: var(--color-primary-500);
+}
+
+.tabs {
+}
+
+.tabsList {
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  flex-shrink: 0;
+}
+
+.tab {
+  font-size: var(--mantine-font-size-md);
+  font-weight: 500;
+  padding: var(--spacing-md) var(--spacing-lg);
+  min-height: 52px;
+}
+
+.tabPanel {
+  padding-top: var(--spacing-lg);
+  margin-right: calc(-1 * var(--spacing-md));
+}
+
+.tabPanelScrollArea {
+  max-height: calc(100vh - 360px);
+  min-height: 200px;
+  overflow-y: auto;
+  padding-right: var(--spacing-md);
+}
+
+.codeBlock {
+  position: relative;
+  padding: var(--spacing-md);
+  padding-top: var(--spacing-lg);
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+}
+
+.codeContent {
+  font-family: monospace;
+  font-size: var(--font-size-xs);
+  color: var(--text-primary);
+  white-space: pre;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+.copyCodeButtonWrapper {
+  position: absolute;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+  z-index: 1;
+}
+
+.copyableHeaderKey {
+  color: var(--text-primary);
+  background-color: var(--bg-app);
+  padding: 2px 10px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-default);
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.copyableHeaderKey:hover {
+  border-color: var(--color-primary-500);
+  background-color: var(--bg-selected);
+}

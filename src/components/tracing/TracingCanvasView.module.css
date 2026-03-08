@@ -1,0 +1,235 @@
+/**
+ * TracingCanvasView - CSS Module
+ */
+
+.container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-app);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.emptyContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-app);
+  color: var(--text-secondary);
+  font-size: var(--font-size-md);
+}
+
+/* ============================================ */
+/* CONTROLS (Top Right)                         */
+/* ============================================ */
+
+.controls {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  z-index: var(--z-sticky);
+}
+
+/* ============================================ */
+/* CUSTOM NODE STYLING                          */
+/* ============================================ */
+
+.customNode {
+  width: 140px;
+  height: 90px;
+  background: var(--bg-paper);
+  border: 2px solid var(--border-default);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs);
+  cursor: pointer;
+  transition:
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+  position: relative;
+}
+
+.customNode:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.customNodeSelected {
+  box-shadow: var(--shadow-md);
+  border-width: 3px;
+  border-color: #1e88e5 !important; /* Primary blue - same as root chain arrows */
+}
+
+.nodeIcon {
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.nodeLabel {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.3;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nodeStatus {
+  position: absolute;
+  bottom: var(--spacing-xs);
+  right: var(--spacing-xs);
+}
+
+/* ============================================ */
+/* SPINNING ANIMATION                           */
+/* ============================================ */
+
+.spinningIcon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================ */
+/* EDGE INDEX BADGE                             */
+/* ============================================ */
+
+.edgeIndexBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg-paper);
+  border: 2px solid currentColor;
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  color: currentColor;
+  pointer-events: none;
+}
+
+/* ============================================ */
+/* XYFLOW OVERRIDES                             */
+/* ============================================ */
+
+.flowControls {
+  background: var(--bg-paper) !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--border-default) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.flowControls button {
+  background: var(--bg-paper) !important;
+  border-bottom: 1px solid var(--border-default) !important;
+  color: var(--text-primary) !important;
+}
+
+.flowControls button:hover {
+  background: var(--bg-elevated) !important;
+}
+
+.flowControls button:last-child {
+  border-bottom: none !important;
+}
+
+.miniMap {
+  background: var(--bg-paper) !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--border-default) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* ============================================ */
+/* REACT FLOW BASE OVERRIDES                    */
+/* ============================================ */
+
+:global(.react-flow__node) {
+  border-radius: var(--radius-md);
+}
+
+:global(.react-flow__edge-path) {
+  stroke: var(--color-primary-400);
+  stroke-width: 2;
+}
+
+:global(.react-flow__handle) {
+  width: 8px;
+  height: 8px;
+  background: var(--color-primary-400);
+  border: 2px solid var(--bg-paper);
+  opacity: 0;
+}
+
+:global(.react-flow__node:hover .react-flow__handle) {
+  opacity: 1;
+}
+
+/* ============================================ */
+/* EDGE COLLAPSE BUTTON                         */
+/* ============================================ */
+
+.edgeButton {
+  width: 22px;
+  height: 22px;
+  background: var(--bg-paper);
+  border: 2px solid var(--color-gray-400);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  z-index: var(--z-dropdown);
+}
+
+.edgeButton:hover {
+  background: var(--color-gray-100);
+  border-color: var(--color-primary-500);
+  color: var(--color-primary-600);
+  transform: scale(1.1);
+}
+
+/* ============================================ */
+/* NODE COLLAPSE BUTTON                         */
+/* ============================================ */
+
+.collapseButton {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background: var(--bg-paper);
+  border: 2px solid var(--color-gray-400);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  z-index: var(--z-dropdown);
+}
+
+.collapseButton:hover {
+  background: var(--color-gray-100);
+  border-color: var(--color-primary-500);
+  color: var(--color-primary-600);
+  transform: scale(1.15);
+}

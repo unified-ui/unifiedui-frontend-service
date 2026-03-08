@@ -9,13 +9,13 @@ import type {
 import type { PrincipalPermission } from '../components/common/ManageAccessTable/ManageAccessTable';
 import type { SelectedPrincipal } from '../components/common/AddPrincipalDialog/AddPrincipalDialog';
 
-export type EntityType = 
-  | 'application' 
-  | 'autonomous-agent' 
-  | 'credential' 
-  | 'chat-widget' 
-  | 'development-platform'
-  | 'conversation';
+export type EntityType =
+  | 'chat-agent'
+  | 'autonomous-agent'
+  | 'credential'
+  | 'chat-widget'
+  | 'conversation'
+  | 'tool';
 
 interface UseEntityPermissionsOptions {
   entityType: EntityType;
@@ -81,13 +81,13 @@ export const useEntityPermissions = ({
     const tenantId = selectedTenant.id;
 
     switch (entityType) {
-      case 'application':
+      case 'chat-agent':
         return {
-          getPrincipals: () => apiClient.getApplicationPrincipals(tenantId, entityId),
+          getPrincipals: () => apiClient.getChatAgentPrincipals(tenantId, entityId),
           setPermission: (data: { principal_id: string; principal_type: PrincipalTypeEnum; role: PermissionActionEnum }) =>
-            apiClient.setApplicationPermission(tenantId, entityId, data),
+            apiClient.setChatAgentPermission(tenantId, entityId, data),
           deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
-            apiClient.deleteApplicationPermission(tenantId, entityId, principalId, principalType, role),
+            apiClient.deleteChatAgentPermission(tenantId, entityId, principalId, principalType, role),
         };
       case 'autonomous-agent':
         return {
@@ -113,14 +113,6 @@ export const useEntityPermissions = ({
           deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
             apiClient.deleteChatWidgetPermission(tenantId, entityId, principalId, principalType, role),
         };
-      case 'development-platform':
-        return {
-          getPrincipals: () => apiClient.getDevelopmentPlatformPrincipals(tenantId, entityId),
-          setPermission: (data: { principal_id: string; principal_type: PrincipalTypeEnum; role: PermissionActionEnum }) =>
-            apiClient.setDevelopmentPlatformPermission(tenantId, entityId, data),
-          deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
-            apiClient.deleteDevelopmentPlatformPermission(tenantId, entityId, principalId, principalType, role),
-        };
       case 'conversation':
         return {
           getPrincipals: () => apiClient.getConversationPrincipals(tenantId, entityId),
@@ -128,6 +120,14 @@ export const useEntityPermissions = ({
             apiClient.setConversationPermission(tenantId, entityId, data),
           deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
             apiClient.deleteConversationPermission(tenantId, entityId, principalId, principalType, role),
+        };
+      case 'tool':
+        return {
+          getPrincipals: () => apiClient.getToolPrincipals(tenantId, entityId),
+          setPermission: (data: { principal_id: string; principal_type: PrincipalTypeEnum; role: PermissionActionEnum }) =>
+            apiClient.setToolPermission(tenantId, entityId, data),
+          deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
+            apiClient.deleteToolPermission(tenantId, entityId, principalId, principalType, role),
         };
       default:
         return null;

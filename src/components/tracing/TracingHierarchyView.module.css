@@ -1,0 +1,247 @@
+/**
+ * TracingHierarchyView - CSS Module
+ *
+ * Features:
+ * - VSCode-style Tree mit curved Linien
+ * - Indentation per Level
+ * - Selected State Highlighting
+ * - Collapsible Data Panels
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-app);
+  border-left: 1px solid var(--border-default);
+  overflow: hidden;
+}
+
+.containerCompact {
+  border-left: none;
+}
+
+.containerChatSidebar {
+  border-left: none;
+  border-top-left-radius: var(--radius-lg);
+  background: var(--bg-paper);
+}
+
+.containerChatSidebar .header {
+  border-bottom: none;
+  background: var(--bg-paper);
+}
+
+.containerChatSidebar .dataPanelsContainer {
+  background: transparent;
+}
+
+:global([data-mantine-color-scheme="dark"]) .containerChatSidebar {
+  background: #1a1a1a;
+}
+
+:global([data-mantine-color-scheme="dark"]) .containerChatSidebar .header {
+  background: #1a1a1a;
+  border-bottom: none;
+}
+
+.emptyContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: var(--bg-app);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-app);
+  flex-shrink: 0;
+}
+
+.fullscreenButton {
+  opacity: 0.7;
+}
+
+.fullscreenButton:hover {
+  opacity: 1;
+}
+
+.scrollArea {
+  flex: 1;
+  overflow: auto;
+}
+
+.treeContainer {
+  padding: var(--spacing-sm);
+}
+
+/* ============================================ */
+/* TREE ITEM                                    */
+/* ============================================ */
+
+.treeItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  padding-right: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  width: 100%;
+  min-height: 28px;
+}
+
+.treeItem:hover {
+  background: var(--bg-hover);
+}
+
+.treeItemSelected {
+  background: var(--bg-selected) !important;
+}
+
+.treeItemSelected:hover {
+  background: var(--bg-selected-hover) !important;
+}
+
+.traceRoot {
+  font-weight: var(--font-weight-medium);
+}
+
+/* ============================================ */
+/* EXPAND/COLLAPSE ICON                         */
+/* ============================================ */
+
+.expandIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.expandIcon:hover {
+  color: var(--text-primary);
+}
+
+.expandIconPlaceholder {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* ============================================ */
+/* TYPE BADGE                                   */
+/* ============================================ */
+
+.typeBadge {
+  flex-shrink: 0;
+  text-transform: lowercase;
+  font-weight: var(--font-weight-regular);
+}
+
+/* ============================================ */
+/* NODE NAME                                    */
+/* ============================================ */
+
+.nodeName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+
+/* ============================================ */
+/* STATUS ICON                                  */
+/* ============================================ */
+
+.statusIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-right: var(--spacing-sm);
+}
+
+/* ============================================ */
+/* CHILDREN CONTAINER & TREE LINES              */
+/* ============================================ */
+
+.childrenContainer {
+  position: relative;
+}
+
+.treeLine {
+  position: absolute;
+  top: 0;
+  bottom: 14px; /* Stoppe vor dem letzten Element */
+  width: 1px;
+  background: var(--border-default);
+}
+
+/* ============================================ */
+/* SPINNING ANIMATION                           */
+/* ============================================ */
+
+.spinningIcon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================ */
+/* PANELS RESIZE HANDLE                         */
+/* ============================================ */
+
+.panelsResizeHandle {
+  height: 4px;
+  cursor: row-resize;
+  background: transparent;
+  transition: background-color var(--transition-fast);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.panelsResizeHandle::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  background: var(--border-default);
+  border-radius: 2px;
+}
+
+.panelsResizeHandle:hover {
+  background: var(--color-primary-100);
+}
+
+.panelsResizeHandle:hover::after {
+  background: var(--color-primary-300);
+}
+
+.panelsResizeHandle:active {
+  background: var(--color-primary-200);
+}
+
+.panelsResizeHandle:active::after {
+  background: var(--color-primary-500);
+}

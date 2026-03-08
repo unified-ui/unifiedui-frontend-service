@@ -16,9 +16,10 @@ import {
   Loader,
   Center,
   Table,
+  Skeleton,
   ActionIcon,
   Menu,
-  ScrollArea,
+  MultiSelect,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -33,9 +34,14 @@ import {
   IconSearch,
   IconDots,
   IconUserPlus,
+  IconKey,
+  IconShieldLock,
+  IconTool,
+  IconBrain,
+  IconBuilding,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { PageContainer, ConfirmDeleteDialog, EditRolesDialog } from '../../components/common';
+import { ConfirmDeleteDialog, EditRolesDialog, OrganizationSettingsPanel, OrganizationAccessPanel } from '../../components/common';
 import { ManageTenantAccessTable, TENANT_ROLE_OPTIONS } from '../../components/common/ManageTenantAccessTable';
 import type { TenantPrincipalPermission } from '../../components/common/ManageTenantAccessTable';
 import { AddPrincipalDialog } from '../../components/common/AddPrincipalDialog';
@@ -43,19 +49,41 @@ import type { SelectedPrincipal, RoleOption } from '../../components/common/AddP
 import {
   CreateCustomGroupDialog,
   EditCustomGroupDialog,
+  CreateCredentialDialog,
+  EditCredentialDialog,
+  CreateToolDialog,
+  EditToolDialog,
 } from '../../components/dialogs';
+import { AIModelDialog } from '../../components/dialogs/AIModelDialog';
+import type { EditDialogTab } from '../../components/dialogs';
 import { useIdentity } from '../../contexts';
 import type {
-  TenantPermissionEnum,
   PrincipalTypeEnum,
   CustomGroupResponse,
+  CredentialResponse,
+  ToolResponse,
+  AIModelResponse,
 } from '../../api/types';
+import { TenantPermissionEnum, ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum } from '../../api/types';
+import { useDelayedLoading, usePermissions } from '../../hooks';
 import classes from './TenantSettingsPage.module.css';
 
-type TabValue = 'settings' | 'iam' | 'custom-groups' | 'billing-and-licence';
+type TabValue = 'organization' | 'org-iam' | 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'ai-models' | 'billing-and-licence';
 
-const TAB_VALUES: TabValue[] = ['settings', 'iam', 'custom-groups', 'billing-and-licence'];
+const TAB_VALUES: TabValue[] = ['organization', 'org-iam', 'settings', 'iam', 'custom-groups', 'tools', 'credentials', 'ai-models', 'billing-and-licence'];
 const DEFAULT_TAB: TabValue = 'settings';
+
+const PURPOSE_GROUP_COLORS: Record<string, string> = {
+  REACT_AGENT: 'violet',
+  CONVERSATION_TITLE_GENERATION: 'blue',
+  CONVERSATION_SUMMARIZATION: 'teal',
+  DESCRIPTION_GENERATION: 'orange',
+  TRACE_ANALYSIS: 'pink',
+  GENERAL: 'gray',
+};
+
+const purposeGroupColor = (group: string): string =>
+  PURPOSE_GROUP_COLORS[group] || 'gray';
 
 const isValidTab = (value: string | null): value is TabValue => {
   return value !== null && TAB_VALUES.includes(value as TabValue);
@@ -68,8 +96,9 @@ interface TenantSettingsFormValues {
 
 export const TenantSettingsPage: FC = () => {
   const { apiClient, selectedTenant, refreshIdentity } = useIdentity();
+  const { isGlobalAdmin, canCreate, hasRole, hasOrgBypass } = usePermissions();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   // Read initial tab from URL, default to 'settings'
   const tabFromUrl = searchParams.get('tab');
   const initialTab = isValidTab(tabFromUrl) ? tabFromUrl : DEFAULT_TAB;
@@ -118,7 +147,7 @@ export const TenantSettingsPage: FC = () => {
   const [principalsRoleFilter, setPrincipalsRoleFilter] = useState<string[]>([]);
   const [addPrincipalDialogOpen, setAddPrincipalDialogOpen] = useState(false);
   const [editPrincipal, setEditPrincipal] = useState<TenantPrincipalPermission | null>(null);
-  
+
   const PRINCIPALS_PAGE_SIZE = 50;
 
   // ===== Custom Groups State =====
@@ -140,9 +169,138 @@ export const TenantSettingsPage: FC = () => {
     name: string;
   }>({ open: false, id: '', name: '' });
   const [isDeletingGroup, setIsDeletingGroup] = useState(false);
-  
+
   const CUSTOM_GROUPS_PAGE_SIZE = 50;
   const customGroupsLoadMoreRef = useRef<HTMLDivElement>(null);
+
+  // ===== Credentials State =====
+  const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
+  const [credentialsLoading, setCredentialsLoading] = useState(false);
+  const [credentialsLoadingMore, setCredentialsLoadingMore] = useState(false);
+  const [credentialsError, setCredentialsError] = useState<string | null>(null);
+  const [credentialsFetched, setCredentialsFetched] = useState(false);
+  const [credentialsHasMore, setCredentialsHasMore] = useState(true);
+  const [credentialsSkip, setCredentialsSkip] = useState(0);
+  const [createCredentialDialogOpen, setCreateCredentialDialogOpen] = useState(false);
+  const [editCredentialId, setEditCredentialId] = useState<string | null>(null);
+  const [editCredentialTab, setEditCredentialTab] = useState<EditDialogTab>('details');
+  const [credentialsSearch, setCredentialsSearch] = useState('');
+  const [debouncedCredentialsSearch] = useDebouncedValue(credentialsSearch, 400);
+  const [deleteCredentialDialog, setDeleteCredentialDialog] = useState<{
+    open: boolean;
+    id: string;
+    name: string;
+  }>({ open: false, id: '', name: '' });
+  const [isDeletingCredential, setIsDeletingCredential] = useState(false);
+
+  const CREDENTIALS_PAGE_SIZE = 50;
+  const credentialsLoadMoreRef = useRef<HTMLDivElement>(null);
+
+  // ===== Tools State =====
+  const [tools, setTools] = useState<ToolResponse[]>([]);
+  const [toolsLoading, setToolsLoading] = useState(false);
+  const [toolsLoadingMore, setToolsLoadingMore] = useState(false);
+  const [toolsError, setToolsError] = useState<string | null>(null);
+  const [toolsFetched, setToolsFetched] = useState(false);
+  const [toolsHasMore, setToolsHasMore] = useState(true);
+  const [toolsSkip, setToolsSkip] = useState(0);
+  const [createToolDialogOpen, setCreateToolDialogOpen] = useState(false);
+  const [editToolId, setEditToolId] = useState<string | null>(null);
+  const [editToolTab, setEditToolTab] = useState<EditDialogTab>('details');
+  const [toolsSearch, setToolsSearch] = useState('');
+  const [debouncedToolsSearch] = useDebouncedValue(toolsSearch, 400);
+  const [toolsTypeFilter, setToolsTypeFilter] = useState<string[]>([]);
+  const [deleteToolDialog, setDeleteToolDialog] = useState<{
+    open: boolean;
+    id: string;
+    name: string;
+  }>({ open: false, id: '', name: '' });
+  const [isDeletingTool, setIsDeletingTool] = useState(false);
+
+  const TOOLS_PAGE_SIZE = 50;
+  const toolsLoadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Tool type options for filter
+  const TOOL_TYPE_OPTIONS = [
+    { value: ToolTypeEnum.MCP_SERVER, label: 'MCP Server' },
+    { value: ToolTypeEnum.OPENAPI_DEFINITION, label: 'OpenAPI Definition' },
+  ];
+
+  const getToolTypeBadgeColor = (type: string): string => {
+    switch (type) {
+      case ToolTypeEnum.MCP_SERVER:
+        return 'blue';
+      case ToolTypeEnum.OPENAPI_DEFINITION:
+        return 'orange';
+      default:
+        return 'gray';
+    }
+  };
+
+  // ===== AI Models State =====
+  const [aiModels, setAiModels] = useState<AIModelResponse[]>([]);
+  const [aiModelsLoading, setAiModelsLoading] = useState(false);
+  const [aiModelsLoadingMore, setAiModelsLoadingMore] = useState(false);
+  const [aiModelsError, setAiModelsError] = useState<string | null>(null);
+  const [aiModelsFetched, setAiModelsFetched] = useState(false);
+  const [aiModelsHasMore, setAiModelsHasMore] = useState(true);
+  const [aiModelsSkip, setAiModelsSkip] = useState(0);
+  const [createAiModelDialogOpen, setCreateAiModelDialogOpen] = useState(false);
+  const [editAiModelId, setEditAiModelId] = useState<string | null>(null);
+  const [aiModelsSearch, setAiModelsSearch] = useState('');
+  const [debouncedAiModelsSearch] = useDebouncedValue(aiModelsSearch, 400);
+  const [aiModelsTypeFilter, setAiModelsTypeFilter] = useState<string[]>([]);
+  const [aiModelsProviderFilter, setAiModelsProviderFilter] = useState<string[]>([]);
+  const [deleteAiModelDialog, setDeleteAiModelDialog] = useState<{
+    open: boolean;
+    id: string;
+    name: string;
+  }>({ open: false, id: '', name: '' });
+  const [isDeletingAiModel, setIsDeletingAiModel] = useState(false);
+
+  const AI_MODELS_PAGE_SIZE = 50;
+  const aiModelsLoadMoreRef = useRef<HTMLDivElement>(null);
+
+  const showCustomGroupsSkeleton = useDelayedLoading(customGroupsLoading && !customGroupsFetched);
+  const showCredentialsSkeleton = useDelayedLoading(credentialsLoading && !credentialsFetched);
+  const showToolsSkeleton = useDelayedLoading(toolsLoading && !toolsFetched);
+  const showAiModelsSkeleton = useDelayedLoading(aiModelsLoading && !aiModelsFetched);
+
+  const AI_MODEL_TYPE_OPTIONS = [
+    { value: AIModelTypeEnum.LLM_MODEL, label: 'LLM Model' },
+    { value: AIModelTypeEnum.EMBEDDING_MODEL, label: 'Embedding Model' },
+  ];
+
+  const AI_MODEL_PROVIDER_OPTIONS = [
+    { value: AIModelProviderEnum.AZURE_OPENAI, label: 'Azure OpenAI' },
+    { value: AIModelProviderEnum.OPENAI, label: 'OpenAI' },
+    { value: AIModelProviderEnum.ANTHROPIC, label: 'Anthropic' },
+    { value: AIModelProviderEnum.GOOGLE_GENAI, label: 'Google GenAI' },
+    { value: AIModelProviderEnum.OLLAMA, label: 'Ollama' },
+    { value: AIModelProviderEnum.MISTRAL, label: 'Mistral' },
+    { value: AIModelProviderEnum.GROQ, label: 'Groq' },
+  ];
+
+  const getAiModelProviderBadgeColor = (provider: string): string => {
+    switch (provider) {
+      case AIModelProviderEnum.AZURE_OPENAI:
+        return 'blue';
+      case AIModelProviderEnum.OPENAI:
+        return 'green';
+      case AIModelProviderEnum.ANTHROPIC:
+        return 'orange';
+      case AIModelProviderEnum.GOOGLE_GENAI:
+        return 'yellow';
+      case AIModelProviderEnum.OLLAMA:
+        return 'gray';
+      case AIModelProviderEnum.MISTRAL:
+        return 'violet';
+      case AIModelProviderEnum.GROQ:
+        return 'teal';
+      default:
+        return 'gray';
+    }
+  };
 
   // ===== Load Tenant Details =====
   useEffect(() => {
@@ -168,7 +326,7 @@ export const TenantSettingsPage: FC = () => {
     setPrincipalsError(null);
 
     const skip = reset ? 0 : principalsSkip;
-    
+
     try {
       const response = await apiClient.getTenantPrincipals(selectedTenant.id, {
         skip,
@@ -178,7 +336,7 @@ export const TenantSettingsPage: FC = () => {
         order_by: 'display_name',
         order_direction: 'asc',
       });
-      
+
       // Transform response: use display_name, mail, principal_name from principal level
       const newPrincipals: TenantPrincipalPermission[] = response.principals.map(principal => ({
         id: `${principal.principal_id}-${principal.principal_type}`,
@@ -191,7 +349,7 @@ export const TenantSettingsPage: FC = () => {
         isActive: principal.is_active,
         roles: principal.roles.map(r => r.role),
       }));
-      
+
       if (reset) {
         setPrincipals(newPrincipals);
         setPrincipalsSkip(PRINCIPALS_PAGE_SIZE);
@@ -204,7 +362,7 @@ export const TenantSettingsPage: FC = () => {
         });
         setPrincipalsSkip(prev => prev + PRINCIPALS_PAGE_SIZE);
       }
-      
+
       // Determine if there are more items to load
       setPrincipalsHasMore(newPrincipals.length === PRINCIPALS_PAGE_SIZE);
       setPrincipalsFetched(true);
@@ -306,6 +464,219 @@ export const TenantSettingsPage: FC = () => {
     return () => observer.disconnect();
   }, [customGroupsHasMore, customGroupsLoadingMore, handleLoadMoreCustomGroups]);
 
+  // ===== Fetch Credentials =====
+  const fetchCredentials = useCallback(async (reset = false) => {
+    if (!apiClient || !selectedTenant) return;
+
+    const isInitialFetch = reset || !credentialsFetched;
+    if (isInitialFetch) {
+      setCredentialsLoading(true);
+    } else {
+      setCredentialsLoadingMore(true);
+    }
+    setCredentialsError(null);
+
+    const skip = reset ? 0 : credentialsSkip;
+
+    try {
+      const result = await apiClient.listCredentials(selectedTenant.id, {
+        skip,
+        limit: CREDENTIALS_PAGE_SIZE,
+        name: debouncedCredentialsSearch || undefined,
+        order_by: 'name',
+        order_direction: 'asc',
+      }) as CredentialResponse[];
+
+      if (reset) {
+        setCredentials(result);
+        setCredentialsSkip(CREDENTIALS_PAGE_SIZE);
+      } else {
+        // Append new credentials, avoiding duplicates
+        setCredentials((prev) => {
+          const existingIds = new Set(prev.map(c => c.id));
+          const uniqueNewCredentials = result.filter(c => !existingIds.has(c.id));
+          return [...prev, ...uniqueNewCredentials];
+        });
+        setCredentialsSkip((prev) => prev + CREDENTIALS_PAGE_SIZE);
+      }
+
+      setCredentialsHasMore(result.length === CREDENTIALS_PAGE_SIZE);
+      setCredentialsFetched(true);
+    } catch {
+      setCredentialsError('Failed to load credentials');
+    } finally {
+      setCredentialsLoading(false);
+      setCredentialsLoadingMore(false);
+    }
+  }, [apiClient, selectedTenant, credentialsFetched, credentialsSkip, debouncedCredentialsSearch]);
+
+  // Handler for loading more credentials (infinite scroll)
+  const handleLoadMoreCredentials = useCallback(() => {
+    if (!credentialsLoadingMore && credentialsHasMore) {
+      fetchCredentials(false);
+    }
+  }, [fetchCredentials, credentialsLoadingMore, credentialsHasMore]);
+
+  // Intersection observer for infinite scroll (credentials)
+  useEffect(() => {
+    if (!credentialsLoadMoreRef.current || !handleLoadMoreCredentials || !credentialsHasMore || credentialsLoadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && credentialsHasMore && !credentialsLoadingMore) {
+          handleLoadMoreCredentials();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(credentialsLoadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [credentialsHasMore, credentialsLoadingMore, handleLoadMoreCredentials]);
+
+  // ===== Fetch Tools =====
+  const fetchTools = useCallback(async (reset = false) => {
+    if (!apiClient || !selectedTenant) return;
+
+    const isInitialFetch = reset || !toolsFetched;
+    if (isInitialFetch) {
+      setToolsLoading(true);
+    } else {
+      setToolsLoadingMore(true);
+    }
+    setToolsError(null);
+
+    const skip = reset ? 0 : toolsSkip;
+
+    try {
+      const result = await apiClient.listTools(selectedTenant.id, {
+        skip,
+        limit: TOOLS_PAGE_SIZE,
+        name: debouncedToolsSearch || undefined,
+        type: toolsTypeFilter.length > 0 ? toolsTypeFilter.join(',') : undefined,
+        order_by: 'name',
+        order_direction: 'asc',
+      }) as ToolResponse[];
+
+      if (reset) {
+        setTools(result);
+        setToolsSkip(TOOLS_PAGE_SIZE);
+      } else {
+        // Append new tools, avoiding duplicates
+        setTools((prev) => {
+          const existingIds = new Set(prev.map(t => t.id));
+          const uniqueNewTools = result.filter(t => !existingIds.has(t.id));
+          return [...prev, ...uniqueNewTools];
+        });
+        setToolsSkip((prev) => prev + TOOLS_PAGE_SIZE);
+      }
+
+      setToolsHasMore(result.length === TOOLS_PAGE_SIZE);
+      setToolsFetched(true);
+    } catch {
+      setToolsError('Failed to load tools');
+    } finally {
+      setToolsLoading(false);
+      setToolsLoadingMore(false);
+    }
+  }, [apiClient, selectedTenant, toolsFetched, toolsSkip, debouncedToolsSearch, toolsTypeFilter]);
+
+  // Handler for loading more tools (infinite scroll)
+  const handleLoadMoreTools = useCallback(() => {
+    if (!toolsLoadingMore && toolsHasMore) {
+      fetchTools(false);
+    }
+  }, [fetchTools, toolsLoadingMore, toolsHasMore]);
+
+  // Intersection observer for infinite scroll (tools)
+  useEffect(() => {
+    if (!toolsLoadMoreRef.current || !handleLoadMoreTools || !toolsHasMore || toolsLoadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && toolsHasMore && !toolsLoadingMore) {
+          handleLoadMoreTools();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(toolsLoadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [toolsHasMore, toolsLoadingMore, handleLoadMoreTools]);
+
+  // ===== Fetch AI Models =====
+  const fetchAIModels = useCallback(async (reset = false) => {
+    if (!apiClient || !selectedTenant) return;
+
+    const isInitialFetch = reset || !aiModelsFetched;
+    if (isInitialFetch) {
+      setAiModelsLoading(true);
+    } else {
+      setAiModelsLoadingMore(true);
+    }
+    setAiModelsError(null);
+
+    const skip = reset ? 0 : aiModelsSkip;
+
+    try {
+      const result = await apiClient.listAIModels(selectedTenant.id, {
+        skip,
+        limit: AI_MODELS_PAGE_SIZE,
+        name: debouncedAiModelsSearch || undefined,
+        type: aiModelsTypeFilter.length > 0 ? aiModelsTypeFilter.join(',') : undefined,
+        provider: aiModelsProviderFilter.length > 0 ? aiModelsProviderFilter.join(',') : undefined,
+        order_by: 'name',
+        order_direction: 'asc',
+      });
+
+      if (reset) {
+        setAiModels(result);
+        setAiModelsSkip(AI_MODELS_PAGE_SIZE);
+      } else {
+        setAiModels((prev) => {
+          const existingIds = new Set(prev.map(m => m.id));
+          const uniqueNew = result.filter(m => !existingIds.has(m.id));
+          return [...prev, ...uniqueNew];
+        });
+        setAiModelsSkip((prev) => prev + AI_MODELS_PAGE_SIZE);
+      }
+
+      setAiModelsHasMore(result.length === AI_MODELS_PAGE_SIZE);
+      setAiModelsFetched(true);
+    } catch {
+      setAiModelsError('Failed to load AI models');
+    } finally {
+      setAiModelsLoading(false);
+      setAiModelsLoadingMore(false);
+    }
+  }, [apiClient, selectedTenant, aiModelsFetched, aiModelsSkip, debouncedAiModelsSearch, aiModelsTypeFilter, aiModelsProviderFilter]);
+
+  const handleLoadMoreAIModels = useCallback(() => {
+    if (!aiModelsLoadingMore && aiModelsHasMore) {
+      fetchAIModels(false);
+    }
+  }, [fetchAIModels, aiModelsLoadingMore, aiModelsHasMore]);
+
+  useEffect(() => {
+    if (!aiModelsLoadMoreRef.current || !handleLoadMoreAIModels || !aiModelsHasMore || aiModelsLoadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && aiModelsHasMore && !aiModelsLoadingMore) {
+          handleLoadMoreAIModels();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(aiModelsLoadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [aiModelsHasMore, aiModelsLoadingMore, handleLoadMoreAIModels]);
+
   // ===== Load data based on active tab =====
   useEffect(() => {
     if (activeTab === 'iam' && !principalsFetched) {
@@ -314,7 +685,16 @@ export const TenantSettingsPage: FC = () => {
     if (activeTab === 'custom-groups' && !customGroupsFetched) {
       fetchCustomGroups();
     }
-  }, [activeTab, principalsFetched, customGroupsFetched, fetchPrincipals, fetchCustomGroups]);
+    if (activeTab === 'tools' && !toolsFetched) {
+      fetchTools(true);
+    }
+    if (activeTab === 'credentials' && !credentialsFetched) {
+      fetchCredentials(true);
+    }
+    if (activeTab === 'ai-models' && !aiModelsFetched) {
+      fetchAIModels(true);
+    }
+  }, [activeTab, principalsFetched, customGroupsFetched, toolsFetched, credentialsFetched, aiModelsFetched, fetchPrincipals, fetchCustomGroups, fetchTools, fetchCredentials, fetchAIModels]);
 
   // Re-fetch principals when search or filters change
   useEffect(() => {
@@ -330,6 +710,27 @@ export const TenantSettingsPage: FC = () => {
     }
   }, [debouncedCustomGroupsSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Re-fetch credentials when search changes
+  useEffect(() => {
+    if (activeTab === 'credentials' && credentialsFetched) {
+      fetchCredentials(true);
+    }
+  }, [debouncedCredentialsSearch]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-fetch tools when search or type filter changes
+  useEffect(() => {
+    if (activeTab === 'tools' && toolsFetched) {
+      fetchTools(true);
+    }
+  }, [debouncedToolsSearch, toolsTypeFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-fetch AI models when search or filters change
+  useEffect(() => {
+    if (activeTab === 'ai-models' && aiModelsFetched) {
+      fetchAIModels(true);
+    }
+  }, [debouncedAiModelsSearch, aiModelsTypeFilter, aiModelsProviderFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ===== Tenant Settings Handlers =====
   const handleSaveTenant = tenantForm.onSubmit(async (values) => {
     if (!apiClient || !selectedTenant) return;
@@ -340,7 +741,7 @@ export const TenantSettingsPage: FC = () => {
         name: values.name.trim(),
         description: values.description.trim() || undefined,
       });
-      await refreshIdentity();
+      await refreshIdentity(true);
       tenantForm.resetDirty();
     } catch {
       // Error handled by API client
@@ -355,7 +756,7 @@ export const TenantSettingsPage: FC = () => {
     setIsDeletingTenant(true);
     try {
       await apiClient.deleteTenant(selectedTenant.id);
-      await refreshIdentity();
+      await refreshIdentity(true);
       setDeleteDialogStep(0);
       // Navigation will happen automatically when tenant is gone
     } catch {
@@ -513,6 +914,82 @@ export const TenantSettingsPage: FC = () => {
     setEditGroupInitialTab('details');
   };
 
+  // ===== Credential Handlers =====
+  const handleDeleteCredential = async () => {
+    if (!apiClient || !selectedTenant || !deleteCredentialDialog.id) return;
+
+    setIsDeletingCredential(true);
+    try {
+      await apiClient.deleteCredential(selectedTenant.id, deleteCredentialDialog.id);
+      setDeleteCredentialDialog({ open: false, id: '', name: '' });
+      await fetchCredentials(true);
+    } catch {
+      // Error handled by API client
+    } finally {
+      setIsDeletingCredential(false);
+    }
+  };
+
+  const handleOpenEditCredential = (credentialId: string, tab: EditDialogTab = 'details') => {
+    setEditCredentialTab(tab);
+    setEditCredentialId(credentialId);
+  };
+
+  const handleCloseEditCredential = () => {
+    setEditCredentialId(null);
+    setEditCredentialTab('details');
+  };
+
+  const handleCredentialEditSuccess = () => {
+    fetchCredentials(true);
+  };
+
+  // ===== Tool Handlers =====
+  const handleDeleteTool = async () => {
+    if (!apiClient || !selectedTenant || !deleteToolDialog.id) return;
+
+    setIsDeletingTool(true);
+    try {
+      await apiClient.deleteTool(selectedTenant.id, deleteToolDialog.id);
+      setDeleteToolDialog({ open: false, id: '', name: '' });
+      await fetchTools(true);
+    } catch {
+      // Error handled by API client
+    } finally {
+      setIsDeletingTool(false);
+    }
+  };
+
+  const handleOpenEditTool = (toolId: string, tab: EditDialogTab = 'details') => {
+    setEditToolTab(tab);
+    setEditToolId(toolId);
+  };
+
+  const handleCloseEditTool = () => {
+    setEditToolId(null);
+    setEditToolTab('details');
+  };
+
+  const handleToolEditSuccess = () => {
+    fetchTools(true);
+  };
+
+  // ===== AI Model Handlers =====
+  const handleDeleteAiModel = async () => {
+    if (!apiClient || !selectedTenant || !deleteAiModelDialog.id) return;
+
+    setIsDeletingAiModel(true);
+    try {
+      await apiClient.deleteAIModel(selectedTenant.id, deleteAiModelDialog.id);
+      setDeleteAiModelDialog({ open: false, id: '', name: '' });
+      await fetchAIModels(true);
+    } catch {
+      // Error handled by API client
+    } finally {
+      setIsDeletingAiModel(false);
+    }
+  };
+
   // Get existing principal IDs for AddPrincipalDialog
   const existingPrincipalIds = useMemo(
     () => principals.map((p) => p.principalId),
@@ -541,32 +1018,59 @@ export const TenantSettingsPage: FC = () => {
 
   return (
     <MainLayout>
-      <PageContainer>
-        <Stack gap="lg">
-          <Tabs
-            value={activeTab}
-            onChange={handleTabChange}
-            classNames={{
-              root: classes.tabs,
-              list: classes.tabsList,
-              tab: classes.tab,
-              panel: classes.tabPanel,
-            }}
-          >
-            <Tabs.List>
-              <Tabs.Tab value="settings" leftSection={<IconSettings size={20} />}>
-                Tenant Settings
-              </Tabs.Tab>
-              <Tabs.Tab value="iam" leftSection={<IconUsers size={20} />}>
-                Manage Access
-              </Tabs.Tab>
-              <Tabs.Tab value="custom-groups" leftSection={<IconUsersGroup size={20} />}>
-                Custom Groups
-              </Tabs.Tab>
-              <Tabs.Tab value="billing-and-licence" leftSection={<IconCreditCard size={20} />}>
-                Billing & Licence
-              </Tabs.Tab>
-            </Tabs.List>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          classNames={{
+            root: classes.settingsLayout,
+            list: classes.settingsTabList,
+            tab: classes.settingsTab,
+            panel: classes.settingsContent,
+          }}
+        >
+          <Tabs.List>
+            <Tabs.Tab value="organization" leftSection={<IconBuilding size={18} />}>
+              Organization
+            </Tabs.Tab>
+            {hasOrgBypass && (
+            <Tabs.Tab value="org-iam" leftSection={<IconShieldLock size={18} />}>
+              Organisation Access (IAM)
+            </Tabs.Tab>
+            )}
+            <Tabs.Tab value="settings" leftSection={<IconSettings size={18} />}>
+              Tenant
+            </Tabs.Tab>
+            {isGlobalAdmin && (
+            <Tabs.Tab value="iam" leftSection={<IconUsers size={18} />}>
+              Tenant Access (IAM)
+            </Tabs.Tab>
+            )}
+            <Tabs.Tab value="custom-groups" leftSection={<IconUsersGroup size={18} />}>
+              Groups
+            </Tabs.Tab>
+            <Tabs.Tab value="ai-models" leftSection={<IconBrain size={18} />}>
+              AI Models
+            </Tabs.Tab>
+            <Tabs.Tab value="tools" leftSection={<IconTool size={18} />}>
+              Tools
+            </Tabs.Tab>
+            <Tabs.Tab value="credentials" leftSection={<IconKey size={18} />}>
+              Credentials
+            </Tabs.Tab>
+            <Tabs.Tab value="billing-and-licence" leftSection={<IconCreditCard size={18} />}>
+              Billing
+            </Tabs.Tab>
+          </Tabs.List>
+
+            {/* Organization Settings Tab */}
+            <Tabs.Panel value="organization">
+              <OrganizationSettingsPanel isOrgAdmin={hasOrgBypass} />
+            </Tabs.Panel>
+
+            {/* Organisation Access (IAM) Tab */}
+            <Tabs.Panel value="org-iam">
+              <OrganizationAccessPanel isOrgAdmin={hasOrgBypass} />
+            </Tabs.Panel>
 
             {/* Tenant Settings Tab */}
             <Tabs.Panel value="settings">
@@ -579,14 +1083,17 @@ export const TenantSettingsPage: FC = () => {
                         label="Name"
                         placeholder="Enter tenant name"
                         required
+                        disabled={!isGlobalAdmin}
                         {...tenantForm.getInputProps('name')}
                       />
                       <Textarea
                         label="Description"
                         placeholder="Enter tenant description (optional)"
                         minRows={3}
+                        disabled={!isGlobalAdmin}
                         {...tenantForm.getInputProps('description')}
                       />
+                      {isGlobalAdmin && (
                       <Group justify="flex-end">
                         <Button
                           type="submit"
@@ -596,17 +1103,19 @@ export const TenantSettingsPage: FC = () => {
                           Save Changes
                         </Button>
                       </Group>
+                      )}
                     </Stack>
                   </form>
                 </Paper>
 
+                {isGlobalAdmin && (
                 <Paper p="lg" withBorder className={classes.dangerZone}>
                   <Stack gap="md">
                     <Title order={4} c="red">
                       Danger Zone
                     </Title>
                     <Text size="sm" c="dimmed">
-                      Deleting a tenant will permanently remove all data including applications,
+                      Deleting a tenant will permanently remove all data including chat agents,
                       credentials, conversations, and custom groups. This action cannot be undone.
                     </Text>
                     <Button
@@ -619,6 +1128,7 @@ export const TenantSettingsPage: FC = () => {
                     </Button>
                   </Stack>
                 </Paper>
+                )}
               </Stack>
             </Tabs.Panel>
 
@@ -671,33 +1181,41 @@ export const TenantSettingsPage: FC = () => {
                     onChange={(e) => setCustomGroupsSearch(e.currentTarget.value)}
                     style={{ flex: 1, maxWidth: 350 }}
                   />
+                  {canCreate('custom-groups') && (
                   <Button
                     leftSection={<IconUsersGroup size={16} />}
                     onClick={() => setCreateGroupDialogOpen(true)}
                   >
                     Create Group
                   </Button>
+                  )}
                 </Group>
 
                 {/* Table */}
-                <ScrollArea.Autosize className={classes.customGroupsTableScrollArea}>
+                <div className={classes.tableScrollWrapper}>
+                  <div className={classes.tableScrollArea}>
+                  <div className={classes.tableWrapper}>
                     <Table striped highlightOnHover>
-                      <Table.Thead className={classes.customGroupsTableHeader}>
+                      <Table.Thead className={classes.tableHeader}>
                         <Table.Tr>
-                          <Table.Th>Name</Table.Th>
-                          <Table.Th>Description</Table.Th>
-                          <Table.Th style={{ width: 60 }}></Table.Th>
+                          <Table.Th className={classes.colName}>Name</Table.Th>
+                          <Table.Th className={classes.colDescription}>Description</Table.Th>
+                          <Table.Th className={classes.colActions}></Table.Th>
                         </Table.Tr>
                       </Table.Thead>
                       <Table.Tbody>
                         {customGroupsLoading && !customGroupsFetched ? (
-                          <Table.Tr>
-                            <Table.Td colSpan={3}>
-                              <Center py="xl">
-                                <Loader size="lg" />
-                              </Center>
-                            </Table.Td>
-                          </Table.Tr>
+                          showCustomGroupsSkeleton ? (
+                            <>
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Table.Tr key={i}>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} width={60} radius="sm" /></Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </>
+                          ) : null
                         ) : customGroupsError ? (
                           <Table.Tr>
                             <Table.Td colSpan={3}>
@@ -791,7 +1309,8 @@ export const TenantSettingsPage: FC = () => {
                         )}
                       </Table.Tbody>
                     </Table>
-                    
+                  </div>
+
                     {/* Infinite scroll trigger element */}
                     {customGroupsHasMore && (
                       <div ref={customGroupsLoadMoreRef} className={classes.loadMoreTrigger}>
@@ -802,7 +1321,575 @@ export const TenantSettingsPage: FC = () => {
                         )}
                       </div>
                     )}
-                </ScrollArea.Autosize>
+                  </div>
+                </div>
+              </Stack>
+            </Tabs.Panel>
+
+            {/* Tools Tab */}
+            <Tabs.Panel value="tools">
+              <Stack gap="md">
+                <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+                  <Text size="sm">
+                    Manage tools for ReACT agents. Tools can be MCP servers or OpenAPI definitions
+                    that agents use to interact with external services.
+                  </Text>
+                </Alert>
+
+                {/* Toolbar */}
+                <Group justify="space-between">
+                  <Group gap="sm" style={{ flex: 1, maxWidth: 500 }}>
+                    <TextInput
+                      placeholder="Search tools..."
+                      leftSection={<IconSearch size={16} />}
+                      value={toolsSearch}
+                      onChange={(e) => setToolsSearch(e.currentTarget.value)}
+                      style={{ flex: 1 }}
+                    />
+                    <MultiSelect
+                      placeholder="All Types"
+                      data={TOOL_TYPE_OPTIONS}
+                      value={toolsTypeFilter}
+                      onChange={setToolsTypeFilter}
+                      clearable
+                      style={{ width: 220 }}
+                    />
+                  </Group>
+                  {canCreate('tools') && (
+                  <Button
+                    leftSection={<IconTool size={16} />}
+                    onClick={() => setCreateToolDialogOpen(true)}
+                  >
+                    Create Tool
+                  </Button>
+                  )}
+                </Group>
+
+                {/* Table */}
+                <div className={classes.tableScrollWrapper}>
+                  <div className={classes.tableScrollArea}>
+                  <div className={classes.tableWrapper}>
+                    <Table striped highlightOnHover>
+                      <Table.Thead className={classes.tableHeader}>
+                        <Table.Tr>
+                          <Table.Th className={classes.colName}>Name</Table.Th>
+                          <Table.Th className={classes.colType}>Type</Table.Th>
+                          <Table.Th className={classes.colDescription}>Description</Table.Th>
+                          <Table.Th className={classes.colActions}></Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {toolsLoading && !toolsFetched ? (
+                          showToolsSkeleton ? (
+                            <>
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Table.Tr key={i}>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} width={60} radius="sm" /></Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </>
+                          ) : null
+                        ) : toolsError ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={4}>
+                              <Alert color="red">{toolsError}</Alert>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : tools.length === 0 ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={4}>
+                              <Center py="xl">
+                                <Text c="dimmed">
+                                  {toolsSearch
+                                    ? 'No tools match your search.'
+                                    : 'No tools yet. Create one to get started.'}
+                                </Text>
+                              </Center>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : (
+                          tools.map((tool) => (
+                            <Table.Tr
+                              key={tool.id}
+                              className={classes.customGroupRow}
+                              onClick={() => handleOpenEditTool(tool.id, 'details')}
+                            >
+                              <Table.Td>
+                                <Group gap="sm">
+                                  <div className={classes.groupIcon}>
+                                    <IconTool size={16} />
+                                  </div>
+                                  <Text fw={500}>{tool.name}</Text>
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Badge size="sm" variant="light" color={getToolTypeBadgeColor(tool.type)}>
+                                  {tool.type === 'MCP_SERVER' ? 'MCP Server' : 'OpenAPI Definition'}
+                                </Badge>
+                              </Table.Td>
+                              <Table.Td>
+                                <Text size="sm" c="dimmed" lineClamp={1}>
+                                  {tool.description || '-'}
+                                </Text>
+                              </Table.Td>
+                              <Table.Td>
+                                <Group gap={0} justify="flex-end">
+                                  <Menu position="bottom-end" withinPortal shadow="md">
+                                    <Menu.Target>
+                                      <ActionIcon
+                                        variant="subtle"
+                                        color="gray"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <IconDots size={16} />
+                                      </ActionIcon>
+                                    </Menu.Target>
+                                    <Menu.Dropdown>
+                                      {(!tool.my_permission || tool.my_permission === 'ADMIN') && (
+                                      <Menu.Item
+                                        leftSection={<IconShieldLock size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenEditTool(tool.id, 'iam');
+                                        }}
+                                      >
+                                        Manage Access
+                                      </Menu.Item>
+                                      )}
+                                      <Menu.Item
+                                        leftSection={<IconEdit size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenEditTool(tool.id, 'details');
+                                        }}
+                                      >
+                                        Edit Details
+                                      </Menu.Item>
+                                      {(!tool.my_permission || tool.my_permission === 'ADMIN') && (
+                                      <>
+                                      <Menu.Divider />
+                                      <Menu.Item
+                                        color="red"
+                                        leftSection={<IconTrash size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setDeleteToolDialog({
+                                            open: true,
+                                            id: tool.id,
+                                            name: tool.name,
+                                          });
+                                        }}
+                                      >
+                                        Delete
+                                      </Menu.Item>
+                                      </>
+                                      )}
+                                    </Menu.Dropdown>
+                                  </Menu>
+                                </Group>
+                              </Table.Td>
+                            </Table.Tr>
+                          ))
+                        )}
+                      </Table.Tbody>
+                    </Table>
+                  </div>
+
+                    {/* Infinite scroll trigger element */}
+                    {toolsHasMore && (
+                      <div ref={toolsLoadMoreRef} className={classes.loadMoreTrigger}>
+                        {toolsLoadingMore && (
+                          <Center py="sm">
+                            <Loader size="sm" />
+                          </Center>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Stack>
+            </Tabs.Panel>
+
+            {/* Credentials Tab */}
+            <Tabs.Panel value="credentials">
+              <Stack gap="md">
+                <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+                  <Text size="sm">
+                    Manage credentials for connecting to external services and APIs.
+                    Click on a credential to view details or manage access permissions.
+                  </Text>
+                </Alert>
+
+                {/* Toolbar */}
+                <Group justify="space-between">
+                  <TextInput
+                    placeholder="Search credentials..."
+                    leftSection={<IconSearch size={16} />}
+                    value={credentialsSearch}
+                    onChange={(e) => setCredentialsSearch(e.currentTarget.value)}
+                    style={{ flex: 1, maxWidth: 350 }}
+                  />
+                  {canCreate('credentials') && (
+                  <Button
+                    leftSection={<IconKey size={16} />}
+                    onClick={() => setCreateCredentialDialogOpen(true)}
+                  >
+                    Create Credential
+                  </Button>
+                  )}
+                </Group>
+
+                {/* Table */}
+                <div className={classes.tableScrollWrapper}>
+                  <div className={classes.tableScrollArea}>
+                  <div className={classes.tableWrapper}>
+                    <Table striped highlightOnHover>
+                      <Table.Thead className={classes.tableHeader}>
+                        <Table.Tr>
+                          <Table.Th className={classes.colName}>Name</Table.Th>
+                          <Table.Th className={classes.colType}>Type</Table.Th>
+                          <Table.Th className={classes.colDescription}>Description</Table.Th>
+                          <Table.Th className={classes.colActions}></Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {credentialsLoading && !credentialsFetched ? (
+                          showCredentialsSkeleton ? (
+                            <>
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Table.Tr key={i}>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} width={60} radius="sm" /></Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </>
+                          ) : null
+                        ) : credentialsError ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={4}>
+                              <Alert color="red">{credentialsError}</Alert>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : credentials.length === 0 ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={4}>
+                              <Center py="xl">
+                                <Text c="dimmed">
+                                  {credentialsSearch
+                                    ? 'No credentials match your search.'
+                                    : 'No credentials yet. Create one to get started.'}
+                                </Text>
+                              </Center>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : (
+                          credentials.map((credential) => (
+                            <Table.Tr
+                              key={credential.id}
+                              className={classes.customGroupRow}
+                              onClick={() => handleOpenEditCredential(credential.id, 'details')}
+                            >
+                              <Table.Td>
+                                <Group gap="sm">
+                                  <div className={classes.groupIcon}>
+                                    <IconKey size={16} />
+                                  </div>
+                                  <Text fw={500}>{credential.name}</Text>
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Badge size="sm" variant="light" color="gray">
+                                  {credential.type}
+                                </Badge>
+                              </Table.Td>
+                              <Table.Td>
+                                <Text size="sm" c="dimmed" lineClamp={1}>
+                                  {credential.description || '-'}
+                                </Text>
+                              </Table.Td>
+                              <Table.Td>
+                                <Group gap={0} justify="flex-end">
+                                  <Menu position="bottom-end" withinPortal shadow="md">
+                                    <Menu.Target>
+                                      <ActionIcon
+                                        variant="subtle"
+                                        color="gray"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <IconDots size={16} />
+                                      </ActionIcon>
+                                    </Menu.Target>
+                                    <Menu.Dropdown>
+                                      {(!credential.my_permission || credential.my_permission === 'ADMIN') && (
+                                      <Menu.Item
+                                        leftSection={<IconShieldLock size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenEditCredential(credential.id, 'iam');
+                                        }}
+                                      >
+                                        Manage Access
+                                      </Menu.Item>
+                                      )}
+                                      <Menu.Item
+                                        leftSection={<IconEdit size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenEditCredential(credential.id, 'details');
+                                        }}
+                                      >
+                                        Edit Details
+                                      </Menu.Item>
+                                      {(!credential.my_permission || credential.my_permission === 'ADMIN') && (
+                                      <>
+                                      <Menu.Divider />
+                                      <Menu.Item
+                                        color="red"
+                                        leftSection={<IconTrash size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setDeleteCredentialDialog({
+                                            open: true,
+                                            id: credential.id,
+                                            name: credential.name,
+                                          });
+                                        }}
+                                      >
+                                        Delete
+                                      </Menu.Item>
+                                      </>
+                                      )}
+                                    </Menu.Dropdown>
+                                  </Menu>
+                                </Group>
+                              </Table.Td>
+                            </Table.Tr>
+                          ))
+                        )}
+                      </Table.Tbody>
+                    </Table>
+                  </div>
+
+                    {/* Infinite scroll trigger element */}
+                    {credentialsHasMore && (
+                      <div ref={credentialsLoadMoreRef} className={classes.loadMoreTrigger}>
+                        {credentialsLoadingMore && (
+                          <Center py="sm">
+                            <Loader size="sm" />
+                          </Center>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Stack>
+            </Tabs.Panel>
+
+            {/* AI Models Tab */}
+            <Tabs.Panel value="ai-models">
+              <Stack gap="md">
+                <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+                  <Text size="sm">
+                    Configure AI models for agent features like description generation, trace analysis, and conversation summarization.
+                  </Text>
+                </Alert>
+
+                <Group justify="space-between">
+                  <Group gap="sm" style={{ flex: 1 }}>
+                    <TextInput
+                      placeholder="Search AI models..."
+                      leftSection={<IconSearch size={16} />}
+                      value={aiModelsSearch}
+                      onChange={(e) => setAiModelsSearch(e.currentTarget.value)}
+                      style={{ flex: 1, maxWidth: 250 }}
+                    />
+                    <MultiSelect
+                      placeholder="Type"
+                      data={AI_MODEL_TYPE_OPTIONS}
+                      value={aiModelsTypeFilter}
+                      onChange={setAiModelsTypeFilter}
+                      clearable
+                      style={{ maxWidth: 200 }}
+                    />
+                    <MultiSelect
+                      placeholder="Provider"
+                      data={AI_MODEL_PROVIDER_OPTIONS}
+                      value={aiModelsProviderFilter}
+                      onChange={setAiModelsProviderFilter}
+                      clearable
+                      style={{ maxWidth: 200 }}
+                    />
+                  </Group>
+                  {(isGlobalAdmin || hasRole(TenantPermissionEnum.TENANT_AI_MODELS_ADMIN)) && (
+                  <Button
+                    leftSection={<IconBrain size={16} />}
+                    onClick={() => setCreateAiModelDialogOpen(true)}
+                  >
+                    Create AI Model
+                  </Button>
+                  )}
+                </Group>
+
+                <div className={classes.tableScrollWrapper}>
+                  <div className={classes.tableScrollArea}>
+                  <div className={classes.tableWrapper}>
+                    <Table striped highlightOnHover>
+                      <Table.Thead className={classes.tableHeader}>
+                        <Table.Tr>
+                          <Table.Th className={classes.colName}>Name</Table.Th>
+                          <Table.Th className={classes.colTypeSmall}>Type</Table.Th>
+                          <Table.Th className={classes.colType}>Provider</Table.Th>
+                          <Table.Th className={classes.colTypeSmall}>Status</Table.Th>
+                          <Table.Th className={classes.colPurposeGroups}>Purpose Groups</Table.Th>
+                          <Table.Th className={classes.colDescription}>Description</Table.Th>
+                          <Table.Th className={classes.colActions}></Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {aiModelsLoading && !aiModelsFetched ? (
+                          showAiModelsSkeleton ? (
+                            <>
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Table.Tr key={i}>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
+                                  <Table.Td><Skeleton height={16} width={60} radius="sm" /></Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </>
+                          ) : null
+                        ) : aiModelsError ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={7}>
+                              <Alert color="red">{aiModelsError}</Alert>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : aiModels.length === 0 ? (
+                          <Table.Tr>
+                            <Table.Td colSpan={7}>
+                              <Center py="xl">
+                                <Text c="dimmed">
+                                  {aiModelsSearch || aiModelsTypeFilter.length > 0 || aiModelsProviderFilter.length > 0
+                                    ? 'No AI models match your filters.'
+                                    : 'No AI models yet. Create one to get started.'}
+                                </Text>
+                              </Center>
+                            </Table.Td>
+                          </Table.Tr>
+                        ) : (
+                          aiModels.map((model) => (
+                            <Table.Tr
+                              key={model.id}
+                              className={classes.customGroupRow}
+                              onClick={() => setEditAiModelId(model.id)}
+                            >
+                              <Table.Td>
+                                <Group gap="sm">
+                                  <div className={classes.groupIcon}>
+                                    <IconBrain size={16} />
+                                  </div>
+                                  <Text fw={500}>{model.name}</Text>
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Badge size="sm" variant="light" color="gray">
+                                  {model.type === AIModelTypeEnum.LLM_MODEL ? 'LLM' : 'Embedding'}
+                                </Badge>
+                              </Table.Td>
+                              <Table.Td>
+                                <Badge size="sm" variant="light" color={getAiModelProviderBadgeColor(model.provider)}>
+                                  {model.provider.replace(/_/g, ' ')}
+                                </Badge>
+                              </Table.Td>
+                              <Table.Td>
+                                <Badge size="sm" variant="light" color={model.is_active ? 'green' : 'gray'}>
+                                  {model.is_active ? 'Active' : 'Inactive'}
+                                </Badge>
+                              </Table.Td>
+                              <Table.Td>
+                                <Group gap={4} wrap="wrap">
+                                  {model.purpose_groups.length > 0 ? model.purpose_groups.map((pg) => (
+                                    <Badge key={pg} size="xs" variant="light" color={purposeGroupColor(pg)}>
+                                      {pg.replace(/_/g, ' ')}
+                                    </Badge>
+                                  )) : (
+                                    <Text size="sm" c="dimmed">-</Text>
+                                  )}
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Text size="sm" c="dimmed" className={classes.descriptionText}>
+                                  {model.description || '-'}
+                                </Text>
+                              </Table.Td>
+                              <Table.Td>
+                                <Group gap={0} justify="flex-end">
+                                  <Menu position="bottom-end" withinPortal shadow="md">
+                                    <Menu.Target>
+                                      <ActionIcon
+                                        variant="subtle"
+                                        color="gray"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <IconDots size={16} />
+                                      </ActionIcon>
+                                    </Menu.Target>
+                                    <Menu.Dropdown>
+                                      <Menu.Item
+                                        leftSection={<IconEdit size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setEditAiModelId(model.id);
+                                        }}
+                                      >
+                                        Edit
+                                      </Menu.Item>
+                                      <Menu.Divider />
+                                      <Menu.Item
+                                        color="red"
+                                        leftSection={<IconTrash size={14} />}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setDeleteAiModelDialog({
+                                            open: true,
+                                            id: model.id,
+                                            name: model.name,
+                                          });
+                                        }}
+                                      >
+                                        Delete
+                                      </Menu.Item>
+                                    </Menu.Dropdown>
+                                  </Menu>
+                                </Group>
+                              </Table.Td>
+                            </Table.Tr>
+                          ))
+                        )}
+                      </Table.Tbody>
+                    </Table>
+                  </div>
+
+                    {aiModelsHasMore && (
+                      <div ref={aiModelsLoadMoreRef} className={classes.loadMoreTrigger}>
+                        {aiModelsLoadingMore && (
+                          <Center py="sm">
+                            <Loader size="sm" />
+                          </Center>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </Stack>
             </Tabs.Panel>
 
@@ -836,9 +1923,7 @@ export const TenantSettingsPage: FC = () => {
                 </Paper>
               </Stack>
             </Tabs.Panel>
-          </Tabs>
-        </Stack>
-      </PageContainer>
+        </Tabs>
 
       {/* Delete Tenant - First Confirmation */}
       <ConfirmDeleteDialog
@@ -848,7 +1933,7 @@ export const TenantSettingsPage: FC = () => {
         itemName={selectedTenant.name}
         itemType="Tenant"
         title="Delete Tenant (Step 1 of 2)"
-        message="Are you sure you want to delete this tenant? This will permanently remove all data including applications, credentials, conversations, and custom groups."
+        message="Are you sure you want to delete this tenant? This will permanently remove all data including chat agents, credentials, conversations, and custom groups."
       />
 
       {/* Delete Tenant - Second Confirmation */}
@@ -861,7 +1946,7 @@ export const TenantSettingsPage: FC = () => {
         title="Final Confirmation (Step 2 of 2)"
         message="This action is IRREVERSIBLE. All tenant data will be permanently deleted. Are you absolutely sure?"
         isLoading={isDeletingTenant}
-        confirmButtonText="WIRKLICH LÖSCHEN"
+        confirmButtonText="REALLY DELETE"
         reverseButtons
       />
 
@@ -902,6 +1987,7 @@ export const TenantSettingsPage: FC = () => {
         onClose={handleCloseEditGroup}
         customGroupId={editGroupId}
         initialTab={editGroupInitialTab}
+        onTabChange={setEditGroupInitialTab}
         onSuccess={() => fetchCustomGroups()}
       />
 
@@ -913,6 +1999,85 @@ export const TenantSettingsPage: FC = () => {
         itemName={deleteGroupDialog.name}
         itemType="Custom Group"
         isLoading={isDeletingGroup}
+      />
+
+      {/* Create Credential Dialog */}
+      <CreateCredentialDialog
+        opened={createCredentialDialogOpen}
+        onClose={() => setCreateCredentialDialogOpen(false)}
+        onSuccess={() => fetchCredentials(true)}
+      />
+
+      {/* Edit Credential Dialog */}
+      <EditCredentialDialog
+        opened={!!editCredentialId}
+        onClose={handleCloseEditCredential}
+        credentialId={editCredentialId}
+        activeTab={editCredentialTab}
+        onTabChange={setEditCredentialTab}
+        onSuccess={handleCredentialEditSuccess}
+      />
+
+      {/* Delete Credential Confirmation */}
+      <ConfirmDeleteDialog
+        opened={deleteCredentialDialog.open}
+        onClose={() => setDeleteCredentialDialog({ open: false, id: '', name: '' })}
+        onConfirm={handleDeleteCredential}
+        itemName={deleteCredentialDialog.name}
+        itemType="Credential"
+        isLoading={isDeletingCredential}
+      />
+
+      {/* Create Tool Dialog */}
+      <CreateToolDialog
+        opened={createToolDialogOpen}
+        onClose={() => setCreateToolDialogOpen(false)}
+        onSuccess={() => fetchTools(true)}
+      />
+
+      {/* Edit Tool Dialog */}
+      <EditToolDialog
+        opened={!!editToolId}
+        onClose={handleCloseEditTool}
+        toolId={editToolId}
+        activeTab={editToolTab}
+        onTabChange={setEditToolTab}
+        onSuccess={handleToolEditSuccess}
+      />
+
+      {/* Delete Tool Confirmation */}
+      <ConfirmDeleteDialog
+        opened={deleteToolDialog.open}
+        onClose={() => setDeleteToolDialog({ open: false, id: '', name: '' })}
+        onConfirm={handleDeleteTool}
+        itemName={deleteToolDialog.name}
+        itemType="Tool"
+        isLoading={isDeletingTool}
+      />
+
+      {/* Create AI Model Dialog */}
+      <AIModelDialog
+        opened={createAiModelDialogOpen}
+        onClose={() => setCreateAiModelDialogOpen(false)}
+        onSuccess={() => fetchAIModels(true)}
+      />
+
+      {/* Edit AI Model Dialog */}
+      <AIModelDialog
+        opened={!!editAiModelId}
+        onClose={() => setEditAiModelId(null)}
+        onSuccess={() => fetchAIModels(true)}
+        modelId={editAiModelId}
+      />
+
+      {/* Delete AI Model Confirmation */}
+      <ConfirmDeleteDialog
+        opened={deleteAiModelDialog.open}
+        onClose={() => setDeleteAiModelDialog({ open: false, id: '', name: '' })}
+        onConfirm={handleDeleteAiModel}
+        itemName={deleteAiModelDialog.name}
+        itemType="AI Model"
+        isLoading={isDeletingAiModel}
       />
     </MainLayout>
   );

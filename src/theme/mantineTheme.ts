@@ -12,14 +12,14 @@ export const theme = createTheme({
     info: colors.info,
     gray: colors.gray,
   },
-  
+
   // Primary Color (verwendet für Buttons, Links, etc.)
   primaryColor: 'primary',
-  
+
   // Font Families
   fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   fontFamilyMonospace: '"Fira Code", Monaco, "Courier New", monospace',
-  
+
   headings: {
     fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     fontWeight: '600',
@@ -120,13 +120,13 @@ export const theme = createTheme({
   // Other Settings
   defaultRadius: 'md',
   cursorType: 'pointer',
-  
+
   // Focus Ring
   focusRing: 'auto',
-  
+
   // Active Styles
   activeClassName: 'mantine-active',
-  
+
   // Default Gradient
   defaultGradient: {
     from: 'primary.6',
@@ -138,7 +138,7 @@ export const theme = createTheme({
 // Dark Theme Variante
 export const darkTheme = createTheme({
   ...theme,
-  
+
   // Dark Mode spezifische Schatten (stärker)
   shadows: {
     xs: '0 1px 3px rgba(0, 0, 0, 0.3)',
@@ -148,4 +148,3 @@ export const darkTheme = createTheme({
     xl: '0 16px 48px rgba(0, 0, 0, 0.7)',
   },
 });
-
