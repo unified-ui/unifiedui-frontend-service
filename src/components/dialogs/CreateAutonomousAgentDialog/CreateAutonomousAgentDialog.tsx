@@ -19,16 +19,16 @@ import {
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconRobot, IconPlus, IconAlertCircle } from '@tabler/icons-react';
-import { useIdentity } from '../../contexts';
-import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
+import { useIdentity } from '../../../contexts';
+import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import {
   AutonomousAgentTypeEnum,
   CredentialTypeEnum,
   type CredentialResponse,
   type N8NAutonomousAgentConfig,
-} from '../../api/types';
-import { TagInput } from '../common';
-import { CreateCredentialDialog } from './CreateCredentialDialog';
+} from '../../../api/types';
+import { TagInput } from '../../common';
+import { CreateCredentialDialog } from '../CreateCredentialDialog';
 
 const AUTONOMOUS_AGENT_TYPES = [
   { value: AutonomousAgentTypeEnum.N8N, label: 'n8n' },

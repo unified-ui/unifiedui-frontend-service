@@ -3,66 +3,68 @@ import {
   Modal,
   TextInput,
   Textarea,
-  Select,
   Button,
   Group,
   Stack,
   Text,
   Box,
+  Select,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconBrandWechat } from '@tabler/icons-react';
-import { useIdentity } from '../../contexts';
-import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
-import { TagInput } from '../common';
-import type { ChatWidgetTypeEnum, ChatWidgetResponse } from '../../api/types';
+import { notifications } from '@mantine/notifications';
+import { IconBuilding } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
+import { useIdentity } from '../../../contexts';
+import { EnvironmentTypeEnum } from '../../../api/types';
+import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 
-interface CreateChatWidgetDialogProps {
+interface CreateTenantDialogProps {
   opened: boolean;
   onClose: () => void;
-  onSuccess?: (widget?: ChatWidgetResponse) => void;
+  onSuccess?: () => void;
 }
 
 interface FormValues {
   name: string;
   description: string;
-  type: string;
-  tags: string[];
+  environment_type: string;
 }
 
-const CHAT_WIDGET_TYPES = [
-  { value: 'IFRAME', label: 'IFrame' },
-  { value: 'FORM', label: 'Form' },
-];
-
-export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
+export const CreateTenantDialog: FC<CreateTenantDialogProps> = ({
   opened,
   onClose,
   onSuccess,
 }) => {
-  const { apiClient, selectedTenant } = useIdentity();
+  const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
+  const { apiClient, organization, refreshIdentity } = useIdentity();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     initialValues: {
       name: '',
       description: '',
-      type: 'IFRAME',
-      tags: [],
+      environment_type: EnvironmentTypeEnum.SANDBOX,
     },
     validate: {
       name: (value) => {
         if (!value || value.trim().length === 0) {
-          return 'Name is required';
+          return tCommon('validation.required', { field: tCommon('name') });
         }
         if (value.length > 255) {
-          return 'Name must be 255 characters or less';
+          return tCommon('validation.maxLength', { field: tCommon('name'), max: 255 });
+        }
+        return null;
+      },
+      environment_type: (value) => {
+        if (!value || value.trim().length === 0) {
+          return tCommon('validation.required', { field: t('environmentType') });
         }
         return null;
       },
       description: (value) => {
         if (value && value.length > 2000) {
-          return 'Description must be 2000 characters or less';
+          return tCommon('validation.maxLength', { field: tCommon('description'), max: 2000 });
         }
         return null;
       },
@@ -70,32 +72,28 @@ export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
   });
 
   const handleSubmit = async (values: FormValues) => {
-    if (!apiClient || !selectedTenant) return;
+    if (!apiClient) return;
+
+    if (!organization) {
+      notifications.show({
+        title: tCommon('error'),
+        message: t('noOrganization'),
+        color: 'red',
+        position: 'top-right',
+      });
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      const widget = await apiClient.createChatWidget(selectedTenant.id, {
+      await apiClient.createTenantInOrganization(organization.id, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
-        type: values.type as ChatWidgetTypeEnum,
-        config: {},
+        environment_type: values.environment_type as EnvironmentTypeEnum,
       });
-
-      // If tags were added, save them to the widget
-      if (values.tags.length > 0) {
-        try {
-          await apiClient.setChatWidgetTags(
-            selectedTenant.id,
-            widget.id,
-            values.tags
-          );
-        } catch (tagError) {
-          console.error('Failed to save tags:', tagError);
-        }
-      }
-
       form.reset();
-      onSuccess?.(widget as ChatWidgetResponse);
+      await refreshIdentity();
+      onSuccess?.();
       onClose();
     } catch {
       // Error handling is done by the API client
@@ -109,14 +107,19 @@ export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
     onClose();
   };
 
+  const environmentOptions = [
+    { value: EnvironmentTypeEnum.SANDBOX, label: t('environmentSandbox') },
+    { value: EnvironmentTypeEnum.PRODUCTION, label: t('environmentProduction') },
+  ];
+
   return (
     <Modal
       opened={opened}
       onClose={handleClose}
       title={
         <Group gap="sm">
-          <IconBrandWechat size={24} />
-          <Text fw={600} size="lg">Create Chat Widget</Text>
+          <IconBuilding size={24} />
+          <Text fw={600} size="lg">{t('createTenant')}</Text>
         </Group>
       }
       size="lg"
@@ -125,8 +128,8 @@ export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">
           <TextInput
-            label="Name"
-            placeholder="Enter a name"
+            label={tCommon('name')}
+            placeholder={tCommon('enterName')}
             required
             withAsterisk
             maxLength={255}
@@ -135,23 +138,17 @@ export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
           />
 
           <Select
-            label="Type"
-            placeholder="Select a type"
-            data={CHAT_WIDGET_TYPES}
-            {...form.getInputProps('type')}
-          />
-
-          <TagInput
-            label="Tags"
-            placeholder="Enter a tag and press Space to add..."
-            value={form.values.tags}
-            onChange={(tags) => form.setFieldValue('tags', tags)}
+            label={t('environmentType')}
+            data={environmentOptions}
+            required
+            withAsterisk
+            {...form.getInputProps('environment_type')}
           />
 
           <Box pos="relative">
             <Textarea
-              label="Description"
-              placeholder="Optional description"
+              label={tCommon('description')}
+              placeholder={tCommon('optionalDescription')}
               maxLength={2000}
               minRows={3}
               maxRows={6}
@@ -160,7 +157,7 @@ export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
             />
             <Box pos="absolute" top={0} right={0}>
               <GenerateWithAIButton
-                entityType="chat_widget"
+                entityType="tenant"
                 entityName={form.values.name}
                 existingDescription={form.values.description || undefined}
                 onGenerated={(desc: string) => form.setFieldValue('description', desc)}
@@ -170,10 +167,10 @@ export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={handleClose} disabled={isSubmitting}>
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button type="submit" loading={isSubmitting}>
-              Create
+              {tCommon('create')}
             </Button>
           </Group>
         </Stack>

@@ -13,10 +13,10 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconKey } from '@tabler/icons-react';
-import { useIdentity } from '../../contexts';
-import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
-import { CredentialTypeEnum } from '../../api/types';
-import { TagInput } from '../common';
+import { useIdentity } from '../../../contexts';
+import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
+import { CredentialTypeEnum } from '../../../api/types';
+import { TagInput } from '../../common';
 
 interface CreateCredentialDialogProps {
   opened: boolean;

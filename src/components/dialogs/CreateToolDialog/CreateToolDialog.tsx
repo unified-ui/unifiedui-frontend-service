@@ -13,11 +13,11 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconTool, IconAlertCircle } from '@tabler/icons-react';
-import { useIdentity } from '../../contexts';
-import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
-import { ToolTypeEnum } from '../../api/types';
-import { TagInput } from '../common';
-import { validateToolConfig, normalizeToolConfig } from '../../utils/toolConfigValidator';
+import { useIdentity } from '../../../contexts';
+import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
+import { ToolTypeEnum } from '../../../api/types';
+import { TagInput } from '../../common';
+import { validateToolConfig, normalizeToolConfig } from '../../../utils/toolConfigValidator';
 
 interface CreateToolDialogProps {
   opened: boolean;

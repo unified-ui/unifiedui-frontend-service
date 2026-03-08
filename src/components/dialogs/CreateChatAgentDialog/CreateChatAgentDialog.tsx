@@ -21,9 +21,9 @@ import {
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconSparkles, IconPlus, IconAlertCircle } from '@tabler/icons-react';
-import { useIdentity } from '../../contexts';
+import { useIdentity } from '../../../contexts';
 import { useTranslation } from 'react-i18next';
-import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
+import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import {
   ChatAgentTypeEnum,
   N8NApiVersionEnum,
@@ -34,9 +34,9 @@ import {
   type CredentialResponse,
   type N8NChatAgentConfig,
   type FoundryChatAgentConfig,
-} from '../../api/types';
-import { TagInput } from '../common';
-import { CreateCredentialDialog } from './CreateCredentialDialog';
+} from '../../../api/types';
+import { TagInput } from '../../common';
+import { CreateCredentialDialog } from '../CreateCredentialDialog';
 
 const CHAT_AGENT_TYPES = [
   { value: ChatAgentTypeEnum.REACT_AGENT, label: 'ReACT Agent' },

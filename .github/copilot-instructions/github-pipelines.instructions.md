@@ -46,14 +46,13 @@ Two validation jobs:
 
 ### Additional Workflows
 
-| Workflow                | Trigger                          | Purpose                                                            |
-| ----------------------- | -------------------------------- | ------------------------------------------------------------------ |
-| `codeql.yml`            | push/PR to main/develop + weekly | Security vulnerability scanning                                    |
-| `dependency-review.yml` | PR to main/develop               | License + severity check (blocks high severity, GPL-3.0, AGPL-3.0) |
-| `auto-labeler.yml`      | PR open/sync                     | Labels PRs by changed files (uses `.github/labeler.yml`)           |
-| `pr-size-labeler.yml`   | PR open/sync                     | Labels PRs by size (XS/S/M/L/XL)                                   |
-| `release-drafter.yml`   | push to main                     | Drafts GitHub Release with changelog                               |
-| `stale.yml`             | daily cron                       | Marks/closes stale issues (60d) and PRs (30d)                      |
+| Workflow              | Trigger                          | Purpose                                                  |
+| --------------------- | -------------------------------- | -------------------------------------------------------- |
+| `codeql.yml`          | push/PR to main/develop + weekly | Security vulnerability scanning                          |
+| `auto-labeler.yml`    | PR open/sync                     | Labels PRs by changed files (uses `.github/labeler.yml`) |
+| `pr-size-labeler.yml` | PR open/sync                     | Labels PRs by size (XS/S/M/L/XL)                         |
+| `release-drafter.yml` | push to main                     | Drafts GitHub Release with changelog                     |
+| `stale.yml`           | daily cron                       | Marks/closes stale issues (60d) and PRs (30d)            |
 
 ---
 
