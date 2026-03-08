@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/419</span>
+                <span class='fraction'>0/421</span>
             </div>
 
 
@@ -2129,7 +2129,25 @@
 <a name='L2064'></a><a href='#L2064'>2064</a>
 <a name='L2065'></a><a href='#L2065'>2065</a>
 <a name='L2066'></a><a href='#L2066'>2066</a>
-<a name='L2067'></a><a href='#L2067'>2067</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L2067'></a><a href='#L2067'>2067</a>
+<a name='L2068'></a><a href='#L2068'>2068</a>
+<a name='L2069'></a><a href='#L2069'>2069</a>
+<a name='L2070'></a><a href='#L2070'>2070</a>
+<a name='L2071'></a><a href='#L2071'>2071</a>
+<a name='L2072'></a><a href='#L2072'>2072</a>
+<a name='L2073'></a><a href='#L2073'>2073</a>
+<a name='L2074'></a><a href='#L2074'>2074</a>
+<a name='L2075'></a><a href='#L2075'>2075</a>
+<a name='L2076'></a><a href='#L2076'>2076</a>
+<a name='L2077'></a><a href='#L2077'>2077</a>
+<a name='L2078'></a><a href='#L2078'>2078</a>
+<a name='L2079'></a><a href='#L2079'>2079</a>
+<a name='L2080'></a><a href='#L2080'>2080</a>
+<a name='L2081'></a><a href='#L2081'>2081</a>
+<a name='L2082'></a><a href='#L2082'>2082</a>
+<a name='L2083'></a><a href='#L2083'>2083</a>
+<a name='L2084'></a><a href='#L2084'>2084</a>
+<a name='L2085'></a><a href='#L2085'>2085</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -3148,6 +3166,24 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -4235,9 +4271,10 @@ import {
   IconShieldLock,
   IconTool,
   IconBrain,
+  IconBuilding,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { ConfirmDeleteDialog, EditRolesDialog } from '../../components/common';
+import { ConfirmDeleteDialog, EditRolesDialog, OrganizationSettingsPanel, OrganizationAccessPanel } from '../../components/common';
 import { ManageTenantAccessTable, TENANT_ROLE_OPTIONS } from '../../components/common/ManageTenantAccessTable';
 import type { TenantPrincipalPermission } from '../../components/common/ManageTenantAccessTable';
 import { AddPrincipalDialog } from '../../components/common/AddPrincipalDialog';
@@ -4254,20 +4291,19 @@ import { AIModelDialog } from '../../components/dialogs/AIModelDialog';
 import type { EditDialogTab } from '../../components/dialogs';
 import { useIdentity } from '../../contexts';
 import type {
-  TenantPermissionEnum,
   PrincipalTypeEnum,
   CustomGroupResponse,
   CredentialResponse,
   ToolResponse,
   AIModelResponse,
 } from '../../api/types';
-import { ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum } from '../../api/types';
+import { TenantPermissionEnum, ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum } from '../../api/types';
 import { useDelayedLoading, usePermissions } from '../../hooks';
 import classes from './TenantSettingsPage.module.css';
 &nbsp;
-type TabValue = 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'ai-models' | 'billing-and-licence';
+type TabValue = 'organization' | 'org-iam' | 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'ai-models' | 'billing-and-licence';
 &nbsp;
-const TAB_VALUES: TabValue[] = <span class="cstat-no" title="statement not covered" >['settings', 'iam', 'custom-groups', 'tools', 'credentials', 'ai-models', 'billing-and-licence'];</span>
+const TAB_VALUES: TabValue[] = <span class="cstat-no" title="statement not covered" >['organization', 'org-iam', 'settings', 'iam', 'custom-groups', 'tools', 'credentials', 'ai-models', 'billing-and-licence'];</span>
 const DEFAULT_TAB: TabValue = <span class="cstat-no" title="statement not covered" >'settings';</span>
 &nbsp;
 const PURPOSE_GROUP_COLORS: Record&lt;string, string&gt; = <span class="cstat-no" title="statement not covered" >{</span>
@@ -4293,9 +4329,9 @@ interface TenantSettingsFormValues {
 &nbsp;
 export const TenantSettingsPage: FC = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
   const { apiClient, selectedTenant, refreshIdentity <span class="cstat-no" title="statement not covered" >} = useIdentity();</span>
-  const { isGlobalAdmin, canCreate, hasRole <span class="cstat-no" title="statement not covered" >} = usePermissions();</span>
+  const { isGlobalAdmin, canCreate, hasRole, hasOrgBypass <span class="cstat-no" title="statement not covered" >} = usePermissions();</span>
   const [searchParams, setSearchParams<span class="cstat-no" title="statement not covered" >] = useSearchParams();</span>
-
+&nbsp;
   // Read initial tab from URL, default to 'settings'
   const tabFromUrl = <span class="cstat-no" title="statement not covered" >searchParams.get('tab');</span>
   const initialTab = <span class="cstat-no" title="statement not covered" >isValidTab(tabFromUrl) ? tabFromUrl : DEFAULT_TAB;</span>
@@ -4344,7 +4380,7 @@ export const TenantSettingsPage: FC = <span class="cstat-no" title="statement no
   const [principalsRoleFilter, setPrincipalsRoleFilter<span class="cstat-no" title="statement not covered" >] = useState&lt;string[]&gt;([]);</span>
   const [addPrincipalDialogOpen, setAddPrincipalDialogOpen<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
   const [editPrincipal, setEditPrincipal<span class="cstat-no" title="statement not covered" >] = useState&lt;TenantPrincipalPermission | null&gt;(null);</span>
-
+&nbsp;
   const PRINCIPALS_PAGE_SIZE = <span class="cstat-no" title="statement not covered" >50;</span>
 &nbsp;
   // ===== Custom Groups State =====
@@ -4366,7 +4402,7 @@ export const TenantSettingsPage: FC = <span class="cstat-no" title="statement no
     name: string;
   }&gt;({ open: false, id: '', name: '' });
   const [isDeletingGroup, setIsDeletingGroup<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
-
+&nbsp;
   const CUSTOM_GROUPS_PAGE_SIZE = <span class="cstat-no" title="statement not covered" >50;</span>
   const <span class="cstat-no" title="statement not covered" >customGroupsLoadMoreRef = useRef&lt;HTMLDivElement&gt;(null);</span>
 &nbsp;
@@ -4389,7 +4425,7 @@ export const TenantSettingsPage: FC = <span class="cstat-no" title="statement no
     name: string;
   }&gt;({ open: false, id: '', name: '' });
   const [isDeletingCredential, setIsDeletingCredential<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
-
+&nbsp;
   const CREDENTIALS_PAGE_SIZE = <span class="cstat-no" title="statement not covered" >50;</span>
   const <span class="cstat-no" title="statement not covered" >credentialsLoadMoreRef = useRef&lt;HTMLDivElement&gt;(null);</span>
 &nbsp;
@@ -4413,16 +4449,16 @@ export const TenantSettingsPage: FC = <span class="cstat-no" title="statement no
     name: string;
   }&gt;({ open: false, id: '', name: '' });
   const [isDeletingTool, setIsDeletingTool<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
-
+&nbsp;
   const TOOLS_PAGE_SIZE = <span class="cstat-no" title="statement not covered" >50;</span>
   const <span class="cstat-no" title="statement not covered" >toolsLoadMoreRef = useRef&lt;HTMLDivElement&gt;(null);</span>
-
+&nbsp;
   // Tool type options for filter
   const TOOL_TYPE_OPTIONS = <span class="cstat-no" title="statement not covered" >[</span>
     { value: ToolTypeEnum.MCP_SERVER, label: 'MCP Server' },
     { value: ToolTypeEnum.OPENAPI_DEFINITION, label: 'OpenAPI Definition' },
   ];
-
+&nbsp;
   const getToolTypeBadgeColor = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(t</span>ype: string): string =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    switch (type) {</span>
       case ToolTypeEnum.MCP_SERVER:
@@ -4523,7 +4559,7 @@ export const TenantSettingsPage: FC = <span class="cstat-no" title="statement no
 <span class="cstat-no" title="statement not covered" >    setPrincipalsError(null);</span>
 &nbsp;
     const skip = <span class="cstat-no" title="statement not covered" >reset ? 0 : principalsSkip;</span>
-
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    try {</span>
       const response = <span class="cstat-no" title="statement not covered" >await apiClient.getTenantPrincipals(selectedTenant.id, {</span>
         skip,
@@ -4533,7 +4569,7 @@ export const TenantSettingsPage: FC = <span class="cstat-no" title="statement no
         order_by: 'display_name',
         order_direction: 'asc',
       });
-
+&nbsp;
       // Transform response: use display_name, mail, principal_name from principal level
       const newPrincipals: TenantPrincipalPermission[] = <span class="cstat-no" title="statement not covered" >response.principals.map(<span class="fstat-no" title="function not covered" >principal =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span></span>
         id: `${principal.principal_id}-${principal.principal_type}`,
@@ -4546,7 +4582,7 @@ export const TenantSettingsPage: FC = <span class="cstat-no" title="statement no
         isActive: principal.is_active,
         roles: principal.roles.map(<span class="fstat-no" title="function not covered" >r =&gt; <span class="cstat-no" title="statement not covered" >r</span>.role)</span>,
       }));
-
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      if (reset) {</span>
 <span class="cstat-no" title="statement not covered" >        setPrincipals(newPrincipals);</span>
 <span class="cstat-no" title="statement not covered" >        setPrincipalsSkip(PRINCIPALS_PAGE_SIZE);</span>
@@ -4559,7 +4595,7 @@ export const TenantSettingsPage: FC = <span class="cstat-no" title="statement no
         });
 <span class="cstat-no" title="statement not covered" >        setPrincipalsSkip(<span class="fstat-no" title="function not covered" >prev =&gt; <span class="cstat-no" title="statement not covered" >p</span>rev + PRINCIPALS_PAGE_SIZE)</span>;</span>
       }
-
+&nbsp;
       // Determine if there are more items to load
 <span class="cstat-no" title="statement not covered" >      setPrincipalsHasMore(newPrincipals.length === PRINCIPALS_PAGE_SIZE);</span>
 <span class="cstat-no" title="statement not covered" >      setPrincipalsFetched(true);</span>
@@ -5226,12 +5262,20 @@ export const TenantSettingsPage: FC = <span class="cstat-no" title="statement no
           }}
         &gt;
           &lt;Tabs.List&gt;
+            &lt;Tabs.Tab value="organization" leftSection={&lt;IconBuilding size={18} /&gt;}&gt;
+              Organization
+            &lt;/Tabs.Tab&gt;
+            {hasOrgBypass &amp;&amp; (
+            &lt;Tabs.Tab value="org-iam" leftSection={&lt;IconShieldLock size={18} /&gt;}&gt;
+              Organisation Access (IAM)
+            &lt;/Tabs.Tab&gt;
+            )}
             &lt;Tabs.Tab value="settings" leftSection={&lt;IconSettings size={18} /&gt;}&gt;
-              General
+              Tenant
             &lt;/Tabs.Tab&gt;
             {isGlobalAdmin &amp;&amp; (
             &lt;Tabs.Tab value="iam" leftSection={&lt;IconUsers size={18} /&gt;}&gt;
-              Access (IAM)
+              Tenant Access (IAM)
             &lt;/Tabs.Tab&gt;
             )}
             &lt;Tabs.Tab value="custom-groups" leftSection={&lt;IconUsersGroup size={18} /&gt;}&gt;
@@ -5250,6 +5294,16 @@ export const TenantSettingsPage: FC = <span class="cstat-no" title="statement no
               Billing
             &lt;/Tabs.Tab&gt;
           &lt;/Tabs.List&gt;
+&nbsp;
+            {/* Organization Settings Tab */}
+            &lt;Tabs.Panel value="organization"&gt;
+              &lt;OrganizationSettingsPanel isOrgAdmin={hasOrgBypass} /&gt;
+            &lt;/Tabs.Panel&gt;
+&nbsp;
+            {/* Organisation Access (IAM) Tab */}
+            &lt;Tabs.Panel value="org-iam"&gt;
+              &lt;OrganizationAccessPanel isOrgAdmin={hasOrgBypass} /&gt;
+            &lt;/Tabs.Panel&gt;
 &nbsp;
             {/* Tenant Settings Tab */}
             &lt;Tabs.Panel value="settings"&gt;
@@ -5489,7 +5543,7 @@ export const TenantSettingsPage: FC = <span class="cstat-no" title="statement no
                       &lt;/Table.Tbody&gt;
                     &lt;/Table&gt;
                   &lt;/div&gt;
-
+&nbsp;
                     {/* Infinite scroll trigger element */}
                     {customGroupsHasMore &amp;&amp; (
                       &lt;div ref={customGroupsLoadMoreRef} className={classes.loadMoreTrigger}&gt;
@@ -5676,7 +5730,7 @@ export const TenantSettingsPage: FC = <span class="cstat-no" title="statement no
                       &lt;/Table.Tbody&gt;
                     &lt;/Table&gt;
                   &lt;/div&gt;
-
+&nbsp;
                     {/* Infinite scroll trigger element */}
                     {toolsHasMore &amp;&amp; (
                       &lt;div ref={toolsLoadMoreRef} className={classes.loadMoreTrigger}&gt;
@@ -5853,7 +5907,7 @@ export const TenantSettingsPage: FC = <span class="cstat-no" title="statement no
                       &lt;/Table.Tbody&gt;
                     &lt;/Table&gt;
                   &lt;/div&gt;
-
+&nbsp;
                     {/* Infinite scroll trigger element */}
                     {credentialsHasMore &amp;&amp; (
                       &lt;div ref={credentialsLoadMoreRef} className={classes.loadMoreTrigger}&gt;
@@ -6268,7 +6322,7 @@ export const TenantSettingsPage: FC = <span class="cstat-no" title="statement no
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-21T17:56:03.063Z
+                at 2026-03-08T16:45:12.110Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

@@ -1,45 +1,46 @@
 ---
 name: Bug Report
-about: Report a bug in the Frontend Service
-title: "[BUG] "
-labels: bug, needs-triage
-assignees: ""
+about: Report a bug to help us improve
+title: "[Bug]: "
+labels: bug
+assignees: enricogoerlitz
 ---
 
-## Bug Description
+## Description
 
-A clear and concise description of what the bug is.
+A clear and concise description of the bug.
 
 ## Steps to Reproduce
 
 1. Go to '...'
 2. Click on '...'
-3. See error
+3. Scroll down to '...'
+4. See error
 
 ## Expected Behavior
 
-A clear and concise description of what you expected to happen.
+What you expected to happen.
 
 ## Actual Behavior
 
-What actually happened instead.
+What actually happened.
 
 ## Screenshots
 
-If applicable, add screenshots to help explain the problem.
+If applicable, add screenshots to help explain your problem.
 
-## Browser Console Errors
+## Console Errors
 
 ```
-# Paste console errors here
+Paste any browser console errors here
 ```
 
 ## Environment
 
-- **Browser**: [e.g., Chrome 120, Firefox 121, Safari 17]
-- **OS**: [e.g., macOS 14.2, Windows 11]
-- **Screen Size**: [e.g., Desktop 1920x1080, Mobile 375x812]
-- **Commit/Version**: [e.g., main@abc1234]
+- **Browser**: [e.g. Chrome 120, Firefox 121]
+- **OS**: [e.g. macOS 14, Windows 11]
+- **Screen size**: [e.g. 1920x1080]
+- **Dark mode**: [yes/no]
 
 ## Additional Context
 

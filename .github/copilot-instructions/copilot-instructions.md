@@ -116,7 +116,7 @@ export const MyComponent: FC<Props> = ({ ... }) => {
 - **Branding config**: `src/config/branding.config.ts` (tenant login page + app-wide branding)
 - **Contexts**: `src/contexts/` — IdentityContext (wraps AuthContext, TenantContext, ApiClientContext), SidebarDataContext, ChatSidebarContext, AICapabilitiesContext, FavoritesContext, RecentVisitsContext
 - **i18n config**: `src/i18n/index.ts` (production), `src/i18n/i18nForTests.ts` (test)
-- **Locales**: `src/i18n/locales/en-US/` (11 namespaces: common, dashboard, login, header, conversations, settings, tracing, credentials, token, widgetDesigner, reactAgent)
+- **Locales**: `src/i18n/locales/en-US/` (12 namespaces: common, dashboard, login, header, conversations, settings, tracing, credentials, token, widgetDesigner, reactAgent, +1)
 - **Command Palette**: `src/components/common/CommandPalette/` (cmdk library, `⌘K` shortcut)
 - **Chat Components**: `src/components/chat/` (ChatView, ChatContent, ChatInput, ChatHeader, ChatEmptyState, FeedbackDialog)
 - **Conversation Components**: `src/components/conversation/` (ConversationSidebar)
@@ -124,6 +124,8 @@ export const MyComponent: FC<Props> = ({ ... }) => {
 - **Conversation Hooks**: `src/hooks/conversation/` (useConversationList, useConversationTracing)
 - **Test setup**: `src/test/setup.ts` (MSW lifecycle, mocks)
 - **Test utils**: `src/test/utils.tsx` (`renderWithProviders()`)
+- **Project docs**: `CONTRIBUTING.md`, `SECURITY.md`, `SPONSORS.md`, `CHANGELOG.md`, `TOOLING.md`
+- **ADRs**: `docs/adr/` (Architecture Decision Records)
 
 ---
 

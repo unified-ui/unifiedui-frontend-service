@@ -1434,7 +1434,7 @@ export const ConversationSidebar: FC&lt;ConversationSidebarProps&gt; = <span cla
   const { apiClient, selectedTenant <span class="cstat-no" title="statement not covered" >} = useIdentity();</span>
   const { t <span class="cstat-no" title="statement not covered" >} = useTranslation();</span>
   const [searchParams, setSearchParams<span class="cstat-no" title="statement not covered" >] = useSearchParams();</span>
-
+&nbsp;
   const [groupMode, setGroupMode<span class="cstat-no" title="statement not covered" >] = useState&lt;GroupMode&gt;(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
     const stored = <span class="cstat-no" title="statement not covered" >localStorage.getItem(STORAGE_KEY_GROUP_MODE);</span>
 <span class="cstat-no" title="statement not covered" >    return (stored === 'time' || stored === 'chat-agent') ? stored : 'time';</span>
@@ -1450,11 +1450,11 @@ export const ConversationSidebar: FC&lt;ConversationSidebarProps&gt; = <span cla
     conversationName: string;
   }&gt;({ open: false, conversationId: '', conversationName: '' });
   const [isDeleting, setIsDeleting<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
-
+&nbsp;
   const [chatAgentSelectDialogOpen, setChatAgentSelectDialogOpen<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
 &nbsp;
   const selectedChatAgentId = <span class="cstat-no" title="statement not covered" >searchParams.get('selected-chatAgentId');</span>
-
+&nbsp;
   const <span class="cstat-no" title="statement not covered" >selectedChatAgent = useMemo(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    if (!selectedChatAgentId) <span class="cstat-no" title="statement not covered" >return null;</span></span>
 <span class="cstat-no" title="statement not covered" >    return chatAgents.find(<span class="fstat-no" title="function not covered" >app =&gt; <span class="cstat-no" title="statement not covered" >a</span>pp.id === selectedChatAgentId)</span> || null;</span>
@@ -1498,14 +1498,14 @@ export const ConversationSidebar: FC&lt;ConversationSidebarProps&gt; = <span cla
 &nbsp;
   const handleRenameSave = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async () =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    if (!editingId || !apiClient || !selectedTenant) <span class="cstat-no" title="statement not covered" >return;</span></span>
-
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      await apiClient.updateConversation(selectedTenant.id, editingId, {</span>
         name: editingName,
       });
-
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      onRenameConversation?.(editingId, editingName);</span>
-
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      setEditingId(null);</span>
 <span class="cstat-no" title="statement not covered" >      setEditingName('');</span>
     } catch (error) {
@@ -1524,7 +1524,7 @@ export const ConversationSidebar: FC&lt;ConversationSidebarProps&gt; = <span cla
 &nbsp;
   const handleDeleteConfirm = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async () =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >    if (!deleteDialog.conversationId) <span class="cstat-no" title="statement not covered" >return;</span></span>
-
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    setIsDeleting(true);</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      await onDeleteConversation?.(deleteDialog.conversationId);</span>
@@ -1550,7 +1550,7 @@ export const ConversationSidebar: FC&lt;ConversationSidebarProps&gt; = <span cla
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (effectiveGroupMode === 'chat-agent') {</span>
       const appGroups = <span class="cstat-no" title="statement not covered" >new Map&lt;string, ConversationResponse[]&gt;();</span>
-
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      unpinned.forEach(<span class="fstat-no" title="function not covered" >conv =&gt; {</span></span>
         const appId = <span class="cstat-no" title="statement not covered" >conv.chat_agent_id;</span>
 <span class="cstat-no" title="statement not covered" >        if (!appGroups.has(appId)) {</span>
@@ -1560,11 +1560,11 @@ export const ConversationSidebar: FC&lt;ConversationSidebarProps&gt; = <span cla
       });
 &nbsp;
       const result: GroupedConversations[] = <span class="cstat-no" title="statement not covered" >[];</span>
-
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      if (pinned.length &gt; 0) {</span>
 <span class="cstat-no" title="statement not covered" >        result.push({ label: t('conversations:pinned'), conversations: pinned });</span>
       }
-
+&nbsp;
       const sortedGroups = <span class="cstat-no" title="statement not covered" >Array.from(appGroups.entries()).sort(<span class="fstat-no" title="function not covered" >(a</span>, b) =&gt; {</span>
         const aLatest = <span class="cstat-no" title="statement not covered" >Math.max(...a[1].map(<span class="fstat-no" title="function not covered" >c =&gt; <span class="cstat-no" title="statement not covered" >n</span>ew Date(c.updated_at).getTime())</span>);</span>
         const bLatest = <span class="cstat-no" title="statement not covered" >Math.max(...b[1].map(<span class="fstat-no" title="function not covered" >c =&gt; <span class="cstat-no" title="statement not covered" >n</span>ew Date(c.updated_at).getTime())</span>);</span>
@@ -1689,7 +1689,7 @@ export const ConversationSidebar: FC&lt;ConversationSidebarProps&gt; = <span cla
             &lt;IconLayoutList size={14} /&gt;
             &lt;span&gt;{t('conversations:groupByTime')}&lt;/span&gt;
           &lt;/UnstyledButton&gt;
-
+&nbsp;
           {isFilterActive ? (
             &lt;div className={classes.segmentedTabFilter}&gt;
               &lt;IconApps size={14} style={{ flexShrink: 0 }} /&gt;
@@ -1987,7 +1987,7 @@ const ConversationItem: FC&lt;ConversationItemProps&gt; = <span class="cstat-no"
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-21T17:56:03.130Z
+                at 2026-03-08T16:45:12.215Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

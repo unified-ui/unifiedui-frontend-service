@@ -23,30 +23,30 @@
         <div class='clearfix'>
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">2.19% </span>
+                <span class="strong">2.29% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>2/91</span>
+                <span class='fraction'>2/87</span>
             </div>
 
 
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/34</span>
+                <span class='fraction'>0/33</span>
             </div>
 
 
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/31</span>
+                <span class='fraction'>0/28</span>
             </div>
 
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">2.35% </span>
+                <span class="strong">2.46% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>2/85</span>
+                <span class='fraction'>2/81</span>
             </div>
 
 
@@ -296,17 +296,7 @@
 <a name='L231'></a><a href='#L231'>231</a>
 <a name='L232'></a><a href='#L232'>232</a>
 <a name='L233'></a><a href='#L233'>233</a>
-<a name='L234'></a><a href='#L234'>234</a>
-<a name='L235'></a><a href='#L235'>235</a>
-<a name='L236'></a><a href='#L236'>236</a>
-<a name='L237'></a><a href='#L237'>237</a>
-<a name='L238'></a><a href='#L238'>238</a>
-<a name='L239'></a><a href='#L239'>239</a>
-<a name='L240'></a><a href='#L240'>240</a>
-<a name='L241'></a><a href='#L241'>241</a>
-<a name='L242'></a><a href='#L242'>242</a>
-<a name='L243'></a><a href='#L243'>243</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L234'></a><a href='#L234'>234</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -389,14 +379,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -561,7 +543,6 @@ import type { SelectedPrincipal } from '../components/common/AddPrincipalDialog/
 export type EntityType =
   | 'chat-agent'
   | 'autonomous-agent'
-  | 're-act-agent'
   | 'credential'
   | 'chat-widget'
   | 'conversation'
@@ -679,14 +660,6 @@ export const useEntityPermissions = <span class="fstat-no" title="function not c
           deletePermission: <span class="fstat-no" title="function not covered" >(p</span>rincipalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =&gt;
 <span class="cstat-no" title="statement not covered" >            apiClient.deleteToolPermission(tenantId, entityId, principalId, principalType, role),</span>
         };
-      case 're-act-agent':
-<span class="cstat-no" title="statement not covered" >        return {</span>
-          getPrincipals: <span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >a</span>piClient.getReActAgentPrincipals(tenantId, entityId),</span>
-          setPermission: <span class="fstat-no" title="function not covered" >(d</span>ata: { principal_id: string; principal_type: PrincipalTypeEnum; role: PermissionActionEnum }) =&gt;
-<span class="cstat-no" title="statement not covered" >            apiClient.setReActAgentPermission(tenantId, entityId, data),</span>
-          deletePermission: <span class="fstat-no" title="function not covered" >(p</span>rincipalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =&gt;
-<span class="cstat-no" title="statement not covered" >            apiClient.deleteReActAgentPermission(tenantId, entityId, principalId, principalType, role),</span>
-        };
       default:
 <span class="cstat-no" title="statement not covered" >        return null;</span>
     }
@@ -796,7 +769,7 @@ export const useEntityPermissions = <span class="fstat-no" title="function not c
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-21T17:56:03.063Z
+                at 2026-03-08T16:45:12.110Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

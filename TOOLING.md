@@ -1,4 +1,4 @@
-# Tooling Guide — Frontend Service
+# Tooling Guide — unified-ui Frontend Service
 
 This document describes the development tooling, workflows, and quality gates for the unified-ui Frontend Service.
 
@@ -28,6 +28,9 @@ npx vitest run --coverage    # Run tests with coverage
 npm run lint                 # ESLint
 npx tsc --noEmit             # TypeScript type check
 
+# Pre-commit
+pre-commit run --all-files   # Run all hooks manually
+
 # Dependencies
 npm install                  # Install dependencies
 npm ci                       # Clean install (CI)
@@ -48,6 +51,22 @@ Hooks run automatically on `git commit`. Manual run:
 ```bash
 pre-commit run --all-files
 ```
+
+### Configured Hooks
+
+| Hook                    | Source           | Purpose                            |
+| ----------------------- | ---------------- | ---------------------------------- |
+| trailing-whitespace     | pre-commit-hooks | Remove trailing whitespace         |
+| end-of-file-fixer       | pre-commit-hooks | Ensure files end with newline      |
+| check-yaml              | pre-commit-hooks | Validate YAML syntax               |
+| check-json              | pre-commit-hooks | Validate JSON syntax               |
+| check-added-large-files | pre-commit-hooks | Prevent large files (>1MB)         |
+| check-merge-conflict    | pre-commit-hooks | Detect merge conflict markers      |
+| detect-private-key      | pre-commit-hooks | Detect accidentally committed keys |
+| eslint                  | local            | Lint with auto-fix                 |
+| prettier                | mirrors-prettier | Format CSS, JSON, YAML, Markdown   |
+| tsc                     | local            | TypeScript type check              |
+| commitizen              | commitizen-tools | Enforce Conventional Commits       |
 
 ## Commit Convention
 
@@ -82,7 +101,6 @@ Key rules enforced:
 
 - React hooks rules
 - TypeScript strict checks
-- Import ordering
 - No unused variables/imports
 
 ### Type Checking (TypeScript)
@@ -98,24 +116,31 @@ Strict mode enabled with:
 
 ### Testing (Vitest + RTL)
 
-- Test location: `src/**/*.test.tsx` and `src/test/`
+- Test location: `src/**/*.test.tsx` and `src/**/*.test.ts`
 - Naming: `{ComponentName}.test.tsx`
 - Coverage target: **80%**
 - Utilities: `renderWithProviders()` in `src/test/utils.tsx`
 
 ## CI/CD Workflows
 
-| Workflow                 | Trigger        | Job                            |
-| ------------------------ | -------------- | ------------------------------ |
-| `ci-tests-and-lint.yml`  | push/PR        | Tests, lint, type check, build |
-| `ci-pr-branch-check.yml` | PR             | Branch naming check            |
-| `codeql.yml`             | push/PR/weekly | Security scanning              |
+| Workflow                 | Trigger                     | Job                                  |
+| ------------------------ | --------------------------- | ------------------------------------ |
+| `ci-tests-and-lint.yml`  | push/PR to `main`/`develop` | Tests, lint, type check, build       |
+| `ci-pr-branch-check.yml` | PR open/sync                | Branch naming + PR target validation |
+| `codeql.yml`             | push/PR/weekly              | Security scanning                    |
+| `dependency-review.yml`  | PR to `main`/`develop`      | License + severity check             |
+| `auto-labeler.yml`       | PR open/sync                | Label PR by changed files            |
+| `pr-size-labeler.yml`    | PR open/sync                | Label PR by size (XS–XL)             |
+| `release-drafter.yml`    | push to `main`              | Draft GitHub Release                 |
+| `stale.yml`              | daily cron                  | Mark/close stale issues & PRs        |
 
 ## Security
 
 - **Dependabot** updates dependencies weekly (Mondays 09:00 CET)
 - **CodeQL** scans for vulnerabilities on every push and weekly
+- **Dependency Review** blocks PRs with high-severity or GPL-3.0/AGPL-3.0 deps
 - **npm audit** should be run periodically: `npm audit`
+- **detect-private-key** pre-commit hook prevents accidental key commits
 
 ## IDE Configuration
 
@@ -126,7 +151,6 @@ Recommended extensions:
 - `dbaeumer.vscode-eslint`
 - `esbenp.prettier-vscode`
 - `EditorConfig.EditorConfig`
-- `bradlc.vscode-tailwindcss` (if using Tailwind)
 
 Settings (`.vscode/settings.json`):
 
@@ -146,12 +170,6 @@ Settings (`.vscode/settings.json`):
   ]
 }
 ```
-
-### WebStorm
-
-- Enable ESLint integration
-- Set Prettier as default formatter
-- Enable EditorConfig support
 
 ## Styling
 

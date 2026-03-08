@@ -25,18 +25,35 @@ The `name:` field inside each workflow MUST match the filename (without `.yml`).
 
 **Triggers**: push/pull_request to `main`/`develop`, workflow_dispatch
 
-| Job      | What it does                                          |
-| -------- | ----------------------------------------------------- |
-| **lint** | `tsc --noEmit` + `npm run lint` (ESLint)              |
-| **test** | `vitest run --coverage` with coverage artifact upload |
+| Job       | What it does                             |
+| --------- | ---------------------------------------- |
+| **lint**  | `tsc --noEmit` + `npm run lint` (ESLint) |
+| **test**  | `vitest run` (coverage not yet enforced) |
+| **build** | `npm run build` (production build)       |
 
-**Coverage**: Reported but not enforced yet. Target is 80% — enforce once test coverage reaches that level.
+**Coverage**: Not yet enforced. Target is 80% — enforce once test coverage reaches that level.
 
 ### ci-pr-branch-check.yml
 
-**Triggers**: pull_request to `main`
+**Triggers**: pull_request (opened, synchronize, reopened, edited)
 
-Validates that PRs to `main` originate from a `release/*` branch.
+Two validation jobs:
+
+1. **Branch naming** — Source branch must follow `<type>/` convention (feat/, fix/, docs/, refactor/, test/, ci/, chore/, hotfix/, etc.)
+2. **PR target rules**:
+   - PRs to `main` only from `develop` or `hotfix/*`
+   - PRs to `develop` only from `feat/*`, `fix/*`, `docs/*`, `refactor/*`, `test/*`, `ci/*`, `chore/*`, `hotfix/*`
+
+### Additional Workflows
+
+| Workflow                | Trigger                          | Purpose                                                            |
+| ----------------------- | -------------------------------- | ------------------------------------------------------------------ |
+| `codeql.yml`            | push/PR to main/develop + weekly | Security vulnerability scanning                                    |
+| `dependency-review.yml` | PR to main/develop               | License + severity check (blocks high severity, GPL-3.0, AGPL-3.0) |
+| `auto-labeler.yml`      | PR open/sync                     | Labels PRs by changed files (uses `.github/labeler.yml`)           |
+| `pr-size-labeler.yml`   | PR open/sync                     | Labels PRs by size (XS/S/M/L/XL)                                   |
+| `release-drafter.yml`   | push to main                     | Drafts GitHub Release with changelog                               |
+| `stale.yml`             | daily cron                       | Marks/closes stale issues (60d) and PRs (30d)                      |
 
 ---
 
@@ -65,7 +82,7 @@ Validates that PRs to `main` originate from a `release/*` branch.
 ## Coverage Policy
 
 - **Target threshold**: 80% (not yet enforced — current coverage is low)
-- **Run locally**: `npm run test:coverage` (generates `coverage/` directory)
+- **Run locally**: `npx vitest run --coverage` (generates `coverage/` directory)
 - **Coverage config**: `vite.config.ts` → `test.coverage` block
 - Once coverage reaches 80%, add threshold to `vite.config.ts`:
   ```typescript
@@ -82,9 +99,16 @@ Validates that PRs to `main` originate from a `release/*` branch.
 
 ---
 
-## Dependencies
+## Branching Strategy
 
-Coverage requires `@vitest/coverage-v8` as a devDependency (already installed).
+See [README.md](../../README.md#branching-strategy) for the full Simplified Flow branching model.
+
+**Quick reference**:
+
+| PR Target | Allowed Source Branches                                                                       |
+| --------- | --------------------------------------------------------------------------------------------- |
+| `main`    | `develop`, `hotfix/*`                                                                         |
+| `develop` | `feat/*`, `fix/*`, `docs/*`, `refactor/*`, `test/*`, `ci/*`, `chore/*`, `hotfix/*` (backport) |
 
 ---
 
