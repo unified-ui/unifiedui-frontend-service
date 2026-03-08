@@ -33,6 +33,5 @@
   "openSettings": "Open Settings",
   "goToDashboard": "Go to Dashboard",
   "goToChatWidgets": "Go to Chat Widgets",
-  "goToWidgetDesigner": "Go to Widget Designer",
-  "goToReActAgents": "Go to ReACT Agents"
+  "goToWidgetDesigner": "Go to Widget Designer"
 }

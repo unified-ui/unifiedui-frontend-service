@@ -86,6 +86,16 @@ function validateOpenAPIConfig(config: Record<string, unknown>): ValidationResul
   return { valid: errors.length === 0, errors, warnings };
 }
 
+export function normalizeToolConfig(
+  type: ToolTypeEnum,
+  config: Record<string, unknown>,
+): Record<string, unknown> {
+  if (type !== ToolTypeEnum.OPENAPI_DEFINITION) return config;
+  if (config.spec) return config;
+  if (config.openapi && config.info) return { spec: config };
+  return config;
+}
+
 export function validateToolConfig(type: ToolTypeEnum, jsonString: string): ValidationResult {
   if (!jsonString.trim()) {
     return { valid: true, errors: [], warnings: [] };

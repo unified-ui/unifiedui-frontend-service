@@ -65,15 +65,9 @@ import type {
   CreateToolRequest,
   UpdateToolRequest,
   SetToolPermissionRequest,
-  // ReACT Agent Types
-  ReActAgentResponse,
-  ReActAgentVersionResponse,
-  CreateReActAgentRequest,
-  UpdateReActAgentRequest,
+  // ReACT Agent Version Types
   UpdateReActAgentVersionRequest,
-  PublishReActAgentRequest,
-  PublishReActAgentResponse,
-  SetReActAgentPermissionRequest,
+  ReActAgentVersionResponse,
   // Custom Group Types
   CustomGroupResponse,
   CreateCustomGroupRequest,
@@ -696,94 +690,22 @@ export class UnifiedUIAPIClient {
     return this.setResourceTags(tenantId, 'tools', toolId, { tags });
   }
 
-  // ========== ReACT Agent Endpoints ==========
+  // ========== Chat Agent Version Methods (REACT_AGENT) ==========
 
-  async listReActAgents(
-    tenantId: string,
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
-    options?: { noCache?: boolean }
-  ): Promise<ReActAgentResponse[] | QuickListItemResponse[]> {
-    const query = this.buildQueryString(params || {});
-    return this.request<ReActAgentResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents${query}`, undefined, undefined, options);
+  async updateChatAgentVersion(tenantId: string, chatAgentId: string, data: UpdateReActAgentVersionRequest): Promise<ChatAgentResponse> {
+    return this.request<ChatAgentResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions`, data);
   }
 
-  async getReActAgent(tenantId: string, agentId: string): Promise<ReActAgentResponse> {
-    return this.request<ReActAgentResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}`);
+  async listChatAgentVersions(tenantId: string, chatAgentId: string, skip = 0, limit = 50): Promise<ReActAgentVersionResponse[]> {
+    return this.request<ReActAgentVersionResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions?skip=${skip}&limit=${limit}`);
   }
 
-  async createReActAgent(tenantId: string, data: CreateReActAgentRequest): Promise<ReActAgentResponse> {
-    return this.request<ReActAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents`, data, 'ReACT Agent created successfully');
+  async getChatAgentVersion(tenantId: string, chatAgentId: string, version: number): Promise<ReActAgentVersionResponse> {
+    return this.request<ReActAgentVersionResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions/${version}`);
   }
 
-  async updateReActAgent(tenantId: string, agentId: string, data: UpdateReActAgentRequest): Promise<ReActAgentResponse> {
-    return this.request<ReActAgentResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}`, data, 'ReACT Agent updated successfully');
-  }
-
-  async deleteReActAgent(tenantId: string, agentId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}`, undefined, 'ReACT Agent deleted successfully');
-  }
-
-  // ========== ReACT Agent Versions ==========
-
-  async updateReActAgentVersion(tenantId: string, agentId: string, data: UpdateReActAgentVersionRequest): Promise<ReActAgentResponse> {
-    return this.request<ReActAgentResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/versions`, data, 'New version created successfully');
-  }
-
-  async listReActAgentVersions(tenantId: string, agentId: string): Promise<ReActAgentVersionResponse[]> {
-    return this.request<ReActAgentVersionResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/versions`);
-  }
-
-  async getReActAgentVersion(tenantId: string, agentId: string, version: number): Promise<ReActAgentVersionResponse> {
-    return this.request<ReActAgentVersionResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/versions/${version}`);
-  }
-
-  async restoreReActAgentVersion(tenantId: string, agentId: string, version: number): Promise<ReActAgentResponse> {
-    return this.request<ReActAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/versions/${version}/restore`, undefined, 'Version restored successfully');
-  }
-
-  // ========== ReACT Agent Publish ==========
-
-  async publishReActAgent(tenantId: string, agentId: string, data: PublishReActAgentRequest): Promise<PublishReActAgentResponse> {
-    return this.request<PublishReActAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/publish`, data, 'ReACT Agent published successfully');
-  }
-
-  // ========== ReACT Agent Permissions ==========
-
-  async getReActAgentPrincipals(tenantId: string, agentId: string): Promise<ResourcePrincipalsResponse> {
-    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/principals`);
-  }
-
-  async setReActAgentPermission(tenantId: string, agentId: string, data: SetReActAgentPermissionRequest): Promise<PrincipalWithRolesResponse> {
-    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/principals`, data, 'Permission added successfully');
-  }
-
-  async deleteReActAgentPermission(
-    tenantId: string,
-    agentId: string,
-    principalId: string,
-    principalType: PrincipalTypeEnum,
-    role: PermissionActionEnum
-  ): Promise<void> {
-    return this.request<void>(
-      'DELETE',
-      `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/principals`,
-      { principal_id: principalId, principal_type: principalType, role },
-      'Permission removed successfully'
-    );
-  }
-
-  // ========== ReACT Agent Tags ==========
-
-  async listReActAgentTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
-    return this.listResourceTypeTags(tenantId, 're-act-agents', params);
-  }
-
-  async getReActAgentTags(tenantId: string, agentId: string): Promise<ResourceTagsResponse> {
-    return this.getResourceTags(tenantId, 're-act-agents', agentId);
-  }
-
-  async setReActAgentTags(tenantId: string, agentId: string, tags: string[]): Promise<ResourceTagsResponse> {
-    return this.setResourceTags(tenantId, 're-act-agents', agentId, { tags });
+  async restoreChatAgentVersion(tenantId: string, chatAgentId: string, version: number): Promise<ChatAgentResponse> {
+    return this.request<ChatAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions/${version}/restore`);
   }
 
   // ========== Custom Group Endpoints ==========

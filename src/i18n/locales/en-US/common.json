@@ -42,7 +42,6 @@
   "errorLoadingChatAgents": "Failed to load chat agents",
   "errorLoadingAutonomousAgents": "Failed to load autonomous agents",
   "errorLoadingChatWidgets": "Failed to load chat widgets",
-  "errorLoadingReActAgents": "Failed to load ReACT agents",
   "chatAgents": "Chat Agents",
   "autonomousAgents": "Autonomous Agents",
   "conversations": "Conversations",

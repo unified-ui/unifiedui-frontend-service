@@ -73,7 +73,6 @@ export const FavoriteResourceTypeEnum = {
   AUTONOMOUS_AGENT: 'autonomous-agents',
   CHAT_WIDGET: 'chat-widgets',
   CONVERSATION: 'conversations',
-  RE_ACT_AGENT: 're-act-agents',
 } as const;
 
 export type FavoriteResourceTypeEnum = typeof FavoriteResourceTypeEnum[keyof typeof FavoriteResourceTypeEnum];
@@ -890,6 +889,14 @@ export interface ChatAgentResponse {
   created_by?: string;
   updated_by?: string;
   my_permission?: string;
+  current_version?: number;
+  ai_model_ids?: string[];
+  system_prompt?: string | null;
+  tool_ids?: string[];
+  security_prompt?: string | null;
+  tool_use_prompt?: string | null;
+  response_prompt?: string | null;
+  greeting_messages?: string[];
 }
 
 export interface CreateChatAgentRequest {
@@ -899,6 +906,14 @@ export interface CreateChatAgentRequest {
   config?: Record<string, unknown>;
   is_active?: boolean;
   embed_allowed_origins?: string;
+  current_version?: number;
+  ai_model_ids?: string[];
+  system_prompt?: string | null;
+  tool_ids?: string[];
+  security_prompt?: string | null;
+  tool_use_prompt?: string | null;
+  response_prompt?: string | null;
+  greeting_messages?: string[];
 }
 
 export interface UpdateChatAgentRequest {
@@ -914,6 +929,35 @@ export interface SetChatAgentPermissionRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
   role: PermissionActionEnum;
+}
+
+export interface UpdateReActAgentVersionRequest {
+  ai_model_ids?: string[];
+  system_prompt?: string | null;
+  tool_ids?: string[];
+  security_prompt?: string | null;
+  tool_use_prompt?: string | null;
+  response_prompt?: string | null;
+  greeting_messages?: string[];
+  config?: Record<string, unknown>;
+}
+
+export interface ReActAgentVersionResponse {
+  id: string;
+  chat_agent_id: string;
+  version: number;
+  ai_model_ids: string[];
+  system_prompt: string | null;
+  tool_ids: string[];
+  security_prompt: string | null;
+  tool_use_prompt: string | null;
+  response_prompt: string | null;
+  greeting_messages: string[];
+  config: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 // ========== Unified Principal Response Types ==========
@@ -1273,101 +1317,6 @@ export interface UpdateAIModelRequest {
   credential_id?: string;
   priority?: number;
   is_active?: boolean;
-}
-
-// ========== ReACT Agent Types ==========
-
-export interface ReActAgentVersionResponse {
-  id: string;
-  re_act_agent_id: string;
-  version: number;
-  ai_model_ids: string[];
-  system_prompt?: string;
-  tool_ids: string[];
-  security_prompt?: string;
-  tool_use_prompt?: string;
-  response_prompt?: string;
-  greeting_messages: string[];
-  config: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-  updated_by?: string;
-}
-
-export interface ReActAgentResponse {
-  id: string;
-  tenant_id: string;
-  name: string;
-  description?: string;
-  ai_model_ids: string[];
-  system_prompt?: string;
-  tool_ids: string[];
-  security_prompt?: string;
-  tool_use_prompt?: string;
-  response_prompt?: string;
-  greeting_messages: string[];
-  config: Record<string, unknown>;
-  current_version: number | null;
-  published_chat_agent_id?: string;
-  is_active: boolean;
-  tags: TagSummary[];
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-  updated_by?: string;
-  my_permission?: string;
-}
-
-export interface CreateReActAgentRequest {
-  name: string;
-  description?: string;
-  ai_model_ids?: string[];
-  system_prompt?: string;
-  tool_ids?: string[];
-  security_prompt?: string;
-  tool_use_prompt?: string;
-  response_prompt?: string;
-  greeting_messages?: string[];
-  config?: Record<string, unknown>;
-  is_active?: boolean;
-}
-
-export interface UpdateReActAgentRequest {
-  name?: string;
-  description?: string;
-  is_active?: boolean;
-}
-
-export interface UpdateReActAgentVersionRequest {
-  ai_model_ids?: string[];
-  system_prompt?: string;
-  tool_ids?: string[];
-  security_prompt?: string;
-  tool_use_prompt?: string;
-  response_prompt?: string;
-  greeting_messages?: string[];
-  config?: Record<string, unknown>;
-}
-
-export interface PublishReActAgentRequest {
-  name?: string;
-  description?: string;
-  is_active?: boolean;
-}
-
-export interface PublishReActAgentResponse {
-  chat_agent_id: string;
-  re_act_agent_id: string;
-  chat_agent_name: string;
-  chat_agent_type: string;
-  is_active: boolean;
-}
-
-export interface SetReActAgentPermissionRequest {
-  principal_id: string;
-  principal_type: PrincipalTypeEnum;
-  role: PermissionActionEnum;
 }
 
 // ========== AI Feature Types ==========

@@ -15,7 +15,6 @@ import {
   IconSearch,
   IconHome,
   IconMessageChatbot,
-  IconBrain,
 } from '@tabler/icons-react';
 import { useMantineColorScheme } from '@mantine/core';
 import { useIdentity } from '../../../contexts';
@@ -333,17 +332,6 @@ export const CommandPalette: FC<CommandPaletteProps> = ({ open, onOpenChange }) 
                     </div>
                     <div className={classes.itemContent}>
                       <div className={classes.itemName}>{t('goToChatWidgets')}</div>
-                    </div>
-                  </Command.Item>
-                  <Command.Item
-                    className={classes.item}
-                    onSelect={() => handleNavigate('/re-act-agents')}
-                  >
-                    <div className={classes.itemIcon}>
-                      <IconBrain size={16} />
-                    </div>
-                    <div className={classes.itemContent}>
-                      <div className={classes.itemName}>{t('goToReActAgents')}</div>
                     </div>
                   </Command.Item>
                   <Command.Item

@@ -17,7 +17,7 @@ import { useIdentity } from '../../contexts';
 import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
 import { ToolTypeEnum } from '../../api/types';
 import { TagInput } from '../common';
-import { validateToolConfig } from '../../utils/toolConfigValidator';
+import { validateToolConfig, normalizeToolConfig } from '../../utils/toolConfigValidator';
 
 interface CreateToolDialogProps {
   opened: boolean;
@@ -95,6 +95,7 @@ export const CreateToolDialog: FC<CreateToolDialogProps> = ({
       if (values.configJson.trim()) {
         parsedConfig = JSON.parse(values.configJson);
       }
+      parsedConfig = normalizeToolConfig(values.type as ToolTypeEnum, parsedConfig);
 
       const createdTool = await apiClient.createTool(selectedTenant.id, {
         name: values.name.trim(),

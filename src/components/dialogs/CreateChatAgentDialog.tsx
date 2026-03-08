@@ -39,6 +39,7 @@ import { TagInput } from '../common';
 import { CreateCredentialDialog } from './CreateCredentialDialog';
 
 const CHAT_AGENT_TYPES = [
+  { value: ChatAgentTypeEnum.REACT_AGENT, label: 'ReACT Agent' },
   { value: ChatAgentTypeEnum.N8N, label: 'n8n' },
   { value: ChatAgentTypeEnum.MICROSOFT_FOUNDRY, label: 'Microsoft Foundry' },
   { value: ChatAgentTypeEnum.REST_API, label: 'REST API' },
@@ -65,6 +66,7 @@ interface CreateChatAgentDialogProps {
   opened: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  defaultType?: string;
 }
 
 interface FormValues {
@@ -93,6 +95,7 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
   opened,
   onClose,
   onSuccess,
+  defaultType,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
   const { t } = useTranslation('common');
@@ -109,7 +112,7 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
   const form = useForm<FormValues>({
     initialValues: {
       name: '',
-      type: '',
+      type: defaultType || '',
       description: '',
       tags: [],
       embed_allowed_origins: [],

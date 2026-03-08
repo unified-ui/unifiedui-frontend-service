@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { MainLayout } from '../../components/layout/MainLayout';
 import { PageHeader, DataTable, ConfirmDeleteDialog, EntityAvatar } from '../../components/common';
@@ -9,12 +9,15 @@ import { CreateChatAgentDialog, EditChatAgentDialog } from '../../components/dia
 import { useIdentity, useSidebarData, useFavorites } from '../../contexts';
 import { useEntityList, usePermissions } from '../../hooks';
 import type { ChatAgentResponse } from '../../api/types';
-import { FavoriteResourceTypeEnum } from '../../api/types';
+import { ChatAgentTypeEnum, FavoriteResourceTypeEnum } from '../../api/types';
 
 const SORT_STORAGE_KEY = 'unified-ui:sort:chat-agents';
 
 export const ChatAgentsPage: FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const typeFilter = searchParams.get('type') as ChatAgentTypeEnum | null;
+  const isReactView = typeFilter === ChatAgentTypeEnum.REACT_AGENT;
   const { apiClient } = useIdentity();
   const { refreshChatAgents } = useSidebarData();
   const { isFavorite: checkFavorite, toggleFavorite } = useFavorites();
@@ -43,8 +46,8 @@ export const ChatAgentsPage: FC = () => {
 
   const listEntities = useCallback(
     (tenantId: string, params: Parameters<NonNullable<typeof apiClient>['listChatAgents']>[1]) =>
-      apiClient!.listChatAgents(tenantId, params) as Promise<ChatAgentResponse[]>,
-    [apiClient]
+      apiClient!.listChatAgents(tenantId, { ...params, type: typeFilter ?? undefined }) as Promise<ChatAgentResponse[]>,
+    [apiClient, typeFilter]
   );
 
   const listTags = useCallback(
@@ -86,8 +89,17 @@ export const ChatAgentsPage: FC = () => {
   } = useEntityList<ChatAgentResponse>(config);
 
   const handleOpen = useCallback((id: string) => {
-    navigate(`/conversations?chat-agent=${id}&selected-chatAgentId=${id}`);
-  }, [navigate]);
+    if (isReactView) {
+      navigate(`/chat-agents/${id}/develop`);
+    } else {
+      const agent = rawDataRef.current.get(id);
+      if (agent?.type === 'REACT_AGENT') {
+        navigate(`/chat-agents/${id}/develop`);
+      } else {
+        navigate(`/conversations?chat-agent=${id}&selected-chatAgentId=${id}`);
+      }
+    }
+  }, [navigate, rawDataRef, isReactView]);
 
   const handleEmbedSetup = useCallback((id: string) => {
     navigate(`/chat-agents/${id}/embed-chat`);
@@ -103,9 +115,11 @@ export const ChatAgentsPage: FC = () => {
   return (
     <MainLayout>
       <PageHeader
-        title="Chat Agents"
-        description="Manage your AI chat agents. Create, configure, and deploy conversational agents for your use cases."
-        actionLabel="Create Chat Agent"
+        title={isReactView ? 'ReACT Agents' : 'Chat Agents'}
+        description={isReactView
+          ? 'Manage your ReACT agents. Configure reasoning, tools, and multi-agent orchestration.'
+          : 'Manage your AI chat agents. Create, configure, and deploy conversational agents for your use cases.'}
+        actionLabel={isReactView ? 'Create ReACT Agent' : 'Create Chat Agent'}
         onAction={canCreateChatAgent ? () => setIsCreateDialogOpen(true) : undefined}
       />
 
@@ -116,9 +130,9 @@ export const ChatAgentsPage: FC = () => {
         hasMore={hasMore}
         error={error}
         showStatus={true}
-        searchPlaceholder="Search chat agents..."
-        emptyMessage="No chat agents found"
-        emptyActionLabel="Create Chat Agent"
+        searchPlaceholder={isReactView ? 'Search ReACT agents...' : 'Search chat agents...'}
+        emptyMessage={isReactView ? 'No ReACT agents found' : 'No chat agents found'}
+        emptyActionLabel={isReactView ? 'Create ReACT Agent' : 'Create Chat Agent'}
         onEmptyAction={canCreateChatAgent ? () => setIsCreateDialogOpen(true) : undefined}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
@@ -146,6 +160,7 @@ export const ChatAgentsPage: FC = () => {
         opened={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onSuccess={handleCreateSuccess}
+        defaultType={isReactView ? ChatAgentTypeEnum.REACT_AGENT : undefined}
       />
 
       <EditChatAgentDialog
@@ -163,7 +178,7 @@ export const ChatAgentsPage: FC = () => {
         onClose={handleDeleteClose}
         onConfirm={handleDeleteConfirm}
         itemName={deleteDialog.name}
-        itemType="Chat Agent"
+        itemType={isReactView ? 'ReACT Agent' : 'Chat Agent'}
         isLoading={isDeleting}
       />
     </MainLayout>

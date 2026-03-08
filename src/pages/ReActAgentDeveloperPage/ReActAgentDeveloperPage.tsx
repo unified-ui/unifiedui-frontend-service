@@ -16,8 +16,9 @@ import {
   ScrollArea,
   Divider,
   LoadingOverlay,
-  Modal,
+  NumberInput,
   Switch,
+  Alert,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { DelayedTooltip } from '../../components/common';
@@ -30,20 +31,41 @@ import {
   IconBrain,
   IconTool,
   IconArrowLeft,
-  IconRocket,
   IconHistory,
   IconArrowBackUp,
+  IconEye,
+  IconPencil,
+  IconSettings,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { ChatView } from '../../components/chat';
-import type { AIModelResponse, ToolResponse, MessageResponse, ReActAgentVersionResponse, PublishReActAgentRequest, SSEStreamMessage } from '../../api/types';
+import type { AIModelResponse, ToolResponse, MessageResponse, ReActAgentVersionResponse, SSEStreamMessage } from '../../api/types';
 import { AIModelPurposeGroupEnum } from '../../api/types';
 import { useIdentity } from '../../contexts';
 import { useUnsavedChanges } from '../../hooks';
 import { useReActChat } from '../../hooks/chat/useReActChat';
+import { CreateToolDialog } from '../../components/dialogs';
 import classes from './ReActAgentDeveloperPage.module.css';
+
+interface MultiAgentConfig {
+  max_sub_agents: number;
+  max_parallel_per_step: number;
+  max_planning_iterations: number;
+  sub_agent_max_iterations: number;
+  sub_agent_max_execution_time_seconds: number;
+  planning_model_id: string | null;
+}
+
+interface AgentEngineConfig {
+  max_iterations: number;
+  max_execution_time_seconds: number;
+  temperature: number;
+  parallel_tool_calls: boolean;
+  multi_agent_enabled: boolean;
+  multi_agent: MultiAgentConfig;
+}
 
 interface AgentConfig {
   name: string;
@@ -55,7 +77,26 @@ interface AgentConfig {
   tool_use_prompt: string;
   response_prompt: string;
   greeting_messages: string[];
+  engine: AgentEngineConfig;
 }
+
+const DEFAULT_MULTI_AGENT: MultiAgentConfig = {
+  max_sub_agents: 5,
+  max_parallel_per_step: 3,
+  max_planning_iterations: 2,
+  sub_agent_max_iterations: 10,
+  sub_agent_max_execution_time_seconds: 60,
+  planning_model_id: null,
+};
+
+const DEFAULT_ENGINE: AgentEngineConfig = {
+  max_iterations: 15,
+  max_execution_time_seconds: 120,
+  temperature: 0.1,
+  parallel_tool_calls: true,
+  multi_agent_enabled: false,
+  multi_agent: { ...DEFAULT_MULTI_AGENT },
+};
 
 const DEFAULT_CONFIG: AgentConfig = {
   name: '',
@@ -67,6 +108,7 @@ const DEFAULT_CONFIG: AgentConfig = {
   tool_use_prompt: '',
   response_prompt: '',
   greeting_messages: [],
+  engine: { ...DEFAULT_ENGINE, multi_agent: { ...DEFAULT_MULTI_AGENT } },
 };
 
 const SYSTEM_PROMPT_MAX = 8000;
@@ -86,7 +128,34 @@ const DEFAULT_RESPONSE_PROMPT = `Format responses using Markdown:
 - Use code blocks with language hints for code
 - Use bullet points for lists
 - Keep responses concise and actionable`;
+const parseEngineConfig = (raw?: Record<string, unknown>): AgentEngineConfig => {
+  if (!raw) return { ...DEFAULT_ENGINE, multi_agent: { ...DEFAULT_MULTI_AGENT } };
+  const ma = (raw.multi_agent ?? {}) as Record<string, unknown>;
+  return {
+    max_iterations: (raw.max_iterations as number) ?? DEFAULT_ENGINE.max_iterations,
+    max_execution_time_seconds: (raw.max_execution_time_seconds as number) ?? DEFAULT_ENGINE.max_execution_time_seconds,
+    temperature: (raw.temperature as number) ?? DEFAULT_ENGINE.temperature,
+    parallel_tool_calls: (raw.parallel_tool_calls as boolean) ?? DEFAULT_ENGINE.parallel_tool_calls,
+    multi_agent_enabled: (raw.multi_agent_enabled as boolean) ?? DEFAULT_ENGINE.multi_agent_enabled,
+    multi_agent: {
+      max_sub_agents: (ma.max_sub_agents as number) ?? DEFAULT_MULTI_AGENT.max_sub_agents,
+      max_parallel_per_step: (ma.max_parallel_per_step as number) ?? DEFAULT_MULTI_AGENT.max_parallel_per_step,
+      max_planning_iterations: (ma.max_planning_iterations as number) ?? DEFAULT_MULTI_AGENT.max_planning_iterations,
+      sub_agent_max_iterations: (ma.sub_agent_max_iterations as number) ?? DEFAULT_MULTI_AGENT.sub_agent_max_iterations,
+      sub_agent_max_execution_time_seconds: (ma.sub_agent_max_execution_time_seconds as number) ?? DEFAULT_MULTI_AGENT.sub_agent_max_execution_time_seconds,
+      planning_model_id: (ma.planning_model_id as string | null) ?? null,
+    },
+  };
+};
 
+const engineToConfig = (engine: AgentEngineConfig): Record<string, unknown> => ({
+  max_iterations: engine.max_iterations,
+  max_execution_time_seconds: engine.max_execution_time_seconds,
+  temperature: engine.temperature,
+  parallel_tool_calls: engine.parallel_tool_calls,
+  multi_agent_enabled: engine.multi_agent_enabled,
+  multi_agent: engine.multi_agent_enabled ? { ...engine.multi_agent } : undefined,
+});
 const AIModelsSection: FC<{
   selectedIds: string[];
   availableModels: AIModelResponse[];
@@ -145,7 +214,8 @@ const ToolsSection: FC<{
   availableTools: ToolResponse[];
   onAdd: (id: string) => void;
   onRemove: (id: string) => void;
-}> = ({ selectedIds, availableTools, onAdd, onRemove }) => {
+  onCreateNew: () => void;
+}> = ({ selectedIds, availableTools, onAdd, onRemove, onCreateNew }) => {
   const { t } = useTranslation('reactAgent');
 
   const unselectedTools = useMemo(
@@ -189,6 +259,14 @@ const ToolsSection: FC<{
           clearable
         />
       )}
+      <Button
+        variant="light"
+        size="xs"
+        leftSection={<IconPlus size={14} />}
+        onClick={onCreateNew}
+      >
+        {t('tools.createNewTool')}
+      </Button>
     </Stack>
   );
 };
@@ -256,11 +334,8 @@ export const ReActAgentDeveloperPage: FC = () => {
   const [playgroundMessages, setPlaygroundMessages] = useState<MessageResponse[]>([]);
   const messageIdCounter = useRef(0);
   const [currentVersion, setCurrentVersion] = useState(1);
-  const [publishedChatAgentId, setPublishedChatAgentId] = useState<string | undefined>(undefined);
+  const [viewingVersion, setViewingVersion] = useState<number | null>(null);
   const [versions, setVersions] = useState<ReActAgentVersionResponse[]>([]);
-  const [publishModalOpen, setPublishModalOpen] = useState(false);
-  const [publishData, setPublishData] = useState<PublishReActAgentRequest>({ is_active: true });
-  const [isPublishing, setIsPublishing] = useState(false);
   const [isPlaygroundStreaming, setIsPlaygroundStreaming] = useState(false);
   const [playgroundStreamingContent, setPlaygroundStreamingContent] = useState('');
   const [playgroundStreamingMessageId, setPlaygroundStreamingMessageId] = useState<string | undefined>();
@@ -276,7 +351,7 @@ export const ReActAgentDeveloperPage: FC = () => {
     if (!tenantId || !apiClient || !agentId) return;
     setIsLoadingAgent(true);
     try {
-      const agent = await apiClient.getReActAgent(tenantId, agentId);
+      const agent = await apiClient.getChatAgent(tenantId, agentId);
       const loadedConfig: AgentConfig = {
         name: agent.name || '',
         description: agent.description || '',
@@ -287,11 +362,11 @@ export const ReActAgentDeveloperPage: FC = () => {
         tool_use_prompt: agent.tool_use_prompt || '',
         response_prompt: agent.response_prompt || '',
         greeting_messages: agent.greeting_messages || [],
+        engine: parseEngineConfig(agent.config as Record<string, unknown> | undefined),
       };
       setConfig(loadedConfig);
       setSavedConfig(structuredClone(loadedConfig));
       setCurrentVersion(agent.current_version || 1);
-      setPublishedChatAgentId(agent.published_chat_agent_id);
     } catch { /* empty */ }
     finally { setIsLoadingAgent(false); }
   }, [tenantId, apiClient, agentId]);
@@ -299,7 +374,7 @@ export const ReActAgentDeveloperPage: FC = () => {
   const loadVersions = useCallback(async () => {
     if (!tenantId || !apiClient || !agentId) return;
     try {
-      const v = await apiClient.listReActAgentVersions(tenantId, agentId);
+      const v = await apiClient.listChatAgentVersions(tenantId, agentId);
       setVersions(v);
     } catch { /* empty */ }
   }, [tenantId, apiClient, agentId]);
@@ -345,6 +420,17 @@ export const ReActAgentDeveloperPage: FC = () => {
     setConfig(prev => ({ ...prev, [key]: value }));
   }, []);
 
+  const updateEngine = useCallback(<K extends keyof AgentEngineConfig>(key: K, value: AgentEngineConfig[K]) => {
+    setConfig(prev => ({ ...prev, engine: { ...prev.engine, [key]: value } }));
+  }, []);
+
+  const updateMultiAgent = useCallback(<K extends keyof MultiAgentConfig>(key: K, value: MultiAgentConfig[K]) => {
+    setConfig(prev => ({
+      ...prev,
+      engine: { ...prev.engine, multi_agent: { ...prev.engine.multi_agent, [key]: value } },
+    }));
+  }, []);
+
   const handleAddModel = useCallback((id: string) => {
     setConfig(prev => ({ ...prev, ai_model_ids: [...prev.ai_model_ids, id] }));
   }, []);
@@ -361,10 +447,18 @@ export const ReActAgentDeveloperPage: FC = () => {
     setConfig(prev => ({ ...prev, tool_ids: prev.tool_ids.filter(tid => tid !== id) }));
   }, []);
 
+  const [isCreateToolDialogOpen, setIsCreateToolDialogOpen] = useState(false);
+
+  const handleToolCreated = useCallback((tool?: { id: string; name: string }) => {
+    if (!tool) return;
+    setToolsLoaded(false);
+    setConfig(prev => ({ ...prev, tool_ids: [...prev.tool_ids, tool.id] }));
+  }, []);
+
   const handleSave = useCallback(async () => {
     if (!tenantId || !apiClient || !agentId) return;
     try {
-      const updated = await apiClient.updateReActAgentVersion(tenantId, agentId, {
+      const updated = await apiClient.updateChatAgentVersion(tenantId, agentId, {
         ai_model_ids: config.ai_model_ids,
         system_prompt: config.system_prompt || undefined,
         tool_ids: config.tool_ids,
@@ -372,9 +466,10 @@ export const ReActAgentDeveloperPage: FC = () => {
         tool_use_prompt: config.tool_use_prompt || undefined,
         response_prompt: config.response_prompt || undefined,
         greeting_messages: config.greeting_messages.filter(Boolean),
+        config: engineToConfig(config.engine),
       });
       if (config.name !== savedConfig?.name || config.description !== savedConfig?.description) {
-        await apiClient.updateReActAgent(tenantId, agentId, {
+        await apiClient.updateChatAgent(tenantId, agentId, {
           name: config.name,
           description: config.description || undefined,
         });
@@ -389,7 +484,7 @@ export const ReActAgentDeveloperPage: FC = () => {
     if (!tenantId || !apiClient || !agentId) return;
     if (hasChanges && !window.confirm(t('versions.unsavedChangesConfirm'))) return;
     try {
-      const restored = await apiClient.restoreReActAgentVersion(tenantId, agentId, version);
+      const restored = await apiClient.restoreChatAgentVersion(tenantId, agentId, version);
       const restoredConfig: AgentConfig = {
         name: restored.name || '',
         description: restored.description || '',
@@ -400,25 +495,45 @@ export const ReActAgentDeveloperPage: FC = () => {
         tool_use_prompt: restored.tool_use_prompt || '',
         response_prompt: restored.response_prompt || '',
         greeting_messages: restored.greeting_messages || [],
+        engine: parseEngineConfig(restored.config as Record<string, unknown> | undefined),
       };
       setConfig(restoredConfig);
       setSavedConfig(structuredClone(restoredConfig));
       setCurrentVersion(restored.current_version || 1);
+      setViewingVersion(null);
       loadVersions();
     } catch { /* empty */ }
   }, [tenantId, apiClient, agentId, hasChanges, t, loadVersions]);
 
-  const handlePublish = useCallback(async () => {
+  const handleViewVersion = useCallback(async (version: number) => {
     if (!tenantId || !apiClient || !agentId) return;
-    setIsPublishing(true);
+    if (hasChanges && !window.confirm(t('versions.unsavedChangesConfirm'))) return;
     try {
-      const result = await apiClient.publishReActAgent(tenantId, agentId, publishData);
-      setPublishedChatAgentId(result.chat_agent_id);
-      setPublishModalOpen(false);
-      setPublishData({ is_active: true });
+      const v = await apiClient.getChatAgentVersion(tenantId, agentId, version);
+      const versionConfig: AgentConfig = {
+        name: config.name,
+        description: config.description,
+        ai_model_ids: v.ai_model_ids || [],
+        system_prompt: v.system_prompt || '',
+        tool_ids: v.tool_ids || [],
+        security_prompt: v.security_prompt || '',
+        tool_use_prompt: v.tool_use_prompt || '',
+        response_prompt: v.response_prompt || '',
+        greeting_messages: v.greeting_messages || [],
+        engine: parseEngineConfig(v.config as Record<string, unknown> | undefined),
+      };
+      setConfig(versionConfig);
+      setSavedConfig(structuredClone(versionConfig));
+      setViewingVersion(version);
     } catch { /* empty */ }
-    finally { setIsPublishing(false); }
-  }, [tenantId, apiClient, agentId, publishData]);
+  }, [tenantId, apiClient, agentId, hasChanges, t, config.name, config.description]);
+
+  const handleBackToLatest = useCallback(() => {
+    setViewingVersion(null);
+    loadAgent();
+  }, [loadAgent]);
+
+  const isViewingOldVersion = viewingVersion !== null && viewingVersion !== currentVersion;
 
   const handleClearChat = useCallback(() => {
     if (playgroundAbortRef.current) {
@@ -443,14 +558,7 @@ export const ReActAgentDeveloperPage: FC = () => {
   }, []);
 
   const handlePlaygroundSend = useCallback(async (content: string) => {
-    if (!apiClient || !tenantId || !publishedChatAgentId) {
-      notifications.show({
-        title: 'Playground',
-        message: 'Publish the agent first to use the playground.',
-        color: 'orange',
-      });
-      return;
-    }
+    if (!apiClient || !tenantId || !agentId) return;
 
     if (playgroundAbortRef.current) {
       playgroundAbortRef.current.abort();
@@ -461,7 +569,7 @@ export const ReActAgentDeveloperPage: FC = () => {
       id: `local-${++messageIdCounter.current}`,
       type: 'user',
       conversationId: 'playground',
-      chatAgentId: publishedChatAgentId,
+      chatAgentId: agentId!,
       content,
       status: 'completed',
       createdAt: new Date().toISOString(),
@@ -480,7 +588,7 @@ export const ReActAgentDeveloperPage: FC = () => {
 
       if (!playgroundConvId) {
         const newConv = await apiClient.createConversation(tenantId, {
-          chat_agent_id: publishedChatAgentId,
+          chat_agent_id: agentId!,
           name: `Playground: ${content.slice(0, 40)}`,
         });
         playgroundConvId = newConv.id;
@@ -490,7 +598,7 @@ export const ReActAgentDeveloperPage: FC = () => {
         tenantId,
         {
           conversationId: playgroundConvId,
-          chatAgentId: publishedChatAgentId,
+          chatAgentId: agentId!,
           message: { content },
         },
         (messageId: string, _conversationId: string, _isNewMessage: boolean) => {
@@ -500,7 +608,7 @@ export const ReActAgentDeveloperPage: FC = () => {
             id: messageId,
             type: 'assistant',
             conversationId: playgroundConvId!,
-            chatAgentId: publishedChatAgentId!,
+            chatAgentId: agentId!,
             content: '',
             status: 'pending',
             createdAt: new Date().toISOString(),
@@ -578,7 +686,7 @@ export const ReActAgentDeveloperPage: FC = () => {
       setPlaygroundStreamingContent('');
       setPlaygroundStreamingMessageId(undefined);
     }
-  }, [apiClient, tenantId, publishedChatAgentId, playgroundMessages, reActChat]);
+  }, [apiClient, tenantId, agentId, playgroundMessages, reActChat]);
 
   return (
     <MainLayout>
@@ -586,34 +694,39 @@ export const ReActAgentDeveloperPage: FC = () => {
         <LoadingOverlay visible={isLoadingAgent} zIndex={1000} overlayProps={{ blur: 2 }} />
         <Group justify="space-between">
           <Group gap="sm">
-            <ActionIcon variant="subtle" onClick={() => navigate('/re-act-agents')} size="lg">
+            <ActionIcon variant="subtle" onClick={() => navigate('/chat-agents')} size="lg">
               <IconArrowLeft size={20} />
             </ActionIcon>
             <Title order={2}>{config.name || t('title')}</Title>
             <Badge variant="light" size="lg" leftSection={<IconHistory size={14} />}>
               {t('versions.currentVersion', { version: currentVersion })}
             </Badge>
-            {publishedChatAgentId && (
-              <Badge variant="filled" color="green" size="sm">
-                {t('publish.published')}
+            {isViewingOldVersion && (
+              <Badge variant="filled" color="yellow" size="lg" leftSection={<IconEye size={14} />}>
+                {t('versions.viewing', { version: viewingVersion })}
               </Badge>
             )}
           </Group>
           <Group gap="sm">
-            <Button
-              variant="light"
-              color="teal"
-              leftSection={<IconRocket size={16} />}
-              onClick={() => setPublishModalOpen(true)}
-            >
-              {publishedChatAgentId ? t('publish.republish') : t('publish.button')}
-            </Button>
-            <Button variant="light" leftSection={<IconPlayerPlay size={16} />} onClick={handleClearChat}>
-              {t('clearChat')}
-            </Button>
-            <Button leftSection={<IconDeviceFloppy size={16} />} onClick={handleSave} disabled={!hasChanges}>
-              {t('saveConfig')}
-            </Button>
+            {isViewingOldVersion ? (
+              <>
+                <Button variant="light" color="blue" leftSection={<IconPencil size={16} />} onClick={handleBackToLatest}>
+                  {t('versions.backToLatest')}
+                </Button>
+                <Button leftSection={<IconArrowBackUp size={16} />} onClick={() => handleRestore(viewingVersion!)}>
+                  {t('versions.restoreThis')}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="light" leftSection={<IconPlayerPlay size={16} />} onClick={handleClearChat}>
+                  {t('clearChat')}
+                </Button>
+                <Button leftSection={<IconDeviceFloppy size={16} />} onClick={handleSave} disabled={!hasChanges}>
+                  {t('saveConfig')}
+                </Button>
+              </>
+            )}
           </Group>
         </Group>
 
@@ -701,6 +814,7 @@ export const ReActAgentDeveloperPage: FC = () => {
                         availableTools={availableTools}
                         onAdd={handleAddTool}
                         onRemove={handleRemoveTool}
+                        onCreateNew={() => setIsCreateToolDialogOpen(true)}
                       />
                     </Accordion.Panel>
                   </Accordion.Item>
@@ -807,6 +921,128 @@ export const ReActAgentDeveloperPage: FC = () => {
                     </Accordion.Panel>
                   </Accordion.Item>
 
+                  <Accordion.Item value="agentEngine">
+                    <Accordion.Control>
+                      <Group gap="xs">
+                        <IconSettings size={16} />
+                        <Text fw={600} size="sm">{t('sections.agentEngine')}</Text>
+                      </Group>
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <Stack gap="sm">
+                        <NumberInput
+                          label={t('engine.maxIterations')}
+                          value={config.engine.max_iterations}
+                          onChange={(val) => updateEngine('max_iterations', Number(val) || 15)}
+                          min={1}
+                          max={50}
+                          size="sm"
+                          disabled={isViewingOldVersion}
+                        />
+                        <NumberInput
+                          label={t('engine.maxExecutionTime')}
+                          value={config.engine.max_execution_time_seconds}
+                          onChange={(val) => updateEngine('max_execution_time_seconds', Number(val) || 120)}
+                          min={10}
+                          max={600}
+                          size="sm"
+                          suffix="s"
+                          disabled={isViewingOldVersion}
+                        />
+                        <NumberInput
+                          label={t('engine.temperature')}
+                          value={config.engine.temperature}
+                          onChange={(val) => updateEngine('temperature', val !== '' && val != null ? Number(val) : 0.1)}
+                          min={0}
+                          max={2}
+                          step={0.1}
+                          decimalScale={1}
+                          size="sm"
+                          disabled={isViewingOldVersion}
+                        />
+                        <Switch
+                          label={t('engine.parallelToolCalls')}
+                          checked={config.engine.parallel_tool_calls}
+                          onChange={(e) => updateEngine('parallel_tool_calls', e.currentTarget.checked)}
+                          disabled={isViewingOldVersion}
+                        />
+
+                        <Divider label={t('engine.multiAgent')} labelPosition="left" mt="sm" />
+
+                        <Switch
+                          label={t('engine.enableMultiAgent')}
+                          checked={config.engine.multi_agent_enabled}
+                          onChange={(e) => updateEngine('multi_agent_enabled', e.currentTarget.checked)}
+                          disabled={isViewingOldVersion}
+                        />
+
+                        {config.engine.multi_agent_enabled && (
+                          <Stack gap="sm" ml="md">
+                            <Alert variant="light" color="blue" title={t('engine.multiAgentInfo')} icon={<IconBrain size={16} />}>
+                              {t('engine.multiAgentDescription')}
+                            </Alert>
+                            <NumberInput
+                              label={t('engine.maxSubAgents')}
+                              value={config.engine.multi_agent.max_sub_agents}
+                              onChange={(val) => updateMultiAgent('max_sub_agents', Number(val) || 5)}
+                              min={1}
+                              max={20}
+                              size="sm"
+                              disabled={isViewingOldVersion}
+                            />
+                            <NumberInput
+                              label={t('engine.maxParallelPerStep')}
+                              value={config.engine.multi_agent.max_parallel_per_step}
+                              onChange={(val) => updateMultiAgent('max_parallel_per_step', Number(val) || 3)}
+                              min={1}
+                              max={10}
+                              size="sm"
+                              disabled={isViewingOldVersion}
+                            />
+                            <NumberInput
+                              label={t('engine.maxPlanningIterations')}
+                              value={config.engine.multi_agent.max_planning_iterations}
+                              onChange={(val) => updateMultiAgent('max_planning_iterations', Number(val) || 2)}
+                              min={1}
+                              max={10}
+                              size="sm"
+                              disabled={isViewingOldVersion}
+                            />
+                            <NumberInput
+                              label={t('engine.subAgentMaxIterations')}
+                              value={config.engine.multi_agent.sub_agent_max_iterations}
+                              onChange={(val) => updateMultiAgent('sub_agent_max_iterations', Number(val) || 10)}
+                              min={1}
+                              max={50}
+                              size="sm"
+                              disabled={isViewingOldVersion}
+                            />
+                            <NumberInput
+                              label={t('engine.subAgentMaxExecTime')}
+                              value={config.engine.multi_agent.sub_agent_max_execution_time_seconds}
+                              onChange={(val) => updateMultiAgent('sub_agent_max_execution_time_seconds', Number(val) || 60)}
+                              min={10}
+                              max={300}
+                              size="sm"
+                              suffix="s"
+                              disabled={isViewingOldVersion}
+                            />
+                            <Select
+                              label={t('engine.planningModel')}
+                              placeholder={t('engine.planningModelDefault')}
+                              data={availableModels.map(m => ({ value: m.id, label: m.name }))}
+                              value={config.engine.multi_agent.planning_model_id}
+                              onChange={(val) => updateMultiAgent('planning_model_id', val)}
+                              clearable
+                              size="sm"
+                              disabled={isViewingOldVersion}
+                            />
+                          </Stack>
+                        )}
+                      </Stack>
+                    </Accordion.Panel>
+                  </Accordion.Item>
+
                   <Accordion.Item value="versionHistory">
                     <Accordion.Control>
                       <Group gap="xs">
@@ -821,10 +1057,11 @@ export const ReActAgentDeveloperPage: FC = () => {
                         )}
                         {versions.map(v => (
                           <Group key={v.id} justify="space-between" wrap="nowrap">
-                            <Group gap="xs">
+                            <Group gap="xs" style={{ cursor: 'pointer' }} onClick={() => handleViewVersion(v.version)}>
                               <Badge
                                 size="sm"
-                                variant={v.version === currentVersion ? 'filled' : 'light'}
+                                variant={v.version === currentVersion ? 'filled' : viewingVersion === v.version ? 'outline' : 'light'}
+                                color={viewingVersion === v.version ? 'yellow' : undefined}
                               >
                                 {t('versions.currentVersion', { version: v.version })}
                               </Badge>
@@ -832,17 +1069,29 @@ export const ReActAgentDeveloperPage: FC = () => {
                                 {new Date(v.created_at).toLocaleDateString()}
                               </Text>
                             </Group>
-                            {v.version !== currentVersion && (
-                              <DelayedTooltip label={t('versions.restore')}>
+                            <Group gap={4}>
+                              <DelayedTooltip label={t('versions.view')}>
                                 <ActionIcon
                                   size="xs"
-                                  variant="subtle"
-                                  onClick={() => handleRestore(v.version)}
+                                  variant={viewingVersion === v.version ? 'filled' : 'subtle'}
+                                  color={viewingVersion === v.version ? 'yellow' : undefined}
+                                  onClick={() => handleViewVersion(v.version)}
                                 >
-                                  <IconArrowBackUp size={14} />
+                                  <IconEye size={14} />
                                 </ActionIcon>
                               </DelayedTooltip>
-                            )}
+                              {v.version !== currentVersion && (
+                                <DelayedTooltip label={t('versions.restore')}>
+                                  <ActionIcon
+                                    size="xs"
+                                    variant="subtle"
+                                    onClick={() => handleRestore(v.version)}
+                                  >
+                                    <IconArrowBackUp size={14} />
+                                  </ActionIcon>
+                                </DelayedTooltip>
+                              )}
+                            </Group>
                           </Group>
                         ))}
                       </Stack>
@@ -869,10 +1118,7 @@ export const ReActAgentDeveloperPage: FC = () => {
                 showTracing={false}
                 showReactions={false}
                 enableFileDrop={false}
-                emptyStateMessage={publishedChatAgentId
-                  ? 'Send a message to test your agent'
-                  : 'Publish your agent first to use the playground'}
-                inputDisabled={!publishedChatAgentId}
+                emptyStateMessage="Send a message to test your agent"
                 reActState={reActChat.reActState}
                 onToggleReasoning={() => reActChat.setIsReasoningExpanded(!reActChat.reActState.isReasoningExpanded)}
                 alwaysExpandReasoning
@@ -881,44 +1127,12 @@ export const ReActAgentDeveloperPage: FC = () => {
           </Paper>
         </div>
       </Stack>
-      <Modal
-        opened={publishModalOpen}
-        onClose={() => setPublishModalOpen(false)}
-        title={t('publish.title')}
-        size="md"
-      >
-        <Stack gap="md">
-          <TextInput
-            label={t('publish.nameLabel')}
-            placeholder={t('publish.namePlaceholder')}
-            value={publishData.name || ''}
-            onChange={(e) => setPublishData(prev => ({ ...prev, name: e.currentTarget.value || undefined }))}
-          />
-          <Textarea
-            label={t('publish.descriptionLabel')}
-            placeholder={t('publish.descriptionPlaceholder')}
-            value={publishData.description || ''}
-            onChange={(e) => setPublishData(prev => ({ ...prev, description: e.currentTarget.value || undefined }))}
-            rows={3}
-          />
-          <Switch
-            label={t('publish.isActive')}
-            checked={publishData.is_active ?? true}
-            onChange={(e) => setPublishData(prev => ({ ...prev, is_active: e.currentTarget.checked }))}
-          />
-          <Group justify="flex-end">
-            <Button variant="default" onClick={() => setPublishModalOpen(false)}>Cancel</Button>
-            <Button
-              leftSection={<IconRocket size={16} />}
-              onClick={handlePublish}
-              loading={isPublishing}
-              color="teal"
-            >
-              {publishedChatAgentId ? t('publish.republish') : t('publish.button')}
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+
+      <CreateToolDialog
+        opened={isCreateToolDialogOpen}
+        onClose={() => setIsCreateToolDialogOpen(false)}
+        onSuccess={handleToolCreated}
+      />
     </MainLayout>
   );
 };

@@ -4,7 +4,6 @@ import {
   IconSparkles,
   IconRobot,
   IconBrandWechat,
-  IconBrain,
   IconMessages,
   IconFile,
 } from '@tabler/icons-react';
@@ -13,7 +12,6 @@ export type EntityAvatarType =
   | 'chat-agent'
   | 'autonomous-agent'
   | 'chat-widget'
-  | 're-act-agent'
   | 'conversation';
 
 interface EntityAvatarProps {
@@ -25,7 +23,6 @@ const ENTITY_ICONS: Record<EntityAvatarType, typeof IconSparkles> = {
   'chat-agent': IconSparkles,
   'autonomous-agent': IconRobot,
   'chat-widget': IconBrandWechat,
-  're-act-agent': IconBrain,
   'conversation': IconMessages,
 };
 

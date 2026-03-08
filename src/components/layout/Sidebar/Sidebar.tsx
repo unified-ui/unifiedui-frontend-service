@@ -11,16 +11,15 @@ import {
   IconBrain,
 } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useSidebarData, useIdentity, useFavorites, type EntityType } from '../../../contexts';
+import { useSidebarData, useFavorites, type EntityType } from '../../../contexts';
 import { EntityAvatar } from '../../common';
-import { usePermissions } from '../../../hooks';
+import { usePermissions, type ResourceType } from '../../../hooks';
 import { SidebarDataList, type DataListItem } from './SidebarDataList';
 import {
   CreateChatAgentDialog,
   CreateAutonomousAgentDialog,
   CreateChatWidgetDialog,
 } from '../../dialogs';
-import type { ConversationResponse, ChatAgentResponse } from '../../../api/types';
 import { FavoriteResourceTypeEnum } from '../../../api/types';
 import classes from './Sidebar.module.css';
 
@@ -31,18 +30,36 @@ interface NavItem {
   path: string;
   hasDataList?: boolean;
   entityType?: EntityType;
+  matchFn?: (pathname: string, search: string) => boolean;
+  requiredResourceAccess?: ResourceType;
 }
 
 const mainNavItemsTop: NavItem[] = [
   { icon: IconHome, iconFilled: IconHomeFilled, labelKey: 'home', path: '/dashboard' },
   { icon: IconMessages, iconFilled: IconMessageFilled, labelKey: 'chats', path: '/conversations' },
-  { icon: IconSparkles, labelKey: 'agents', path: '/chat-agents', hasDataList: true, entityType: 'chat-agents' },
+  {
+    icon: IconSparkles,
+    labelKey: 'agents',
+    path: '/chat-agents',
+    hasDataList: true,
+    entityType: 'chat-agents',
+    matchFn: (pathname, search) =>
+      pathname === '/chat-agents' && !search.includes('type=REACT_AGENT'),
+  },
   { icon: IconRobot, labelKey: 'auto', path: '/autonomous-agents', hasDataList: true, entityType: 'autonomous-agents' },
 ];
 
 const mainNavItemsBottom: NavItem[] = [
-  { icon: IconBrain, labelKey: 'reactAgents', path: '/re-act-agents', hasDataList: true, entityType: 're-act-agents' },
   { icon: IconBrandWechat, labelKey: 'widgets', path: '/chat-widgets', hasDataList: true, entityType: 'chat-widgets' },
+  {
+    icon: IconBrain,
+    labelKey: 'reactAgents',
+    path: '/chat-agents?type=REACT_AGENT',
+    requiredResourceAccess: 'tools',
+    matchFn: (pathname, search) =>
+      (pathname === '/chat-agents' && search.includes('type=REACT_AGENT')) ||
+      pathname.endsWith('/develop'),
+  },
 ];
 
 const bottomNavItems: NavItem[] = [
@@ -68,28 +85,39 @@ export const Sidebar: FC = () => {
     chatAgents,
     autonomousAgents,
     chatWidgets,
-    reActAgents,
+    conversations,
     loadingStates,
     errorStates,
     fetchEntityData,
+    fetchChatAgents,
+    fetchConversations,
     refreshEntityData,
     refreshChatAgents,
     refreshAutonomousAgents,
     refreshChatWidgets,
-    refreshReActAgents,
+    refreshConversations,
   } = useSidebarData();
-
-  const { apiClient, selectedTenant } = useIdentity();
 
   const { isFavorite: checkFavorite, toggleFavorite } = useFavorites();
   const { canCreate } = usePermissions();
+
+  const visibleNavItemsTop = useMemo(
+    () => mainNavItemsTop.filter(item =>
+      !item.requiredResourceAccess || canCreate(item.requiredResourceAccess)),
+    [canCreate],
+  );
+
+  const visibleNavItemsBottom = useMemo(
+    () => mainNavItemsBottom.filter(item =>
+      !item.requiredResourceAccess || canCreate(item.requiredResourceAccess)),
+    [canCreate],
+  );
 
   const ENTITY_TO_FAVORITE_TYPE: Record<string, FavoriteResourceTypeEnum> = useMemo(() => ({
     'chat-agents': FavoriteResourceTypeEnum.CHAT_AGENT,
     'autonomous-agents': FavoriteResourceTypeEnum.AUTONOMOUS_AGENT,
     'chat-widgets': FavoriteResourceTypeEnum.CHAT_WIDGET,
     conversations: FavoriteResourceTypeEnum.CONVERSATION,
-    're-act-agents': FavoriteResourceTypeEnum.RE_ACT_AGENT,
   }), []);
 
   const getIsFavoriteForEntity = useCallback(
@@ -127,10 +155,6 @@ export const Sidebar: FC = () => {
   const [isConversationsSidebarVisible, setIsConversationsSidebarVisible] = useState(false);
   const [isHoveringConversationsNav, setIsHoveringConversationsNav] = useState(false);
   const [isHoveringConversationsSidebar, setIsHoveringConversationsSidebar] = useState(false);
-  const [conversations, setConversations] = useState<ConversationResponse[]>([]);
-  const [conversationChatAgents, setConversationChatAgents] = useState<ChatAgentResponse[]>([]);
-  const [conversationsLoading, setConversationsLoading] = useState(false);
-  const [conversationsError, setConversationsError] = useState<string | null>(null);
   const [conversationsRefreshing, setConversationsRefreshing] = useState(false);
 
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -165,13 +189,6 @@ export const Sidebar: FC = () => {
       fetchData: () => fetchEntityData('chat-widgets'),
       getLink: (id) => `/widget-designer/${id}`,
     },
-    're-act-agents': {
-      title: t('reactAgents'),
-      icon: <IconBrain size={24} />,
-      addButtonLabel: t('addReActAgent'),
-      fetchData: () => fetchEntityData('re-act-agents'),
-      getLink: (id) => `/re-act-agents/${id}`,
-    },
   }), [fetchEntityData, t]);
 
   const dataListItems: DataListItem[] = useMemo(() => {
@@ -199,24 +216,16 @@ export const Sidebar: FC = () => {
           link: entityConfigs['chat-widgets']!.getLink(widget.id),
           icon: <EntityAvatar entityType="chat-widget" size="xs" />,
         }));
-      case 're-act-agents':
-        return reActAgents.map(agent => ({
-          id: agent.id,
-          name: agent.name,
-          link: entityConfigs['re-act-agents']!.getLink(agent.id),
-          icon: <EntityAvatar entityType="re-act-agent" size="xs" />,
-        }));
       default:
         return [];
     }
-  }, [activeEntity, chatAgents, autonomousAgents, chatWidgets, reActAgents, entityConfigs]);
+  }, [activeEntity, chatAgents, autonomousAgents, chatWidgets, entityConfigs]);
 
   const isOnEntityListPage = useCallback((entityType: EntityType) => {
     const entityPaths: Partial<Record<EntityType, string>> = {
       'chat-agents': '/chat-agents',
       'autonomous-agents': '/autonomous-agents',
       'chat-widgets': '/chat-widgets',
-      're-act-agents': '/re-act-agents',
     };
     return location.pathname === entityPaths[entityType];
   }, [location.pathname]);
@@ -340,50 +349,26 @@ export const Sidebar: FC = () => {
     setIsHoveringConversationsSidebar(false);
   }, []);
 
-  const loadConversations = useCallback(async (useCache = true) => {
-    if (!apiClient || !selectedTenant) return;
-
-    if (!useCache) {
-      setConversationsRefreshing(true);
-    } else {
-      setConversationsLoading(true);
-    }
-    setConversationsError(null);
-
-    try {
-      const [convsList, appsList] = await Promise.all([
-        apiClient.listConversations(selectedTenant.id, {
-          limit: 999,
-          order_by: 'updated_at',
-          order_direction: 'desc',
-        }, { noCache: !useCache }) as Promise<ConversationResponse[]>,
-        apiClient.listChatAgents(selectedTenant.id, undefined, { noCache: !useCache }) as Promise<ChatAgentResponse[]>,
-      ]);
-      setConversations(convsList);
-      setConversationChatAgents(appsList);
-    } catch (error) {
-      console.error('Failed to load conversations:', error);
-      setConversationsError(t('failedToLoadConversations'));
-    } finally {
-      setConversationsLoading(false);
-      setConversationsRefreshing(false);
-    }
-  }, [apiClient, selectedTenant]);
-
   useEffect(() => {
     if (isConversationsSidebarVisible && !isOnConversationsPage) {
-      loadConversations(true);
+      fetchConversations();
+      fetchChatAgents();
     }
-  }, [isConversationsSidebarVisible, isOnConversationsPage, loadConversations]);
+  }, [isConversationsSidebarVisible, isOnConversationsPage, fetchConversations, fetchChatAgents]);
 
   const handleRefreshConversations = useCallback(async () => {
-    await loadConversations(false);
-  }, [loadConversations]);
+    setConversationsRefreshing(true);
+    try {
+      await refreshConversations();
+    } finally {
+      setConversationsRefreshing(false);
+    }
+  }, [refreshConversations]);
 
   const getChatAgentName = useCallback((chatAgentId: string): string => {
-    const app = conversationChatAgents.find(a => a.id === chatAgentId);
+    const app = chatAgents.find(a => a.id === chatAgentId);
     return app?.name || 'Unknown Chat Agent';
-  }, [conversationChatAgents]);
+  }, [chatAgents]);
 
   const conversationItems: DataListItem[] = useMemo(() => {
     return conversations.map(conv => ({
@@ -425,18 +410,8 @@ export const Sidebar: FC = () => {
       case 'chat-widgets':
         setIsChatWidgetDialogOpen(true);
         break;
-      case 're-act-agents':
-        if (!apiClient || !selectedTenant) return;
-        try {
-          const agent = await apiClient.createReActAgent(selectedTenant.id, {
-            name: t('untitledReActAgent'),
-          });
-          refreshReActAgents();
-          navigate(`/re-act-agents/${agent.id}`);
-        } catch { /* handled by API client */ }
-        break;
     }
-  }, [activeEntity, apiClient, selectedTenant, navigate, t, refreshReActAgents]);
+  }, [activeEntity]);
 
   const handleChatAgentCreated = useCallback(() => {
     refreshChatAgents();
@@ -477,7 +452,9 @@ export const Sidebar: FC = () => {
   const renderNavItem = (item: NavItem) => {
     const Icon = item.icon;
     const IconFilled = item.iconFilled || item.icon;
-    const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
+    const isActive = item.matchFn
+      ? item.matchFn(location.pathname, location.search)
+      : location.pathname === item.path || location.pathname.startsWith(item.path + '/');
     const isEntityHovered = item.entityType === activeEntity;
     const isConversationsItem = item.path === '/conversations';
 
@@ -522,9 +499,9 @@ export const Sidebar: FC = () => {
     <>
       <aside className={classes.sidebar}>
         <Stack gap="xs" className={classes.navMain}>
-          {mainNavItemsTop.map(renderNavItem)}
+          {visibleNavItemsTop.map(renderNavItem)}
           <Divider className={classes.navDivider} />
-          {mainNavItemsBottom.map(renderNavItem)}
+          {visibleNavItemsBottom.map(renderNavItem)}
         </Stack>
 
         <Stack gap="xs" className={classes.navBottom}>
@@ -558,8 +535,8 @@ export const Sidebar: FC = () => {
           title={t('conversations')}
           icon={<IconMessages size={24} />}
           items={conversationItems}
-          isLoading={conversationsLoading}
-          error={conversationsError}
+          isLoading={loadingStates.conversations}
+          error={errorStates.conversations}
           onClose={handleCloseConversationsSidebar}
           isExpanded={isDataListExpanded}
           onToggleExpand={handleToggleExpand}

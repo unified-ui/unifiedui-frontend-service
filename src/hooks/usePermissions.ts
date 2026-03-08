@@ -6,7 +6,6 @@ export type ResourceType =
   | 'chat-agents'
   | 'autonomous-agents'
   | 'chat-widgets'
-  | 're-act-agents'
   | 'conversations'
   | 'credentials'
   | 'custom-groups'
@@ -17,7 +16,6 @@ const CREATOR_ROLES: Record<ResourceType, TenantPermissionEnum> = {
   'chat-agents': TenantPermissionEnum.CHAT_AGENTS_CREATOR,
   'autonomous-agents': TenantPermissionEnum.AUTONOMOUS_AGENTS_CREATOR,
   'chat-widgets': TenantPermissionEnum.CHAT_WIDGETS_CREATOR,
-  're-act-agents': TenantPermissionEnum.REACT_AGENT_CREATOR,
   'conversations': TenantPermissionEnum.CONVERSATIONS_CREATOR,
   'credentials': TenantPermissionEnum.CREDENTIALS_CREATOR,
   'custom-groups': TenantPermissionEnum.CUSTOM_GROUP_CREATOR,
@@ -29,7 +27,6 @@ const ADMIN_ROLES: Record<ResourceType, TenantPermissionEnum> = {
   'chat-agents': TenantPermissionEnum.CHAT_AGENTS_ADMIN,
   'autonomous-agents': TenantPermissionEnum.AUTONOMOUS_AGENTS_ADMIN,
   'chat-widgets': TenantPermissionEnum.CHAT_WIDGETS_ADMIN,
-  're-act-agents': TenantPermissionEnum.REACT_AGENT_ADMIN,
   'conversations': TenantPermissionEnum.CONVERSATIONS_ADMIN,
   'credentials': TenantPermissionEnum.CREDENTIALS_ADMIN,
   'custom-groups': TenantPermissionEnum.CUSTOM_GROUPS_ADMIN,

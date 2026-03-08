@@ -25,7 +25,7 @@ import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
 import type { ToolResponse, PrincipalTypeEnum, ToolTypeEnum } from '../../../api/types';
 import { PermissionActionEnum } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
-import { validateToolConfig } from '../../../utils/toolConfigValidator';
+import { validateToolConfig, normalizeToolConfig } from '../../../utils/toolConfigValidator';
 import classes from './EditToolDialog.module.css';
 
 export type EditDialogTab = 'details' | 'iam';
@@ -177,6 +177,9 @@ export const EditToolDialog: FC<EditToolDialogProps> = ({
       let parsedConfig: Record<string, unknown> | undefined;
       if (values.configJson.trim()) {
         parsedConfig = JSON.parse(values.configJson);
+      }
+      if (parsedConfig !== undefined && tool?.type) {
+        parsedConfig = normalizeToolConfig(tool.type as ToolTypeEnum, parsedConfig);
       }
 
       await apiClient.updateTool(selectedTenant.id, toolId, {
