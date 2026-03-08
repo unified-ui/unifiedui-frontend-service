@@ -315,6 +315,21 @@ export function useChat({
           }
         }, 30);
       },
+      undefined, // onReasoningStart
+      undefined, // onReasoningStream
+      undefined, // onReasoningEnd
+      undefined, // onToolCallStart
+      undefined, // onToolCallStream
+      undefined, // onToolCallEnd
+      undefined, // onPlanStart
+      undefined, // onPlanStream
+      undefined, // onPlanComplete
+      undefined, // onSubAgentStart
+      undefined, // onSubAgentStream
+      undefined, // onSubAgentEnd
+      undefined, // onSynthesisStart
+      undefined, // onSynthesisStream
+      undefined, // onTrace
       foundryToken,
       abortControllerRef.current?.signal
     );
