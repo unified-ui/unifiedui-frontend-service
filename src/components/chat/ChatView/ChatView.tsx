@@ -7,6 +7,7 @@ import { ChatContent } from '../ChatContent';
 import { ChatInput } from '../ChatInput';
 import type { ChatInputRef } from '../ChatInput';
 import type { MessageResponse, ReactionResponse } from '../../../api/types';
+import type { ReActStreamState } from '../../../hooks/chat/useReActChat';
 import classes from './ChatView.module.css';
 
 export interface ChatViewProps {
@@ -36,6 +37,10 @@ export interface ChatViewProps {
   showReactions?: boolean;
   showTracing?: boolean;
   enableFileDrop?: boolean;
+
+  reActState?: ReActStreamState;
+  onToggleReasoning?: () => void;
+  alwaysExpandReasoning?: boolean;
 
   headerSlot?: ReactNode;
   tracingSlot?: ReactNode;
@@ -68,6 +73,10 @@ export const ChatView: FC<ChatViewProps> = ({
   showReactions = true,
   showTracing = true,
   enableFileDrop = true,
+
+  reActState,
+  onToggleReasoning,
+  alwaysExpandReasoning,
 
   headerSlot,
   tracingSlot,
@@ -169,6 +178,9 @@ export const ChatView: FC<ChatViewProps> = ({
                 onReaction={showReactions ? onReaction : undefined}
                 reactions={reactions}
                 onRetry={onRetry}
+                reActState={reActState}
+                onToggleReasoning={onToggleReasoning}
+                alwaysExpandReasoning={alwaysExpandReasoning}
               />
             </Box>
             <ChatInput

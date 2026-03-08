@@ -86,5 +86,17 @@
   "agentSaved": "Agent configuration saved successfully.",
   "agentSaveFailed": "Failed to save agent configuration.",
   "agentCreated": "ReACT Agent created successfully.",
-  "agentDeleted": "ReACT Agent deleted successfully."
+  "agentDeleted": "ReACT Agent deleted successfully.",
+  "reasoning": {
+    "title": "Reasoning",
+    "streaming": "Streaming",
+    "thinking": "Thinking",
+    "plan": "Plan",
+    "synthesizing": "Synthesizing",
+    "steps": "{{count}} step",
+    "steps_plural": "{{count}} steps",
+    "tools": "{{count}} tool",
+    "tools_plural": "{{count}} tools"
+  },
+  "playgroundPublishRequired": "Publish your agent first to use the playground"
 }

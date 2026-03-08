@@ -10,3 +10,4 @@ export { ChatEmptyState } from './ChatEmptyState';
 export type { ChatEmptyStateProps } from './ChatEmptyState';
 export { FeedbackDialog } from './FeedbackDialog';
 export type { FeedbackDialogProps } from './FeedbackDialog';
+export { ReasoningSection } from './ReasoningSection';

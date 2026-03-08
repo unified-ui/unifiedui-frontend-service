@@ -19,6 +19,7 @@ import {
   Modal,
   Switch,
 } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import { DelayedTooltip } from '../../components/common';
 import {
   IconPlus,
@@ -37,10 +38,11 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { ChatView } from '../../components/chat';
-import type { AIModelResponse, ToolResponse, MessageResponse, ReActAgentVersionResponse, PublishReActAgentRequest } from '../../api/types';
+import type { AIModelResponse, ToolResponse, MessageResponse, ReActAgentVersionResponse, PublishReActAgentRequest, SSEStreamMessage } from '../../api/types';
 import { AIModelPurposeGroupEnum } from '../../api/types';
 import { useIdentity } from '../../contexts';
 import { useUnsavedChanges } from '../../hooks';
+import { useReActChat } from '../../hooks/chat/useReActChat';
 import classes from './ReActAgentDeveloperPage.module.css';
 
 interface AgentConfig {
@@ -259,6 +261,12 @@ export const ReActAgentDeveloperPage: FC = () => {
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [publishData, setPublishData] = useState<PublishReActAgentRequest>({ is_active: true });
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isPlaygroundStreaming, setIsPlaygroundStreaming] = useState(false);
+  const [playgroundStreamingContent, setPlaygroundStreamingContent] = useState('');
+  const [playgroundStreamingMessageId, setPlaygroundStreamingMessageId] = useState<string | undefined>();
+  const playgroundAbortRef = useRef<AbortController | null>(null);
+
+  const reActChat = useReActChat();
 
   const { hasChanges, resetBaseline } = useUnsavedChanges(config, savedConfig);
 
@@ -413,24 +421,164 @@ export const ReActAgentDeveloperPage: FC = () => {
   }, [tenantId, apiClient, agentId, publishData]);
 
   const handleClearChat = useCallback(() => {
+    if (playgroundAbortRef.current) {
+      playgroundAbortRef.current.abort();
+    }
     setChatKey(prev => prev + 1);
     setPlaygroundMessages([]);
+    setIsPlaygroundStreaming(false);
+    setPlaygroundStreamingContent('');
+    setPlaygroundStreamingMessageId(undefined);
     messageIdCounter.current = 0;
+    reActChat.resetReActState();
+  }, [reActChat]);
+
+  const handleCancelPlaygroundStream = useCallback(() => {
+    if (playgroundAbortRef.current) {
+      playgroundAbortRef.current.abort();
+    }
+    setIsPlaygroundStreaming(false);
+    setPlaygroundStreamingContent('');
+    setPlaygroundStreamingMessageId(undefined);
   }, []);
 
-  const handlePlaygroundSend = useCallback((content: string) => {
+  const handlePlaygroundSend = useCallback(async (content: string) => {
+    if (!apiClient || !tenantId || !publishedChatAgentId) {
+      notifications.show({
+        title: 'Playground',
+        message: 'Publish the agent first to use the playground.',
+        color: 'orange',
+      });
+      return;
+    }
+
+    if (playgroundAbortRef.current) {
+      playgroundAbortRef.current.abort();
+    }
+    playgroundAbortRef.current = new AbortController();
+
     const userMessage: MessageResponse = {
       id: `local-${++messageIdCounter.current}`,
       type: 'user',
       conversationId: 'playground',
-      chatAgentId: 'playground',
+      chatAgentId: publishedChatAgentId,
       content,
       status: 'completed',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
     setPlaygroundMessages(prev => [...prev, userMessage]);
-  }, []);
+    setIsPlaygroundStreaming(true);
+    setPlaygroundStreamingContent('');
+    reActChat.resetReActState();
+
+    let accumulatedContent = '';
+    let currentMsgId = '';
+
+    try {
+      let playgroundConvId = playgroundMessages.find(m => m.conversationId !== 'playground')?.conversationId;
+
+      if (!playgroundConvId) {
+        const newConv = await apiClient.createConversation(tenantId, {
+          chat_agent_id: publishedChatAgentId,
+          name: `Playground: ${content.slice(0, 40)}`,
+        });
+        playgroundConvId = newConv.id;
+      }
+
+      const stream = apiClient.sendMessageStream(
+        tenantId,
+        {
+          conversationId: playgroundConvId,
+          chatAgentId: publishedChatAgentId,
+          message: { content },
+        },
+        (messageId: string, _conversationId: string, _isNewMessage: boolean) => {
+          currentMsgId = messageId;
+          setPlaygroundStreamingMessageId(messageId);
+          const assistantMessage: MessageResponse = {
+            id: messageId,
+            type: 'assistant',
+            conversationId: playgroundConvId!,
+            chatAgentId: publishedChatAgentId!,
+            content: '',
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          setPlaygroundMessages(prev => [...prev, assistantMessage]);
+        },
+        (chunk: string) => {
+          accumulatedContent += chunk;
+          setPlaygroundStreamingContent(accumulatedContent);
+        },
+        undefined,
+        () => {
+          setIsPlaygroundStreaming(false);
+          const finalContent = accumulatedContent;
+          if (finalContent && currentMsgId) {
+            setPlaygroundMessages(prev => prev.map(m =>
+              m.id === currentMsgId
+                ? { ...m, content: finalContent, status: 'completed' as const }
+                : m
+            ));
+          }
+          setPlaygroundStreamingContent('');
+          setPlaygroundStreamingMessageId(undefined);
+          reActChat.onReActStreamEnd();
+        },
+        (code: string, message: string, details: string) => {
+          console.error('Playground stream error:', { code, message, details });
+          setIsPlaygroundStreaming(false);
+          setPlaygroundStreamingContent('');
+          setPlaygroundStreamingMessageId(undefined);
+        },
+        (completedMessage: MessageResponse) => {
+          setPlaygroundMessages(prev => {
+            const existingIndex = prev.findIndex(m => m.id === completedMessage.id);
+            if (existingIndex >= 0) {
+              return prev.map(m => m.id === completedMessage.id ? completedMessage : m);
+            }
+            return [...prev, completedMessage];
+          });
+        },
+        undefined,
+        (config?: SSEStreamMessage['config']) => reActChat.onReasoningStart(config),
+        (content: string) => reActChat.onReasoningStream(content),
+        () => reActChat.onReasoningEnd(),
+        (config?: SSEStreamMessage['config']) => reActChat.onToolCallStart(config),
+        (content: string) => reActChat.onToolCallStream(content),
+        (config?: SSEStreamMessage['config']) => reActChat.onToolCallEnd(config),
+        (config?: SSEStreamMessage['config']) => reActChat.onPlanStart(config),
+        (content: string) => reActChat.onPlanStream(content),
+        (config?: SSEStreamMessage['config']) => reActChat.onPlanComplete(config),
+        (config?: SSEStreamMessage['config']) => reActChat.onSubAgentStart(config),
+        (content: string) => reActChat.onSubAgentStream(content),
+        (config?: SSEStreamMessage['config']) => reActChat.onSubAgentEnd(config),
+        (config?: SSEStreamMessage['config']) => reActChat.onSynthesisStart(config),
+        (content: string) => reActChat.onSynthesisStream(content),
+        (config?: SSEStreamMessage['config']) => reActChat.onTrace(config),
+        undefined,
+        playgroundAbortRef.current?.signal
+      );
+
+      for await (const _event of stream) {
+        if (playgroundAbortRef.current?.signal.aborted) break;
+      }
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        console.error('Playground stream failed:', error);
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to send playground message',
+          color: 'red',
+        });
+      }
+      setIsPlaygroundStreaming(false);
+      setPlaygroundStreamingContent('');
+      setPlaygroundStreamingMessageId(undefined);
+    }
+  }, [apiClient, tenantId, publishedChatAgentId, playgroundMessages, reActChat]);
 
   return (
     <MainLayout>
@@ -713,11 +861,21 @@ export const ReActAgentDeveloperPage: FC = () => {
               <ChatView
                 key={chatKey}
                 messages={playgroundMessages}
+                isStreaming={isPlaygroundStreaming}
+                streamingContent={playgroundStreamingContent}
+                streamingMessageId={playgroundStreamingMessageId}
                 onSendMessage={handlePlaygroundSend}
+                onCancelStream={handleCancelPlaygroundStream}
                 showTracing={false}
                 showReactions={false}
                 enableFileDrop={false}
-                emptyStateMessage="Send a message to test your agent"
+                emptyStateMessage={publishedChatAgentId
+                  ? 'Send a message to test your agent'
+                  : 'Publish your agent first to use the playground'}
+                inputDisabled={!publishedChatAgentId}
+                reActState={reActChat.reActState}
+                onToggleReasoning={() => reActChat.setIsReasoningExpanded(!reActChat.reActState.isReasoningExpanded)}
+                alwaysExpandReasoning
               />
             </Stack>
           </Paper>

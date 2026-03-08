@@ -5,8 +5,10 @@ import { IconUser, IconSparkles, IconCopy, IconCheck, IconBinaryTree, IconThumbU
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { MessageResponse, AttachmentMetadata, ReactionResponse } from '../../../api/types';
+import type { ReActStreamState } from '../../../hooks/chat/useReActChat';
 import { ConfirmDeleteDialog } from '../../common';
 import { FeedbackDialog } from '../FeedbackDialog';
+import { ReasoningSection } from '../ReasoningSection';
 import classes from './ChatContent.module.css';
 import mdClasses from './Markdown.module.css';
 
@@ -25,6 +27,9 @@ export interface ChatContentProps {
   onReaction?: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string) => Promise<void>;
   reactions?: Map<string, ReactionResponse>;
   onRetry?: (failedMessageId: string) => void;
+  reActState?: ReActStreamState;
+  onToggleReasoning?: () => void;
+  alwaysExpandReasoning?: boolean;
 }
 
 export const ChatContent: FC<ChatContentProps> = ({
@@ -42,6 +47,9 @@ export const ChatContent: FC<ChatContentProps> = ({
   onReaction,
   reactions,
   onRetry,
+  reActState,
+  onToggleReasoning,
+  alwaysExpandReasoning,
 }) => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -219,6 +227,9 @@ export const ChatContent: FC<ChatContentProps> = ({
                 onDeleteMessage={onDeleteMessage}
                 onReaction={onReaction}
                 activeReaction={reactions?.get(message.id)}
+                reActState={reActState}
+                onToggleReasoning={onToggleReasoning}
+                alwaysExpandReasoning={alwaysExpandReasoning}
               />
             );
           })}
@@ -301,6 +312,9 @@ interface MessageBubbleProps {
   onDeleteMessage?: (messageId: string) => Promise<void>;
   onReaction?: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string) => Promise<void>;
   activeReaction?: ReactionResponse;
+  reActState?: ReActStreamState;
+  onToggleReasoning?: () => void;
+  alwaysExpandReasoning?: boolean;
 }
 
 const MessageBubble: FC<MessageBubbleProps> = ({
@@ -317,6 +331,9 @@ const MessageBubble: FC<MessageBubbleProps> = ({
   onDeleteMessage,
   onReaction,
   activeReaction,
+  reActState,
+  onToggleReasoning,
+  alwaysExpandReasoning,
 }) => {
   const isUser = message.type === 'user';
   const content = streamingContent || message.content;
@@ -442,6 +459,14 @@ const MessageBubble: FC<MessageBubbleProps> = ({
           <IconSparkles size={16} />
         </Avatar>
         <Box className={classes.assistantContent}>
+          {reActState && reActState.reasoningSteps.length > 0 && onToggleReasoning && (
+            <ReasoningSection
+              reActState={reActState}
+              isStreaming={!!isStreaming}
+              onToggle={onToggleReasoning}
+              alwaysExpanded={alwaysExpandReasoning}
+            />
+          )}
           <Box className={mdClasses.markdownContent}>
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
