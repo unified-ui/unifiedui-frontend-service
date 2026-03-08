@@ -16,6 +16,8 @@ import {
   ScrollArea,
   Divider,
   LoadingOverlay,
+  Modal,
+  Switch,
 } from '@mantine/core';
 import { DelayedTooltip } from '../../components/common';
 import {
@@ -27,12 +29,15 @@ import {
   IconBrain,
   IconTool,
   IconArrowLeft,
+  IconRocket,
+  IconHistory,
+  IconArrowBackUp,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { ChatView } from '../../components/chat';
-import type { AIModelResponse, ToolResponse, MessageResponse } from '../../api/types';
+import type { AIModelResponse, ToolResponse, MessageResponse, ReActAgentVersionResponse, PublishReActAgentRequest } from '../../api/types';
 import { AIModelPurposeGroupEnum } from '../../api/types';
 import { useIdentity } from '../../contexts';
 import { useUnsavedChanges } from '../../hooks';
@@ -248,6 +253,12 @@ export const ReActAgentDeveloperPage: FC = () => {
   const [isLoadingAgent, setIsLoadingAgent] = useState(false);
   const [playgroundMessages, setPlaygroundMessages] = useState<MessageResponse[]>([]);
   const messageIdCounter = useRef(0);
+  const [currentVersion, setCurrentVersion] = useState(1);
+  const [publishedChatAgentId, setPublishedChatAgentId] = useState<string | undefined>(undefined);
+  const [versions, setVersions] = useState<ReActAgentVersionResponse[]>([]);
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [publishData, setPublishData] = useState<PublishReActAgentRequest>({ is_active: true });
+  const [isPublishing, setIsPublishing] = useState(false);
 
   const { hasChanges, resetBaseline } = useUnsavedChanges(config, savedConfig);
 
@@ -271,13 +282,27 @@ export const ReActAgentDeveloperPage: FC = () => {
       };
       setConfig(loadedConfig);
       setSavedConfig(structuredClone(loadedConfig));
+      setCurrentVersion(agent.current_version || 1);
+      setPublishedChatAgentId(agent.published_chat_agent_id);
     } catch { /* empty */ }
     finally { setIsLoadingAgent(false); }
+  }, [tenantId, apiClient, agentId]);
+
+  const loadVersions = useCallback(async () => {
+    if (!tenantId || !apiClient || !agentId) return;
+    try {
+      const v = await apiClient.listReActAgentVersions(tenantId, agentId);
+      setVersions(v);
+    } catch { /* empty */ }
   }, [tenantId, apiClient, agentId]);
 
   useEffect(() => {
     loadAgent();
   }, [loadAgent]);
+
+  useEffect(() => {
+    loadVersions();
+  }, [loadVersions]);
 
   const loadModels = useCallback(async () => {
     if (!tenantId || !apiClient || modelsLoaded) return;
@@ -331,9 +356,7 @@ export const ReActAgentDeveloperPage: FC = () => {
   const handleSave = useCallback(async () => {
     if (!tenantId || !apiClient || !agentId) return;
     try {
-      await apiClient.updateReActAgent(tenantId, agentId, {
-        name: config.name,
-        description: config.description || undefined,
+      const updated = await apiClient.updateReActAgentVersion(tenantId, agentId, {
         ai_model_ids: config.ai_model_ids,
         system_prompt: config.system_prompt || undefined,
         tool_ids: config.tool_ids,
@@ -342,9 +365,52 @@ export const ReActAgentDeveloperPage: FC = () => {
         response_prompt: config.response_prompt || undefined,
         greeting_messages: config.greeting_messages.filter(Boolean),
       });
+      if (config.name !== savedConfig?.name || config.description !== savedConfig?.description) {
+        await apiClient.updateReActAgent(tenantId, agentId, {
+          name: config.name,
+          description: config.description || undefined,
+        });
+      }
+      setCurrentVersion(updated.current_version || currentVersion + 1);
       resetBaseline(config);
+      loadVersions();
     } catch { /* empty */ }
-  }, [tenantId, apiClient, agentId, config, resetBaseline]);
+  }, [tenantId, apiClient, agentId, config, savedConfig, currentVersion, resetBaseline, loadVersions]);
+
+  const handleRestore = useCallback(async (version: number) => {
+    if (!tenantId || !apiClient || !agentId) return;
+    if (hasChanges && !window.confirm(t('versions.unsavedChangesConfirm'))) return;
+    try {
+      const restored = await apiClient.restoreReActAgentVersion(tenantId, agentId, version);
+      const restoredConfig: AgentConfig = {
+        name: restored.name || '',
+        description: restored.description || '',
+        ai_model_ids: restored.ai_model_ids || [],
+        system_prompt: restored.system_prompt || '',
+        tool_ids: restored.tool_ids || [],
+        security_prompt: restored.security_prompt || '',
+        tool_use_prompt: restored.tool_use_prompt || '',
+        response_prompt: restored.response_prompt || '',
+        greeting_messages: restored.greeting_messages || [],
+      };
+      setConfig(restoredConfig);
+      setSavedConfig(structuredClone(restoredConfig));
+      setCurrentVersion(restored.current_version || 1);
+      loadVersions();
+    } catch { /* empty */ }
+  }, [tenantId, apiClient, agentId, hasChanges, t, loadVersions]);
+
+  const handlePublish = useCallback(async () => {
+    if (!tenantId || !apiClient || !agentId) return;
+    setIsPublishing(true);
+    try {
+      const result = await apiClient.publishReActAgent(tenantId, agentId, publishData);
+      setPublishedChatAgentId(result.chat_agent_id);
+      setPublishModalOpen(false);
+      setPublishData({ is_active: true });
+    } catch { /* empty */ }
+    finally { setIsPublishing(false); }
+  }, [tenantId, apiClient, agentId, publishData]);
 
   const handleClearChat = useCallback(() => {
     setChatKey(prev => prev + 1);
@@ -376,8 +442,24 @@ export const ReActAgentDeveloperPage: FC = () => {
               <IconArrowLeft size={20} />
             </ActionIcon>
             <Title order={2}>{config.name || t('title')}</Title>
+            <Badge variant="light" size="lg" leftSection={<IconHistory size={14} />}>
+              {t('versions.currentVersion', { version: currentVersion })}
+            </Badge>
+            {publishedChatAgentId && (
+              <Badge variant="filled" color="green" size="sm">
+                {t('publish.published')}
+              </Badge>
+            )}
           </Group>
           <Group gap="sm">
+            <Button
+              variant="light"
+              color="teal"
+              leftSection={<IconRocket size={16} />}
+              onClick={() => setPublishModalOpen(true)}
+            >
+              {publishedChatAgentId ? t('publish.republish') : t('publish.button')}
+            </Button>
             <Button variant="light" leftSection={<IconPlayerPlay size={16} />} onClick={handleClearChat}>
               {t('clearChat')}
             </Button>
@@ -576,6 +658,48 @@ export const ReActAgentDeveloperPage: FC = () => {
                       />
                     </Accordion.Panel>
                   </Accordion.Item>
+
+                  <Accordion.Item value="versionHistory">
+                    <Accordion.Control>
+                      <Group gap="xs">
+                        <Text fw={600} size="sm">{t('sections.versionHistory')}</Text>
+                        <Badge size="xs" variant="light">{versions.length}</Badge>
+                      </Group>
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <Stack gap="xs">
+                        {versions.length === 0 && (
+                          <Text size="sm" c="dimmed">{t('versions.noVersions')}</Text>
+                        )}
+                        {versions.map(v => (
+                          <Group key={v.id} justify="space-between" wrap="nowrap">
+                            <Group gap="xs">
+                              <Badge
+                                size="sm"
+                                variant={v.version === currentVersion ? 'filled' : 'light'}
+                              >
+                                {t('versions.currentVersion', { version: v.version })}
+                              </Badge>
+                              <Text size="xs" c="dimmed">
+                                {new Date(v.created_at).toLocaleDateString()}
+                              </Text>
+                            </Group>
+                            {v.version !== currentVersion && (
+                              <DelayedTooltip label={t('versions.restore')}>
+                                <ActionIcon
+                                  size="xs"
+                                  variant="subtle"
+                                  onClick={() => handleRestore(v.version)}
+                                >
+                                  <IconArrowBackUp size={14} />
+                                </ActionIcon>
+                              </DelayedTooltip>
+                            )}
+                          </Group>
+                        ))}
+                      </Stack>
+                    </Accordion.Panel>
+                  </Accordion.Item>
                 </Accordion>
               </Stack>
             </ScrollArea>
@@ -599,6 +723,44 @@ export const ReActAgentDeveloperPage: FC = () => {
           </Paper>
         </div>
       </Stack>
+      <Modal
+        opened={publishModalOpen}
+        onClose={() => setPublishModalOpen(false)}
+        title={t('publish.title')}
+        size="md"
+      >
+        <Stack gap="md">
+          <TextInput
+            label={t('publish.nameLabel')}
+            placeholder={t('publish.namePlaceholder')}
+            value={publishData.name || ''}
+            onChange={(e) => setPublishData(prev => ({ ...prev, name: e.currentTarget.value || undefined }))}
+          />
+          <Textarea
+            label={t('publish.descriptionLabel')}
+            placeholder={t('publish.descriptionPlaceholder')}
+            value={publishData.description || ''}
+            onChange={(e) => setPublishData(prev => ({ ...prev, description: e.currentTarget.value || undefined }))}
+            rows={3}
+          />
+          <Switch
+            label={t('publish.isActive')}
+            checked={publishData.is_active ?? true}
+            onChange={(e) => setPublishData(prev => ({ ...prev, is_active: e.currentTarget.checked }))}
+          />
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setPublishModalOpen(false)}>Cancel</Button>
+            <Button
+              leftSection={<IconRocket size={16} />}
+              onClick={handlePublish}
+              loading={isPublishing}
+              color="teal"
+            >
+              {publishedChatAgentId ? t('publish.republish') : t('publish.button')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </MainLayout>
   );
 };

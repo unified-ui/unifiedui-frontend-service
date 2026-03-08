@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Modal,
   TextInput,
@@ -22,9 +22,10 @@ import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import { useEntityPermissions, usePermissions } from '../../../hooks';
 import { useFormDirtyGuard } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
-import type { ToolResponse, PrincipalTypeEnum } from '../../../api/types';
+import type { ToolResponse, PrincipalTypeEnum, ToolTypeEnum } from '../../../api/types';
 import { PermissionActionEnum } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
+import { validateToolConfig } from '../../../utils/toolConfigValidator';
 import classes from './EditToolDialog.module.css';
 
 export type EditDialogTab = 'details' | 'iam';
@@ -34,6 +35,7 @@ interface FormValues {
   description: string;
   tags: string[];
   is_active: boolean;
+  configJson: string;
 }
 
 export interface EditToolDialogProps {
@@ -86,6 +88,7 @@ export const EditToolDialog: FC<EditToolDialogProps> = ({
       description: '',
       tags: [],
       is_active: true,
+      configJson: '',
     },
     validate: {
       name: (value) => {
@@ -96,17 +99,26 @@ export const EditToolDialog: FC<EditToolDialogProps> = ({
     },
   });
 
+  const configValidation = useMemo(() => {
+    if (!form.values.configJson.trim() || !tool?.type) return null;
+    return validateToolConfig(tool.type as ToolTypeEnum, form.values.configJson);
+  }, [form.values.configJson, tool?.type]);
+
   useFormDirtyGuard(form.isDirty());
 
   // Initialize form from data
   const initializeFromData = useCallback(
     (data: ToolResponse) => {
       setTool(data);
+      const configStr = data.config && Object.keys(data.config).length > 0
+        ? JSON.stringify(data.config, null, 2)
+        : '';
       form.setValues({
         name: data.name,
         description: data.description || '',
         tags: data.tags?.map((t) => t.name) || [],
         is_active: data.is_active,
+        configJson: configStr,
       });
       form.resetDirty();
     },
@@ -156,16 +168,22 @@ export const EditToolDialog: FC<EditToolDialogProps> = ({
   // Handle form submit
   const handleSubmit = async (values: FormValues) => {
     if (!apiClient || !selectedTenant || !toolId) return;
+    if (configValidation && !configValidation.valid) return;
 
     setIsSaving(true);
     setError(null);
 
     try {
-      // Update tool
+      let parsedConfig: Record<string, unknown> | undefined;
+      if (values.configJson.trim()) {
+        parsedConfig = JSON.parse(values.configJson);
+      }
+
       await apiClient.updateTool(selectedTenant.id, toolId, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
         is_active: values.is_active,
+        ...(parsedConfig !== undefined ? { config: parsedConfig } : {}),
       });
 
       // Update tags if changed
@@ -326,6 +344,44 @@ export const EditToolDialog: FC<EditToolDialogProps> = ({
                   value={formatToolType(tool.type)}
                   disabled
                 />
+              )}
+
+              {tool && (
+                <Stack gap="xs">
+                  <Textarea
+                    label="Configuration (JSON)"
+                    placeholder="Enter tool configuration as JSON..."
+                    minRows={6}
+                    maxRows={12}
+                    autosize
+                    styles={{ input: { fontFamily: 'monospace', fontSize: 12 } }}
+                    {...form.getInputProps('configJson')}
+                  />
+                  {configValidation && !configValidation.valid && (
+                    <Alert
+                      icon={<IconAlertCircle size={16} />}
+                      color="red"
+                      variant="light"
+                      title="Configuration Error"
+                    >
+                      {configValidation.errors.map((err, i) => (
+                        <Text key={i} size="xs">{err}</Text>
+                      ))}
+                    </Alert>
+                  )}
+                  {configValidation && configValidation.valid && configValidation.warnings.length > 0 && (
+                    <Alert
+                      icon={<IconAlertCircle size={16} />}
+                      color="yellow"
+                      variant="light"
+                      title="Warning"
+                    >
+                      {configValidation.warnings.map((w, i) => (
+                        <Text key={i} size="xs">{w}</Text>
+                      ))}
+                    </Alert>
+                  )}
+                </Stack>
               )}
 
               <TagInput

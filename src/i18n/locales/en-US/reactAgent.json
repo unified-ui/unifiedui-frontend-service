@@ -25,7 +25,8 @@
     "toolUseInstructions": "Tool Use Instructions",
     "securityInstructions": "Security Instructions",
     "responseFormat": "Response Format",
-    "greetingMessages": "Greeting Messages"
+    "greetingMessages": "Greeting Messages",
+    "versionHistory": "Version History"
   },
   "useDefault": "Use Default",
   "aiModels": {
@@ -58,6 +59,29 @@
     "addMessage": "Add Greeting",
     "noMessages": "No greeting messages. The agent will start with a default greeting.",
     "messagePlaceholder": "Enter greeting message..."
+  },
+  "versions": {
+    "currentVersion": "v{{version}}",
+    "versionLabel": "Version {{version}}",
+    "noVersions": "No version history available.",
+    "restore": "Restore",
+    "restoreConfirm": "Restore version {{version}}? This creates a new version with that configuration.",
+    "unsavedChangesConfirm": "You have unsaved changes. Restoring a version will discard them. Continue?",
+    "restored": "Version restored successfully.",
+    "createdAt": "Created {{date}}"
+  },
+  "publish": {
+    "button": "Publish",
+    "republish": "Republish",
+    "title": "Publish to Chat Agents",
+    "nameLabel": "Chat Agent Name",
+    "namePlaceholder": "Enter chat agent name (optional, defaults to agent name)...",
+    "descriptionLabel": "Chat Agent Description",
+    "descriptionPlaceholder": "Enter description (optional)...",
+    "isActive": "Active",
+    "success": "ReACT Agent published as Chat Agent successfully.",
+    "published": "Published",
+    "viewChatAgent": "View Chat Agent"
   },
   "agentSaved": "Agent configuration saved successfully.",
   "agentSaveFailed": "Failed to save agent configuration.",

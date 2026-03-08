@@ -67,8 +67,12 @@ import type {
   SetToolPermissionRequest,
   // ReACT Agent Types
   ReActAgentResponse,
+  ReActAgentVersionResponse,
   CreateReActAgentRequest,
   UpdateReActAgentRequest,
+  UpdateReActAgentVersionRequest,
+  PublishReActAgentRequest,
+  PublishReActAgentResponse,
   SetReActAgentPermissionRequest,
   // Custom Group Types
   CustomGroupResponse,
@@ -719,6 +723,30 @@ export class UnifiedUIAPIClient {
     return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}`, undefined, 'ReACT Agent deleted successfully');
   }
 
+  // ========== ReACT Agent Versions ==========
+
+  async updateReActAgentVersion(tenantId: string, agentId: string, data: UpdateReActAgentVersionRequest): Promise<ReActAgentResponse> {
+    return this.request<ReActAgentResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/versions`, data, 'New version created successfully');
+  }
+
+  async listReActAgentVersions(tenantId: string, agentId: string): Promise<ReActAgentVersionResponse[]> {
+    return this.request<ReActAgentVersionResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/versions`);
+  }
+
+  async getReActAgentVersion(tenantId: string, agentId: string, version: number): Promise<ReActAgentVersionResponse> {
+    return this.request<ReActAgentVersionResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/versions/${version}`);
+  }
+
+  async restoreReActAgentVersion(tenantId: string, agentId: string, version: number): Promise<ReActAgentResponse> {
+    return this.request<ReActAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/versions/${version}/restore`, undefined, 'Version restored successfully');
+  }
+
+  // ========== ReACT Agent Publish ==========
+
+  async publishReActAgent(tenantId: string, agentId: string, data: PublishReActAgentRequest): Promise<PublishReActAgentResponse> {
+    return this.request<PublishReActAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/re-act-agents/${agentId}/publish`, data, 'ReACT Agent published successfully');
+  }
+
   // ========== ReACT Agent Permissions ==========
 
   async getReActAgentPrincipals(tenantId: string, agentId: string): Promise<ResourcePrincipalsResponse> {
@@ -1146,6 +1174,21 @@ export class UnifiedUIAPIClient {
     onError?: (code: string, message: string, details: string) => void,
     onMessageComplete?: (message: MessageResponse) => void,
     onTitleGeneration?: (title: string) => void,
+    onReasoningStart?: (config?: SSEStreamMessage['config']) => void,
+    onReasoningStream?: (content: string) => void,
+    onReasoningEnd?: () => void,
+    onToolCallStart?: (config?: SSEStreamMessage['config']) => void,
+    onToolCallStream?: (content: string) => void,
+    onToolCallEnd?: (config?: SSEStreamMessage['config']) => void,
+    onPlanStart?: (config?: SSEStreamMessage['config']) => void,
+    onPlanStream?: (content: string) => void,
+    onPlanComplete?: (config?: SSEStreamMessage['config']) => void,
+    onSubAgentStart?: (config?: SSEStreamMessage['config']) => void,
+    onSubAgentStream?: (content: string) => void,
+    onSubAgentEnd?: (config?: SSEStreamMessage['config']) => void,
+    onSynthesisStart?: (config?: SSEStreamMessage['config']) => void,
+    onSynthesisStream?: (content: string) => void,
+    onTrace?: (config?: SSEStreamMessage['config']) => void,
     foundryToken?: string,
     signal?: AbortSignal
   ): AsyncGenerator<SSEEvent, void, unknown> {
@@ -1272,6 +1315,51 @@ export class UnifiedUIAPIClient {
                     if (onTitleGeneration && streamMsg.content) {
                       onTitleGeneration(streamMsg.content);
                     }
+                    break;
+                  case 'REASONING_START':
+                    if (onReasoningStart) onReasoningStart(streamMsg.config);
+                    break;
+                  case 'REASONING_STREAM':
+                    if (onReasoningStream && streamMsg.content) onReasoningStream(streamMsg.content);
+                    break;
+                  case 'REASONING_END':
+                    if (onReasoningEnd) onReasoningEnd();
+                    break;
+                  case 'TOOL_CALL_START':
+                    if (onToolCallStart) onToolCallStart(streamMsg.config);
+                    break;
+                  case 'TOOL_CALL_STREAM':
+                    if (onToolCallStream && streamMsg.content) onToolCallStream(streamMsg.content);
+                    break;
+                  case 'TOOL_CALL_END':
+                    if (onToolCallEnd) onToolCallEnd(streamMsg.config);
+                    break;
+                  case 'PLAN_START':
+                    if (onPlanStart) onPlanStart(streamMsg.config);
+                    break;
+                  case 'PLAN_STREAM':
+                    if (onPlanStream && streamMsg.content) onPlanStream(streamMsg.content);
+                    break;
+                  case 'PLAN_COMPLETE':
+                    if (onPlanComplete) onPlanComplete(streamMsg.config);
+                    break;
+                  case 'SUB_AGENT_START':
+                    if (onSubAgentStart) onSubAgentStart(streamMsg.config);
+                    break;
+                  case 'SUB_AGENT_STREAM':
+                    if (onSubAgentStream && streamMsg.content) onSubAgentStream(streamMsg.content);
+                    break;
+                  case 'SUB_AGENT_END':
+                    if (onSubAgentEnd) onSubAgentEnd(streamMsg.config);
+                    break;
+                  case 'SYNTHESIS_START':
+                    if (onSynthesisStart) onSynthesisStart(streamMsg.config);
+                    break;
+                  case 'SYNTHESIS_STREAM':
+                    if (onSynthesisStream && streamMsg.content) onSynthesisStream(streamMsg.content);
+                    break;
+                  case 'TRACE':
+                    if (onTrace) onTrace(streamMsg.config);
                     break;
                 }
               }

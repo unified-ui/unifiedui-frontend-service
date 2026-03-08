@@ -42,6 +42,7 @@ export const ChatAgentTypeEnum = {
   N8N: 'N8N',
   MICROSOFT_FOUNDRY: 'MICROSOFT_FOUNDRY',
   REST_API: 'REST_API',
+  REACT_AGENT: 'REACT_AGENT',
 } as const;
 
 export type ChatAgentTypeEnum = typeof ChatAgentTypeEnum[keyof typeof ChatAgentTypeEnum];
@@ -168,6 +169,11 @@ export interface FoundryChatAgentConfig {
 export const MessageType = {
   USER: 'user',
   ASSISTANT: 'assistant',
+  REASONING: 'reasoning',
+  TOOL_CALL: 'tool_call',
+  TOOL_RESULT: 'tool_result',
+  PLAN: 'plan',
+  SUB_AGENT: 'sub_agent',
 } as const;
 
 export type MessageType = typeof MessageType[keyof typeof MessageType];
@@ -487,6 +493,21 @@ export const SSEStreamMessageType = {
   MESSAGE_COMPLETE: 'MESSAGE_COMPLETE',
   TITLE_GENERATION: 'TITLE_GENERATION',
   ERROR: 'ERROR',
+  REASONING_START: 'REASONING_START',
+  REASONING_STREAM: 'REASONING_STREAM',
+  REASONING_END: 'REASONING_END',
+  TOOL_CALL_START: 'TOOL_CALL_START',
+  TOOL_CALL_STREAM: 'TOOL_CALL_STREAM',
+  TOOL_CALL_END: 'TOOL_CALL_END',
+  PLAN_START: 'PLAN_START',
+  PLAN_STREAM: 'PLAN_STREAM',
+  PLAN_COMPLETE: 'PLAN_COMPLETE',
+  SUB_AGENT_START: 'SUB_AGENT_START',
+  SUB_AGENT_STREAM: 'SUB_AGENT_STREAM',
+  SUB_AGENT_END: 'SUB_AGENT_END',
+  SYNTHESIS_START: 'SYNTHESIS_START',
+  SYNTHESIS_STREAM: 'SYNTHESIS_STREAM',
+  TRACE: 'TRACE',
 } as const;
 
 export type SSEStreamMessageType = typeof SSEStreamMessageType[keyof typeof SSEStreamMessageType];
@@ -500,6 +521,12 @@ export interface SSEStreamMessage {
     code?: string;
     message?: string | MessageResponse;
     details?: string;
+    toolName?: string;
+    toolInput?: string;
+    agentName?: string;
+    agentId?: string;
+    traceId?: string;
+    [key: string]: unknown;
   };
 }
 
@@ -1250,6 +1277,24 @@ export interface UpdateAIModelRequest {
 
 // ========== ReACT Agent Types ==========
 
+export interface ReActAgentVersionResponse {
+  id: string;
+  re_act_agent_id: string;
+  version: number;
+  ai_model_ids: string[];
+  system_prompt?: string;
+  tool_ids: string[];
+  security_prompt?: string;
+  tool_use_prompt?: string;
+  response_prompt?: string;
+  greeting_messages: string[];
+  config: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
 export interface ReActAgentResponse {
   id: string;
   tenant_id: string;
@@ -1263,6 +1308,8 @@ export interface ReActAgentResponse {
   response_prompt?: string;
   greeting_messages: string[];
   config: Record<string, unknown>;
+  current_version: number | null;
+  published_chat_agent_id?: string;
   is_active: boolean;
   tags: TagSummary[];
   created_at: string;
@@ -1289,6 +1336,10 @@ export interface CreateReActAgentRequest {
 export interface UpdateReActAgentRequest {
   name?: string;
   description?: string;
+  is_active?: boolean;
+}
+
+export interface UpdateReActAgentVersionRequest {
   ai_model_ids?: string[];
   system_prompt?: string;
   tool_ids?: string[];
@@ -1297,7 +1348,20 @@ export interface UpdateReActAgentRequest {
   response_prompt?: string;
   greeting_messages?: string[];
   config?: Record<string, unknown>;
+}
+
+export interface PublishReActAgentRequest {
+  name?: string;
+  description?: string;
   is_active?: boolean;
+}
+
+export interface PublishReActAgentResponse {
+  chat_agent_id: string;
+  re_act_agent_id: string;
+  chat_agent_name: string;
+  chat_agent_type: string;
+  is_active: boolean;
 }
 
 export interface SetReActAgentPermissionRequest {
