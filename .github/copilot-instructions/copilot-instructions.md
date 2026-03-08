@@ -28,6 +28,7 @@ Read the relevant instruction file **before** working in that area.
 | [components/tracing.instructions.md](./components/tracing.instructions.md)               | Working with trace visualization, TracingVisualDialog, or canvas      |
 | [components/unified-dialog.instructions.md](./components/unified-dialog.instructions.md) | Creating or editing any modal dialog — ALWAYS use UnifiedDialog       |
 | [branding.instructions.md](./branding.instructions.md)                                   | Adding/changing tenant branding, login page customization, assets     |
+| [security.instructions.md](./security.instructions.md)                                   | **ALWAYS read** — XSS, secrets, secure API calls, URL safety          |
 | [testing.instructions.md](./testing.instructions.md)                                     | Writing tests, running tests, understanding test patterns             |
 | [github-pipelines.instructions.md](./github-pipelines.instructions.md)                   | Working with CI/CD workflows, adding pipelines, coverage thresholds   |
 
