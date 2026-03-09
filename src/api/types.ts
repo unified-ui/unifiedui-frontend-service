@@ -188,9 +188,11 @@ export const MessageStatus = {
 export type MessageStatus = typeof MessageStatus[keyof typeof MessageStatus];
 
 export interface StatusTrace {
-  status: string;
+  type: string;
+  name?: string;
+  content?: string;
+  data?: Record<string, unknown>;
   timestamp: string;
-  message?: string;
 }
 
 export interface AssistantMetadata {
@@ -522,6 +524,8 @@ export interface SSEStreamMessage {
     details?: string;
     toolName?: string;
     toolInput?: string;
+    toolResult?: string;
+    callType?: string;
     agentName?: string;
     agentId?: string;
     traceId?: string;

@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import type { SSEStreamMessage } from '../../api/types';
+import type { SSEStreamMessage, StatusTrace } from '../../api/types';
 
 export type ReasoningStepType = 'reasoning' | 'tool_call' | 'plan' | 'sub_agent' | 'synthesis';
 
@@ -44,6 +44,57 @@ export interface UseReActChatReturn {
   onSynthesisStream: (content: string) => void;
   onTrace: (config?: SSEStreamMessage['config']) => void;
   onReActStreamEnd: () => void;
+}
+
+const TRACE_TYPE_MAP: Record<string, ReasoningStepType> = {
+  reasoning_start: 'reasoning',
+  tool_call_start: 'tool_call',
+  plan_start: 'plan',
+  sub_agent_start: 'sub_agent',
+  synthesis_start: 'synthesis',
+};
+
+export function statusTracesToReActState(traces: StatusTrace[]): ReActStreamState | null {
+  if (!traces || traces.length === 0) return null;
+
+  const steps: ReasoningStep[] = [];
+  let stepIdx = 0;
+  let currentStep: ReasoningStep | null = null;
+
+  for (const trace of traces) {
+    const stepType = TRACE_TYPE_MAP[trace.type];
+    if (stepType) {
+      currentStep = {
+        id: `persisted-${stepIdx++}`,
+        type: stepType,
+        content: trace.content || '',
+        toolName: trace.data?.toolName as string | undefined,
+        toolInput: trace.data?.toolInput as string | undefined,
+        toolResult: trace.data?.toolResult as string | undefined,
+        agentName: trace.data?.agentName as string | undefined,
+        agentId: trace.data?.agentId as string | undefined,
+        startedAt: new Date(trace.timestamp).getTime(),
+      };
+      steps.push(currentStep);
+    } else if (trace.type.endsWith('_end')) {
+      if (currentStep) {
+        currentStep.completedAt = new Date(trace.timestamp).getTime();
+        if (trace.data?.toolResult) {
+          currentStep.toolResult = trace.data.toolResult as string;
+        }
+        currentStep = null;
+      }
+    }
+  }
+
+  if (steps.length === 0) return null;
+
+  return {
+    reasoningSteps: steps,
+    isReasoningExpanded: false,
+    activeStepType: null,
+    activeStepContent: '',
+  };
 }
 
 const INITIAL_STATE: ReActStreamState = {

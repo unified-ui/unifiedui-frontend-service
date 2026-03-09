@@ -1,11 +1,12 @@
 import type { FC, ReactNode } from 'react';
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { ScrollArea, Box, Text, Avatar, Stack, Loader, Paper, Tooltip, ActionIcon, CopyButton, Group, Button, Textarea } from '@mantine/core';
 import { IconUser, IconSparkles, IconCopy, IconCheck, IconBinaryTree, IconThumbUp, IconThumbDown, IconThumbUpFilled, IconThumbDownFilled, IconArrowDown, IconEdit, IconTrash, IconAlertTriangle, IconRefresh, IconFile, IconPhoto, IconFileTypePdf, IconFileTypeDoc, IconFileTypeXls, IconFileTypePpt, IconFileText, IconMusic, IconFileCode } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { MessageResponse, AttachmentMetadata, ReactionResponse } from '../../../api/types';
 import type { ReActStreamState } from '../../../hooks/chat/useReActChat';
+import { statusTracesToReActState } from '../../../hooks/chat/useReActChat';
 import { ConfirmDeleteDialog } from '../../common';
 import { FeedbackDialog } from '../FeedbackDialog';
 import { ReasoningSection } from '../ReasoningSection';
@@ -342,6 +343,19 @@ const MessageBubble: FC<MessageBubbleProps> = ({
   const [editContent, setEditContent] = useState(content);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [persistedReasoningExpanded, setPersistedReasoningExpanded] = useState(false);
+
+  const isCurrentlyStreaming = !!isStreaming && !!streamingContent;
+
+  const effectiveReActState = useMemo(() => {
+    if (isCurrentlyStreaming && reActState && reActState.reasoningSteps.length > 0) {
+      return reActState;
+    }
+    if (message.statusTraces && message.statusTraces.length > 0) {
+      return statusTracesToReActState(message.statusTraces);
+    }
+    return null;
+  }, [isCurrentlyStreaming, reActState, message.statusTraces]);
 
   const handleViewTrace = useCallback(() => {
     if (extMessageId && onViewTrace) {
@@ -459,11 +473,11 @@ const MessageBubble: FC<MessageBubbleProps> = ({
           <IconSparkles size={16} />
         </Avatar>
         <Box className={classes.assistantContent}>
-          {reActState && reActState.reasoningSteps.length > 0 && onToggleReasoning && (
+          {effectiveReActState && effectiveReActState.reasoningSteps.length > 0 && (
             <ReasoningSection
-              reActState={reActState}
-              isStreaming={!!isStreaming}
-              onToggle={onToggleReasoning}
+              reActState={isCurrentlyStreaming ? effectiveReActState : { ...effectiveReActState, isReasoningExpanded: persistedReasoningExpanded }}
+              isStreaming={isCurrentlyStreaming}
+              onToggle={isCurrentlyStreaming && onToggleReasoning ? onToggleReasoning : () => setPersistedReasoningExpanded(prev => !prev)}
               alwaysExpanded={alwaysExpandReasoning}
             />
           )}

@@ -299,6 +299,8 @@ export const ConversationsPage: FC = () => {
                 ? (convList.isNewChat ? t('conversations:typeToStart') : t('conversations:messageInput'))
                 : t('conversations:selectAgentToStart')
             }
+            reActState={chat.hasReasoningSteps ? chat.reActState : undefined}
+            onToggleReasoning={() => chat.setIsReasoningExpanded(!chat.reActState.isReasoningExpanded)}
             headerSlot={headerSlot}
             tracingSlot={tracingSlot}
             emptyStateSlot={emptyStateSlot}

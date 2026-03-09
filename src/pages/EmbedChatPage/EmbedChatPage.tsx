@@ -224,6 +224,8 @@ export const EmbedChatPage: FC = () => {
         highlightedExtMessageId={tracing.highlightedMessageExtId}
         highlightedUserMessageId={tracing.highlightedUserMessageId}
         inputDisabled={!selectedChatAgentId}
+        reActState={chat.hasReasoningSteps ? chat.reActState : undefined}
+        onToggleReasoning={() => chat.setIsReasoningExpanded(!chat.reActState.isReasoningExpanded)}
         headerSlot={headerSlot}
         emptyStateSlot={emptyStateSlot}
         tracingSlot={tracingSlot}

@@ -16,19 +16,19 @@ applyTo: "**"
 
 Read the relevant instruction file **before** working in that area.
 
-| File                                                                               | Read when...                                                          |
-| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| [react-structure.instructions.md](./react-structure.instructions.md)               | Creating new pages, components, or modifying folder structure         |
-| [design-system.instructions.md](./design-system.instructions.md)                   | Styling anything — colors, spacing, typography, light/dark mode       |
-| [api-client.instructions.md](./api-client.instructions.md)                         | Adding API calls, new endpoints, or working with IdentityContext      |
-| [ui-patterns.instructions.md](./ui-patterns.instructions.md)                       | Implementing scrolling, tabs, dialogs, forms, lists, or detail pages  |
-| [instruction-management.instructions.md](./instruction-management.instructions.md) | After completing work — decides if/how to update docs                 |
-| [components/layout.instructions.md](./components/layout.instructions.md)           | Touching MainLayout, Sidebar, Header, or page shells                  |
-| [components/data-table.instructions.md](./components/data-table.instructions.md)   | Working with DataTable, list pages, infinite scroll, or search/filter |
-| [components/tracing.instructions.md](./components/tracing.instructions.md)         | Working with trace visualization, TracingVisualDialog, or canvas      |
-| [branding.instructions.md](./branding.instructions.md)                             | Adding/changing tenant branding, login page customization, assets     |
-| [testing.instructions.md](./testing.instructions.md)                               | Writing tests, running tests, understanding test patterns             |
-| [github-pipelines.instructions.md](./github-pipelines.instructions.md)             | Working with CI/CD workflows, adding pipelines, coverage thresholds   |
+| File                                                                                            | Read when...                                                          |
+| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [react-structure.instructions.md](./instructions/react-structure.instructions.md)               | Creating new pages, components, or modifying folder structure         |
+| [design-system.instructions.md](./instructions/design-system.instructions.md)                   | Styling anything — colors, spacing, typography, light/dark mode       |
+| [api-client.instructions.md](./instructions/api-client.instructions.md)                         | Adding API calls, new endpoints, or working with IdentityContext      |
+| [ui-patterns.instructions.md](./instructions/ui-patterns.instructions.md)                       | Implementing scrolling, tabs, dialogs, forms, lists, or detail pages  |
+| [instruction-management.instructions.md](./instructions/instruction-management.instructions.md) | After completing work — decides if/how to update docs                 |
+| [components/layout.instructions.md](./instructions/components/layout.instructions.md)           | Touching MainLayout, Sidebar, Header, or page shells                  |
+| [components/data-table.instructions.md](./instructions/components/data-table.instructions.md)   | Working with DataTable, list pages, infinite scroll, or search/filter |
+| [components/tracing.instructions.md](./instructions/components/tracing.instructions.md)         | Working with trace visualization, TracingVisualDialog, or canvas      |
+| [branding.instructions.md](./instructions/branding.instructions.md)                             | Adding/changing tenant branding, login page customization, assets     |
+| [testing.instructions.md](./instructions/testing.instructions.md)                               | Writing tests, running tests, understanding test patterns             |
+| [github-pipelines.instructions.md](./instructions/github-pipelines.instructions.md)             | Working with CI/CD workflows, adding pipelines, coverage thresholds   |
 
 ---
 
@@ -131,7 +131,7 @@ export const MyComponent: FC<Props> = ({ ... }) => {
 
 ## Instruction Management (Summary)
 
-After completing work, evaluate whether documentation needs updating. Full rules in [instruction-management.instructions.md](./instruction-management.instructions.md).
+After completing work, evaluate whether documentation needs updating. Full rules in [instruction-management.instructions.md](./instructions/instruction-management.instructions.md).
 
 **Update docs when:**
 

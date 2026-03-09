@@ -8,9 +8,11 @@ import {
   type MessageResponse,
   type FileAttachment,
   type ReactionResponse,
+  type SSEStreamMessage,
 } from '../../api/types';
 import { filesToAttachments } from '../../utils/fileUtils';
 import type { UnifiedUIAPIClient } from '../../api/client';
+import type { ReActStreamState, ReasoningStep } from './useReActChat';
 
 const CONTEXT_DATA_PREFIX = 'ctx_';
 
@@ -56,6 +58,9 @@ interface UseChatReturn {
   abortControllerRef: React.RefObject<AbortController | null>;
   justCreatedConversationRef: React.RefObject<string | null>;
   reactions: Map<string, ReactionResponse>;
+  reActState: ReActStreamState;
+  hasReasoningSteps: boolean;
+  setIsReasoningExpanded: (expanded: boolean) => void;
   handleSendMessage: (content: string, attachments?: File[]) => Promise<void>;
   handleEditMessage: (messageId: string, newContent: string) => Promise<void>;
   handleDeleteMessage: (messageId: string) => Promise<void>;
@@ -92,6 +97,91 @@ export function useChat({
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const justCreatedConversationRef = useRef<string | null>(null);
+
+  // ReACT reasoning state
+  const [reActState, setReActState] = useState<ReActStreamState>({
+    reasoningSteps: [],
+    isReasoningExpanded: true,
+    activeStepType: null,
+    activeStepContent: '',
+  });
+  const activeStepRef = useRef<string>('');
+  const stepIdCounterRef = useRef(0);
+
+  const nextStepId = useCallback(() => `step-${++stepIdCounterRef.current}`, []);
+
+  const setIsReasoningExpanded = useCallback((expanded: boolean) => {
+    setReActState(prev => ({ ...prev, isReasoningExpanded: expanded }));
+  }, []);
+
+  const finalizeActiveStep = useCallback(() => {
+    if (!activeStepRef.current) return;
+    const stepId = activeStepRef.current;
+    setReActState(prev => ({
+      ...prev,
+      reasoningSteps: prev.reasoningSteps.map(s =>
+        s.id === stepId ? { ...s, completedAt: Date.now() } : s
+      ),
+      activeStepType: null,
+      activeStepContent: '',
+    }));
+    activeStepRef.current = '';
+  }, []);
+
+  const createStep = useCallback((type: ReasoningStep['type'], config?: SSEStreamMessage['config']) => {
+    finalizeActiveStep();
+    const id = nextStepId();
+    activeStepRef.current = id;
+    const step: ReasoningStep = {
+      id,
+      type,
+      content: '',
+      toolName: config?.toolName,
+      toolInput: config?.toolInput,
+      agentName: config?.agentName,
+      agentId: config?.agentId,
+      startedAt: Date.now(),
+    };
+    setReActState(prev => ({
+      ...prev,
+      reasoningSteps: [...prev.reasoningSteps, step],
+      activeStepType: type,
+      activeStepContent: '',
+      isReasoningExpanded: true,
+    }));
+  }, [finalizeActiveStep, nextStepId]);
+
+  const appendStepContent = useCallback((content: string) => {
+    const stepId = activeStepRef.current;
+    if (!stepId) return;
+    setReActState(prev => ({
+      ...prev,
+      activeStepContent: prev.activeStepContent + content,
+      reasoningSteps: prev.reasoningSteps.map(s =>
+        s.id === stepId ? { ...s, content: s.content + content } : s
+      ),
+    }));
+  }, []);
+
+  const resetReActState = useCallback(() => {
+    setReActState({
+      reasoningSteps: [],
+      isReasoningExpanded: true,
+      activeStepType: null,
+      activeStepContent: '',
+    });
+    activeStepRef.current = '';
+  }, []);
+
+  const onReActStreamEnd = useCallback(() => {
+    finalizeActiveStep();
+    setReActState(prev => ({
+      ...prev,
+      isReasoningExpanded: false,
+      activeStepType: null,
+      activeStepContent: '',
+    }));
+  }, [finalizeActiveStep]);
 
   const resetStreamingState = useCallback(() => {
     setIsStreaming(false);
@@ -265,6 +355,7 @@ export function useChat({
 
         setStreamingContent('');
         setStreamingMessageId(undefined);
+        onReActStreamEnd();
       },
       async (code: string, message: string, details: string) => {
         console.error('Stream error:', { code, message, details });
@@ -315,21 +406,41 @@ export function useChat({
           }
         }, 30);
       },
-      undefined, // onReasoningStart
-      undefined, // onReasoningStream
-      undefined, // onReasoningEnd
-      undefined, // onToolCallStart
-      undefined, // onToolCallStream
-      undefined, // onToolCallEnd
-      undefined, // onPlanStart
-      undefined, // onPlanStream
-      undefined, // onPlanComplete
-      undefined, // onSubAgentStart
-      undefined, // onSubAgentStream
-      undefined, // onSubAgentEnd
-      undefined, // onSynthesisStart
-      undefined, // onSynthesisStream
-      undefined, // onTrace
+      (config?: SSEStreamMessage['config']) => createStep('reasoning', config),
+      (content: string) => appendStepContent(content),
+      () => finalizeActiveStep(),
+      (config?: SSEStreamMessage['config']) => createStep('tool_call', config),
+      (content: string) => appendStepContent(content),
+      (config?: SSEStreamMessage['config']) => {
+        const stepId = activeStepRef.current;
+        if (stepId) {
+          setReActState(prev => ({
+            ...prev,
+            reasoningSteps: prev.reasoningSteps.map(s =>
+              s.id === stepId
+                ? {
+                    ...s,
+                    completedAt: Date.now(),
+                    toolResult: config?.toolResult,
+                    toolName: config?.toolName ?? s.toolName,
+                  }
+                : s
+            ),
+            activeStepType: null,
+            activeStepContent: '',
+          }));
+          activeStepRef.current = '';
+        }
+      },
+      (config?: SSEStreamMessage['config']) => createStep('plan', config),
+      (content: string) => appendStepContent(content),
+      () => finalizeActiveStep(),
+      (config?: SSEStreamMessage['config']) => createStep('sub_agent', config),
+      (content: string) => appendStepContent(content),
+      () => finalizeActiveStep(),
+      (config?: SSEStreamMessage['config']) => createStep('synthesis', config),
+      (content: string) => appendStepContent(content),
+      () => {}, // onTrace — handled externally
       foundryToken,
       abortControllerRef.current?.signal
     );
@@ -339,7 +450,7 @@ export function useChat({
         break;
       }
     }
-  }, [apiClient, tenantId, selectedChatAgentId, searchParams, setConversations, setCurrentConversation, onRefreshTraces]);
+  }, [apiClient, tenantId, selectedChatAgentId, searchParams, setConversations, setCurrentConversation, onRefreshTraces, createStep, appendStepContent, finalizeActiveStep, onReActStreamEnd]);
 
   const handleSendMessage = useCallback(async (content: string, attachments?: File[]) => {
     if (!apiClient || !tenantId || !selectedChatAgentId) {
@@ -389,6 +500,7 @@ export function useChat({
     setMessages(prev => [...prev, optimisticUserMessage]);
     setIsStreaming(true);
     setStreamingContent('');
+    resetReActState();
 
     if (!activeConversationId) {
       try {
@@ -455,7 +567,7 @@ export function useChat({
         });
       }
     }
-  }, [apiClient, tenantId, selectedChatAgentId, conversationId, chatAgents, currentConversation, getFoundryToken, nav, setCurrentConversation, setConversations, executeStream]);
+  }, [apiClient, tenantId, selectedChatAgentId, conversationId, chatAgents, currentConversation, getFoundryToken, nav, setCurrentConversation, setConversations, executeStream, resetReActState]);
 
   const handleEditMessage = useCallback(async (messageId: string, newContent: string) => {
     if (!apiClient || !tenantId || !conversationId) return;
@@ -563,6 +675,9 @@ export function useChat({
     handleReaction,
     handleCancelStream,
     reactions,
+    reActState,
+    hasReasoningSteps: reActState.reasoningSteps.length > 0,
+    setIsReasoningExpanded,
     resetStreamingState,
     loadConversationMessages,
   };
