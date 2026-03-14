@@ -144,7 +144,7 @@ export const ChatAgentsPage: FC = () => {
         onRowClick={handleOpen}
         onOpen={handleOpen}
         onEdit={handleEdit}
-        onShare={handleManageAccess}
+        onManageAccess={handleManageAccess}
         onDuplicate={handleDuplicate}
         onEmbedSetup={handleEmbedSetup}
         onDelete={handleDeleteClick}

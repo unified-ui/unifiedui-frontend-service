@@ -40,6 +40,10 @@ interface FormValues {
   secret_value: string;
   username: string;
   password: string;
+  // For ENTRA_ID_APP_REGISTRATION
+  entra_tenant_id: string;
+  entra_client_id: string;
+  entra_client_secret: string;
 }
 
 export interface EditCredentialDialogProps {
@@ -96,6 +100,9 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
       secret_value: '',
       username: '',
       password: '',
+      entra_tenant_id: '',
+      entra_client_id: '',
+      entra_client_secret: '',
     },
     validate: {
       name: (value) => {
@@ -120,6 +127,9 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
         secret_value: '',
         username: '',
         password: '',
+        entra_tenant_id: '',
+        entra_client_id: '',
+        entra_client_secret: '',
       });
       form.resetDirty();
     },
@@ -186,6 +196,14 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
       } else if (credential?.type === CredentialTypeEnum.API_KEY) {
         if (values.secret_value.trim()) {
           secretValue = values.secret_value.trim();
+        }
+      } else if (credential?.type === CredentialTypeEnum.ENTRA_ID_APP_REGISTRATION) {
+        if (values.entra_tenant_id.trim() || values.entra_client_id.trim() || values.entra_client_secret.trim()) {
+          secretValue = JSON.stringify({
+            tenant_id: values.entra_tenant_id.trim(),
+            client_id: values.entra_client_id.trim(),
+            client_secret: values.entra_client_secret.trim(),
+          });
         }
       }
 
@@ -381,6 +399,29 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
                     placeholder={t('credentials:leaveEmptyToKeep')}
                     description={t('credentials:fillOnlyToChangePassword')}
                     {...form.getInputProps('password')}
+                  />
+                </>
+              )}
+
+              {credential?.type === CredentialTypeEnum.ENTRA_ID_APP_REGISTRATION && (
+                <>
+                  <TextInput
+                    label={t('credentials:newTenantId')}
+                    placeholder={t('credentials:leaveEmptyToKeep')}
+                    description={t('credentials:fillOnlyToChangeTenantId')}
+                    {...form.getInputProps('entra_tenant_id')}
+                  />
+                  <TextInput
+                    label={t('credentials:newClientId')}
+                    placeholder={t('credentials:leaveEmptyToKeep')}
+                    description={t('credentials:fillOnlyToChangeClientId')}
+                    {...form.getInputProps('entra_client_id')}
+                  />
+                  <PasswordInput
+                    label={t('credentials:newClientSecret')}
+                    placeholder={t('credentials:leaveEmptyToKeep')}
+                    description={t('credentials:fillOnlyToChangeClientSecret')}
+                    {...form.getInputProps('entra_client_secret')}
                   />
                 </>
               )}

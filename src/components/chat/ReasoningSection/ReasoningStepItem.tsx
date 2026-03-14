@@ -101,13 +101,18 @@ const StepContent: FC<{ step: ReasoningStep; isActive: boolean }> = ({ step, isA
   );
 };
 
+const formatValue = (value: unknown): string => {
+  if (typeof value === 'object' && value !== null) return JSON.stringify(value, null, 2);
+  return String(value);
+};
+
 const ToolCallContent: FC<{ step: ReasoningStep; isActive: boolean }> = ({ step, isActive }) => {
   return (
     <Box className={classes.toolCallContent}>
       {step.toolInput && (
         <Box className={classes.toolSection}>
           <Text size="xs" c="dimmed" fw={600} className={classes.toolSectionLabel}>Input</Text>
-          <pre className={classes.toolCodeBlock}>{step.toolInput}</pre>
+          <pre className={classes.toolCodeBlock}>{formatValue(step.toolInput)}</pre>
         </Box>
       )}
       {step.content && (
@@ -129,7 +134,7 @@ const ToolCallContent: FC<{ step: ReasoningStep; isActive: boolean }> = ({ step,
       {step.toolResult && (
         <Box className={classes.toolSection}>
           <Text size="xs" c="dimmed" fw={600} className={classes.toolSectionLabel}>Result</Text>
-          <pre className={classes.toolCodeBlock}>{step.toolResult}</pre>
+          <pre className={classes.toolCodeBlock}>{formatValue(step.toolResult)}</pre>
         </Box>
       )}
       {isActive && !step.completedAt && (

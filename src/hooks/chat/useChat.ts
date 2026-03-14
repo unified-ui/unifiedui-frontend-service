@@ -132,12 +132,13 @@ export function useChat({
     finalizeActiveStep();
     const id = nextStepId();
     activeStepRef.current = id;
+    const toolInput = config?.toolInput;
     const step: ReasoningStep = {
       id,
       type,
       content: '',
       toolName: config?.toolName,
-      toolInput: config?.toolInput,
+      toolInput: typeof toolInput === 'object' ? JSON.stringify(toolInput, null, 2) : toolInput,
       agentName: config?.agentName,
       agentId: config?.agentId,
       startedAt: Date.now(),
@@ -421,7 +422,7 @@ export function useChat({
                 ? {
                     ...s,
                     completedAt: Date.now(),
-                    toolResult: config?.toolResult,
+                    toolResult: typeof config?.toolResult === 'object' ? JSON.stringify(config.toolResult, null, 2) : config?.toolResult,
                     toolName: config?.toolName ?? s.toolName,
                   }
                 : s

@@ -102,6 +102,8 @@ export const CredentialTypeEnum = {
   API_KEY: 'API_KEY',
   BASIC_AUTH: 'BASIC_AUTH',
   OPENAPI_CONNECTION: 'OPENAPI_CONNECTION',
+  AI_MODEL_PROVIDER: 'AI_MODEL_PROVIDER',
+  ENTRA_ID_APP_REGISTRATION: 'ENTRA_ID_APP_REGISTRATION',
 } as const;
 
 export type CredentialTypeEnum = typeof CredentialTypeEnum[keyof typeof CredentialTypeEnum];
@@ -160,6 +162,28 @@ export interface FoundryChatAgentConfig {
   api_version: FoundryApiVersionEnum;
   project_endpoint: string;
   agent_name: string;
+}
+
+// ========== REST API Chat Agent Config Types ==========
+
+export const RestApiAuthTypeEnum = {
+  ANONYMOUS: 'ANONYMOUS',
+  BASIC_AUTH: 'BASIC_AUTH',
+  API_KEY: 'API_KEY',
+  ENTRA_ID_USER_TOKEN: 'ENTRA_ID_USER_TOKEN',
+  ENTRA_ID_APP_REGISTRATION: 'ENTRA_ID_APP_REGISTRATION',
+} as const;
+
+export type RestApiAuthTypeEnum = typeof RestApiAuthTypeEnum[keyof typeof RestApiAuthTypeEnum];
+
+export interface RestApiChatAgentConfig {
+  auth_type: RestApiAuthTypeEnum;
+  invoke_endpoint: string;
+  credential_id?: string | null;
+  api_key_header_name?: string;
+  use_unified_chat_history: boolean;
+  chat_history_count?: number;
+  create_conversation_endpoint?: string | null;
 }
 
 // ========== Agent Service Types ==========
