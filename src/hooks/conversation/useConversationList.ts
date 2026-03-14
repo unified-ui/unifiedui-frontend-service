@@ -140,12 +140,13 @@ export function useConversationList({
   }, [apiClient, tenantId, userId]);
 
   useEffect(() => {
+    if (conversationId) return;
     const queryAppId = searchParams.get('agent');
     if (queryAppId && queryAppId !== selectedChatAgentId) {
       setSelectedChatAgentId(queryAppId);
       localStorage.setItem(STORAGE_KEY_LAST_APP, queryAppId);
     }
-  }, [searchParams, selectedChatAgentId]);
+  }, [searchParams, selectedChatAgentId, conversationId]);
 
   const resetStreamingState = useCallback(() => {
   }, []);

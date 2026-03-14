@@ -111,6 +111,16 @@ export const ConversationsPage: FC = () => {
   const handleNewChat = useCallback(() => {
     chat.resetStreamingState();
     convList.handleNewChat(chat.abortControllerRef);
+    if (!conversationId) {
+      chat.setIsLoadingMessages(false);
+      triggerFocus();
+    }
+  }, [chat, convList, conversationId, triggerFocus]);
+
+  const handleNewChatWithAgent = useCallback((agentId: string) => {
+    chat.resetStreamingState();
+    convList.handleChatAgentChange(agentId);
+    convList.handleNewChat(chat.abortControllerRef);
   }, [chat, convList]);
 
   const handleSelectConversation = useCallback((id: string) => {
@@ -192,6 +202,7 @@ export const ConversationsPage: FC = () => {
       hasTraces={tracing.traces.length > 0}
       messages={chat.messages}
       onChatAgentChange={convList.handleChatAgentChange}
+      onNewChatWithAgent={handleNewChatWithAgent}
       onShare={handleShare}
       onToggleFavorite={() => {
         if (convList.currentConversation) {
