@@ -38,6 +38,7 @@ import {
   type RestApiChatAgentConfig,
 } from '../../api/types';
 import { TagInput } from '../common';
+import { GreetingMessagesInput } from '../common';
 import { CreateCredentialDialog } from './CreateCredentialDialog';
 
 const CHAT_AGENT_TYPES = [
@@ -114,6 +115,7 @@ interface FormValues {
   rest_api_chat_history_count: number;
   rest_api_enable_conversation_endpoint: boolean;
   rest_api_create_conversation_endpoint: string;
+  greeting_messages: string[];
 }
 
 export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
@@ -164,6 +166,7 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
       rest_api_chat_history_count: 30,
       rest_api_enable_conversation_endpoint: false,
       rest_api_create_conversation_endpoint: '',
+      greeting_messages: [],
     },
     validate: {
       name: (value) => {
@@ -417,6 +420,9 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
         config: config as Record<string, unknown> | undefined,
         embed_allowed_origins: values.embed_allowed_origins.length > 0
           ? values.embed_allowed_origins.join(';')
+          : undefined,
+        greeting_messages: values.greeting_messages.filter(Boolean).length > 0
+          ? values.greeting_messages.filter(Boolean)
           : undefined,
       });
 
@@ -816,6 +822,16 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
                 />
               </Box>
             </Box>
+
+            {form.values.type && form.values.type !== ChatAgentTypeEnum.REACT_AGENT && (
+              <>
+                <Divider />
+                <GreetingMessagesInput
+                  value={form.values.greeting_messages}
+                  onChange={(msgs) => form.setFieldValue('greeting_messages', msgs)}
+                />
+              </>
+            )}
 
             <Group justify="flex-end" mt="md">
               <Button variant="default" onClick={handleClose} disabled={isSubmitting}>

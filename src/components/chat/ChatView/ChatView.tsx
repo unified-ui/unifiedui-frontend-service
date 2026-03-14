@@ -147,10 +147,8 @@ export const ChatView: FC<ChatViewProps> = ({
         {headerSlot}
 
         {showEmpty ? (
-          <>
-            <Box className={classes.contentArea}>
-              {emptyStateSlot}
-            </Box>
+          <Box className={classes.welcomeLayout}>
+            {emptyStateSlot}
             <ChatInput
               ref={chatInputRef}
               onSend={onSendMessage ?? (() => {})}
@@ -159,7 +157,7 @@ export const ChatView: FC<ChatViewProps> = ({
               isStreaming={isStreaming}
               placeholder={inputPlaceholder}
             />
-          </>
+          </Box>
         ) : (
           <>
             <Box className={classes.contentArea}>

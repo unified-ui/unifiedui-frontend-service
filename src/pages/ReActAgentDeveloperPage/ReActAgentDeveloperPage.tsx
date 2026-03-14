@@ -21,13 +21,12 @@ import {
   Alert,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { DelayedTooltip } from '../../components/common';
+import { DelayedTooltip, GreetingMessagesInput } from '../../components/common';
 import {
   IconPlus,
   IconX,
   IconDeviceFloppy,
   IconPlayerPlay,
-  IconTrash,
   IconBrain,
   IconTool,
   IconArrowLeft,
@@ -266,53 +265,6 @@ const ToolsSection: FC<{
         onClick={onCreateNew}
       >
         {t('tools.createNewTool')}
-      </Button>
-    </Stack>
-  );
-};
-
-const GreetingMessagesSection: FC<{
-  messages: string[];
-  onChange: (messages: string[]) => void;
-}> = ({ messages, onChange }) => {
-  const { t } = useTranslation('reactAgent');
-
-  const handleAdd = useCallback(() => {
-    onChange([...messages, '']);
-  }, [messages, onChange]);
-
-  const handleRemove = useCallback((index: number) => {
-    onChange(messages.filter((_: string, i: number) => i !== index));
-  }, [messages, onChange]);
-
-  const handleChange = useCallback((index: number, value: string) => {
-    const updated = [...messages];
-    updated[index] = value;
-    onChange(updated);
-  }, [messages, onChange]);
-
-  return (
-    <Stack gap="sm">
-      {messages.length === 0 && (
-        <Text size="sm" c="dimmed">{t('greetingMessages.noMessages')}</Text>
-      )}
-      {messages.map((msg: string, i: number) => (
-        <Group key={i} gap="xs" wrap="nowrap" align="flex-start">
-          <Textarea
-            value={msg}
-            onChange={(e) => handleChange(i, e.currentTarget.value)}
-            placeholder={t('greetingMessages.messagePlaceholder')}
-            size="sm"
-            minRows={2}
-            style={{ flex: 1 }}
-          />
-          <ActionIcon size="sm" variant="subtle" color="red" onClick={() => handleRemove(i)} mt={6}>
-            <IconTrash size={14} />
-          </ActionIcon>
-        </Group>
-      ))}
-      <Button variant="light" size="xs" leftSection={<IconPlus size={14} />} onClick={handleAdd}>
-        {t('greetingMessages.addMessage')}
       </Button>
     </Stack>
   );
@@ -914,8 +866,8 @@ export const ReActAgentDeveloperPage: FC = () => {
                       </Group>
                     </Accordion.Control>
                     <Accordion.Panel>
-                      <GreetingMessagesSection
-                        messages={config.greeting_messages}
+                      <GreetingMessagesInput
+                        value={config.greeting_messages}
                         onChange={(msgs) => updateConfig('greeting_messages', msgs)}
                       />
                     </Accordion.Panel>

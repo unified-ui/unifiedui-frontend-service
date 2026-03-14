@@ -50,7 +50,7 @@ import {
   type FoundryChatAgentConfig,
   type RestApiChatAgentConfig,
 } from '../../../api/types';
-import { TagInput, ManageAccessTable, AddPrincipalDialog } from '../../common';
+import { TagInput, ManageAccessTable, AddPrincipalDialog, GreetingMessagesInput } from '../../common';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
 import type { PrincipalPermission } from '../../common/ManageAccessTable/ManageAccessTable';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
@@ -114,6 +114,7 @@ interface FormValues {
   tags: string[];
   embed_allowed_origins: string[];
   is_active: boolean;
+  greeting_messages: string[];
   // N8N Config
   n8n_api_version: string;
   n8n_workflow_type: string;
@@ -179,6 +180,7 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
       tags: [],
       embed_allowed_origins: [],
       is_active: true,
+      greeting_messages: [],
       // N8N Config defaults
       n8n_api_version: N8NApiVersionEnum.V1,
       n8n_workflow_type: N8NWorkflowTypeEnum.N8N_CHAT_AGENT_WORKFLOW,
@@ -416,6 +418,7 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
         ? data.embed_allowed_origins.split(';').filter(Boolean)
         : [],
       is_active: data.is_active,
+      greeting_messages: data.greeting_messages || [],
       // N8N Config from data
       n8n_api_version: n8nConfig?.api_version || N8NApiVersionEnum.V1,
       n8n_workflow_type: n8nConfig?.workflow_type || N8NWorkflowTypeEnum.N8N_CHAT_AGENT_WORKFLOW,
@@ -585,6 +588,7 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
         embed_allowed_origins: values.embed_allowed_origins.length > 0
           ? values.embed_allowed_origins.join(';')
           : undefined,
+        greeting_messages: values.greeting_messages.filter(Boolean),
       });
 
       // Update tags if changed
@@ -1132,6 +1136,12 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
                   />
                 </Box>
               </Box>
+
+              <Divider />
+              <GreetingMessagesInput
+                value={form.values.greeting_messages}
+                onChange={(msgs) => form.setFieldValue('greeting_messages', msgs)}
+              />
 
               <Divider />
 

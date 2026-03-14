@@ -30,3 +30,5 @@ export { PermissionGate } from './PermissionGate';
 export type { PermissionGateProps } from './PermissionGate';
 export { OrganizationSettingsPanel } from './OrganizationSettingsPanel';
 export { OrganizationAccessPanel } from './OrganizationAccessPanel';
+export { GreetingMessagesInput } from './GreetingMessagesInput';
+export type { GreetingMessagesInputProps } from './GreetingMessagesInput';

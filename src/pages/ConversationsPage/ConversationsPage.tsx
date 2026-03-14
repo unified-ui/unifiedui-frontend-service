@@ -194,17 +194,27 @@ export const ConversationsPage: FC = () => {
     />
   );
 
-  const emptyStateSlot = convList.isNewChat ? (
-    <ChatEmptyState
-      icon={<IconMessageCircle size={64} />}
-      title={t('conversations:startNewConversation')}
-      description={
-        convList.selectedChatAgentId
-          ? t('conversations:typeToStart')
-          : t('conversations:selectAgentToStart')
-      }
-    />
-  ) : undefined;
+  const emptyStateSlot = convList.isNewChat ? (() => {
+    const selectedAgent = convList.chatAgents.find(a => a.id === convList.selectedChatAgentId);
+    const hasAgent = !!selectedAgent;
+    return (
+      <ChatEmptyState
+        icon={<IconMessageCircle size={64} />}
+        title={
+          hasAgent
+            ? t('conversations:welcomeTitleWithAgent', { agentName: selectedAgent.name })
+            : t('conversations:welcomeTitle')
+        }
+        description={
+          hasAgent
+            ? t('conversations:welcomeDescription')
+            : t('conversations:selectAgentToStart')
+        }
+        promptStarters={selectedAgent?.greeting_messages}
+        onStarterClick={hasAgent ? (msg) => chat.handleSendMessage(msg) : undefined}
+      />
+    );
+  })() : undefined;
 
   return (
     <MainLayout noPadding>

@@ -170,6 +170,8 @@ export const EmbedChatPage: FC = () => {
       icon={<IconMessageCircle size={64} />}
       title={chatAgent?.name || t('embedChatAgent', { agentId })}
       description={chatAgent?.description || ''}
+      promptStarters={chatAgent?.greeting_messages}
+      onStarterClick={chatAgent ? (msg) => chat.handleSendMessage(msg) : undefined}
     />
   ) : undefined;
 

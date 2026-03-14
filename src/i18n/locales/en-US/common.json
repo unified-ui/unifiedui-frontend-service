@@ -98,5 +98,11 @@
     "preview": "Chat Preview",
     "width": "Width",
     "height": "Height"
+  },
+  "greetingMessages": {
+    "title": "Greeting Messages",
+    "description": "Suggested prompts shown to users when starting a new chat.",
+    "placeholder": "Enter a starter prompt...",
+    "maxReached": "Maximum greeting messages reached"
   }
 }

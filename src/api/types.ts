@@ -951,6 +951,7 @@ export interface UpdateChatAgentRequest {
   config?: Record<string, unknown>;
   is_active?: boolean;
   embed_allowed_origins?: string;
+  greeting_messages?: string[];
 }
 
 export interface SetChatAgentPermissionRequest {

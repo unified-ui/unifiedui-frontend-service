@@ -54,6 +54,8 @@ export const ChatContent: FC<ChatContentProps> = ({
 }) => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const spacerRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageRefsMap = useRef<Map<string, HTMLDivElement>>(new Map());
   const userMessageRefsMap = useRef<Map<string, HTMLDivElement>>(new Map());
   const [flashingExtId, setFlashingExtId] = useState<string | null>(null);
@@ -61,6 +63,7 @@ export const ChatContent: FC<ChatContentProps> = ({
   const prevHighlightedRef = useRef<string | null>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const userScrolledUpRef = useRef(false);
+  const prevMessageCountRef = useRef(0);
 
   const setMessageRef = useCallback((extMessageId: string, element: HTMLDivElement | null) => {
     if (element) {
@@ -133,10 +136,39 @@ export const ChatContent: FC<ChatContentProps> = ({
   }, [highlightedUserMessageId]);
 
   useEffect(() => {
+    const prevCount = prevMessageCountRef.current;
+    prevMessageCountRef.current = messages.length;
+
+    if (messages.length > prevCount && messages.length > 0) {
+      const newMessage = messages[messages.length - 1];
+      if (newMessage.type === 'user') {
+        const element = userMessageRefsMap.current.get(newMessage.id);
+        if (element) {
+          const viewport = viewportRef.current;
+          if (spacerRef.current && viewport) {
+            spacerRef.current.style.minHeight = `${viewport.clientHeight}px`;
+          }
+          requestAnimationFrame(() => {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+          userScrolledUpRef.current = false;
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setShowScrollButton(false);
+          return;
+        }
+      }
+    }
+
     if (!userScrolledUpRef.current) {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, streamingContent]);
+  }, [messages]);
+
+  useEffect(() => {
+    if (!userScrolledUpRef.current && streamingContent) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [streamingContent]);
 
   useEffect(() => {
     if (isStreaming) {
@@ -146,6 +178,40 @@ export const ChatContent: FC<ChatContentProps> = ({
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [isStreaming]);
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      const viewport = viewportRef.current;
+      const spacer = spacerRef.current;
+      const endMarker = messagesEndRef.current;
+      if (!viewport || !spacer || !endMarker) return;
+
+      if (messages.length === 0) {
+        spacer.style.minHeight = '0px';
+        return;
+      }
+
+      let lastUserEl: HTMLDivElement | undefined;
+      for (let i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].type === 'user') {
+          lastUserEl = userMessageRefsMap.current.get(messages[i].id);
+          break;
+        }
+      }
+
+      if (!lastUserEl) {
+        spacer.style.minHeight = '0px';
+        return;
+      }
+
+      const viewportHeight = viewport.clientHeight;
+      const userRect = lastUserEl.getBoundingClientRect();
+      const endRect = endMarker.getBoundingClientRect();
+      const contentFromUserToEnd = endRect.top - userRect.top;
+
+      spacer.style.minHeight = `${Math.max(0, viewportHeight - contentFromUserToEnd)}px`;
+    });
+  }, [messages, streamingContent, isStreaming]);
 
   const lastUserMessageId = (() => {
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -181,68 +247,71 @@ export const ChatContent: FC<ChatContentProps> = ({
         scrollbarSize={8}
         onScrollPositionChange={handleScroll}
       >
-        <Stack gap="lg" className={classes.messagesContainer}>
-          {messages.map((message) => {
-            const messageExtId = message.type !== 'user' ? message.metadata?.extMessageId : undefined;
-            const isUser = message.type === 'user';
-            const isHighlighted = isUser
-              ? !!(highlightedUserMessageId && highlightedUserMessageId === message.id)
-              : !!(messageExtId && highlightedExtMessageId === messageExtId);
-            const isFlashing = isUser
-              ? !!(flashingUserMsgId === message.id)
-              : !!(messageExtId && flashingExtId === messageExtId);
-            const isLastUserMessage = message.id === lastUserMessageId;
-            const isError = message.status === 'failed';
-            const isCancelled = message.status === 'cancelled';
+        <Box className={classes.scrollContentWrapper}>
+          <Stack gap="lg" className={classes.messagesContainer}>
+            {messages.map((message) => {
+              const messageExtId = message.type !== 'user' ? message.metadata?.extMessageId : undefined;
+              const isUser = message.type === 'user';
+              const isHighlighted = isUser
+                ? !!(highlightedUserMessageId && highlightedUserMessageId === message.id)
+                : !!(messageExtId && highlightedExtMessageId === messageExtId);
+              const isFlashing = isUser
+                ? !!(flashingUserMsgId === message.id)
+                : !!(messageExtId && flashingExtId === messageExtId);
+              const isLastUserMessage = message.id === lastUserMessageId;
+              const isError = message.status === 'failed';
+              const isCancelled = message.status === 'cancelled';
 
-            if (isError) {
+              if (isError) {
+                return (
+                  <ErrorBubble
+                    key={message.id}
+                    message={message}
+                    onRetry={onRetry}
+                  />
+                );
+              }
+
+              const refSetter = (el: HTMLDivElement | null) => {
+                setUserMessageRef(message.id, el);
+                if (!isUser && messageExtId) {
+                  setMessageRef(messageExtId, el);
+                }
+              };
+
               return (
-                <ErrorBubble
+                <MessageBubble
                   key={message.id}
                   message={message}
-                  onRetry={onRetry}
+                  isStreaming={isStreaming && message.id === streamingMessageId}
+                  streamingContent={message.id === streamingMessageId ? streamingContent : undefined}
+                  isCancelled={isCancelled}
+                  onViewTrace={onViewTrace}
+                  isHighlighted={isHighlighted}
+                  isFlashing={isFlashing}
+                  onRefSet={refSetter}
+                  isLastUserMessage={isLastUserMessage}
+                  onEditMessage={onEditMessage}
+                  onDeleteMessage={onDeleteMessage}
+                  onReaction={onReaction}
+                  activeReaction={reactions?.get(message.id)}
+                  reActState={reActState}
+                  onToggleReasoning={onToggleReasoning}
+                  alwaysExpandReasoning={alwaysExpandReasoning}
                 />
               );
-            }
+            })}
 
-            const refSetter = (el: HTMLDivElement | null) => {
-              setUserMessageRef(message.id, el);
-              if (!isUser && messageExtId) {
-                setMessageRef(messageExtId, el);
-              }
-            };
+            {isStreaming && streamingContent && !streamingMessageId && (
+              <StreamingMessage content={streamingContent} />
+            )}
 
-            return (
-              <MessageBubble
-                key={message.id}
-                message={message}
-                isStreaming={isStreaming && message.id === streamingMessageId}
-                streamingContent={message.id === streamingMessageId ? streamingContent : undefined}
-                isCancelled={isCancelled}
-                onViewTrace={onViewTrace}
-                isHighlighted={isHighlighted}
-                isFlashing={isFlashing}
-                onRefSet={refSetter}
-                isLastUserMessage={isLastUserMessage}
-                onEditMessage={onEditMessage}
-                onDeleteMessage={onDeleteMessage}
-                onReaction={onReaction}
-                activeReaction={reactions?.get(message.id)}
-                reActState={reActState}
-                onToggleReasoning={onToggleReasoning}
-                alwaysExpandReasoning={alwaysExpandReasoning}
-              />
-            );
-          })}
-
-          {isStreaming && streamingContent && !streamingMessageId && (
-            <StreamingMessage content={streamingContent} />
-          )}
-
-          <ThinkingIndicator isVisible={!!isStreaming && !streamingContent && !streamingMessageId} />
-
+            <ThinkingIndicator isVisible={!!isStreaming && !streamingContent && !streamingMessageId} />
+          </Stack>
+          <div ref={messagesEndRef} />
+          <div ref={spacerRef} />
           <div ref={bottomRef} />
-        </Stack>
+        </Box>
       </ScrollArea>
 
       {showScrollButton && (
