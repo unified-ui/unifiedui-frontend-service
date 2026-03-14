@@ -519,7 +519,8 @@ export function useChat({
 
         justCreatedConversationRef.current = newConv.id;
 
-        nav(`/conversations/${newConv.id}`, { replace: true });
+        const qs = searchParams.toString();
+        nav(`/conversations/${newConv.id}${qs ? `?${qs}` : ''}`, { replace: true });
 
         setCurrentConversation(newConv);
         setConversations(prev => [newConv, ...prev]);

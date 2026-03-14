@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Drawer, Loader, Center, Title } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { IconMessageCircle } from '@tabler/icons-react';
@@ -22,6 +22,7 @@ import classes from './ConversationsPage.module.css';
 export const ConversationsPage: FC = () => {
   const { conversationId } = useParams<{ conversationId?: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { apiClient, selectedTenant, user, getFoundryToken } = useIdentity();
   const { trackVisit } = useRecentVisits();
   const { t } = useTranslation();
@@ -114,9 +115,10 @@ export const ConversationsPage: FC = () => {
       setTimeout(() => setSearchHighlightedMessageId(null), 2000);
     }
     if (targetConversationId !== conversationId) {
-      navigate(`/conversations/${targetConversationId}`);
+      const qs = searchParams.toString();
+      navigate(`/conversations/${targetConversationId}${qs ? `?${qs}` : ''}`);
     }
-  }, [conversationId, navigate]);
+  }, [conversationId, navigate, searchParams]);
 
   const handleEmbedSetup = useCallback(() => {
     if (convList.selectedChatAgentId) {

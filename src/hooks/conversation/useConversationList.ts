@@ -111,7 +111,7 @@ export function useConversationList({
         setChatAgents(appsData);
         setFavoriteIds(new Set(favoritesData.favorites.map(f => f.resource_id)));
 
-        const queryAppId = searchParams.get('chat-agent');
+        const queryAppId = searchParams.get('agent');
         const storedAppId = localStorage.getItem(STORAGE_KEY_LAST_APP);
 
         if (queryAppId) {
@@ -140,7 +140,7 @@ export function useConversationList({
   }, [apiClient, tenantId, userId]);
 
   useEffect(() => {
-    const queryAppId = searchParams.get('chat-agent');
+    const queryAppId = searchParams.get('agent');
     if (queryAppId && queryAppId !== selectedChatAgentId) {
       setSelectedChatAgentId(queryAppId);
       localStorage.setItem(STORAGE_KEY_LAST_APP, queryAppId);
@@ -153,8 +153,10 @@ export function useConversationList({
   const handleChatAgentChange = useCallback((chatAgentId: string) => {
     setSelectedChatAgentId(chatAgentId);
     localStorage.setItem(STORAGE_KEY_LAST_APP, chatAgentId);
-    setSearchParams({ 'chat-agent': chatAgentId });
-  }, [setSearchParams]);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('agent', chatAgentId);
+    setSearchParams(newParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const handleSidebarCollapse = useCallback((collapsed: boolean) => {
     setSidebarCollapsed(collapsed);
@@ -167,19 +169,21 @@ export function useConversationList({
     }
     setCurrentConversation(null);
 
+    const params = new URLSearchParams(searchParams);
     if (selectedChatAgentId) {
-      navigate(`/conversations?chat-agent=${selectedChatAgentId}`);
-    } else {
-      navigate('/conversations');
+      params.set('agent', selectedChatAgentId);
     }
-  }, [navigate, selectedChatAgentId]);
+    const qs = params.toString();
+    navigate(`/conversations${qs ? `?${qs}` : ''}`);
+  }, [navigate, selectedChatAgentId, searchParams]);
 
   const handleSelectConversation = useCallback((id: string, abortController: React.RefObject<AbortController | null>) => {
     if (abortController.current) {
       abortController.current.abort();
     }
-    navigate(`/conversations/${id}`);
-  }, [navigate]);
+    const qs = searchParams.toString();
+    navigate(`/conversations/${id}${qs ? `?${qs}` : ''}`);
+  }, [navigate, searchParams]);
 
   const handleToggleFavorite = useCallback(async (id: string) => {
     if (!apiClient || !tenantId || !userId) return;
@@ -233,11 +237,12 @@ export function useConversationList({
 
       if (currentConversation?.id === id) {
         setCurrentConversation(null);
+        const params = new URLSearchParams(searchParams);
         if (selectedChatAgentId) {
-          navigate(`/conversations?chat-agent=${selectedChatAgentId}`);
-        } else {
-          navigate('/conversations');
+          params.set('agent', selectedChatAgentId);
         }
+        const qs = params.toString();
+        navigate(`/conversations${qs ? `?${qs}` : ''}`);
       }
     } catch (error) {
       console.error('Failed to delete conversation:', error);
@@ -247,7 +252,7 @@ export function useConversationList({
         color: 'red',
       });
     }
-  }, [apiClient, tenantId, currentConversation?.id, selectedChatAgentId, navigate]);
+  }, [apiClient, tenantId, currentConversation?.id, selectedChatAgentId, navigate, searchParams]);
 
   const handleSidebarSearch = useCallback((query: string) => {
     setSidebarSearchQuery(query);

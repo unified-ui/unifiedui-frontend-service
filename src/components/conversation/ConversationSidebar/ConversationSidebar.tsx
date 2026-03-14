@@ -110,7 +110,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
 
   const [chatAgentSelectDialogOpen, setChatAgentSelectDialogOpen] = useState(false);
 
-  const selectedChatAgentId = searchParams.get('selected-chatAgentId');
+  const selectedChatAgentId = searchParams.get('selected');
 
   const selectedChatAgent = useMemo(() => {
     if (!selectedChatAgentId) return null;
@@ -127,15 +127,14 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
 
   const handleClearFilter = useCallback(() => {
     const newParams = new URLSearchParams(searchParams);
-    newParams.delete('selected-chatAgentId');
+    newParams.delete('selected');
     setSearchParams(newParams, { replace: true });
   }, [searchParams, setSearchParams]);
 
   const handleSelectChatAgent = useCallback((app: QuickListItemResponse) => {
     const newParams = new URLSearchParams(searchParams);
-    newParams.set('selected-chatAgentId', app.id);
-    newParams.set('chatAgentId', app.id);
-    newParams.set('chat-agent', app.id);
+    newParams.set('selected', app.id);
+    newParams.set('agent', app.id);
     setSearchParams(newParams, { replace: true });
   }, [searchParams, setSearchParams]);
 
