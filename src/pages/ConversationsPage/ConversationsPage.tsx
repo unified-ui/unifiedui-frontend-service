@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Drawer, Loader, Center, Title } from '@mantine/core';
@@ -32,6 +32,8 @@ export const ConversationsPage: FC = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [searchHighlightedMessageId, setSearchHighlightedMessageId] = useState<string | null>(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const focusTriggerRef = useRef(0);
+  const [focusTrigger, setFocusTrigger] = useState(0);
 
   const tenantId = selectedTenant?.id;
   const userId = user?.id;
@@ -71,6 +73,7 @@ export const ConversationsPage: FC = () => {
     if (!apiClient || !tenantId || !conversationId) {
       convList.setCurrentConversation(null);
       chat.setMessages([]);
+      chat.setIsLoadingMessages(false);
       return;
     }
 
@@ -95,6 +98,15 @@ export const ConversationsPage: FC = () => {
 
   const convPerm = convList.currentConversation?.my_permission;
   const canWriteConversation = !convPerm || convPerm === 'ADMIN' || convPerm === 'WRITE';
+
+  const triggerFocus = useCallback(() => {
+    focusTriggerRef.current += 1;
+    setFocusTrigger(focusTriggerRef.current);
+  }, []);
+
+  useEffect(() => {
+    triggerFocus();
+  }, [conversationId, convList.selectedChatAgentId]);
 
   const handleNewChat = useCallback(() => {
     chat.resetStreamingState();
@@ -130,6 +142,8 @@ export const ConversationsPage: FC = () => {
     convList.isLoadingConversations && !convList.conversations.length,
     1000,
   );
+
+  const showMessageLoading = useDelayedLoading(chat.isLoadingMessages, 500);
 
   if (convList.isLoadingConversations && !convList.conversations.length) {
     return (
@@ -283,7 +297,7 @@ export const ConversationsPage: FC = () => {
         >
           <ChatView
             messages={chat.messages}
-            isLoading={chat.isLoadingMessages}
+            isLoading={showMessageLoading}
             isStreaming={chat.isStreaming}
             streamingContent={chat.streamingContent}
             streamingMessageId={chat.streamingMessageId}
@@ -316,6 +330,7 @@ export const ConversationsPage: FC = () => {
             headerSlot={headerSlot}
             tracingSlot={tracingSlot}
             emptyStateSlot={emptyStateSlot}
+            focusTrigger={focusTrigger}
           />
         </Box>
         </Box>

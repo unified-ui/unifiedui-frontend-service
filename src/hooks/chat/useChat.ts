@@ -55,6 +55,7 @@ interface UseChatReturn {
   streamingContent: string;
   streamingMessageId: string | undefined;
   isLoadingMessages: boolean;
+  setIsLoadingMessages: React.Dispatch<React.SetStateAction<boolean>>;
   abortControllerRef: React.RefObject<AbortController | null>;
   justCreatedConversationRef: React.RefObject<string | null>;
   reactions: Map<string, ReactionResponse>;
@@ -189,6 +190,7 @@ export function useChat({
     setStreamingContent('');
     setStreamingMessageId(undefined);
     setMessages([]);
+    setIsLoadingMessages(true);
   }, []);
 
   const handleCancelStream = useCallback(() => {
@@ -225,6 +227,7 @@ export function useChat({
       setCurrentConversation(convData);
       const loadedMessages = [...messagesData.messages].reverse();
       setMessages(loadedMessages);
+      setIsLoadingMessages(false);
       setSelectedChatAgentId(convData.chat_agent_id);
 
       const assistantMessages = loadedMessages.filter(m => m.type === 'assistant' && !m.id.startsWith('temp-'));
@@ -251,9 +254,9 @@ export function useChat({
       });
       nav('/conversations');
     } finally {
-      setIsLoadingMessages(false);
+      if (isLoadingMessages) setIsLoadingMessages(false);
     }
-  }, [apiClient, tenantId, nav, setCurrentConversation, setSelectedChatAgentId]);
+  }, [apiClient, tenantId, nav, setCurrentConversation, setSelectedChatAgentId, isLoadingMessages]);
 
   const executeStream = useCallback(async (
     content: string,
@@ -672,6 +675,7 @@ export function useChat({
     streamingContent,
     streamingMessageId,
     isLoadingMessages,
+    setIsLoadingMessages,
     abortControllerRef,
     justCreatedConversationRef,
     handleSendMessage,

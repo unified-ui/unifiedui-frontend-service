@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from 'react';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Box, Text } from '@mantine/core';
 import { IconUpload } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +16,6 @@ export interface ChatViewProps {
   isStreaming?: boolean;
   streamingContent?: string;
   streamingMessageId?: string;
-  emptyStateMessage?: string;
   emptyStateSlot?: ReactNode;
 
   onSendMessage?: (content: string, attachments?: File[]) => void;
@@ -42,6 +41,8 @@ export interface ChatViewProps {
   onToggleReasoning?: () => void;
   alwaysExpandReasoning?: boolean;
 
+  focusTrigger?: number;
+
   headerSlot?: ReactNode;
   tracingSlot?: ReactNode;
 }
@@ -52,7 +53,6 @@ export const ChatView: FC<ChatViewProps> = ({
   isStreaming = false,
   streamingContent = '',
   streamingMessageId,
-  emptyStateMessage,
   emptyStateSlot,
 
   onSendMessage,
@@ -77,6 +77,8 @@ export const ChatView: FC<ChatViewProps> = ({
   reActState,
   onToggleReasoning,
   alwaysExpandReasoning,
+
+  focusTrigger,
 
   headerSlot,
   tracingSlot,
@@ -125,6 +127,12 @@ export const ChatView: FC<ChatViewProps> = ({
     }
   }, [enableFileDrop]);
 
+  useEffect(() => {
+    if (focusTrigger !== undefined) {
+      requestAnimationFrame(() => chatInputRef.current?.focus());
+    }
+  }, [focusTrigger]);
+
   const showEmpty = emptyStateSlot && messages.length === 0 && !isStreaming && !isLoading;
 
   return (
@@ -167,7 +175,6 @@ export const ChatView: FC<ChatViewProps> = ({
                 isStreaming={isStreaming}
                 streamingContent={streamingContent}
                 streamingMessageId={streamingMessageId}
-                emptyStateMessage={emptyStateMessage}
                 onViewTrace={showTracing ? onViewTrace : undefined}
                 highlightedExtMessageId={highlightedExtMessageId}
                 highlightedUserMessageId={highlightedUserMessageId}

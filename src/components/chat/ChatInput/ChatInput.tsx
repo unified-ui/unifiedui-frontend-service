@@ -29,6 +29,7 @@ export interface ChatInputProps {
 
 export interface ChatInputRef {
   handleFileDrop: (files: File[]) => void;
+  focus: () => void;
 }
 
 export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
@@ -103,6 +104,9 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
   useImperativeHandle(ref, () => ({
     handleFileDrop: (files: File[]) => {
       addFiles(files);
+    },
+    focus: () => {
+      textareaRef.current?.focus();
     },
   }), [attachments]);
 

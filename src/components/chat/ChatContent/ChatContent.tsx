@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from 'react';
-import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { ScrollArea, Box, Text, Avatar, Stack, Loader, Paper, Tooltip, ActionIcon, CopyButton, Group, Button, Textarea } from '@mantine/core';
 import { IconUser, IconSparkles, IconCopy, IconCheck, IconBinaryTree, IconThumbUp, IconThumbDown, IconThumbUpFilled, IconThumbDownFilled, IconArrowDown, IconEdit, IconTrash, IconAlertTriangle, IconRefresh, IconFile, IconPhoto, IconFileTypePdf, IconFileTypeDoc, IconFileTypeXls, IconFileTypePpt, IconFileText, IconMusic, IconFileCode } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
@@ -18,8 +18,6 @@ export interface ChatContentProps {
   isLoading?: boolean;
   isStreaming?: boolean;
   streamingContent?: string;
-  streamingMessageId?: string;
-  emptyStateMessage?: string;
   onViewTrace?: (extMessageId: string) => void;
   highlightedExtMessageId?: string | null;
   highlightedUserMessageId?: string | null;
@@ -39,7 +37,6 @@ export const ChatContent: FC<ChatContentProps> = ({
   isStreaming,
   streamingContent,
   streamingMessageId,
-  emptyStateMessage = 'Start a conversation by typing a message below.',
   onViewTrace,
   highlightedExtMessageId,
   highlightedUserMessageId,
@@ -64,6 +61,7 @@ export const ChatContent: FC<ChatContentProps> = ({
   const [showScrollButton, setShowScrollButton] = useState(false);
   const userScrolledUpRef = useRef(false);
   const prevMessageCountRef = useRef(0);
+  const pendingScrollToBottomRef = useRef(false);
 
   const setMessageRef = useCallback((extMessageId: string, element: HTMLDivElement | null) => {
     if (element) {
@@ -139,6 +137,14 @@ export const ChatContent: FC<ChatContentProps> = ({
     const prevCount = prevMessageCountRef.current;
     prevMessageCountRef.current = messages.length;
 
+    const isBulkLoad = prevCount === 0 && messages.length > 1;
+
+    if (isBulkLoad) {
+      userScrolledUpRef.current = false;
+      pendingScrollToBottomRef.current = true;
+      return;
+    }
+
     if (messages.length > prevCount && messages.length > 0) {
       const newMessage = messages[messages.length - 1];
       if (newMessage.type === 'user') {
@@ -163,6 +169,18 @@ export const ChatContent: FC<ChatContentProps> = ({
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  useLayoutEffect(() => {
+    if (!pendingScrollToBottomRef.current) return;
+    if (spacerRef.current) spacerRef.current.style.minHeight = '0px';
+    const viewport = viewportRef.current;
+    if (viewport && messages.length > 0) {
+      viewport.scrollTop = viewport.scrollHeight;
+      pendingScrollToBottomRef.current = false;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setShowScrollButton(false);
+    }
+  });
 
   useEffect(() => {
     if (!userScrolledUpRef.current && streamingContent) {
@@ -225,16 +243,6 @@ export const ChatContent: FC<ChatContentProps> = ({
       <Box className={classes.loadingContainer}>
         <Loader size="lg" />
         <Text c="dimmed" mt="md">Loading messages...</Text>
-      </Box>
-    );
-  }
-
-  if (messages.length === 0 && !isStreaming) {
-    return (
-      <Box className={classes.emptyState}>
-        <IconSparkles size={48} className={classes.emptyIcon} />
-        <Text size="lg" fw={500} mt="md">How can I help you today?</Text>
-        <Text c="dimmed" size="sm" mt="xs" maw={400} ta="center">{emptyStateMessage}</Text>
       </Box>
     );
   }
