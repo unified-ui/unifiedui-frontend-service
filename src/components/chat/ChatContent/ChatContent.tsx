@@ -414,17 +414,18 @@ const MessageBubble: FC<MessageBubbleProps> = ({
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [persistedReasoningExpanded, setPersistedReasoningExpanded] = useState(false);
 
-  const isCurrentlyStreaming = !!isStreaming && !!streamingContent;
+  const hasActiveReActSteps = !!reActState && reActState.reasoningSteps.length > 0;
+  const isCurrentlyStreaming = !!isStreaming && (!!streamingContent || hasActiveReActSteps);
 
   const effectiveReActState = useMemo(() => {
-    if (isCurrentlyStreaming && reActState && reActState.reasoningSteps.length > 0) {
+    if (isCurrentlyStreaming && hasActiveReActSteps) {
       return reActState;
     }
     if (message.statusTraces && message.statusTraces.length > 0) {
       return statusTracesToReActState(message.statusTraces);
     }
     return null;
-  }, [isCurrentlyStreaming, reActState, message.statusTraces]);
+  }, [isCurrentlyStreaming, hasActiveReActSteps, reActState, message.statusTraces]);
 
   const handleViewTrace = useCallback(() => {
     if (extMessageId && onViewTrace) {

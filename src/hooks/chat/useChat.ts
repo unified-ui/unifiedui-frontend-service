@@ -325,6 +325,9 @@ export function useChat({
         }
       },
       (chunk: string) => {
+        if (!accumulatedContent && stepIdCounterRef.current > 0) {
+          onReActStreamEnd();
+        }
         accumulatedContent += chunk;
         setStreamingContent(accumulatedContent);
       },

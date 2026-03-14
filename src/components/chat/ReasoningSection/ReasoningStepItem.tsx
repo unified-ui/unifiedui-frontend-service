@@ -101,9 +101,27 @@ const StepContent: FC<{ step: ReasoningStep; isActive: boolean }> = ({ step, isA
   );
 };
 
+const deepParseJson = (value: unknown): unknown => {
+  if (typeof value === 'string') {
+    try {
+      return deepParseJson(JSON.parse(value));
+    } catch {
+      return value;
+    }
+  }
+  if (Array.isArray(value)) return value.map(deepParseJson);
+  if (typeof value === 'object' && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, deepParseJson(v)])
+    );
+  }
+  return value;
+};
+
 const formatValue = (value: unknown): string => {
-  if (typeof value === 'object' && value !== null) return JSON.stringify(value, null, 2);
-  return String(value);
+  const parsed = deepParseJson(value);
+  if (typeof parsed === 'object' && parsed !== null) return JSON.stringify(parsed, null, 2);
+  return String(parsed);
 };
 
 const ToolCallContent: FC<{ step: ReasoningStep; isActive: boolean }> = ({ step, isActive }) => {
