@@ -86,32 +86,6 @@
   background-color: var(--sidebar-hover);
 }
 
-.actions {
-  padding: var(--spacing-lg) var(--spacing-md) var(--spacing-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.newChatButton {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-lg) var(--spacing-md);
-  border-radius: var(--radius-md);
-  border: 1px dashed var(--sidebar-border);
-  color: var(--sidebar-text-secondary);
-  font-weight: var(--font-weight-medium);
-  transition: all var(--transition-fast) var(--easing-ease-in-out);
-}
-
-.newChatButton:hover {
-  background-color: var(--sidebar-hover);
-  border-color: var(--sidebar-text-secondary);
-  color: var(--sidebar-text);
-}
-
 .searchContainer {
   padding: 0 var(--spacing-md);
   padding-bottom: var(--spacing-sm);
@@ -132,6 +106,7 @@
 }
 
 .groupToggle {
+  margin-top: 1rem;
   padding: var(--spacing-xs) var(--spacing-md);
 }
 

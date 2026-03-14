@@ -18,7 +18,6 @@ import {
   CopyButton,
 } from '@mantine/core';
 import {
-  IconPlus,
   IconSearch,
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand,
@@ -299,7 +298,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
             className={classes.newChatButtonCollapsed}
             onClick={onNewChat}
           >
-            <IconPlus size={18} />
+            <IconEdit size={18} />
           </ActionIcon>
         </Tooltip>
       </div>
@@ -318,22 +317,28 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
         >
           <IconLayoutSidebarLeftCollapse size={20} />
         </ActionIcon>
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          onClick={onSearchOpen}
-          aria-label="Search"
-          className={classes.headerButton}
-        >
-          <IconSearch size={18} />
-        </ActionIcon>
-      </div>
-
-      <div className={classes.actions}>
-        <UnstyledButton className={classes.newChatButton} onClick={onNewChat}>
-          <IconPlus size={18} />
-          <Text size="sm">{t('conversations:newChat')}</Text>
-        </UnstyledButton>
+        <Group gap={4}>
+          <Tooltip label={t('conversations:newChat')} position="bottom">
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              onClick={onNewChat}
+              aria-label={t('conversations:newChat')}
+              className={classes.headerButton}
+            >
+              <IconEdit size={18} />
+            </ActionIcon>
+          </Tooltip>
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            onClick={onSearchOpen}
+            aria-label="Search"
+            className={classes.headerButton}
+          >
+            <IconSearch size={18} />
+          </ActionIcon>
+        </Group>
       </div>
 
       <div className={classes.groupToggle}>
