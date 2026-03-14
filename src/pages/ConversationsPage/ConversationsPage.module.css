@@ -9,15 +9,7 @@
 
 .pageHeader {
   flex-shrink: 0;
-  padding: var(--spacing-md) var(--spacing-md);
-}
-
-.pageTitle {
-  font-size: var(--font-size-2xl) !important;
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-  letter-spacing: 0.15em;
-  margin: 0;
+  padding: var(--spacing-sm);
 }
 
 .pageContent {

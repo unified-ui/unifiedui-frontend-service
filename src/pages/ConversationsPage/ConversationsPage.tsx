@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Drawer, Loader, Center, Title } from '@mantine/core';
+import { Box, Drawer, Loader, Center } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { IconMessageCircle } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
@@ -149,9 +149,7 @@ export const ConversationsPage: FC = () => {
     return (
       <MainLayout noPadding>
         <Box className={classes.pageContainer}>
-          <Box className={classes.pageHeader}>
-            <Title order={1} className={classes.pageTitle}>{t('conversations:yourAIChats')}</Title>
-          </Box>
+          <Box className={classes.pageHeader} />
           <Box className={classes.pageContent}>
             <Box className={classes.chatSidebarWrapper}>
               {showInitialLoading && (
@@ -235,9 +233,7 @@ export const ConversationsPage: FC = () => {
   return (
     <MainLayout noPadding>
       <Box className={classes.pageContainer}>
-        <Box className={classes.pageHeader}>
-          <Title order={1} className={classes.pageTitle}>{t('conversations:yourAIChats')}</Title>
-        </Box>
+        <Box className={classes.pageHeader} />
         <Box className={classes.pageContent}>
         {isMobile ? (
           <Drawer
