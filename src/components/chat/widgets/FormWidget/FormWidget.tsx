@@ -56,13 +56,33 @@ function buildInitialValues(
 
 function parseSubmittedData(
   submittedData: string,
+  fields: FormFieldConfig[],
 ): Record<string, string | boolean | string[]> | null {
   try {
     const parsed: unknown = JSON.parse(submittedData);
-    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
-      return parsed as Record<string, string | boolean | string[]>;
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
+    const labelMap = parsed as Record<string, unknown>;
+    const values: Record<string, string | boolean | string[]> = {};
+    for (const field of fields) {
+      if (field.type === 'label' || field.type === 'description_textarea' || field.type === 'file') continue;
+      const val = labelMap[field.label] ?? labelMap[field.id];
+      if (val !== undefined && val !== null) {
+        if (field.type === 'multi_select' && Array.isArray(val)) {
+          values[field.id] = val as string[];
+        } else if (field.type === 'toggle') {
+          values[field.id] = Boolean(val);
+        } else {
+          values[field.id] = String(val);
+        }
+      } else if (field.type === 'toggle') {
+        values[field.id] = false;
+      } else if (field.type === 'multi_select') {
+        values[field.id] = [];
+      } else {
+        values[field.id] = '';
+      }
     }
-    return null;
+    return Object.keys(values).length > 0 ? values : null;
   } catch {
     return null;
   }
@@ -77,8 +97,8 @@ export const FormWidget: FC<FormWidgetProps> = ({
 }) => {
   const { t } = useTranslation('widgets');
   const parsedSubmitted = useMemo(
-    () => (submittedData ? parseSubmittedData(submittedData) : null),
-    [submittedData],
+    () => (submittedData ? parseSubmittedData(submittedData, fields) : null),
+    [submittedData, fields],
   );
   const isSubmitted = !!parsedSubmitted;
 

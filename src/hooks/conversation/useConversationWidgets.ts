@@ -29,11 +29,13 @@ export function useConversationWidgets({
 
       const nextMsg = messages[i + 1];
       const submittedData = nextMsg?.type === 'user' ? nextMsg.content : undefined;
+      const extra = nextMsg?.type === 'user' ? nextMsg.extra : undefined;
 
       result.push({
         widgetId: parsed.widget.id,
         messageIndex: i,
         submittedData,
+        extra,
       });
     }
     return result;

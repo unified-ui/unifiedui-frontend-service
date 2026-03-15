@@ -10,6 +10,8 @@ import type { MessageResponse, ReactionResponse } from '../../../api/types';
 import type { ReActStreamState } from '../../../hooks/chat/useReActChat';
 import classes from './ChatView.module.css';
 
+const NOOP = () => {};
+
 export interface ChatViewProps {
   messages: MessageResponse[];
   isLoading?: boolean;
@@ -18,7 +20,7 @@ export interface ChatViewProps {
   streamingMessageId?: string;
   emptyStateSlot?: ReactNode;
 
-  onSendMessage?: (content: string, attachments?: File[]) => void;
+  onSendMessage?: (content: string, attachments?: File[], extra?: Record<string, unknown>) => void;
   onCancelStream?: () => void;
   onEditMessage?: (messageId: string, content: string) => Promise<void>;
   onDeleteMessage?: (messageId: string) => Promise<void>;
@@ -89,6 +91,10 @@ export const ChatView: FC<ChatViewProps> = ({
   const chatInputRef = useRef<ChatInputRef>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounterRef = useRef(0);
+
+  const handleContentSendMessage = useCallback((content: string, extra?: Record<string, unknown>) => {
+    onSendMessage?.(content, undefined, extra);
+  }, [onSendMessage]);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     if (!enableFileDrop) return;
@@ -161,7 +167,7 @@ export const ChatView: FC<ChatViewProps> = ({
             {emptyStateSlot}
             <ChatInput
               ref={chatInputRef}
-              onSend={onSendMessage ?? (() => {})}
+              onSend={onSendMessage ?? NOOP}
               onCancel={onCancelStream}
               isDisabled={inputDisabled}
               isStreaming={isStreaming}
@@ -188,12 +194,12 @@ export const ChatView: FC<ChatViewProps> = ({
                 reActState={reActState}
                 onToggleReasoning={onToggleReasoning}
                 alwaysExpandReasoning={alwaysExpandReasoning}
-                onSendMessage={onSendMessage ? (content: string) => onSendMessage(content) : undefined}
+                onSendMessage={onSendMessage ? handleContentSendMessage : undefined}
               />
             </Box>
             <ChatInput
               ref={chatInputRef}
-              onSend={onSendMessage ?? (() => {})}
+              onSend={onSendMessage ?? NOOP}
               onCancel={onCancelStream}
               isDisabled={inputDisabled}
               isStreaming={isStreaming}

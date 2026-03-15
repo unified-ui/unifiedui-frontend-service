@@ -62,7 +62,7 @@ interface UseChatReturn {
   reActState: ReActStreamState;
   hasReasoningSteps: boolean;
   setIsReasoningExpanded: (expanded: boolean) => void;
-  handleSendMessage: (content: string, attachments?: File[]) => Promise<void>;
+  handleSendMessage: (content: string, attachments?: File[], extra?: Record<string, unknown>) => Promise<void>;
   handleEditMessage: (messageId: string, newContent: string) => Promise<void>;
   handleDeleteMessage: (messageId: string) => Promise<void>;
   handleReaction: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string) => Promise<void>;
@@ -266,6 +266,7 @@ export function useChat({
     foundryToken: string | undefined,
     isFoundryApp: boolean,
     files?: FileAttachment[],
+    extra?: Record<string, unknown>,
   ) => {
     let accumulatedContent = '';
     let currentStreamingMessageId = '';
@@ -284,6 +285,7 @@ export function useChat({
         },
         invokeConfig: contextData ? { contextData } : undefined,
         extConversationId: isFoundryApp ? activeExtConversationId : undefined,
+        extra,
       },
       (messageId: string, _newConversationId: string, isNewMessage: boolean) => {
         if (isNewMessage) {
@@ -459,7 +461,7 @@ export function useChat({
     }
   }, [apiClient, tenantId, selectedChatAgentId, searchParams, setConversations, setCurrentConversation, onRefreshTraces, createStep, appendStepContent, finalizeActiveStep, onReActStreamEnd]);
 
-  const handleSendMessage = useCallback(async (content: string, attachments?: File[]) => {
+  const handleSendMessage = useCallback(async (content: string, attachments?: File[], extra?: Record<string, unknown>) => {
     if (!apiClient || !tenantId || !selectedChatAgentId) {
       notifications.show({
         title: 'Error',
@@ -500,6 +502,7 @@ export function useChat({
       content,
       status: 'pending',
       attachmentsMetadata,
+      extra,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -558,6 +561,7 @@ export function useChat({
         foundryToken,
         isFoundryApp,
         files,
+        extra,
       );
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -575,6 +579,7 @@ export function useChat({
         });
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiClient, tenantId, selectedChatAgentId, conversationId, chatAgents, currentConversation, getFoundryToken, nav, setCurrentConversation, setConversations, executeStream, resetReActState]);
 
   const handleEditMessage = useCallback(async (messageId: string, newContent: string) => {

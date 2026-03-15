@@ -271,6 +271,7 @@ export interface MessageResponse {
   statusTraces?: StatusTrace[];
   metadata?: AssistantMetadata;
   attachmentsMetadata?: AttachmentMetadata[];
+  extra?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -316,6 +317,7 @@ export interface SendMessageRequest {
   message: MessageContent;
   invokeConfig?: InvokeConfig;
   extConversationId?: string; // External conversation ID for Foundry
+  extra?: Record<string, unknown>;
 }
 
 export interface SendMessageResponse {

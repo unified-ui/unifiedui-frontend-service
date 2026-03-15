@@ -1138,6 +1138,7 @@ export class UnifiedUIAPIClient {
       message: data.message,
       invokeConfig: data.invokeConfig,
       extConversationId: data.extConversationId,
+      extra: data.extra,
     };
 
     const response = await fetch(

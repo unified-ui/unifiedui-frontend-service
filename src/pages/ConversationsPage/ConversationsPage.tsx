@@ -71,24 +71,26 @@ export const ConversationsPage: FC = () => {
 
   useEffect(() => {
     tracing.setMessagesRef(chat.messages);
-  }, [chat.messages, tracing.setMessagesRef, tracing]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chat.messages, tracing.setMessagesRef]);
 
   useEffect(() => {
     if (!apiClient || !tenantId || !conversationId) {
       convList.setCurrentConversation(null);
-      chat.setMessages([]);
+      chat.setMessages(prev => prev.length === 0 ? prev : []);
       chat.setIsLoadingMessages(false);
       return;
     }
 
     if (chat.justCreatedConversationRef.current === conversationId) {
-      // eslint-disable-next-line react-hooks/immutability
+
       chat.justCreatedConversationRef.current = null;
       return;
     }
 
     chat.loadConversationMessages(conversationId);
-  }, [apiClient, tenantId, conversationId, chat, convList]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiClient, tenantId, conversationId]);
 
   useEffect(() => {
     if (convList.currentConversation) {
@@ -151,6 +153,34 @@ export const ConversationsPage: FC = () => {
       navigate(`/chat-agents/${convList.selectedChatAgentId}/embed-chat`);
     }
   }, [convList.selectedChatAgentId, navigate]);
+
+  const chatMessagesRef = useRef(chat.messages);
+  chatMessagesRef.current = chat.messages;
+
+  const handleRetry = useCallback(
+    (failedMessageId: string) => {
+      const failedMsg = chatMessagesRef.current.find(m => m.id === failedMessageId);
+      const userMsg = failedMsg?.userMessageId
+        ? chatMessagesRef.current.find(m => m.id === failedMsg.userMessageId)
+        : undefined;
+      if (userMsg?.content) {
+        chat.handleSendMessage(userMsg.content);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [chat.handleSendMessage],
+  );
+
+  const reActStateRef = useRef(chat.reActState);
+  reActStateRef.current = chat.reActState;
+
+  const handleToggleReasoning = useCallback(
+    () => {
+      chat.setIsReasoningExpanded(!reActStateRef.current.isReasoningExpanded);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [chat.setIsReasoningExpanded],
+  );
 
   const showInitialLoading = useDelayedLoading(
     convList.isLoadingConversations && !convList.conversations.length,
@@ -324,15 +354,7 @@ export const ConversationsPage: FC = () => {
             onEditMessage={canWriteConversation ? chat.handleEditMessage : undefined}
             onDeleteMessage={canWriteConversation ? chat.handleDeleteMessage : undefined}
             onReaction={chat.handleReaction}
-            onRetry={(failedMessageId) => {
-              const failedMsg = chat.messages.find(m => m.id === failedMessageId);
-              const userMsg = failedMsg?.userMessageId
-                ? chat.messages.find(m => m.id === failedMsg.userMessageId)
-                : undefined;
-              if (userMsg?.content) {
-                chat.handleSendMessage(userMsg.content);
-              }
-            }}
+            onRetry={handleRetry}
             onViewTrace={tracing.handleViewTrace}
             reactions={chat.reactions}
             highlightedExtMessageId={tracing.highlightedMessageExtId}
@@ -344,7 +366,7 @@ export const ConversationsPage: FC = () => {
                 : t('conversations:selectAgentToStart')
             }
             reActState={chat.hasReasoningSteps ? chat.reActState : undefined}
-            onToggleReasoning={() => chat.setIsReasoningExpanded(!chat.reActState.isReasoningExpanded)}
+            onToggleReasoning={handleToggleReasoning}
             headerSlot={headerSlot}
             tracingSlot={tracingSlot}
             widgetSlot={widgetSlot}

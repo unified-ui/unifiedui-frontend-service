@@ -37,7 +37,7 @@ export interface ChatContentProps {
   reActState?: ReActStreamState;
   onToggleReasoning?: () => void;
   alwaysExpandReasoning?: boolean;
-  onSendMessage?: (content: string) => void;
+  onSendMessage?: (content: string, extra?: Record<string, unknown>) => void;
 }
 
 export const ChatContent: FC<ChatContentProps> = ({
@@ -279,6 +279,7 @@ export const ChatContent: FC<ChatContentProps> = ({
               const isUser = message.type === 'user';
               const nextMsg = messages[index + 1];
               const nextUserMessageContent = (!isUser && nextMsg?.type === 'user') ? nextMsg.content : undefined;
+              const nextUserMessageExtra = (!isUser && nextMsg?.type === 'user') ? nextMsg.extra : undefined;
               const isHighlighted = isUser
                 ? !!(highlightedUserMessageId && highlightedUserMessageId === message.id)
                 : !!(messageExtId && highlightedExtMessageId === messageExtId);
@@ -328,6 +329,7 @@ export const ChatContent: FC<ChatContentProps> = ({
                   isLastAssistantMessage={message.id === lastAssistantMessageId}
                   onSendMessage={onSendMessage}
                   nextUserMessageContent={nextUserMessageContent}
+                  nextUserMessageExtra={nextUserMessageExtra}
                 />
               );
             })}
@@ -359,6 +361,48 @@ export const ChatContent: FC<ChatContentProps> = ({
         </Box>
       )}
     </Box>
+  );
+};
+
+function tryParseJson(content: string): Record<string, unknown> | null {
+  const trimmed = content.trim();
+  if (!trimmed.startsWith('{')) return null;
+  try {
+    const parsed: unknown = JSON.parse(trimmed);
+    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function formatJsonValue(value: unknown): string {
+  if (value === null || value === undefined) return '–';
+  if (typeof value === 'boolean') return value ? '✓' : '✗';
+  if (Array.isArray(value)) return value.join(', ');
+  return String(value);
+}
+
+const UserMessageContent: FC<{ content: string }> = ({ content }) => {
+  const jsonData = useMemo(() => tryParseJson(content), [content]);
+
+  if (!jsonData) {
+    return <Text size="lg" style={{ whiteSpace: 'pre-wrap' }}>{content}</Text>;
+  }
+
+  const entries = Object.entries(jsonData);
+
+  return (
+    <Stack gap={4}>
+      {entries.map(([key, value]) => (
+        <Box key={key}>
+          <Text size="xs" fw={600} c="dimmed" style={{ lineHeight: 1.3 }}>{key}</Text>
+          <Text size="sm" style={{ lineHeight: 1.4 }}>{formatJsonValue(value)}</Text>
+        </Box>
+      ))}
+    </Stack>
   );
 };
 
@@ -416,8 +460,9 @@ interface MessageBubbleProps {
   onToggleReasoning?: () => void;
   alwaysExpandReasoning?: boolean;
   isLastAssistantMessage?: boolean;
-  onSendMessage?: (content: string) => void;
+  onSendMessage?: (content: string, extra?: Record<string, unknown>) => void;
   nextUserMessageContent?: string;
+  nextUserMessageExtra?: Record<string, unknown>;
 }
 
 const MessageBubble: FC<MessageBubbleProps> = ({
@@ -440,6 +485,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
   isLastAssistantMessage,
   onSendMessage,
   nextUserMessageContent,
+  nextUserMessageExtra,
 }) => {
   const isUser = message.type === 'user';
   const content = streamingContent || message.content;
@@ -519,7 +565,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
             ) : (
               <>
                 <Paper className={classes.userBubble} shadow="xs" style={{ borderRadius: 'var(--mantine-radius-xl) var(--mantine-radius-xs) var(--mantine-radius-xl) var(--mantine-radius-xl)' }}>
-                  <Text size="lg" style={{ whiteSpace: 'pre-wrap' }}>{content}</Text>
+                  <UserMessageContent content={content} />
                 </Paper>
                 <Avatar size="sm" radius="xl" className={classes.avatar} color="primary">
                   <IconUser size={16} />
@@ -601,6 +647,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
               isInteractive={!!isLastAssistantMessage && !isStreaming}
               onSendMessage={onSendMessage}
               nextUserMessageContent={nextUserMessageContent}
+              nextUserMessageExtra={nextUserMessageExtra}
             />
           )}
           {parsedWidget?.widget && parsedWidget.textAfter && (
@@ -852,8 +899,9 @@ const MarkdownRenderer: FC<MarkdownRendererProps> = ({ content }) => (
 interface WidgetRendererProps {
   widget: { id: string; data: Record<string, unknown> | unknown[] };
   isInteractive: boolean;
-  onSendMessage?: (content: string) => void;
+  onSendMessage?: (content: string, extra?: Record<string, unknown>) => void;
   nextUserMessageContent?: string;
+  nextUserMessageExtra?: Record<string, unknown>;
 }
 
 function parseSurveyAnswersFromMessage(content: string): Record<string, string> | undefined {
@@ -868,7 +916,7 @@ function parseSurveyAnswersFromMessage(content: string): Record<string, string> 
   return Object.keys(answers).length > 0 ? answers : undefined;
 }
 
-const WidgetRenderer: FC<WidgetRendererProps> = ({ widget, isInteractive, onSendMessage, nextUserMessageContent }) => {
+const WidgetRenderer: FC<WidgetRendererProps> = ({ widget, isInteractive, onSendMessage, nextUserMessageContent, nextUserMessageExtra }) => {
   const handleYesNoSelect = useCallback((value: string) => {
     onSendMessage?.(value);
   }, [onSendMessage]);
@@ -916,6 +964,7 @@ const WidgetRenderer: FC<WidgetRendererProps> = ({ widget, isInteractive, onSend
         isInteractive={isInteractive}
         onSendMessage={onSendMessage}
         nextUserMessageContent={nextUserMessageContent}
+        nextUserMessageExtra={nextUserMessageExtra}
       />
     );
   }
@@ -927,8 +976,9 @@ interface CustomWidgetRendererProps {
   widgetId: string;
   widgetData: Record<string, unknown>;
   isInteractive: boolean;
-  onSendMessage?: (content: string) => void;
+  onSendMessage?: (content: string, extra?: Record<string, unknown>) => void;
   nextUserMessageContent?: string;
+  nextUserMessageExtra?: Record<string, unknown>;
 }
 
 const CustomWidgetRenderer: FC<CustomWidgetRendererProps> = ({
@@ -937,13 +987,20 @@ const CustomWidgetRenderer: FC<CustomWidgetRendererProps> = ({
   isInteractive,
   onSendMessage,
   nextUserMessageContent,
+  nextUserMessageExtra,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+
+  const persistedConfig = nextUserMessageExtra?.widgetConfig as Record<string, unknown> | undefined;
+  const persistedType = nextUserMessageExtra?.widgetType as string | undefined;
+  const hasPersisted = !!persistedConfig && !!persistedType;
+
   const [widgetDef, setWidgetDef] = useState<ChatWidgetResponse | null>(null);
-  const [loading, setLoading] = useState(!!apiClient && !!selectedTenant?.id);
-  const [error, setError] = useState(!apiClient || !selectedTenant?.id);
+  const [loading, setLoading] = useState(!hasPersisted && !!apiClient && !!selectedTenant?.id);
+  const [error, setError] = useState(!hasPersisted && (!apiClient || !selectedTenant?.id));
 
   useEffect(() => {
+    if (hasPersisted) return;
     if (!apiClient || !selectedTenant?.id) return;
     let cancelled = false;
     apiClient.getChatWidget(selectedTenant.id, widgetId)
@@ -960,17 +1017,26 @@ const CustomWidgetRenderer: FC<CustomWidgetRendererProps> = ({
         }
       });
     return () => { cancelled = true; };
-  }, [apiClient, selectedTenant?.id, widgetId]);
+  }, [apiClient, selectedTenant?.id, widgetId, hasPersisted]);
+
+  const activeType = hasPersisted ? persistedType : widgetDef?.type;
+  const activeConfig = hasPersisted ? persistedConfig : widgetDef?.config;
 
   const handleSubmit = useCallback((data: string) => {
-    onSendMessage?.(data);
-  }, [onSendMessage]);
+    if (!activeType || !activeConfig) return;
+    const extra: Record<string, unknown> = {
+      widgetId,
+      widgetType: activeType,
+      widgetConfig: activeConfig,
+    };
+    onSendMessage?.(data, extra);
+  }, [onSendMessage, activeType, activeConfig, widgetId]);
 
   if (loading) return <Loader size="sm" />;
-  if (error || !widgetDef) return <Text size="xs" c="dimmed">Widget not available</Text>;
+  if (error || (!hasPersisted && !widgetDef)) return <Text size="xs" c="dimmed">Widget not available</Text>;
 
-  if (widgetDef.type === ChatWidgetTypeEnum.FORM) {
-    const fields = (widgetDef.config?.fields as FormFieldConfig[]) || [];
+  if (activeType === ChatWidgetTypeEnum.FORM) {
+    const fields = (activeConfig?.fields as FormFieldConfig[]) || [];
     return (
       <FormWidget
         fields={fields}
@@ -982,8 +1048,8 @@ const CustomWidgetRenderer: FC<CustomWidgetRendererProps> = ({
     );
   }
 
-  if (widgetDef.type === ChatWidgetTypeEnum.IFRAME) {
-    const config = widgetDef.config as { url: string; width?: string | number; height?: string | number; allowFullscreen?: boolean };
+  if (activeType === ChatWidgetTypeEnum.IFRAME) {
+    const config = activeConfig as { url: string; width?: string | number; height?: string | number; allowFullscreen?: boolean };
     return (
       <IframeWidget
         config={config}

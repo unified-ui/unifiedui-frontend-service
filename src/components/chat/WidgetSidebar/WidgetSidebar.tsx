@@ -25,6 +25,7 @@ export interface WidgetInteraction {
   widgetId: string;
   messageIndex: number;
   submittedData?: string;
+  extra?: Record<string, unknown>;
 }
 
 interface WidgetSidebarProps {
@@ -131,7 +132,11 @@ const WidgetDetailView: FC<WidgetDetailViewProps> = ({ interaction, onBack }) =>
   const [widgetDef, setWidgetDef] = useState<ChatWidgetResponse | null>(null);
   const [viewMode, setViewMode] = useState<string>('form');
 
-  const shouldFetch = !!apiClient && !!selectedTenant?.id;
+  const persistedConfig = interaction.extra?.widgetConfig as Record<string, unknown> | undefined;
+  const persistedType = interaction.extra?.widgetType as string | undefined;
+  const hasPersisted = !!persistedConfig && !!persistedType;
+
+  const shouldFetch = !hasPersisted && !!apiClient && !!selectedTenant?.id;
   const [loading, setLoading] = useState(shouldFetch);
 
   useEffect(() => {
@@ -153,6 +158,10 @@ const WidgetDetailView: FC<WidgetDetailViewProps> = ({ interaction, onBack }) =>
     return () => { cancelled = true; };
   }, [shouldFetch, apiClient, selectedTenant?.id, interaction.widgetId]);
 
+  const activeType = hasPersisted ? persistedType : widgetDef?.type;
+  const activeConfig = hasPersisted ? persistedConfig : widgetDef?.config;
+  const activeName = hasPersisted ? (interaction.extra?.widgetName as string | undefined) : widgetDef?.name;
+
   const formattedJson = useMemo(() => {
     if (!interaction.submittedData) return null;
     try {
@@ -162,7 +171,7 @@ const WidgetDetailView: FC<WidgetDetailViewProps> = ({ interaction, onBack }) =>
     }
   }, [interaction.submittedData]);
 
-  const isFormType = widgetDef?.type === ChatWidgetTypeEnum.FORM;
+  const isFormType = activeType === ChatWidgetTypeEnum.FORM;
 
   return (
     <Box className={classes.sidebar}>
@@ -172,7 +181,7 @@ const WidgetDetailView: FC<WidgetDetailViewProps> = ({ interaction, onBack }) =>
             <IconArrowLeft size={16} />
           </ActionIcon>
           <Text fw={600} size="sm" truncate>
-            {widgetDef?.name ?? interaction.widgetId.slice(0, 8)}
+            {activeName ?? interaction.widgetId.slice(0, 8)}
           </Text>
         </Group>
         {isFormType && interaction.submittedData && (
@@ -193,9 +202,9 @@ const WidgetDetailView: FC<WidgetDetailViewProps> = ({ interaction, onBack }) =>
             <Loader size="sm" />
           ) : viewMode === 'json' && formattedJson ? (
             <Code block>{formattedJson}</Code>
-          ) : isFormType && widgetDef ? (
+          ) : isFormType && activeConfig ? (
             <FormWidget
-              fields={(widgetDef.config?.fields as FormFieldConfig[]) || []}
+              fields={(activeConfig.fields as FormFieldConfig[]) || []}
               onSubmit={() => {}}
               disabled
               submittedData={interaction.submittedData}
