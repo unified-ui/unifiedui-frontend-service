@@ -4,12 +4,16 @@ import { ScrollArea, Box, Text, Avatar, Stack, Loader, Paper, Tooltip, ActionIco
 import { IconUser, IconSparkles, IconCopy, IconCheck, IconBinaryTree, IconThumbUp, IconThumbDown, IconThumbUpFilled, IconThumbDownFilled, IconArrowDown, IconEdit, IconTrash, IconAlertTriangle, IconRefresh, IconFile, IconPhoto, IconFileTypePdf, IconFileTypeDoc, IconFileTypeXls, IconFileTypePpt, IconFileText, IconMusic, IconFileCode } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { MessageResponse, AttachmentMetadata, ReactionResponse } from '../../../api/types';
+import type { MessageResponse, AttachmentMetadata, ReactionResponse, SurveyWidgetData, YesNoWidgetData } from '../../../api/types';
+import { StandardWidgetId } from '../../../api/types';
 import type { ReActStreamState } from '../../../hooks/chat/useReActChat';
 import { statusTracesToReActState } from '../../../hooks/chat/useReActChat';
+import { parseWidgetTag } from '../../../utils/widgetParser';
 import { ConfirmDeleteDialog } from '../../common';
 import { FeedbackDialog } from '../FeedbackDialog';
 import { ReasoningSection } from '../ReasoningSection';
+import { YesNoWidget } from '../widgets/YesNoWidget';
+import { SurveyWidget } from '../widgets/SurveyWidget';
 import classes from './ChatContent.module.css';
 import mdClasses from './Markdown.module.css';
 
@@ -29,6 +33,7 @@ export interface ChatContentProps {
   reActState?: ReActStreamState;
   onToggleReasoning?: () => void;
   alwaysExpandReasoning?: boolean;
+  onSendMessage?: (content: string) => void;
 }
 
 export const ChatContent: FC<ChatContentProps> = ({
@@ -48,6 +53,7 @@ export const ChatContent: FC<ChatContentProps> = ({
   reActState,
   onToggleReasoning,
   alwaysExpandReasoning,
+  onSendMessage,
 }) => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -238,6 +244,13 @@ export const ChatContent: FC<ChatContentProps> = ({
     return undefined;
   })();
 
+  const lastAssistantMessageId = (() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].type === 'assistant') return messages[i].id;
+    }
+    return undefined;
+  })();
+
   if (isLoading) {
     return (
       <Box className={classes.loadingContainer}>
@@ -257,9 +270,11 @@ export const ChatContent: FC<ChatContentProps> = ({
       >
         <Box className={classes.scrollContentWrapper}>
           <Stack gap="lg" className={classes.messagesContainer}>
-            {messages.map((message) => {
+            {messages.map((message, index) => {
               const messageExtId = message.type !== 'user' ? message.metadata?.extMessageId : undefined;
               const isUser = message.type === 'user';
+              const nextMsg = messages[index + 1];
+              const nextUserMessageContent = (!isUser && nextMsg?.type === 'user') ? nextMsg.content : undefined;
               const isHighlighted = isUser
                 ? !!(highlightedUserMessageId && highlightedUserMessageId === message.id)
                 : !!(messageExtId && highlightedExtMessageId === messageExtId);
@@ -306,6 +321,9 @@ export const ChatContent: FC<ChatContentProps> = ({
                   reActState={reActState}
                   onToggleReasoning={onToggleReasoning}
                   alwaysExpandReasoning={alwaysExpandReasoning}
+                  isLastAssistantMessage={message.id === lastAssistantMessageId}
+                  onSendMessage={onSendMessage}
+                  nextUserMessageContent={nextUserMessageContent}
                 />
               );
             })}
@@ -393,6 +411,9 @@ interface MessageBubbleProps {
   reActState?: ReActStreamState;
   onToggleReasoning?: () => void;
   alwaysExpandReasoning?: boolean;
+  isLastAssistantMessage?: boolean;
+  onSendMessage?: (content: string) => void;
+  nextUserMessageContent?: string;
 }
 
 const MessageBubble: FC<MessageBubbleProps> = ({
@@ -412,6 +433,9 @@ const MessageBubble: FC<MessageBubbleProps> = ({
   reActState,
   onToggleReasoning,
   alwaysExpandReasoning,
+  isLastAssistantMessage,
+  onSendMessage,
+  nextUserMessageContent,
 }) => {
   const isUser = message.type === 'user';
   const content = streamingContent || message.content;
@@ -424,6 +448,11 @@ const MessageBubble: FC<MessageBubbleProps> = ({
 
   const hasActiveReActSteps = !!reActState && reActState.reasoningSteps.length > 0;
   const isCurrentlyStreaming = !!isStreaming && (!!streamingContent || hasActiveReActSteps);
+
+  const parsedWidget = useMemo(() => {
+    if (isUser || isCurrentlyStreaming) return null;
+    return parseWidgetTag(content);
+  }, [isUser, isCurrentlyStreaming, content]);
 
   const effectiveReActState = useMemo(() => {
     if (isCurrentlyStreaming && hasActiveReActSteps) {
@@ -560,59 +589,21 @@ const MessageBubble: FC<MessageBubbleProps> = ({
             />
           )}
           <Box className={mdClasses.markdownContent}>
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                code: ({ className, children, ...props }: { className?: string; children?: ReactNode }) => {
-                  const match = /language-(\w+)/.exec(className || '');
-                  const isInline = !match && !String(children).includes('\n');
-
-                  if (isInline) {
-                    return <code className={mdClasses.inlineCode} {...props}>{children}</code>;
-                  }
-
-                  const codeString = String(children).replace(/\n$/, '');
-
-                  return (
-                    <Box className={mdClasses.codeBlock}>
-                      <Box className={mdClasses.codeHeader}>
-                        <Text size="xs" c="dimmed">{match ? match[1] : 'code'}</Text>
-                        <CopyButton value={codeString} timeout={2000}>
-                          {({ copied, copy }) => (
-                            <ActionIcon size="xs" variant="subtle" color={copied ? 'teal' : 'gray'} onClick={copy} className={mdClasses.codeBlockCopyButton}>
-                              {copied ? <IconCheck size={12} /> : <IconCopy size={12} />}
-                            </ActionIcon>
-                          )}
-                        </CopyButton>
-                      </Box>
-                      <pre className={mdClasses.pre}>
-                        <code className={className} {...props}>{children}</code>
-                      </pre>
-                    </Box>
-                  );
-                },
-                p: ({ children }: { children?: ReactNode }) => (
-                  <Text size="sm" component="p" className={mdClasses.paragraph}>{children}</Text>
-                ),
-                ul: ({ children }: { children?: ReactNode }) => <ul className={mdClasses.list}>{children}</ul>,
-                ol: ({ children }: { children?: ReactNode }) => <ol className={mdClasses.list}>{children}</ol>,
-                li: ({ children }: { children?: ReactNode }) => <li className={mdClasses.listItem}>{children}</li>,
-                a: ({ href, children }: { href?: string; children?: ReactNode }) => (
-                  <a href={href} target="_blank" rel="noopener noreferrer" className={mdClasses.link}>{children}</a>
-                ),
-                blockquote: ({ children }: { children?: ReactNode }) => (
-                  <blockquote className={mdClasses.blockquote}>{children}</blockquote>
-                ),
-                table: ({ children }: { children?: ReactNode }) => (
-                  <Box className={mdClasses.tableWrapper}><table className={mdClasses.table}>{children}</table></Box>
-                ),
-                th: ({ children }: { children?: ReactNode }) => <th className={mdClasses.tableHeader}>{children}</th>,
-                td: ({ children }: { children?: ReactNode }) => <td className={mdClasses.tableCell}>{children}</td>,
-              }}
-            >
-              {content}
-            </ReactMarkdown>
+            <MarkdownRenderer content={parsedWidget?.widget ? parsedWidget.textBefore : content} />
           </Box>
+          {parsedWidget?.widget && !isCurrentlyStreaming && (
+            <WidgetRenderer
+              widget={parsedWidget.widget}
+              isInteractive={!!isLastAssistantMessage && !isStreaming}
+              onSendMessage={onSendMessage}
+              nextUserMessageContent={nextUserMessageContent}
+            />
+          )}
+          {parsedWidget?.widget && parsedWidget.textAfter && (
+            <Box className={mdClasses.markdownContent}>
+              <MarkdownRenderer content={parsedWidget.textAfter} />
+            </Box>
+          )}
           {isStreaming && (
             <Box className={classes.typingIndicator}>
               <span></span><span></span><span></span>
@@ -794,4 +785,124 @@ const FileAttachmentChips: FC<FileAttachmentChipsProps> = ({ attachments }) => {
       ))}
     </Box>
   );
+};
+
+const markdownComponents = {
+  code: ({ className, children, ...props }: { className?: string; children?: ReactNode }) => {
+    const match = /language-(\w+)/.exec(className || '');
+    const isInline = !match && !String(children).includes('\n');
+
+    if (isInline) {
+      return <code className={mdClasses.inlineCode} {...props}>{children}</code>;
+    }
+
+    const codeString = String(children).replace(/\n$/, '');
+
+    return (
+      <Box className={mdClasses.codeBlock}>
+        <Box className={mdClasses.codeHeader}>
+          <Text size="xs" c="dimmed">{match ? match[1] : 'code'}</Text>
+          <CopyButton value={codeString} timeout={2000}>
+            {({ copied, copy }) => (
+              <ActionIcon size="xs" variant="subtle" color={copied ? 'teal' : 'gray'} onClick={copy} className={mdClasses.codeBlockCopyButton}>
+                {copied ? <IconCheck size={12} /> : <IconCopy size={12} />}
+              </ActionIcon>
+            )}
+          </CopyButton>
+        </Box>
+        <pre className={mdClasses.pre}>
+          <code className={className} {...props}>{children}</code>
+        </pre>
+      </Box>
+    );
+  },
+  p: ({ children }: { children?: ReactNode }) => (
+    <Text size="sm" component="p" className={mdClasses.paragraph}>{children}</Text>
+  ),
+  ul: ({ children }: { children?: ReactNode }) => <ul className={mdClasses.list}>{children}</ul>,
+  ol: ({ children }: { children?: ReactNode }) => <ol className={mdClasses.list}>{children}</ol>,
+  li: ({ children }: { children?: ReactNode }) => <li className={mdClasses.listItem}>{children}</li>,
+  a: ({ href, children }: { href?: string; children?: ReactNode }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className={mdClasses.link}>{children}</a>
+  ),
+  blockquote: ({ children }: { children?: ReactNode }) => (
+    <blockquote className={mdClasses.blockquote}>{children}</blockquote>
+  ),
+  table: ({ children }: { children?: ReactNode }) => (
+    <Box className={mdClasses.tableWrapper}><table className={mdClasses.table}>{children}</table></Box>
+  ),
+  th: ({ children }: { children?: ReactNode }) => <th className={mdClasses.tableHeader}>{children}</th>,
+  td: ({ children }: { children?: ReactNode }) => <td className={mdClasses.tableCell}>{children}</td>,
+};
+
+interface MarkdownRendererProps {
+  content: string;
+}
+
+const MarkdownRenderer: FC<MarkdownRendererProps> = ({ content }) => (
+  <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+    {content}
+  </ReactMarkdown>
+);
+
+interface WidgetRendererProps {
+  widget: { id: string; data: Record<string, unknown> | unknown[] };
+  isInteractive: boolean;
+  onSendMessage?: (content: string) => void;
+  nextUserMessageContent?: string;
+}
+
+function parseSurveyAnswersFromMessage(content: string): Record<string, string> | undefined {
+  const lines = content.split('\n').filter(Boolean);
+  if (lines.length === 0) return undefined;
+  const answers: Record<string, string> = {};
+  for (const line of lines) {
+    const sepIndex = line.indexOf(': ');
+    if (sepIndex === -1) return undefined;
+    answers[line.slice(0, sepIndex)] = line.slice(sepIndex + 2);
+  }
+  return Object.keys(answers).length > 0 ? answers : undefined;
+}
+
+const WidgetRenderer: FC<WidgetRendererProps> = ({ widget, isInteractive, onSendMessage, nextUserMessageContent }) => {
+  const handleYesNoSelect = useCallback((value: string) => {
+    onSendMessage?.(value);
+  }, [onSendMessage]);
+
+  const handleSurveySubmit = useCallback((answers: Record<string, string>) => {
+    const lines = Object.entries(answers)
+      .map(([question, answer]) => `${question}: ${answer}`)
+      .join('\n');
+    onSendMessage?.(lines);
+  }, [onSendMessage]);
+
+  if (widget.id === StandardWidgetId.YES_NO) {
+    const yesNoData = widget.data as YesNoWidgetData;
+    return (
+      <YesNoWidget
+        data={yesNoData}
+        onSelect={handleYesNoSelect}
+        disabled={!isInteractive}
+        selectedValue={nextUserMessageContent || undefined}
+      />
+    );
+  }
+
+  if (widget.id === StandardWidgetId.SURVEY) {
+    const surveyData = widget.data as SurveyWidgetData;
+    if (!surveyData.questions?.length) return null;
+    const submittedAnswers = nextUserMessageContent
+      ? parseSurveyAnswersFromMessage(nextUserMessageContent)
+      : undefined;
+    return (
+      <SurveyWidget
+        data={surveyData}
+        onSubmit={handleSurveySubmit}
+        disabled={!isInteractive}
+        submittedAnswers={submittedAnswers}
+      />
+    );
+  }
+
+  return null;
 };

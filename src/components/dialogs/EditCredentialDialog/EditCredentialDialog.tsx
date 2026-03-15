@@ -476,6 +476,11 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
               onDeletePrincipal={handleDeletePrincipalWithTypes}
               onAddPrincipal={() => setIsAddPrincipalOpen(true)}
               entityName="credential"
+              onRefreshPrincipal={async (principalId, principalType) => {
+                if (!apiClient || !selectedTenant) return;
+                await apiClient.refreshPrincipal(principalId, { tenant_id: selectedTenant.id, type: principalType as 'IDENTITY_USER' | 'IDENTITY_GROUP' });
+                await fetchPrincipals(false);
+              }}
             />
           </Box>
         )}

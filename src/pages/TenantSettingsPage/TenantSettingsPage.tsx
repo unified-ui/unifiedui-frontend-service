@@ -1158,6 +1158,11 @@ export const TenantSettingsPage: FC = () => {
                   onLoadMore={handleLoadMorePrincipals}
                   searchValue={principalsSearch}
                   roleFilterValue={principalsRoleFilter}
+                  onRefreshPrincipal={async (principalId, principalType) => {
+                    if (!apiClient || !selectedTenant) return;
+                    await apiClient.refreshPrincipal(principalId, { tenant_id: selectedTenant.id, type: principalType as 'IDENTITY_USER' | 'IDENTITY_GROUP' });
+                    await fetchPrincipals(true);
+                  }}
                 />
               </Stack>
             </Tabs.Panel>

@@ -186,6 +186,7 @@ export const ChatView: FC<ChatViewProps> = ({
                 reActState={reActState}
                 onToggleReasoning={onToggleReasoning}
                 alwaysExpandReasoning={alwaysExpandReasoning}
+                onSendMessage={onSendMessage ? (content: string) => onSendMessage(content) : undefined}
               />
             </Box>
             <ChatInput

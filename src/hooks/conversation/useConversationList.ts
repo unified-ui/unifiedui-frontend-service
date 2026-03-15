@@ -34,7 +34,7 @@ interface UseConversationListReturn {
   sidebarSearchQuery: string;
   handleChatAgentChange: (chatAgentId: string) => void;
   handleSidebarCollapse: (collapsed: boolean) => void;
-  handleNewChat: (abortController: React.RefObject<AbortController | null>) => void;
+  handleNewChat: (abortController: React.RefObject<AbortController | null>, agentIdOverride?: string) => void;
   handleSelectConversation: (id: string, abortController: React.RefObject<AbortController | null>) => void;
   handleToggleFavorite: (id: string) => Promise<void>;
   handleRenameConversation: (id: string, newName: string) => void;
@@ -164,15 +164,16 @@ export function useConversationList({
     localStorage.setItem(STORAGE_KEY_SIDEBAR_COLLAPSED, String(collapsed));
   }, []);
 
-  const handleNewChat = useCallback((abortController: React.RefObject<AbortController | null>) => {
+  const handleNewChat = useCallback((abortController: React.RefObject<AbortController | null>, agentIdOverride?: string) => {
     if (abortController.current) {
       abortController.current.abort();
     }
     setCurrentConversation(null);
 
+    const agentId = agentIdOverride || selectedChatAgentId;
     const params = new URLSearchParams(searchParams);
-    if (selectedChatAgentId) {
-      params.set('agent', selectedChatAgentId);
+    if (agentId) {
+      params.set('agent', agentId);
     }
     const qs = params.toString();
     navigate(`/conversations${qs ? `?${qs}` : ''}`);

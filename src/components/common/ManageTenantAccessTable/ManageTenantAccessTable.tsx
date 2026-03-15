@@ -18,7 +18,7 @@ import {
   Switch,
 } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
-import { IconSearch, IconPlus, IconUser, IconUsers, IconUsersGroup, IconTrash } from '@tabler/icons-react';
+import { IconSearch, IconPlus, IconUser, IconUsers, IconUsersGroup, IconTrash, IconRefresh } from '@tabler/icons-react';
 import type { TenantPermissionEnum, PrincipalTypeEnum } from '../../../api/types';
 import { useIdentity } from '../../../contexts';
 import { ConfirmDeleteDialog } from '../ConfirmDeleteDialog';
@@ -124,6 +124,8 @@ interface ManageTenantAccessTableProps {
   roleOptions?: RoleOption[];
   /** Whether to show the Status column with active/inactive toggle. Defaults to true. */
   showStatusColumn?: boolean;
+  /** Handler to refresh a principal from the identity provider */
+  onRefreshPrincipal?: (principalId: string, principalType: PrincipalTypeEnum) => Promise<void>;
 }
 
 const getPrincipalIcon = (type: PrincipalTypeEnum) => {
@@ -285,6 +287,7 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
   roleFilterValue: controlledRoleFilterValue,
   roleOptions: roleOptionsProp,
   showStatusColumn = true,
+  onRefreshPrincipal,
 }) => {
   // Resolve role options (default to tenant roles)
   const resolvedRoleOptions = roleOptionsProp || TENANT_ROLE_OPTIONS;
@@ -309,6 +312,9 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
     displayName: string | null | undefined;
   }>({ open: false, principalId: '', principalType: 'IDENTITY_USER', displayName: '' });
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Refresh principal loading state
+  const [refreshingPrincipal, setRefreshingPrincipal] = useState<string | null>(null);
 
   // Sync internal search with controlled value
   useEffect(() => {
@@ -382,6 +388,21 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
   const handleRowClick = useCallback((principal: TenantPrincipalPermission) => {
     onManageAccess(principal);
   }, [onManageAccess]);
+
+  // Handle refresh principal
+  const handleRefreshPrincipal = useCallback(
+    async (e: React.MouseEvent, principalId: string, principalType: PrincipalTypeEnum) => {
+      e.stopPropagation();
+      if (!onRefreshPrincipal) return;
+      setRefreshingPrincipal(principalId);
+      try {
+        await onRefreshPrincipal(principalId, principalType);
+      } finally {
+        setRefreshingPrincipal(null);
+      }
+    },
+    [onRefreshPrincipal]
+  );
 
   // Group role options for filter dropdown
   const roleFilterOptions = useMemo(() =>
@@ -489,12 +510,29 @@ export const ManageTenantAccessTable: FC<ManageTenantAccessTableProps> = ({
                     key={`${principal.principalId}-${principal.principalType}`}
                     onClick={() => !isCurrentUser && handleRowClick(principal)}
                     style={{ cursor: isCurrentUser ? 'default' : 'pointer' }}
+                    className={classes.principalRow}
                   >
                     {/* Principal Info */}
                     <Table.Td>
                       <Group gap="sm" wrap="nowrap">
-                        <Box className={classes.principalIcon}>
-                          {getPrincipalIcon(principal.principalType)}
+                        <Box className={classes.principalIconWrapper}>
+                          <Box className={classes.principalIcon}>
+                            {getPrincipalIcon(principal.principalType)}
+                          </Box>
+                          {onRefreshPrincipal && principal.principalType !== 'CUSTOM_GROUP' && (
+                            <Tooltip label="Refresh from identity provider" withArrow>
+                              <ActionIcon
+                                className={classes.refreshIcon}
+                                variant="subtle"
+                                size="sm"
+                                loading={refreshingPrincipal === principal.principalId}
+                                onClick={(e) => handleRefreshPrincipal(e, principal.principalId, principal.principalType)}
+                                aria-label={`Refresh ${principal.displayName || principal.principalId}`}
+                              >
+                                <IconRefresh size={14} />
+                              </ActionIcon>
+                            </Tooltip>
+                          )}
                         </Box>
                         <Stack gap={2}>
                           <Group gap="xs">

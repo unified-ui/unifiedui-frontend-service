@@ -27,7 +27,8 @@ import {
   type CredentialResponse,
   type N8NAutonomousAgentConfig,
 } from '../../api/types';
-import { TagInput } from '../common';
+import { TagInput, KeyValuePairsInput } from '../common';
+import type { KeyValuePair } from '../common';
 import { CreateCredentialDialog } from './CreateCredentialDialog';
 
 const AUTONOMOUS_AGENT_TYPES = [
@@ -54,6 +55,10 @@ interface FormValues {
   n8n_api_version: string;
   n8n_workflow_endpoint: string;
   n8n_api_api_key_credential_id: string;
+  n8n_enable_start_workflow: boolean;
+  n8n_webhook_url: string;
+  n8n_default_body: string;
+  n8n_default_query_params: KeyValuePair[];
 }
 
 export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> = ({
@@ -80,6 +85,10 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
       n8n_api_version: 'v1',
       n8n_workflow_endpoint: '',
       n8n_api_api_key_credential_id: '',
+      n8n_enable_start_workflow: false,
+      n8n_webhook_url: '',
+      n8n_default_body: '{}',
+      n8n_default_query_params: [],
     },
     validate: {
       name: (value) => {
@@ -123,6 +132,19 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
         if (values.type === AutonomousAgentTypeEnum.N8N) {
           if (!value || value.trim().length === 0) {
             return 'API Key Credential is required';
+          }
+        }
+        return null;
+      },
+      n8n_default_body: (value, values) => {
+        if (values.type === AutonomousAgentTypeEnum.N8N && values.n8n_enable_start_workflow) {
+          const trimmed = value.trim();
+          if (trimmed && trimmed !== '{}') {
+            try {
+              JSON.parse(trimmed);
+            } catch {
+              return 'Invalid JSON';
+            }
           }
         }
         return null;
@@ -188,6 +210,21 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
           workflow_endpoint: values.n8n_workflow_endpoint.trim(),
           api_api_key_credential_id: values.n8n_api_api_key_credential_id,
         };
+        if (values.n8n_enable_start_workflow && values.n8n_webhook_url.trim()) {
+          config.webhook_url = values.n8n_webhook_url.trim();
+          const bodyTrimmed = values.n8n_default_body.trim();
+          if (bodyTrimmed && bodyTrimmed !== '{}') {
+            try {
+              config.default_body = JSON.parse(bodyTrimmed) as Record<string, unknown>;
+            } catch { /* ignore invalid JSON, will be empty */ }
+          }
+          const filledPairs = values.n8n_default_query_params.filter((p) => p.key.trim());
+          if (filledPairs.length > 0) {
+            config.default_query_params = Object.fromEntries(
+              filledPairs.map((p) => [p.key.trim(), p.value])
+            );
+          }
+        }
       }
 
       // Create the autonomous agent
@@ -300,6 +337,55 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
                   withAsterisk
                   {...form.getInputProps('n8n_workflow_endpoint')}
                 />
+
+                <Switch
+                  label="Enable Start Workflow"
+                  description="Allow triggering the workflow via webhook with optional defaults"
+                  checked={form.values.n8n_enable_start_workflow}
+                  onChange={(e) => form.setFieldValue('n8n_enable_start_workflow', e.currentTarget.checked)}
+                />
+
+                {form.values.n8n_enable_start_workflow && (
+                  <>
+                    <TextInput
+                      label="Webhook URL"
+                      placeholder="https://your-n8n.com/webhook/my-hook"
+                      description="Webhook URL to trigger the workflow"
+                      required
+                      withAsterisk
+                      {...form.getInputProps('n8n_webhook_url')}
+                    />
+                    <Textarea
+                      label="Default Body (JSON)"
+                      placeholder="{}"
+                      description="Pre-filled request body when starting the workflow"
+                      minRows={3}
+                      maxRows={6}
+                      autosize
+                      styles={{ input: { fontFamily: 'monospace' } }}
+                      value={form.values.n8n_default_body}
+                      error={form.errors.n8n_default_body}
+                      onChange={(e) => form.setFieldValue('n8n_default_body', e.currentTarget.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Tab') {
+                          e.preventDefault();
+                          const ta = e.currentTarget;
+                          const s = ta.selectionStart;
+                          const end = ta.selectionEnd;
+                          const val = form.values.n8n_default_body;
+                          form.setFieldValue('n8n_default_body', val.substring(0, s) + '  ' + val.substring(end));
+                          requestAnimationFrame(() => { ta.selectionStart = ta.selectionEnd = s + 2; });
+                        }
+                      }}
+                    />
+                    <KeyValuePairsInput
+                      label="Default Query Params"
+                      description="Key-value pairs pre-filled when starting the workflow"
+                      value={form.values.n8n_default_query_params}
+                      onChange={(pairs) => form.setFieldValue('n8n_default_query_params', pairs)}
+                    />
+                  </>
+                )}
 
                 {/* API Key Credential with Add Button */}
                 <Group gap="xs" align="flex-end">

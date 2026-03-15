@@ -54,6 +54,31 @@ export const ChatWidgetTypeEnum = {
 
 export type ChatWidgetTypeEnum = typeof ChatWidgetTypeEnum[keyof typeof ChatWidgetTypeEnum];
 
+// ========== Standard Widget Types (In-Chat) ==========
+
+export const StandardWidgetId = {
+  YES_NO: 'yesno',
+  SURVEY: 'survey',
+} as const;
+
+export type StandardWidgetId = typeof StandardWidgetId[keyof typeof StandardWidgetId];
+
+export interface YesNoWidgetData {
+  yesLabel?: string;
+  noLabel?: string;
+}
+
+export interface SurveyQuestion {
+  question: string;
+  options: string[];
+  recommendation?: string;
+}
+
+export interface SurveyWidgetData {
+  title: string;
+  questions: SurveyQuestion[];
+}
+
 export const AutonomousAgentTypeEnum = {
   N8N: 'N8N',
 } as const;
@@ -66,6 +91,9 @@ export interface N8NAutonomousAgentConfig {
   api_version: string;
   workflow_endpoint: string;
   api_api_key_credential_id: string;
+  webhook_url?: string;
+  default_body?: Record<string, unknown>;
+  default_query_params?: Record<string, string>;
 }
 
 export const FavoriteResourceTypeEnum = {
@@ -1071,6 +1099,34 @@ export interface SetAutonomousAgentPermissionRequest {
 export interface AutonomousAgentKeyResponse {
   key: string;
   key_number: number;
+}
+
+export interface WorkflowRunResponse {
+  id: string;
+  finished: boolean;
+  status: string;
+  startedAt: string;
+  stoppedAt?: string;
+  mode: string;
+  workflowName?: string;
+  retryOf?: string;
+  retrySuccessId?: string;
+}
+
+export interface WorkflowRunDetailResponse extends WorkflowRunResponse {
+  data?: Record<string, unknown>;
+  workflowData?: Record<string, unknown>;
+}
+
+export interface ListWorkflowRunsResponse {
+  runs: WorkflowRunResponse[];
+  nextCursor?: string | null;
+}
+
+export interface WorkflowRunRetryResponse {
+  id?: string;
+  retried: boolean;
+  message?: string;
 }
 
 // ========== Conversation Types ==========

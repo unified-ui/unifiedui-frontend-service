@@ -158,7 +158,6 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [chatAgent, setChatAgent] = useState<ChatAgentResponse | null>(null);
-
   // Credentials state
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
@@ -1166,6 +1165,11 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
               onDeletePrincipal={handleDeletePrincipal}
               onAddPrincipal={() => setIsAddPrincipalOpen(true)}
               entityName="chat agent"
+              onRefreshPrincipal={async (principalId, principalType) => {
+                if (!apiClient || !selectedTenant) return;
+                await apiClient.refreshPrincipal(principalId, { tenant_id: selectedTenant.id, type: principalType as 'IDENTITY_USER' | 'IDENTITY_GROUP' });
+                await fetchPrincipals(false);
+              }}
             />
           </Box>
         )}
@@ -1185,6 +1189,7 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
         onClose={() => setCreateCredentialOpen(false)}
         onSuccess={handleCredentialCreated}
       />
+
     </>
   );
 };

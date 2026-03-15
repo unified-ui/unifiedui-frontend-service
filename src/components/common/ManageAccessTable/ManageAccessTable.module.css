@@ -50,6 +50,30 @@
   text-align: center;
 }
 
+.principalRow .principalIconWrapper {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.principalRow .refreshIcon {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+}
+
+.principalRow:hover .refreshIcon {
+  display: flex;
+}
+
+.principalRow:hover .principalIcon {
+  display: none;
+}
+
 .principalIcon {
   display: flex;
   align-items: center;

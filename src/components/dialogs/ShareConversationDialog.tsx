@@ -182,6 +182,11 @@ export const ShareConversationDialog: FC<ShareConversationDialogProps> = ({
           onDeletePrincipal={handleDeletePrincipal}
           onAddPrincipal={() => setIsAddPrincipalOpen(true)}
           entityName="conversation"
+          onRefreshPrincipal={async (principalId, principalType) => {
+            if (!apiClient || !selectedTenant) return;
+            await apiClient.refreshPrincipal(principalId, { tenant_id: selectedTenant.id, type: principalType as 'IDENTITY_USER' | 'IDENTITY_GROUP' });
+            await fetchPrincipals(false);
+          }}
         />
       </Modal>
 

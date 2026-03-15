@@ -388,6 +388,11 @@ export const EditCustomGroupDialog: FC<EditCustomGroupDialogProps> = ({
                   addButtonLabel="Add Member"
                   roleLabels={CUSTOM_GROUP_ROLE_LABELS}
                   visibleRoles={CUSTOM_GROUP_VISIBLE_ROLES}
+                  onRefreshPrincipal={async (principalId, principalType) => {
+                    if (!apiClient || !selectedTenant) return;
+                    await apiClient.refreshPrincipal(principalId, { tenant_id: selectedTenant.id, type: principalType as 'IDENTITY_USER' | 'IDENTITY_GROUP' });
+                    await fetchPrincipals(false);
+                  }}
                 />
 
                 <Group justify="flex-end" mt="md">

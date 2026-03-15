@@ -1,0 +1,53 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.toolbar {
+  padding: var(--spacing-sm) 0;
+  flex-shrink: 0;
+}
+
+.statusFilter {
+  width: 140px;
+}
+
+.scrollWrapper {
+  margin-right: calc(-1 * var(--spacing-md));
+  overflow: hidden;
+}
+
+.scrollArea {
+  max-height: calc(100vh - 450px);
+  min-height: 200px;
+  overflow: auto;
+  padding-right: var(--spacing-md);
+}
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--bg-app);
+}
+
+.row {
+  transition: background-color var(--transition-fast);
+  cursor: pointer;
+}
+
+.row:hover {
+  background-color: var(--bg-hover);
+}
+
+.loadMoreRow td {
+  text-align: center;
+  padding: var(--spacing-md) !important;
+}

@@ -43,6 +43,8 @@ import type {
   UpdateAutonomousAgentRequest,
   SetAutonomousAgentPermissionRequest,
   AutonomousAgentKeyResponse,
+  ListWorkflowRunsResponse,
+  WorkflowRunRetryResponse,
   // Conversation Types
   ConversationResponse,
   ConversationQuickListItemResponse,
@@ -1388,6 +1390,64 @@ export class UnifiedUIAPIClient {
     return this.agentServiceRequest<FullTraceResponse>(
       'PUT',
       `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces/${traceId}/import/refresh`
+    );
+  }
+
+  /**
+   * Import a trace for an autonomous agent by execution ID.
+   */
+  async importAutonomousAgentTrace(
+    tenantId: string,
+    agentId: string,
+    data: { type: string; executionId: string; sessionId?: string }
+  ): Promise<{ id: string }> {
+    return this.agentServiceRequest<{ id: string }>(
+      'PUT',
+      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces/import`,
+      data,
+      'Trace imported successfully'
+    );
+  }
+
+  async listWorkflowRuns(
+    tenantId: string,
+    agentId: string,
+    params?: { limit?: number; cursor?: string; status?: string }
+  ): Promise<ListWorkflowRunsResponse> {
+    const query = this.buildQueryString(params || {});
+    return this.request<ListWorkflowRunsResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/workflow-runs${query}`
+    );
+  }
+
+  async retryWorkflowRun(
+    tenantId: string,
+    agentId: string,
+    executionId: string
+  ): Promise<WorkflowRunRetryResponse> {
+    return this.request<WorkflowRunRetryResponse>(
+      'POST',
+      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/workflow-runs/${executionId}/retry`
+    );
+  }
+
+  async startWorkflow(
+    tenantId: string,
+    agentId: string,
+    body?: Record<string, unknown>,
+    files?: { name: string; mimeType: string; data: string }[],
+    queryParams?: Record<string, string>
+  ): Promise<Record<string, unknown>> {
+    const payload: Record<string, unknown> = {};
+    if (body) payload.body = body;
+    if (files && files.length > 0) payload.files = files;
+    if (queryParams && Object.keys(queryParams).length > 0) payload.queryParams = queryParams;
+    return this.request<Record<string, unknown>>(
+      'POST',
+      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/workflow-start`,
+      Object.keys(payload).length > 0 ? payload : undefined,
+      'Workflow started successfully'
     );
   }
 

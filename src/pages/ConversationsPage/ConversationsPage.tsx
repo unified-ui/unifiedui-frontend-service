@@ -120,7 +120,7 @@ export const ConversationsPage: FC = () => {
   const handleNewChatWithAgent = useCallback((agentId: string) => {
     chat.resetStreamingState();
     convList.handleChatAgentChange(agentId);
-    convList.handleNewChat(chat.abortControllerRef);
+    convList.handleNewChat(chat.abortControllerRef, agentId);
   }, [chat, convList]);
 
   const handleSelectConversation = useCallback((id: string) => {

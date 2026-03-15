@@ -1,0 +1,7 @@
+.container {
+  padding: var(--spacing-sm) 0;
+}
+
+.button {
+  min-width: 80px;
+}
