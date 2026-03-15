@@ -1,0 +1,14 @@
+.iframeWidget {
+  margin-top: var(--spacing-sm);
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.submittedBadge {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  z-index: 1;
+}

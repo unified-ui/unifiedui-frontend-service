@@ -12,8 +12,8 @@ import { ShareConversationDialog } from '../../components/dialogs/ShareConversat
 import { SearchConversationsDialog } from '../../components/dialogs/SearchConversationsDialog';
 import { TracingProvider, TracingSidebar, TracingVisualDialog } from '../../components/tracing';
 import { ConversationSidebar } from '../../components/conversation';
-import { ChatView, ChatHeader, ChatEmptyState } from '../../components/chat';
-import { useConversationList, useChat, useConversationTracing, useDelayedLoading } from '../../hooks';
+import { ChatView, ChatHeader, ChatEmptyState, WidgetSidebar } from '../../components/chat';
+import { useConversationList, useChat, useConversationTracing, useConversationWidgets, useDelayedLoading } from '../../hooks';
 import classes from './ConversationsPage.module.css';
 
 /**
@@ -65,9 +65,13 @@ export const ConversationsPage: FC = () => {
     onRefreshTraces: tracing.refreshTraces,
   });
 
+  const widgets = useConversationWidgets({
+    messages: chat.messages,
+  });
+
   useEffect(() => {
     tracing.setMessagesRef(chat.messages);
-  }, [chat.messages, tracing.setMessagesRef]);
+  }, [chat.messages, tracing.setMessagesRef, tracing]);
 
   useEffect(() => {
     if (!apiClient || !tenantId || !conversationId) {
@@ -84,7 +88,7 @@ export const ConversationsPage: FC = () => {
     }
 
     chat.loadConversationMessages(conversationId);
-  }, [apiClient, tenantId, conversationId]);
+  }, [apiClient, tenantId, conversationId, chat, convList]);
 
   useEffect(() => {
     if (convList.currentConversation) {
@@ -94,7 +98,7 @@ export const ConversationsPage: FC = () => {
         resource_name: convList.currentConversation.name || convList.currentConversation.id,
       });
     }
-  }, [convList.currentConversation?.id]);
+  }, [convList.currentConversation, convList.currentConversation?.id, trackVisit]);
 
   const convPerm = convList.currentConversation?.my_permission;
   const canWriteConversation = !convPerm || convPerm === 'ADMIN' || convPerm === 'WRITE';
@@ -106,7 +110,7 @@ export const ConversationsPage: FC = () => {
 
   useEffect(() => {
     triggerFocus();
-  }, [conversationId, convList.selectedChatAgentId]);
+  }, [conversationId, convList.selectedChatAgentId, triggerFocus]);
 
   const handleNewChat = useCallback(() => {
     chat.resetStreamingState();
@@ -191,6 +195,10 @@ export const ConversationsPage: FC = () => {
     </TracingProvider>
   ) : undefined;
 
+    const widgetSlot = widgets.widgetSidebarVisible && widgets.hasWidgets ? (
+      <WidgetSidebar interactions={widgets.interactions} />
+    ) : undefined;
+
   const headerSlot = (
     <ChatHeader
       conversation={convList.currentConversation}
@@ -200,6 +208,8 @@ export const ConversationsPage: FC = () => {
       isFavorite={convList.currentConversation ? convList.favoriteIds.has(convList.currentConversation.id) : false}
       tracingSidebarVisible={tracing.tracingSidebarVisible}
       hasTraces={tracing.traces.length > 0}
+      widgetSidebarVisible={widgets.widgetSidebarVisible}
+      hasWidgets={widgets.hasWidgets}
       messages={chat.messages}
       onChatAgentChange={convList.handleChatAgentChange}
       onNewChatWithAgent={handleNewChatWithAgent}
@@ -215,6 +225,7 @@ export const ConversationsPage: FC = () => {
         }
       }}
       onToggleTracingSidebar={tracing.handleToggleTracingSidebar}
+      onToggleWidgetSidebar={widgets.handleToggleWidgetSidebar}
       onEmbedSetup={handleEmbedSetup}
     />
   );
@@ -336,6 +347,7 @@ export const ConversationsPage: FC = () => {
             onToggleReasoning={() => chat.setIsReasoningExpanded(!chat.reActState.isReasoningExpanded)}
             headerSlot={headerSlot}
             tracingSlot={tracingSlot}
+            widgetSlot={widgetSlot}
             emptyStateSlot={emptyStateSlot}
             focusTrigger={focusTrigger}
           />

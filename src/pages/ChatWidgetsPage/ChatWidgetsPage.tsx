@@ -1,17 +1,37 @@
 import type { FC } from 'react';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { MainLayout } from '../../components/layout/MainLayout';
 import { PageHeader, DataTable, ConfirmDeleteDialog, EntityAvatar } from '../../components/common';
 import type { DataTableItem } from '../../components/common';
-import { CreateChatWidgetDialog, EditChatWidgetDialog } from '../../components/dialogs';
+import { CreateChatWidgetDialog, EditChatWidgetDialog, StandardWidgetPromptDialog } from '../../components/dialogs';
+import type { StandardWidgetType } from '../../components/dialogs';
 import { useIdentity } from '../../contexts';
 import { useEntityList, usePermissions } from '../../hooks';
 import type { ChatWidgetResponse } from '../../api/types';
 import { ChatWidgetTypeEnum } from '../../api/types';
 
 const SORT_STORAGE_KEY = 'unified-ui:sort:chat-widgets';
+
+const _STANDARD_WIDGET_IDS = new Set(['__standard_yesno__', '__standard_survey__']);
+
+const STANDARD_WIDGETS: DataTableItem[] = [
+  {
+    id: '__standard_yesno__',
+    name: 'Yes / No',
+    description: 'Interactive yes/no confirmation buttons for the chat.',
+    type: 'Standard',
+    hideActions: true,
+  },
+  {
+    id: '__standard_survey__',
+    name: 'Survey',
+    description: 'Multi-question survey widget with structured answer options.',
+    type: 'Standard',
+    hideActions: true,
+  },
+];
 
 const CHAT_WIDGET_TYPE_LABELS: Record<string, string> = {
   'CHAT': 'Chat',
@@ -79,7 +99,20 @@ export const ChatWidgetsPage: FC = () => {
     handleDeleteClick, handleDeleteConfirm, handleDeleteClose, handleCreateSuccess,
   } = useEntityList<ChatWidgetResponse>(config);
 
+  const [standardWidgetType, setStandardWidgetType] = useState<StandardWidgetType | null>(null);
+  const [customPromptWidget, setCustomPromptWidget] = useState<{ id: string; name: string } | null>(null);
+
+  const allItems = useMemo(() => [...STANDARD_WIDGETS, ...items], [items]);
+
   const handleOpen = useCallback((id: string) => {
+    if (id === '__standard_yesno__') {
+      setStandardWidgetType('yesno');
+      return;
+    }
+    if (id === '__standard_survey__') {
+      setStandardWidgetType('survey');
+      return;
+    }
     const widget = rawDataRef.current.get(id) as ChatWidgetResponse | undefined;
     if (widget?.type === ChatWidgetTypeEnum.FORM) {
       navigate(`/widget-designer/${id}`);
@@ -89,6 +122,13 @@ export const ChatWidgetsPage: FC = () => {
       handleEdit(id);
     }
   }, [navigate, handleEdit, rawDataRef]);
+
+  const handleIntegrationPrompt = useCallback((id: string) => {
+    const widget = rawDataRef.current.get(id) as ChatWidgetResponse | undefined;
+    if (widget) {
+      setCustomPromptWidget({ id: widget.id, name: widget.name });
+    }
+  }, [rawDataRef]);
 
   const handleShare = useCallback((_id: string) => {
     void _id;
@@ -116,7 +156,7 @@ export const ChatWidgetsPage: FC = () => {
       />
 
       <DataTable
-        items={items}
+        items={allItems}
         isLoading={isLoading}
         isLoadingMore={isLoadingMore}
         hasMore={hasMore}
@@ -139,6 +179,7 @@ export const ChatWidgetsPage: FC = () => {
         onShare={handleShare}
         onManageAccess={handleManageAccess}
         onDuplicate={handleDuplicate}
+        onIntegrationPrompt={handleIntegrationPrompt}
         onDelete={handleDeleteClick}
         renderIcon={renderIcon}
         sortBy={sortBy}
@@ -160,6 +201,14 @@ export const ChatWidgetsPage: FC = () => {
         onClose={handleEditClose}
         onSuccess={handleEditSuccess}
         onTabChange={handleEditTabChange}
+      />
+
+      <StandardWidgetPromptDialog
+        opened={standardWidgetType !== null || customPromptWidget !== null}
+        onClose={() => { setStandardWidgetType(null); setCustomPromptWidget(null); }}
+        widgetType={customPromptWidget ? 'custom' : standardWidgetType}
+        customWidgetId={customPromptWidget?.id}
+        customWidgetName={customPromptWidget?.name}
       />
 
       <ConfirmDeleteDialog

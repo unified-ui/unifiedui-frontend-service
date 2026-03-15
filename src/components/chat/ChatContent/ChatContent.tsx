@@ -4,16 +4,20 @@ import { ScrollArea, Box, Text, Avatar, Stack, Loader, Paper, Tooltip, ActionIco
 import { IconUser, IconSparkles, IconCopy, IconCheck, IconBinaryTree, IconThumbUp, IconThumbDown, IconThumbUpFilled, IconThumbDownFilled, IconArrowDown, IconEdit, IconTrash, IconAlertTriangle, IconRefresh, IconFile, IconPhoto, IconFileTypePdf, IconFileTypeDoc, IconFileTypeXls, IconFileTypePpt, IconFileText, IconMusic, IconFileCode } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { MessageResponse, AttachmentMetadata, ReactionResponse, SurveyWidgetData, YesNoWidgetData } from '../../../api/types';
-import { StandardWidgetId } from '../../../api/types';
+import type { MessageResponse, AttachmentMetadata, ReactionResponse, SurveyWidgetData, YesNoWidgetData, ChatWidgetResponse } from '../../../api/types';
+import { StandardWidgetId, ChatWidgetTypeEnum } from '../../../api/types';
+import type { FormFieldConfig } from '../../../pages/WidgetDesignerPage/types';
 import type { ReActStreamState } from '../../../hooks/chat/useReActChat';
 import { statusTracesToReActState } from '../../../hooks/chat/useReActChat';
-import { parseWidgetTag } from '../../../utils/widgetParser';
+import { parseWidgetTag, isStandardWidgetId } from '../../../utils/widgetParser';
+import { useIdentity } from '../../../contexts';
 import { ConfirmDeleteDialog } from '../../common';
 import { FeedbackDialog } from '../FeedbackDialog';
 import { ReasoningSection } from '../ReasoningSection';
 import { YesNoWidget } from '../widgets/YesNoWidget';
 import { SurveyWidget } from '../widgets/SurveyWidget';
+import { FormWidget } from '../widgets/FormWidget';
+import { IframeWidget } from '../widgets/IframeWidget';
 import classes from './ChatContent.module.css';
 import mdClasses from './Markdown.module.css';
 
@@ -186,7 +190,7 @@ export const ChatContent: FC<ChatContentProps> = ({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowScrollButton(false);
     }
-  });
+  }, [messages.length]);
 
   useEffect(() => {
     if (!userScrolledUpRef.current && streamingContent) {
@@ -904,5 +908,92 @@ const WidgetRenderer: FC<WidgetRendererProps> = ({ widget, isInteractive, onSend
     );
   }
 
+  if (!isStandardWidgetId(widget.id)) {
+    return (
+      <CustomWidgetRenderer
+        widgetId={widget.id}
+        widgetData={widget.data as Record<string, unknown>}
+        isInteractive={isInteractive}
+        onSendMessage={onSendMessage}
+        nextUserMessageContent={nextUserMessageContent}
+      />
+    );
+  }
+
   return null;
+};
+
+interface CustomWidgetRendererProps {
+  widgetId: string;
+  widgetData: Record<string, unknown>;
+  isInteractive: boolean;
+  onSendMessage?: (content: string) => void;
+  nextUserMessageContent?: string;
+}
+
+const CustomWidgetRenderer: FC<CustomWidgetRendererProps> = ({
+  widgetId,
+  widgetData,
+  isInteractive,
+  onSendMessage,
+  nextUserMessageContent,
+}) => {
+  const { apiClient, selectedTenant } = useIdentity();
+  const [widgetDef, setWidgetDef] = useState<ChatWidgetResponse | null>(null);
+  const [loading, setLoading] = useState(!!apiClient && !!selectedTenant?.id);
+  const [error, setError] = useState(!apiClient || !selectedTenant?.id);
+
+  useEffect(() => {
+    if (!apiClient || !selectedTenant?.id) return;
+    let cancelled = false;
+    apiClient.getChatWidget(selectedTenant.id, widgetId)
+      .then((def) => {
+        if (!cancelled) {
+          setWidgetDef(def);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError(true);
+          setLoading(false);
+        }
+      });
+    return () => { cancelled = true; };
+  }, [apiClient, selectedTenant?.id, widgetId]);
+
+  const handleSubmit = useCallback((data: string) => {
+    onSendMessage?.(data);
+  }, [onSendMessage]);
+
+  if (loading) return <Loader size="sm" />;
+  if (error || !widgetDef) return <Text size="xs" c="dimmed">Widget not available</Text>;
+
+  if (widgetDef.type === ChatWidgetTypeEnum.FORM) {
+    const fields = (widgetDef.config?.fields as FormFieldConfig[]) || [];
+    return (
+      <FormWidget
+        fields={fields}
+        onSubmit={handleSubmit}
+        disabled={!isInteractive}
+        submittedData={nextUserMessageContent}
+        widgetData={widgetData}
+      />
+    );
+  }
+
+  if (widgetDef.type === ChatWidgetTypeEnum.IFRAME) {
+    const config = widgetDef.config as { url: string; width?: string | number; height?: string | number; allowFullscreen?: boolean };
+    return (
+      <IframeWidget
+        config={config}
+        onSubmit={handleSubmit}
+        disabled={!isInteractive}
+        submittedData={nextUserMessageContent}
+        widgetData={widgetData}
+      />
+    );
+  }
+
+  return <Text size="xs" c="dimmed">Unsupported widget type</Text>;
 };

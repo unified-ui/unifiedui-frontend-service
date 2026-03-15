@@ -9,7 +9,7 @@ export interface ParsedMessageContent {
   textAfter: string;
 }
 
-const WIDGET_TAG_REGEX = /<\$_WGET\s+_id=(\S+)\s+d=(\{[\s\S]*?\}|\[[\s\S]*?\])\s*\/>/;
+const WIDGET_TAG_REGEX = /<\$_WGET\s+_id=(\S+?)(?:\s+d=(\{[\s\S]*?\}|\[[\s\S]*?\])?)?\s*\/>/;
 
 function safeParseJSON(jsonString: string): Record<string, unknown> | unknown[] | null {
   try {
@@ -31,9 +31,14 @@ export function parseWidgetTag(content: string): ParsedMessageContent {
   }
 
   const [fullMatch, id, dataString] = match;
-  const data = safeParseJSON(dataString);
 
-  if (!data || !id) {
+  if (!id) {
+    return { textBefore: content, widget: null, textAfter: '' };
+  }
+
+  const data = dataString ? safeParseJSON(dataString) : {};
+
+  if (!data) {
     return { textBefore: content, widget: null, textAfter: '' };
   }
 

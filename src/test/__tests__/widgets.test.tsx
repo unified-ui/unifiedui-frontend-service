@@ -3,7 +3,10 @@ import { renderWithProviders } from '../utils';
 import { screen, fireEvent } from '@testing-library/react';
 import { YesNoWidget } from '../../components/chat/widgets/YesNoWidget';
 import { SurveyWidget } from '../../components/chat/widgets/SurveyWidget';
+import { FormWidget } from '../../components/chat/widgets/FormWidget';
 import type { SurveyWidgetData } from '../../api/types';
+import { parseWidgetTag, isStandardWidgetId } from '../../utils/widgetParser';
+import type { FormFieldConfig } from '../../pages/WidgetDesignerPage/types';
 
 describe('YesNoWidget', () => {
   it('renders default Yes/No labels', () => {
@@ -149,5 +152,88 @@ describe('SurveyWidget', () => {
 
     const radioB = screen.getByLabelText('B') as HTMLInputElement;
     expect(radioB.checked).toBe(true);
+  });
+});
+
+describe('FormWidget', () => {
+  const fields: FormFieldConfig[] = [
+    { id: 'f1', type: 'text', label: 'Name', placeholder: 'Enter name', required: true },
+    { id: 'f2', type: 'select', label: 'Color', options: ['Red', 'Blue', 'Green'] },
+    { id: 'f3', type: 'toggle', label: 'Active', default_value: false },
+  ];
+
+  it('renders form fields', () => {
+    renderWithProviders(
+      <FormWidget fields={fields} onSubmit={() => {}} />
+    );
+    expect(screen.getByLabelText(/Name/)).toBeInTheDocument();
+    expect(screen.getByText('Color')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Active/)).toBeInTheDocument();
+  });
+
+  it('submits form data as JSON', () => {
+    const onSubmit = vi.fn();
+    renderWithProviders(
+      <FormWidget fields={fields} onSubmit={onSubmit} />
+    );
+
+    fireEvent.change(screen.getByLabelText(/Name/), { target: { value: 'Alice' } });
+    fireEvent.click(screen.getByText('Submit'));
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    const submitted = JSON.parse(onSubmit.mock.calls[0][0]);
+    expect(submitted['Name']).toBe('Alice');
+  });
+
+  it('shows submitted state with badge', () => {
+    const submittedData = JSON.stringify({ Name: 'Alice', Color: 'Red', Active: true });
+    renderWithProviders(
+      <FormWidget fields={fields} onSubmit={() => {}} submittedData={submittedData} />
+    );
+    expect(screen.getByText('Form submitted')).toBeInTheDocument();
+    expect(screen.queryByText('Submit')).not.toBeInTheDocument();
+  });
+
+  it('disables fields when disabled prop is true', () => {
+    renderWithProviders(
+      <FormWidget fields={fields} onSubmit={() => {}} disabled />
+    );
+    expect(screen.getByLabelText(/Name/)).toBeDisabled();
+  });
+
+  it('pre-fills from widgetData', () => {
+    renderWithProviders(
+      <FormWidget fields={fields} onSubmit={() => {}} widgetData={{ f1: 'Prefilled' }} />
+    );
+    expect(screen.getByLabelText(/Name/)).toHaveValue('Prefilled');
+  });
+});
+
+describe('parseWidgetTag', () => {
+  it('parses custom widget ID', () => {
+    const content = 'Here is your form: <$_WGET _id=abc-123 d={"name":"test"} />';
+    const parsed = parseWidgetTag(content);
+    expect(parsed.widget?.id).toBe('abc-123');
+    expect(parsed.textBefore).toBe('Here is your form:');
+  });
+
+  it('returns null widget for no tag', () => {
+    const content = 'Just text, no widget here.';
+    const parsed = parseWidgetTag(content);
+    expect(parsed.widget).toBeNull();
+  });
+});
+
+describe('isStandardWidgetId', () => {
+  it('returns true for yesno', () => {
+    expect(isStandardWidgetId('yesno')).toBe(true);
+  });
+
+  it('returns true for survey', () => {
+    expect(isStandardWidgetId('survey')).toBe(true);
+  });
+
+  it('returns false for custom UUID', () => {
+    expect(isStandardWidgetId('abc-123-def')).toBe(false);
   });
 });

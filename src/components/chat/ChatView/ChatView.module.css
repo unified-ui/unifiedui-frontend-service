@@ -26,6 +26,14 @@
   overflow: hidden;
 }
 
+.widgetSidebarWrapper {
+  width: 320px;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .contentArea {
   flex: 1;
   min-height: 0;

@@ -19,3 +19,5 @@ export { ImportTraceDialog } from './ImportTraceDialog';
 export { StartWorkflowDialog } from './StartWorkflowDialog';
 export { AIModelDialog } from './AIModelDialog';
 export { AnalyzeErrorDialog } from './AnalyzeErrorDialog';
+export { StandardWidgetPromptDialog } from './StandardWidgetPromptDialog';
+export type { StandardWidgetType } from './StandardWidgetPromptDialog';

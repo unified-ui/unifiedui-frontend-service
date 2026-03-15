@@ -45,6 +45,7 @@ export interface ChatViewProps {
 
   headerSlot?: ReactNode;
   tracingSlot?: ReactNode;
+  widgetSlot?: ReactNode;
 }
 
 export const ChatView: FC<ChatViewProps> = ({
@@ -82,6 +83,7 @@ export const ChatView: FC<ChatViewProps> = ({
 
   headerSlot,
   tracingSlot,
+  widgetSlot,
 }) => {
   const { t } = useTranslation();
   const chatInputRef = useRef<ChatInputRef>(null);
@@ -200,6 +202,12 @@ export const ChatView: FC<ChatViewProps> = ({
           </>
         )}
       </Box>
+
+      {widgetSlot && (
+        <Box className={classes.widgetSidebarWrapper}>
+          {widgetSlot}
+        </Box>
+      )}
 
       {tracingSlot && (
         <Box className={classes.tracingSidebarWrapper}>

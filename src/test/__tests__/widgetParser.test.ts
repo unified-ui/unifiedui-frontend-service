@@ -85,3 +85,23 @@ describe('isStandardWidgetId', () => {
     expect(isStandardWidgetId('')).toBe(false);
   });
 });
+
+describe('parseWidgetTag — empty/missing d=', () => {
+  it('should parse a tag with d= followed by space (empty data)', () => {
+    const content = 'I Need more data! <$_WGET _id=79c56c4d-7ba8-471b-9cb9-a6d9d39382d7 d= />';
+    const result = parseWidgetTag(content);
+    expect(result.widget).not.toBeNull();
+    expect(result.widget!.id).toBe('79c56c4d-7ba8-471b-9cb9-a6d9d39382d7');
+    expect(result.widget!.data).toEqual({});
+    expect(result.textBefore).toBe('I Need more data!');
+  });
+
+  it('should parse a tag without d= at all', () => {
+    const content = 'Fill this out: <$_WGET _id=abc-123 />';
+    const result = parseWidgetTag(content);
+    expect(result.widget).not.toBeNull();
+    expect(result.widget!.id).toBe('abc-123');
+    expect(result.widget!.data).toEqual({});
+    expect(result.textBefore).toBe('Fill this out:');
+  });
+});

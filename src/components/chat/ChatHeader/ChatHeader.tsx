@@ -22,6 +22,7 @@ import {
   IconChevronDown,
   IconSparkles,
   IconChartDots,
+  IconPuzzle,
   IconFileText,
   IconFileTypePdf,
   IconFileTypeJs,
@@ -39,6 +40,8 @@ export interface ChatHeaderProps {
   isFavorite?: boolean;
   tracingSidebarVisible?: boolean;
   hasTraces?: boolean;
+  widgetSidebarVisible?: boolean;
+  hasWidgets?: boolean;
   messages?: MessageResponse[];
   onChatAgentChange: (chatAgentId: string) => void;
   onNewChatWithAgent?: (chatAgentId: string) => void;
@@ -46,6 +49,7 @@ export interface ChatHeaderProps {
   onToggleFavorite?: () => void;
   onDelete?: () => void;
   onToggleTracingSidebar?: () => void;
+  onToggleWidgetSidebar?: () => void;
   onEmbedSetup?: () => void;
 }
 
@@ -57,6 +61,8 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
   isFavorite = false,
   tracingSidebarVisible = false,
   hasTraces = false,
+  widgetSidebarVisible = false,
+  hasWidgets = false,
   messages = [],
   onChatAgentChange,
   onNewChatWithAgent,
@@ -64,6 +70,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
   onToggleFavorite,
   onDelete,
   onToggleTracingSidebar,
+  onToggleWidgetSidebar,
   onEmbedSetup,
 }) => {
   const { t } = useTranslation();
@@ -179,6 +186,18 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
         <Group gap="xs" className={classes.rightSection}>
           {selectedChatAgentId && (
             <>
+              <Tooltip label={widgetSidebarVisible ? t('widgets:sidebar.hideWidgets') : t('widgets:sidebar.showWidgets')}>
+                <ActionIcon
+                  variant={widgetSidebarVisible ? 'filled' : 'subtle'}
+                  color={widgetSidebarVisible ? 'primary' : undefined}
+                  onClick={onToggleWidgetSidebar}
+                  aria-label="Toggle widget sidebar"
+                  disabled={isNewChat || !hasWidgets}
+                >
+                  <IconPuzzle size={18} />
+                </ActionIcon>
+              </Tooltip>
+
               <Tooltip label={tracingSidebarVisible ? t('tracing:hideTracing') : t('tracing:showTracing')}>
                 <ActionIcon
                   variant={tracingSidebarVisible ? 'filled' : 'subtle'}

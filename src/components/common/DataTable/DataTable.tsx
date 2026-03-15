@@ -25,6 +25,7 @@ interface DataTableProps {
   onManageAccess?: (id: string) => void;
   onDuplicate?: (id: string) => void;
   onEmbedSetup?: (id: string) => void;
+  onIntegrationPrompt?: (id: string) => void;
   onPin?: (id: string, isPinned: boolean) => void;
   onDelete?: (id: string) => void;
   onRowClick?: (id: string) => void;
@@ -63,6 +64,7 @@ export const DataTable: FC<DataTableProps> = ({
   onManageAccess,
   onDuplicate,
   onEmbedSetup,
+  onIntegrationPrompt,
   onPin,
   onDelete,
   onRowClick,
@@ -377,6 +379,7 @@ export const DataTable: FC<DataTableProps> = ({
                     onManageAccess={onManageAccess}
                     onDuplicate={onDuplicate}
                     onEmbedSetup={onEmbedSetup}
+                    onIntegrationPrompt={onIntegrationPrompt}
                     onPin={onPin}
                     onDelete={onDelete}
                     onRowClick={onRowClick}
