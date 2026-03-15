@@ -104,5 +104,9 @@
     "description": "Suggested prompts shown to users when starting a new chat.",
     "placeholder": "Enter a starter prompt...",
     "maxReached": "Maximum greeting messages reached"
-  }
+  },
+  "testConnection": "Test Connection",
+  "testConnectionFailed": "Failed to test connection",
+  "testConnectionHintN8nChat": "This will trigger a test execution on your n8n instance",
+  "testConnectionHintWebhook": "This will trigger a test execution via the webhook"
 }

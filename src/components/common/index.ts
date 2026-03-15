@@ -35,3 +35,6 @@ export { GreetingMessagesInput } from './GreetingMessagesInput';
 export type { GreetingMessagesInputProps } from './GreetingMessagesInput';
 export { KeyValuePairsInput } from './KeyValuePairsInput';
 export type { KeyValuePairsInputProps, KeyValuePair } from './KeyValuePairsInput';
+export { ConnectionTestButton } from './ConnectionTestButton';
+export { FilterableSelect } from './FilterableSelect';
+export type { FilterableSelectProps } from './FilterableSelect';

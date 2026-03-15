@@ -3,7 +3,6 @@ import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Group,
-  Select,
   Text,
   ActionIcon,
   Menu,
@@ -28,7 +27,7 @@ import {
   IconFileTypeJs,
   IconCode,
 } from '@tabler/icons-react';
-import { ConfirmDeleteDialog } from '../../common';
+import { ConfirmDeleteDialog, FilterableSelect } from '../../common';
 import type { ChatAgentResponse, ConversationResponse, MessageResponse } from '../../../api/types';
 import classes from './ChatHeader.module.css';
 
@@ -169,7 +168,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
     <div className={classes.header}>
       <Group justify="space-between" align="center" wrap="nowrap" className={classes.headerContent}>
         <Box className={classes.leftSection}>
-          <Select
+          <FilterableSelect
             placeholder={t('conversations:selectAgent')}
             data={chatAgentOptions}
             value={selectedChatAgentId}
@@ -177,7 +176,6 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
             leftSection={<IconSparkles size={18} />}
             rightSection={<IconChevronDown size={16} />}
             className={classes.chatAgentSelect}
-            searchable
             nothingFoundMessage={t('conversations:noAgentsFound')}
             comboboxProps={{ position: 'bottom-start', shadow: 'md' }}
           />

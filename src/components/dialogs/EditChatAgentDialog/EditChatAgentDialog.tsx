@@ -23,6 +23,7 @@ import {
   TagsInput,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useDebouncedValue } from '@mantine/hooks';
 import {
   IconSparkles,
   IconInfoCircle,
@@ -50,7 +51,8 @@ import {
   type FoundryChatAgentConfig,
   type RestApiChatAgentConfig,
 } from '../../../api/types';
-import { TagInput, ManageAccessTable, AddPrincipalDialog, GreetingMessagesInput } from '../../common';
+import { TagInput, ManageAccessTable, AddPrincipalDialog, GreetingMessagesInput, ConnectionTestButton, FilterableSelect } from '../../common';
+import { TestConnectionType } from '../../../api/types';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
 import type { PrincipalPermission } from '../../common/ManageAccessTable/ManageAccessTable';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
@@ -163,6 +165,9 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
   const [credentialFieldTarget, setCredentialFieldTarget] = useState<'api_key' | 'chat_auth' | 'rest_api' | null>(null);
+
+  const [credentialSearch, setCredentialSearch] = useState('');
+  const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
 
   // Principals state
   const [principals, setPrincipals] = useState<PrincipalPermission[]>([]);
@@ -346,7 +351,7 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
   }, [initialTab]);
 
   // Load credentials when dialog opens
-  const loadCredentials = useCallback(async () => {
+  const loadCredentials = useCallback(async (searchTerm?: string) => {
     if (!apiClient || !selectedTenant) return;
 
     setIsLoadingCredentials(true);
@@ -355,6 +360,7 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
         limit: 100,
         order_by: 'name',
         order_direction: 'asc',
+        name: searchTerm || undefined,
       });
       setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
     } catch (error) {
@@ -519,6 +525,12 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
       setHasPrincipalsFetched(false);
     }
   }, [opened, chatAgentId, initialData, initializeFromData, fetchChatAgent, fetchPrincipals, loadCredentials]);
+
+  useEffect(() => {
+    if (opened && debouncedCredentialSearch !== undefined) {
+      loadCredentials(debouncedCredentialSearch);
+    }
+  }, [opened, debouncedCredentialSearch, loadCredentials]);
 
   // Handle tab change
   const handleTabChange = (value: string) => {
@@ -858,26 +870,9 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
                     />
                   </Group>
 
-                  <TextInput
-                    label="Chat URL"
-                    placeholder="https://your-n8n-instance.com/webhook/..."
-                    required
-                    withAsterisk
-                    {...form.getInputProps('n8n_chat_url')}
-                  />
-
-                  <TextInput
-                    label="Workflow Endpoint"
-                    placeholder="https://your-n8n-instance.com/workflow/abc123"
-                    description="The URL to the N8N workflow (e.g. https://n8n.example.com/workflow/abc123)"
-                    required
-                    withAsterisk
-                    {...form.getInputProps('n8n_workflow_endpoint')}
-                  />
-
                   {/* API Key Credential with Add Button */}
                   <Group gap="xs" align="flex-end">
-                    <Select
+                    <FilterableSelect
                       label="API Key Credential"
                       placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
                       required
@@ -885,8 +880,8 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
                       data={apiKeyCredentials}
                       rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                       disabled={isLoadingCredentials}
-                      searchable
                       nothingFoundMessage="No credentials found"
+                      onFilterChange={setCredentialSearch}
                       style={{ flex: 1 }}
                       {...form.getInputProps('n8n_api_api_key_credential_id')}
                     />
@@ -910,15 +905,15 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
 
                   {/* Chat Auth Credential (Optional) with Add Button */}
                   <Group gap="xs" align="flex-end">
-                    <Select
+                    <FilterableSelect
                       label="Chat Auth Credential (Optional)"
                       placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential (optional)'}
                       data={chatAuthCredentials}
                       rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                       disabled={isLoadingCredentials}
                       clearable
-                      searchable
                       nothingFoundMessage="No credentials found"
+                      onFilterChange={setCredentialSearch}
                       style={{ flex: 1 }}
                       {...form.getInputProps('n8n_chat_auth_credential_id')}
                     />
@@ -933,6 +928,36 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
                       </ActionIcon>
                     </Tooltip>
                   </Group>
+
+                  <TextInput
+                    label="Chat URL"
+                    placeholder="https://your-n8n-instance.com/webhook/..."
+                    required
+                    withAsterisk
+                    {...form.getInputProps('n8n_chat_url')}
+                  />
+                  <ConnectionTestButton
+                    testType={TestConnectionType.N8N_CHAT_URL}
+                    url={form.values.n8n_chat_url}
+                    credentialId={form.values.n8n_chat_auth_credential_id || undefined}
+                    disabled={!form.values.n8n_chat_url}
+                    hint={t('testConnectionHintN8nChat')}
+                  />
+
+                  <TextInput
+                    label="Workflow Endpoint"
+                    placeholder="https://your-n8n-instance.com/workflow/abc123"
+                    description="The URL to the N8N workflow (e.g. https://n8n.example.com/workflow/abc123)"
+                    required
+                    withAsterisk
+                    {...form.getInputProps('n8n_workflow_endpoint')}
+                  />
+                  <ConnectionTestButton
+                    testType={TestConnectionType.N8N_WORKFLOW}
+                    url={form.values.n8n_workflow_endpoint}
+                    credentialId={form.values.n8n_api_api_key_credential_id || undefined}
+                    disabled={!form.values.n8n_workflow_endpoint || !form.values.n8n_api_api_key_credential_id}
+                  />
 
                   <Divider label="Chat History" labelPosition="center" />
 
@@ -991,6 +1016,15 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
                     withAsterisk
                     {...form.getInputProps('foundry_agent_name')}
                   />
+                  <ConnectionTestButton
+                    testType={TestConnectionType.FOUNDRY_AGENT}
+                    url={form.values.foundry_project_endpoint}
+                    config={{
+                      agent_name: form.values.foundry_agent_name,
+                      api_version: form.values.foundry_api_version,
+                    }}
+                    disabled={!form.values.foundry_project_endpoint || !form.values.foundry_agent_name}
+                  />
                 </>
               )}
 
@@ -1007,19 +1041,10 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
                     {...form.getInputProps('rest_api_auth_type')}
                   />
 
-                  <TextInput
-                    label="Invoke Endpoint"
-                    placeholder="https://your-agent-api.com/invoke"
-                    description="The URL to send chat messages to"
-                    required
-                    withAsterisk
-                    {...form.getInputProps('rest_api_invoke_endpoint')}
-                  />
-
                   {AUTH_TYPES_REQUIRING_CREDENTIAL.has(form.values.rest_api_auth_type as RestApiAuthTypeEnum) && (
                     <>
                       <Group gap="xs" align="flex-end">
-                        <Select
+                        <FilterableSelect
                           label="Credential"
                           placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
                           required
@@ -1027,8 +1052,8 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
                           data={restApiCredentials}
                           rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                           disabled={isLoadingCredentials}
-                          searchable
                           nothingFoundMessage="No credentials found"
+                          onFilterChange={setCredentialSearch}
                           style={{ flex: 1 }}
                           {...form.getInputProps('rest_api_credential_id')}
                         />
@@ -1061,6 +1086,25 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
                     />
                   )}
 
+                  <TextInput
+                    label="Invoke Endpoint"
+                    placeholder="https://your-agent-api.com/invoke"
+                    description="The URL to send chat messages to"
+                    required
+                    withAsterisk
+                    {...form.getInputProps('rest_api_invoke_endpoint')}
+                  />
+                  <ConnectionTestButton
+                    testType={TestConnectionType.REST_API_INVOKE}
+                    url={form.values.rest_api_invoke_endpoint}
+                    credentialId={form.values.rest_api_credential_id || undefined}
+                    config={{
+                      auth_type: form.values.rest_api_auth_type,
+                      api_key_header_name: form.values.rest_api_api_key_header_name,
+                    }}
+                    disabled={!form.values.rest_api_invoke_endpoint}
+                  />
+
                   <Divider label="Chat History" labelPosition="center" />
 
                   <Switch
@@ -1088,14 +1132,26 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
                   />
 
                   {form.values.rest_api_enable_conversation_endpoint && (
-                    <TextInput
-                      label="Create Conversation Endpoint"
-                      placeholder="https://your-agent-api.com/conversations"
-                      description="POST endpoint to create a new conversation/session"
-                      required
-                      withAsterisk
-                      {...form.getInputProps('rest_api_create_conversation_endpoint')}
-                    />
+                    <>
+                      <TextInput
+                        label="Create Conversation Endpoint"
+                        placeholder="https://your-agent-api.com/conversations"
+                        description="POST endpoint to create a new conversation/session"
+                        required
+                        withAsterisk
+                        {...form.getInputProps('rest_api_create_conversation_endpoint')}
+                      />
+                      <ConnectionTestButton
+                        testType={TestConnectionType.REST_API_CONVERSATION}
+                        url={form.values.rest_api_create_conversation_endpoint}
+                        credentialId={form.values.rest_api_credential_id || undefined}
+                        config={{
+                          auth_type: form.values.rest_api_auth_type,
+                          api_key_header_name: form.values.rest_api_api_key_header_name,
+                        }}
+                        disabled={!form.values.rest_api_create_conversation_endpoint}
+                      />
+                    </>
                   )}
                 </>
               )}

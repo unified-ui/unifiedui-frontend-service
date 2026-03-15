@@ -20,6 +20,7 @@ import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconRobot, IconPlus, IconAlertCircle } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
+import { useTranslation } from 'react-i18next';
 import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
 import {
   AutonomousAgentTypeEnum,
@@ -27,8 +28,9 @@ import {
   type CredentialResponse,
   type N8NAutonomousAgentConfig,
 } from '../../api/types';
-import { TagInput, KeyValuePairsInput } from '../common';
+import { TagInput, KeyValuePairsInput, ConnectionTestButton, FilterableSelect } from '../common';
 import type { KeyValuePair } from '../common';
+import { TestConnectionType } from '../../api/types';
 import { CreateCredentialDialog } from './CreateCredentialDialog';
 
 const AUTONOMOUS_AGENT_TYPES = [
@@ -67,6 +69,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
   onSuccess,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { t } = useTranslation('common');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
@@ -337,6 +340,12 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
                   withAsterisk
                   {...form.getInputProps('n8n_workflow_endpoint')}
                 />
+                <ConnectionTestButton
+                  testType={TestConnectionType.N8N_WORKFLOW}
+                  url={form.values.n8n_workflow_endpoint}
+                  credentialId={form.values.n8n_api_api_key_credential_id || undefined}
+                  disabled={!form.values.n8n_workflow_endpoint || !form.values.n8n_api_api_key_credential_id}
+                />
 
                 <Switch
                   label="Enable Start Workflow"
@@ -354,6 +363,12 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
                       required
                       withAsterisk
                       {...form.getInputProps('n8n_webhook_url')}
+                    />
+                    <ConnectionTestButton
+                      testType={TestConnectionType.N8N_WEBHOOK}
+                      url={form.values.n8n_webhook_url}
+                      disabled={!form.values.n8n_webhook_url}
+                      hint={t('testConnectionHintWebhook')}
                     />
                     <Textarea
                       label="Default Body (JSON)"
@@ -389,7 +404,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
 
                 {/* API Key Credential with Add Button */}
                 <Group gap="xs" align="flex-end">
-                  <Select
+                  <FilterableSelect
                     label="API Key Credential"
                     placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
                     required
@@ -397,9 +412,8 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
                     data={apiKeyCredentials}
                     rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                     disabled={isLoadingCredentials}
-                    searchable
-                    onSearchChange={setCredentialSearch}
                     nothingFoundMessage="No credentials found"
+                    onFilterChange={setCredentialSearch}
                     style={{ flex: 1 }}
                     {...form.getInputProps('n8n_api_api_key_credential_id')}
                   />

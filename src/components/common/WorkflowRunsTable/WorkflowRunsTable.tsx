@@ -90,9 +90,11 @@ export const WorkflowRunsTable: FC<WorkflowRunsTableProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const nextCursorRef = useRef<string | null>(null);
+  const isLoadingRef = useRef(false);
   const [hasMore, setHasMore] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [autoRefreshCountdown, setAutoRefreshCountdown] = useState(AUTO_REFRESH_SECONDS);
@@ -106,6 +108,7 @@ export const WorkflowRunsTable: FC<WorkflowRunsTableProps> = ({
         setIsLoading(true);
       } else {
         setIsLoadingMore(true);
+        isLoadingRef.current = true;
       }
 
       try {
@@ -121,12 +124,13 @@ export const WorkflowRunsTable: FC<WorkflowRunsTableProps> = ({
           setRuns((prev) => [...prev, ...response.runs]);
         }
         nextCursorRef.current = response.nextCursor ?? null;
-        setHasMore(!!response.nextCursor);
+        setHasMore(!!response.nextCursor && response.runs.length > 0);
       } catch {
         // Error handled by API client onError
       } finally {
         setIsLoading(false);
         setIsLoadingMore(false);
+        isLoadingRef.current = false;
       }
     },
     [apiClient, tenantId, agentId, statusFilter]
@@ -141,6 +145,28 @@ export const WorkflowRunsTable: FC<WorkflowRunsTableProps> = ({
       fetchRuns(false);
     }
   }, [fetchRuns, isLoadingMore, hasMore]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting && !isLoadingRef.current) {
+          handleLoadMore();
+        }
+      },
+      {
+        root: null,
+        rootMargin: '100px',
+        threshold: 0,
+      }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, handleLoadMore]);
 
   const handleRefresh = useCallback(() => {
     fetchRuns(true);
@@ -348,22 +374,16 @@ export const WorkflowRunsTable: FC<WorkflowRunsTableProps> = ({
                     </Table.Td>
                   </Table.Tr>
                 ))}
-                {hasMore && (
-                  <Table.Tr className={classes.loadMoreRow}>
-                    <Table.Td colSpan={6}>
-                      <Button
-                        variant="subtle"
-                        size="xs"
-                        onClick={handleLoadMore}
-                        loading={isLoadingMore}
-                      >
-                        Load more
-                      </Button>
-                    </Table.Td>
-                  </Table.Tr>
-                )}
               </Table.Tbody>
             </Table>
+
+            {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
+
+            {isLoadingMore && (
+              <Center py="md">
+                <Loader size="sm" />
+              </Center>
+            )}
           </div>
         </div>
       )}

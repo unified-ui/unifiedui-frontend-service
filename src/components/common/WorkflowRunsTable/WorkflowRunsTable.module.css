@@ -46,8 +46,3 @@
 .row:hover {
   background-color: var(--bg-hover);
 }
-
-.loadMoreRow td {
-  text-align: center;
-  padding: var(--spacing-md) !important;
-}

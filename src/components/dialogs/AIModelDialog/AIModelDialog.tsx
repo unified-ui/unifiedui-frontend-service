@@ -6,8 +6,10 @@ import {
   ActionIcon, Tooltip,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useDebouncedValue } from '@mantine/hooks';
 import { IconBrain, IconCheck, IconX, IconAlertCircle, IconPlus } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
+import { FilterableSelect } from '../../common';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import {
   AIModelTypeEnum,
@@ -86,6 +88,8 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [credentials, setCredentials] = useState<QuickListItemResponse[]>([]);
+  const [credentialSearch, setCredentialSearch] = useState('');
+  const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
   const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
 
   const form = useForm<FormValues>({
@@ -113,12 +117,13 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
 
   useFormDirtyGuard(form.isDirty());
 
-  const fetchCredentials = useCallback(async () => {
+  const fetchCredentials = useCallback(async (searchTerm?: string) => {
     if (!apiClient || !selectedTenant) return;
     try {
       const result = await apiClient.listCredentials(selectedTenant.id, {
         view: 'quick-list',
         limit: 200,
+        ...(searchTerm ? { name: searchTerm } : {}),
       }) as QuickListItemResponse[];
       setCredentials(result);
     } catch {
@@ -162,6 +167,12 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
       }
     }
   }, [opened, isEdit]);
+
+  useEffect(() => {
+    if (opened) {
+      fetchCredentials(debouncedCredentialSearch || undefined);
+    }
+  }, [debouncedCredentialSearch]);
 
   const handleSubmit = async (values: FormValues) => {
     if (!apiClient || !selectedTenant) return;
@@ -386,13 +397,13 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
 
               {requiresCredential && (
                 <Group gap="xs" align="flex-end">
-                  <Select
+                  <FilterableSelect
                     label="Credential"
                     placeholder="Select a credential"
                     data={credentialOptions}
                     clearable
-                    searchable
                     style={{ flex: 1 }}
+                    onFilterChange={setCredentialSearch}
                     {...form.getInputProps('credential_id')}
                   />
                   <Tooltip label="Create new Credential">

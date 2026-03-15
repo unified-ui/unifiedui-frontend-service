@@ -2,14 +2,14 @@ import type { FC } from 'react';
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Group, TextInput, ActionIcon, Avatar, Text, Title, useMantineColorScheme, Stack, Paper, Button, Divider, Select } from '@mantine/core';
+import { Group, TextInput, ActionIcon, Avatar, Text, Title, useMantineColorScheme, Stack, Paper, Button, Divider } from '@mantine/core';
 import { IconSearch, IconBrain, IconSun, IconMoon, IconLogout, IconPlus, IconBuilding } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
 import { useIdentity } from '../../../contexts';
 import { useKeyboardShortcuts } from '../../../hooks';
 import { CreateTenantDialog } from '../../dialogs';
 import { CreateOrganizationDialog } from '../../dialogs';
-import { CommandPalette } from '../../common';
+import { CommandPalette, FilterableSelect } from '../../common';
 import classes from './Header.module.css';
 
 export const Header: FC = () => {
@@ -145,11 +145,10 @@ export const Header: FC = () => {
 
                 <Stack gap="xs">
                   <Text size="xs" fw={700}>{t('tenantLabel')}</Text>
-                  <Select
+                  <FilterableSelect
                     data={tenantOptions}
                     value={selectedTenant?.id || null}
                     onChange={handleTenantChange}
-                    searchable
                     size="xs"
                     placeholder={t('selectTenant')}
                     disabled={tenants.length === 0}

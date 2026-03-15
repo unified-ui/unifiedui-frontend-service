@@ -37,8 +37,9 @@ import {
   type FoundryChatAgentConfig,
   type RestApiChatAgentConfig,
 } from '../../api/types';
-import { TagInput } from '../common';
+import { TagInput, ConnectionTestButton, FilterableSelect } from '../common';
 import { GreetingMessagesInput } from '../common';
+import { TestConnectionType } from '../../api/types';
 import { CreateCredentialDialog } from './CreateCredentialDialog';
 
 const CHAT_AGENT_TYPES = [
@@ -542,26 +543,9 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
                   />
                 </Group>
 
-                <TextInput
-                  label="Chat URL"
-                  placeholder="https://your-n8n-instance.com/webhook/..."
-                  required
-                  withAsterisk
-                  {...form.getInputProps('n8n_chat_url')}
-                />
-
-                <TextInput
-                  label="Workflow Endpoint"
-                  placeholder="https://your-n8n-instance.com/workflow/abc123"
-                  description="The URL to the N8N workflow (e.g. https://n8n.example.com/workflow/abc123)"
-                  required
-                  withAsterisk
-                  {...form.getInputProps('n8n_workflow_endpoint')}
-                />
-
                 {/* API Key Credential with Add Button */}
                 <Group gap="xs" align="flex-end">
-                  <Select
+                  <FilterableSelect
                     label="API Key Credential"
                     placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
                     required
@@ -569,9 +553,8 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
                     data={apiKeyCredentials}
                     rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                     disabled={isLoadingCredentials}
-                    searchable
-                    onSearchChange={setCredentialSearch}
                     nothingFoundMessage="No credentials found"
+                    onFilterChange={setCredentialSearch}
                     style={{ flex: 1 }}
                     {...form.getInputProps('n8n_api_api_key_credential_id')}
                   />
@@ -595,16 +578,15 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
 
                 {/* Chat Auth Credential (Optional) with Add Button */}
                 <Group gap="xs" align="flex-end">
-                  <Select
+                  <FilterableSelect
                     label="Chat Auth Credential (Optional)"
                     placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential (optional)'}
                     data={chatAuthCredentials}
                     rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                     disabled={isLoadingCredentials}
                     clearable
-                    searchable
-                    onSearchChange={setCredentialSearch}
                     nothingFoundMessage="No credentials found"
+                    onFilterChange={setCredentialSearch}
                     style={{ flex: 1 }}
                     {...form.getInputProps('n8n_chat_auth_credential_id')}
                   />
@@ -619,6 +601,36 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
                     </ActionIcon>
                   </Tooltip>
                 </Group>
+
+                <TextInput
+                  label="Chat URL"
+                  placeholder="https://your-n8n-instance.com/webhook/..."
+                  required
+                  withAsterisk
+                  {...form.getInputProps('n8n_chat_url')}
+                />
+                <ConnectionTestButton
+                  testType={TestConnectionType.N8N_CHAT_URL}
+                  url={form.values.n8n_chat_url}
+                  credentialId={form.values.n8n_chat_auth_credential_id || undefined}
+                  disabled={!form.values.n8n_chat_url}
+                  hint={t('testConnectionHintN8nChat')}
+                />
+
+                <TextInput
+                  label="Workflow Endpoint"
+                  placeholder="https://your-n8n-instance.com/workflow/abc123"
+                  description="The URL to the N8N workflow (e.g. https://n8n.example.com/workflow/abc123)"
+                  required
+                  withAsterisk
+                  {...form.getInputProps('n8n_workflow_endpoint')}
+                />
+                <ConnectionTestButton
+                  testType={TestConnectionType.N8N_WORKFLOW}
+                  url={form.values.n8n_workflow_endpoint}
+                  credentialId={form.values.n8n_api_api_key_credential_id || undefined}
+                  disabled={!form.values.n8n_workflow_endpoint || !form.values.n8n_api_api_key_credential_id}
+                />
 
                 <Divider label="Chat History" labelPosition="center" />
 
@@ -677,6 +689,15 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
                   withAsterisk
                   {...form.getInputProps('foundry_agent_name')}
                 />
+                <ConnectionTestButton
+                  testType={TestConnectionType.FOUNDRY_AGENT}
+                  url={form.values.foundry_project_endpoint}
+                  config={{
+                    agent_name: form.values.foundry_agent_name,
+                    api_version: form.values.foundry_api_version,
+                  }}
+                  disabled={!form.values.foundry_project_endpoint || !form.values.foundry_agent_name}
+                />
               </>
             )}
 
@@ -693,19 +714,10 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
                   {...form.getInputProps('rest_api_auth_type')}
                 />
 
-                <TextInput
-                  label="Invoke Endpoint"
-                  placeholder="https://api.example.com/agent/invoke"
-                  description="The POST endpoint URL for sending messages to the agent"
-                  required
-                  withAsterisk
-                  {...form.getInputProps('rest_api_invoke_endpoint')}
-                />
-
                 {AUTH_TYPES_REQUIRING_CREDENTIAL.has(form.values.rest_api_auth_type as RestApiAuthTypeEnum) && (
                   <>
                     <Group gap="xs" align="flex-end">
-                      <Select
+                      <FilterableSelect
                         label="Credential"
                         placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
                         required
@@ -713,9 +725,8 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
                         data={restApiCredentials}
                         rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                         disabled={isLoadingCredentials}
-                        searchable
-                        onSearchChange={setCredentialSearch}
                         nothingFoundMessage="No matching credentials found"
+                        onFilterChange={setCredentialSearch}
                         style={{ flex: 1 }}
                         {...form.getInputProps('rest_api_credential_id')}
                       />
@@ -748,6 +759,25 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
                   />
                 )}
 
+                <TextInput
+                  label="Invoke Endpoint"
+                  placeholder="https://api.example.com/agent/invoke"
+                  description="The POST endpoint URL for sending messages to the agent"
+                  required
+                  withAsterisk
+                  {...form.getInputProps('rest_api_invoke_endpoint')}
+                />
+                <ConnectionTestButton
+                  testType={TestConnectionType.REST_API_INVOKE}
+                  url={form.values.rest_api_invoke_endpoint}
+                  credentialId={form.values.rest_api_credential_id || undefined}
+                  config={{
+                    auth_type: form.values.rest_api_auth_type,
+                    api_key_header_name: form.values.rest_api_api_key_header_name,
+                  }}
+                  disabled={!form.values.rest_api_invoke_endpoint}
+                />
+
                 <Divider label="Chat History" labelPosition="center" />
 
                 <Switch
@@ -775,14 +805,26 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
                 />
 
                 {form.values.rest_api_enable_conversation_endpoint && (
-                  <TextInput
-                    label="Create Conversation Endpoint"
-                    placeholder="https://api.example.com/conversations"
-                    description="POST endpoint that returns a conversation_id"
-                    required
-                    withAsterisk
-                    {...form.getInputProps('rest_api_create_conversation_endpoint')}
-                  />
+                  <>
+                    <TextInput
+                      label="Create Conversation Endpoint"
+                      placeholder="https://api.example.com/conversations"
+                      description="POST endpoint that returns a conversation_id"
+                      required
+                      withAsterisk
+                      {...form.getInputProps('rest_api_create_conversation_endpoint')}
+                    />
+                    <ConnectionTestButton
+                      testType={TestConnectionType.REST_API_CONVERSATION}
+                      url={form.values.rest_api_create_conversation_endpoint}
+                      credentialId={form.values.rest_api_credential_id || undefined}
+                      config={{
+                        auth_type: form.values.rest_api_auth_type,
+                        api_key_header_name: form.values.rest_api_api_key_header_name,
+                    }}
+                      disabled={!form.values.rest_api_create_conversation_endpoint}
+                    />
+                  </>
                 )}
               </>
             )}

@@ -126,6 +126,8 @@ import type {
   SummarizeTraceResponse,
   TestModelRequest,
   TestModelResponse,
+  TestConnectionRequest,
+  TestConnectionResponse,
   AICapabilitiesResponse,
   TraceChatRequest,
   TraceChatResponse,
@@ -1553,6 +1555,23 @@ export class UnifiedUIAPIClient {
       'POST',
       `/api/v1/agent-service/tenants/${tenantId}/ai/test-model`,
       data
+    );
+  }
+
+  async testConnection(
+    tenantId: string,
+    data: TestConnectionRequest,
+    foundryToken?: string
+  ): Promise<TestConnectionResponse> {
+    const additionalHeaders = foundryToken
+      ? { 'X-Microsoft-Foundry-API-Key': foundryToken }
+      : undefined;
+    return this.agentServiceRequest<TestConnectionResponse>(
+      'POST',
+      `/api/v1/agent-service/tenants/${tenantId}/connections/test`,
+      data,
+      undefined,
+      additionalHeaders
     );
   }
 

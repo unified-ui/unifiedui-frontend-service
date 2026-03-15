@@ -24,12 +24,13 @@ import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconAlertCircle, IconRobot, IconInfoCircle, IconShieldLock, IconPlus } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
+import { useTranslation } from 'react-i18next';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import { useEntityPermissions, usePermissions } from '../../../hooks';
-import { ManageAccessTable, TagInput, AddPrincipalDialog, KeyValuePairsInput } from '../../common';
+import { ManageAccessTable, TagInput, AddPrincipalDialog, KeyValuePairsInput, ConnectionTestButton, FilterableSelect } from '../../common';
 import type { KeyValuePair } from '../../common';
 import type { AutonomousAgentResponse, PrincipalTypeEnum, CredentialResponse } from '../../../api/types';
-import { PermissionActionEnum, AutonomousAgentTypeEnum, CredentialTypeEnum } from '../../../api/types';
+import { PermissionActionEnum, AutonomousAgentTypeEnum, CredentialTypeEnum, TestConnectionType } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
 import { useFormDirtyGuard } from '../../../hooks';
@@ -77,6 +78,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
   onTabChange,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { t } = useTranslation('common');
   const { isGlobalAdmin } = usePermissions();
   const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission === 'ADMIN';
   const [autonomousAgent, setAutonomousAgent] = useState<AutonomousAgentResponse | null>(null);
@@ -531,10 +533,16 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
                     withAsterisk
                     {...form.getInputProps('n8n_workflow_endpoint')}
                   />
+                  <ConnectionTestButton
+                    testType={TestConnectionType.N8N_WORKFLOW}
+                    url={form.values.n8n_workflow_endpoint}
+                    credentialId={form.values.n8n_api_api_key_credential_id || undefined}
+                    disabled={!form.values.n8n_workflow_endpoint || !form.values.n8n_api_api_key_credential_id}
+                  />
 
                   {/* API Key Credential with Add Button */}
                   <Group gap="xs" align="flex-end">
-                    <Select
+                    <FilterableSelect
                       label="API Key Credential"
                       placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
                       required
@@ -542,9 +550,8 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
                       data={apiKeyCredentials}
                       rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                       disabled={isLoadingCredentials}
-                      searchable
-                      onSearchChange={setCredentialSearch}
                       nothingFoundMessage="No credentials found"
+                      onFilterChange={setCredentialSearch}
                       style={{ flex: 1 }}
                       {...form.getInputProps('n8n_api_api_key_credential_id')}
                     />
@@ -586,6 +593,12 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
                         required
                         withAsterisk
                         {...form.getInputProps('n8n_webhook_url')}
+                      />
+                      <ConnectionTestButton
+                        testType={TestConnectionType.N8N_WEBHOOK}
+                        url={form.values.n8n_webhook_url}
+                        disabled={!form.values.n8n_webhook_url}
+                        hint={t('testConnectionHintWebhook')}
                       />
                       <Textarea
                         label="Default Body (JSON)"

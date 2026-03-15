@@ -476,3 +476,56 @@ const canAdminConv = !convPerm || convPerm === "ADMIN";
 7. **Org-specific UI** — use `isOrgGlobalAdmin` for org management features (org settings, org member CRUD), use `hasOrgBypass` for org tab visibility
 8. **Never check org roles manually** — always use `usePermissions()` helpers instead of reading `organization.roles` directly
 9. **When adding new tenant roles** — update `usePermissions.ts` (CREATOR_ROLES, ADMIN_ROLES maps), `api/types.ts` (`TenantPermissionEnum`), and document in these instruction files
+
+---
+
+## Dropdown / Select Components (CRITICAL)
+
+### Always Use `FilterableSelect` — Never Mantine `Select`
+
+For **all** dropdown/select inputs, use the custom `FilterableSelect` component from `components/common/FilterableSelect`. **Never** use Mantine's built-in `Select` for data-driven dropdowns.
+
+**Exception**: Static dropdowns with a fixed, small list of options (e.g. enum selectors like "API Version", "Auth Type") may still use Mantine `Select` since there is no server data to search.
+
+### Why
+
+Mantine's `Select` conflates the display of the selected value with the search input. When a value is selected, typing in the input filters the dropdown to match the selected label text, making the list appear empty. `FilterableSelect` separates these concerns: the input is **read-only** (shows the selected label), and a **dedicated search field inside the dropdown** handles filtering.
+
+### Required Pattern: Server-Side Filtering
+
+All `FilterableSelect` usages with server-loaded data **must** use server-side filtering via the `onFilterChange` prop:
+
+```tsx
+// In dialog state:
+const [credentialSearch, setCredentialSearch] = useState("");
+const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
+
+// In useEffect — reload data when debounced search changes:
+useEffect(() => {
+  if (opened && debouncedCredentialSearch !== undefined) {
+    loadCredentials(debouncedCredentialSearch);
+  }
+}, [opened, debouncedCredentialSearch, loadCredentials]);
+
+// In JSX:
+<FilterableSelect
+  label="Credential"
+  data={credentials}
+  onFilterChange={setCredentialSearch} // ← REQUIRED for server data
+  {...form.getInputProps("credential_id")}
+/>;
+```
+
+### Key Props
+
+| Prop                  | Description                                                                                                                                                                     |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `onFilterChange`      | Called on every keystroke in the dropdown search field. Wire to `setCredentialSearch` (or similar state). When provided, client-side filtering is disabled (server handles it). |
+| `clearable`           | Shows a clear button when a value is selected. Use for optional fields.                                                                                                         |
+| `rightSection`        | Override the right icon (e.g. `<Loader size="xs" />` while loading).                                                                                                            |
+| `filterPlaceholder`   | Placeholder text for the search field inside the dropdown (default: "Search...").                                                                                               |
+| `nothingFoundMessage` | Message shown when no options match the filter.                                                                                                                                 |
+
+### Component Location
+
+`src/components/common/FilterableSelect/FilterableSelect.tsx` — exported via barrel from `components/common`.

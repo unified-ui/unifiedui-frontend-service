@@ -1455,6 +1455,28 @@ export interface TestModelResponse {
   response_time_ms: number;
 }
 
+export enum TestConnectionType {
+  N8N_CHAT_URL = 'N8N_CHAT_URL',
+  N8N_WORKFLOW = 'N8N_WORKFLOW',
+  N8N_WEBHOOK = 'N8N_WEBHOOK',
+  FOUNDRY_AGENT = 'FOUNDRY_AGENT',
+  REST_API_INVOKE = 'REST_API_INVOKE',
+  REST_API_CONVERSATION = 'REST_API_CONVERSATION',
+}
+
+export interface TestConnectionRequest {
+  test_type: TestConnectionType;
+  url: string;
+  config?: Record<string, unknown>;
+  credential_id?: string;
+}
+
+export interface TestConnectionResponse {
+  success: boolean;
+  message: string;
+  response_time_ms: number;
+}
+
 export interface AICapabilitiesResponse {
   title_generation: boolean;
   description_generation: boolean;
