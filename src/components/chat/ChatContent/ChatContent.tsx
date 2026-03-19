@@ -9,6 +9,7 @@ import { StandardWidgetId, ChatWidgetTypeEnum } from '../../../api/types';
 import type { FormFieldConfig } from '../../../pages/WidgetDesignerPage/types';
 import type { ReActStreamState } from '../../../hooks/chat/useReActChat';
 import { statusTracesToReActState } from '../../../hooks/chat/useReActChat';
+import { useStreamSmoother } from '../../../hooks/chat';
 import { parseWidgetTag, isStandardWidgetId } from '../../../utils/widgetParser';
 import { useIdentity } from '../../../contexts';
 import { ConfirmDeleteDialog } from '../../common';
@@ -59,6 +60,8 @@ export const ChatContent: FC<ChatContentProps> = ({
   alwaysExpandReasoning,
   onSendMessage,
 }) => {
+  const smoothedContent = useStreamSmoother(streamingContent ?? '', isStreaming ?? false);
+
   const viewportRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
@@ -193,10 +196,10 @@ export const ChatContent: FC<ChatContentProps> = ({
   }, [messages.length]);
 
   useEffect(() => {
-    if (!userScrolledUpRef.current && streamingContent) {
+    if (!userScrolledUpRef.current && smoothedContent) {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [streamingContent]);
+  }, [smoothedContent]);
 
   useEffect(() => {
     if (isStreaming) {
@@ -239,7 +242,7 @@ export const ChatContent: FC<ChatContentProps> = ({
 
       spacer.style.minHeight = `${Math.max(0, viewportHeight - contentFromUserToEnd)}px`;
     });
-  }, [messages, streamingContent, isStreaming]);
+  }, [messages, smoothedContent, isStreaming]);
 
   const lastUserMessageId = (() => {
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -312,7 +315,7 @@ export const ChatContent: FC<ChatContentProps> = ({
                   key={message.id}
                   message={message}
                   isStreaming={isStreaming && message.id === streamingMessageId}
-                  streamingContent={message.id === streamingMessageId ? streamingContent : undefined}
+                  streamingContent={message.id === streamingMessageId ? smoothedContent : undefined}
                   isCancelled={isCancelled}
                   onViewTrace={onViewTrace}
                   isHighlighted={isHighlighted}
@@ -335,7 +338,7 @@ export const ChatContent: FC<ChatContentProps> = ({
             })}
 
             {isStreaming && streamingContent && !streamingMessageId && (
-              <StreamingMessage content={streamingContent} />
+              <StreamingMessage content={smoothedContent} />
             )}
 
             <ThinkingIndicator isVisible={!!isStreaming && !streamingContent && !streamingMessageId} />
