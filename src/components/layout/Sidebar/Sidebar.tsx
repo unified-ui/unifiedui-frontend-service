@@ -9,6 +9,7 @@ import {
   IconBrandWechat,
   IconRobot,
   IconBrain,
+  IconAppWindow,
 } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSidebarData, useFavorites, type EntityType } from '../../../contexts';
@@ -32,6 +33,7 @@ interface NavItem {
   entityType?: EntityType;
   matchFn?: (pathname: string, search: string) => boolean;
   requiredResourceAccess?: ResourceType;
+  envFlag?: string;
 }
 
 const mainNavItemsTop: NavItem[] = [
@@ -56,9 +58,17 @@ const mainNavItemsBottom: NavItem[] = [
     labelKey: 'reactAgents',
     path: '/chat-agents?type=REACT_AGENT',
     requiredResourceAccess: 'tools',
+    envFlag: 'VITE_SHOW_RE_ACT_AGENT_DEVELOPMENT_PAGE',
     matchFn: (pathname, search) =>
       (pathname === '/chat-agents' && search.includes('type=REACT_AGENT')) ||
       pathname.endsWith('/develop'),
+  },
+  {
+    icon: IconAppWindow,
+    labelKey: 'apps',
+    path: '/external-apps',
+    requiredResourceAccess: 'external-apps',
+    envFlag: 'VITE_SHOW_EXTERNAL_APPS_PAGE',
   },
 ];
 
@@ -101,16 +111,24 @@ export const Sidebar: FC = () => {
   const { isFavorite: checkFavorite, toggleFavorite } = useFavorites();
   const { canCreate } = usePermissions();
 
+  const isEnvFlagEnabled = useCallback((flag?: string): boolean => {
+    if (!flag) return true;
+    const value = import.meta.env[flag];
+    return value !== 'false' && value !== '0';
+  }, []);
+
   const visibleNavItemsTop = useMemo(
     () => mainNavItemsTop.filter(item =>
-      !item.requiredResourceAccess || canCreate(item.requiredResourceAccess)),
-    [canCreate],
+      isEnvFlagEnabled(item.envFlag) &&
+      (!item.requiredResourceAccess || canCreate(item.requiredResourceAccess))),
+    [canCreate, isEnvFlagEnabled],
   );
 
   const visibleNavItemsBottom = useMemo(
     () => mainNavItemsBottom.filter(item =>
-      !item.requiredResourceAccess || canCreate(item.requiredResourceAccess)),
-    [canCreate],
+      isEnvFlagEnabled(item.envFlag) &&
+      (!item.requiredResourceAccess || canCreate(item.requiredResourceAccess))),
+    [canCreate, isEnvFlagEnabled],
   );
 
   const ENTITY_TO_FAVORITE_TYPE: Record<string, FavoriteResourceTypeEnum> = useMemo(() => ({

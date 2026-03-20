@@ -18,6 +18,7 @@
   "manageTenant": "Manage Tenant",
   "manageLicence": "Manage Licence",
   "logout": "Logout",
+  "switchAccount": "Switch Account",
   "switchToLight": "Switch to light mode",
   "switchToDark": "Switch to dark mode",
   "searchPlaceholder": "Search or type a command...",

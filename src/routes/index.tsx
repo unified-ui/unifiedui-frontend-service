@@ -16,6 +16,8 @@ import { ReActAgentDeveloperPage } from '../pages/ReActAgentDeveloperPage';
 import { EmbedChatPage } from '../pages/EmbedChatPage';
 import { HowEmbedChatPage } from '../pages/HowEmbedChatPage';
 import { TracingDialogDevelopmentPage } from '../pages/TracingDialogDevelopmentPage';
+import { ExternalAppsPage } from '../pages/ExternalAppsPage';
+import { ExternalAppPage } from '../pages/ExternalAppPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 
 export const AppRoutes = () => {
@@ -39,6 +41,8 @@ export const AppRoutes = () => {
         <Route path="/chat-widgets/:widgetId/preview" element={<ProtectedRoute><IframeWidgetPreviewPage /></ProtectedRoute>} />
         <Route path="/widget-designer/:widgetId" element={<ProtectedRoute><WidgetDesignerPage /></ProtectedRoute>} />
         <Route path="/chat-agents/:agentId/develop" element={<ProtectedRoute><ReActAgentDeveloperPage /></ProtectedRoute>} />
+        <Route path="/external-apps" element={<ProtectedRoute><ExternalAppsPage /></ProtectedRoute>} />
+        <Route path="/external-apps/:id" element={<ProtectedRoute><ExternalAppPage /></ProtectedRoute>} />
 
         <Route path="/dev/tracing" element={<ProtectedRoute><TracingDialogDevelopmentPage /></ProtectedRoute>} />
 

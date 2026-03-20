@@ -12,6 +12,7 @@ interface AuthContextType {
   account: AccountInfo | null;
   login: () => Promise<void>;
   logout: () => Promise<void>;
+  switchAccount: () => Promise<void>;
   getAccessToken: () => Promise<string | null>;
   getFoundryToken: () => Promise<string | null>;
 }
@@ -51,6 +52,17 @@ const MsalAuthProviderInner = ({ children }: AuthProviderProps) => {
       await instance.logoutRedirect();
     } catch (error) {
       console.error('Logout failed:', error);
+    }
+  };
+
+  const switchAccount = async () => {
+    try {
+      await instance.loginRedirect({
+        scopes: loginRequest.scopes,
+        prompt: 'select_account',
+      });
+    } catch (error) {
+      console.error('Switch account failed:', error);
     }
   };
 
@@ -112,6 +124,7 @@ const MsalAuthProviderInner = ({ children }: AuthProviderProps) => {
     account: accounts[0] || null,
     login,
     logout,
+    switchAccount,
     getAccessToken,
     getFoundryToken,
   };
@@ -128,6 +141,7 @@ const GoogleAuthProviderInner = ({ children }: AuthProviderProps) => {
     account: googleAuth.account,
     login: googleAuth.login,
     logout: googleAuth.logout,
+    switchAccount: googleAuth.logout,
     getAccessToken: googleAuth.getAccessToken,
     getFoundryToken: googleAuth.getFoundryToken,
   };
@@ -144,6 +158,7 @@ const CognitoAuthProviderInner = ({ children }: AuthProviderProps) => {
     account: cognitoAuth.account,
     login: cognitoAuth.login,
     logout: cognitoAuth.logout,
+    switchAccount: cognitoAuth.logout,
     getAccessToken: cognitoAuth.getAccessToken,
     getFoundryToken: cognitoAuth.getFoundryToken,
   };

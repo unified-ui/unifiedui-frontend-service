@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Group, TextInput, ActionIcon, Avatar, Text, Title, useMantineColorScheme, Stack, Paper, Button, Divider } from '@mantine/core';
-import { IconSearch, IconBrain, IconSun, IconMoon, IconLogout, IconPlus, IconBuilding } from '@tabler/icons-react';
+import { IconSearch, IconBrain, IconSun, IconMoon, IconLogout, IconPlus, IconBuilding, IconSwitchHorizontal } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
 import { useIdentity } from '../../../contexts';
 import { useKeyboardShortcuts } from '../../../hooks';
@@ -16,7 +16,7 @@ export const Header: FC = () => {
   const { t } = useTranslation('header');
   const navigate = useNavigate();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
-  const { account, logout } = useAuth();
+  const { account, logout, switchAccount } = useAuth();
   const { user, isSystemAdmin, organization, tenants, selectedTenant, selectTenant } = useIdentity();
   const isDark = colorScheme === 'dark';
   const [userDropdownOpened, setUserDropdownOpened] = useState(false);
@@ -188,6 +188,15 @@ export const Header: FC = () => {
                 )}
 
                 <Divider />
+
+                <Button
+                  leftSection={<IconSwitchHorizontal size={16} />}
+                  variant="subtle"
+                  fullWidth
+                  onClick={switchAccount}
+                >
+                  {t('switchAccount')}
+                </Button>
 
                 <Button
                   leftSection={<IconLogout size={16} />}

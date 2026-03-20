@@ -15,6 +15,7 @@ import widgetDesignerEN from './locales/en-US/widgetDesigner.json';
 import reactAgentEN from './locales/en-US/reactAgent.json';
 import sidebarEN from './locales/en-US/sidebar.json';
 import widgetsEN from './locales/en-US/widgets.json';
+import externalAppsEN from './locales/en-US/externalApps.json';
 
 const resources = {
   'en-US': {
@@ -31,6 +32,7 @@ const resources = {
     reactAgent: reactAgentEN,
     sidebar: sidebarEN,
     widgets: widgetsEN,
+    externalApps: externalAppsEN,
   },
 };
 
@@ -41,7 +43,7 @@ i18n
     resources,
     fallbackLng: 'en-US',
     defaultNS: 'common',
-    ns: ['common', 'dashboard', 'login', 'header', 'conversations', 'settings', 'tracing', 'credentials', 'token', 'widgetDesigner', 'reactAgent', 'sidebar', 'widgets'],
+    ns: ['common', 'dashboard', 'login', 'header', 'conversations', 'settings', 'tracing', 'credentials', 'token', 'widgetDesigner', 'reactAgent', 'sidebar', 'widgets', 'externalApps'],
     interpolation: {
       escapeValue: false,
     },

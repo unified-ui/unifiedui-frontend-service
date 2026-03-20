@@ -18,6 +18,8 @@ export const TenantPermissionEnum = {
   REACT_AGENT_ADMIN: 'REACT_AGENT_ADMIN',
   REACT_AGENT_CREATOR: 'REACT_AGENT_CREATOR',
   TENANT_AI_MODELS_ADMIN: 'TENANT_AI_MODELS_ADMIN',
+  EXTERNAL_APPS_ADMIN: 'EXTERNAL_APPS_ADMIN',
+  EXTERNAL_APPS_CREATOR: 'EXTERNAL_APPS_CREATOR',
 } as const;
 
 export type TenantPermissionEnum = typeof TenantPermissionEnum[keyof typeof TenantPermissionEnum];
@@ -1404,6 +1406,35 @@ export interface UpdateAIModelRequest {
   credential_id?: string;
   priority?: number;
   is_active?: boolean;
+}
+
+// ========== External App Types ==========
+
+export interface ExternalAppResponse {
+  id: string;
+  tenant_id: string;
+  name: string;
+  description?: string;
+  url: string;
+  image_url?: string;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+export interface CreateExternalAppRequest {
+  name: string;
+  description?: string;
+  url: string;
+  image_url?: string;
+}
+
+export interface UpdateExternalAppRequest {
+  name?: string;
+  description?: string;
+  url?: string;
+  image_url?: string;
 }
 
 // ========== AI Feature Types ==========

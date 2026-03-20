@@ -117,6 +117,10 @@ import type {
   AIModelResponse,
   CreateAIModelRequest,
   UpdateAIModelRequest,
+  // External App Types
+  ExternalAppResponse,
+  CreateExternalAppRequest,
+  UpdateExternalAppRequest,
   // AI Feature Types
   GenerateDescriptionRequest,
   GenerateDescriptionResponse,
@@ -1509,6 +1513,59 @@ export class UnifiedUIAPIClient {
       `/api/v1/platform-service/tenants/${tenantId}/ai-models/${modelId}`,
       undefined,
       'AI Model deleted successfully'
+    );
+  }
+
+  // ========== External App Endpoints ==========
+
+  async listExternalApps(
+    tenantId: string,
+    params?: PaginationParams & OrderParams,
+    options?: { noCache?: boolean }
+  ): Promise<ExternalAppResponse[]> {
+    const query = this.buildQueryString(params || {});
+    return this.request<ExternalAppResponse[]>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/external-apps${query}`,
+      undefined, undefined, options
+    );
+  }
+
+  async getExternalApp(tenantId: string, externalAppId: string): Promise<ExternalAppResponse> {
+    return this.request<ExternalAppResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/external-apps/${externalAppId}`
+    );
+  }
+
+  async createExternalApp(tenantId: string, data: CreateExternalAppRequest): Promise<ExternalAppResponse> {
+    return this.request<ExternalAppResponse>(
+      'POST',
+      `/api/v1/platform-service/tenants/${tenantId}/external-apps`,
+      data,
+      'External app created successfully'
+    );
+  }
+
+  async updateExternalApp(
+    tenantId: string,
+    externalAppId: string,
+    data: UpdateExternalAppRequest
+  ): Promise<ExternalAppResponse> {
+    return this.request<ExternalAppResponse>(
+      'PATCH',
+      `/api/v1/platform-service/tenants/${tenantId}/external-apps/${externalAppId}`,
+      data,
+      'External app updated successfully'
+    );
+  }
+
+  async deleteExternalApp(tenantId: string, externalAppId: string): Promise<void> {
+    return this.request<void>(
+      'DELETE',
+      `/api/v1/platform-service/tenants/${tenantId}/external-apps/${externalAppId}`,
+      undefined,
+      'External app deleted successfully'
     );
   }
 
