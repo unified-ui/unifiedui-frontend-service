@@ -3,6 +3,12 @@ import type { SSEStreamMessage, StatusTrace } from '../../api/types';
 
 export type ReasoningStepType = 'reasoning' | 'tool_call' | 'plan' | 'sub_agent' | 'synthesis';
 
+export function sanitizeToolResult(value: unknown): string | undefined {
+  if (value == null) return undefined;
+  const str = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
+  return str.replace(/\r/g, '');
+}
+
 export interface ReasoningStep {
   id: string;
   type: ReasoningStepType;
@@ -75,7 +81,7 @@ export function statusTracesToReActState(traces: StatusTrace[]): ReActStreamStat
         toolCallId,
         toolName: trace.data?.toolName as string | undefined,
         toolInput: typeof toolInputRaw === 'object' ? JSON.stringify(toolInputRaw, null, 2) : toolInputRaw as string | undefined,
-        toolResult: trace.data?.toolResult as string | undefined,
+        toolResult: sanitizeToolResult(trace.data?.toolResult),
         agentName: trace.data?.agentName as string | undefined,
         agentId: trace.data?.agentId as string | undefined,
         startedAt: new Date(trace.timestamp).getTime(),
@@ -95,7 +101,7 @@ export function statusTracesToReActState(traces: StatusTrace[]): ReActStreamStat
       if (matchedStep) {
         matchedStep.completedAt = new Date(trace.timestamp).getTime();
         if (trace.data?.toolResult) {
-          matchedStep.toolResult = trace.data.toolResult as string;
+          matchedStep.toolResult = sanitizeToolResult(trace.data.toolResult);
         }
         if (!endToolCallId) {
           lastNonToolStep = null;
@@ -240,7 +246,7 @@ export function useReActChat(): UseReActChatReturn {
             ? {
                 ...s,
                 completedAt: Date.now(),
-                toolResult: typeof config?.toolResult === 'object' ? JSON.stringify(config.toolResult, null, 2) : config?.toolResult as string | undefined,
+                toolResult: sanitizeToolResult(config?.toolResult),
                 toolName: config?.toolName ?? s.toolName,
               }
             : s

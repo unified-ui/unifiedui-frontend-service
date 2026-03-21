@@ -12,7 +12,7 @@ import {
 } from '../../api/types';
 import { filesToAttachments } from '../../utils/fileUtils';
 import type { UnifiedUIAPIClient } from '../../api/client';
-import type { ReActStreamState, ReasoningStep } from './useReActChat';
+import { type ReActStreamState, type ReasoningStep, sanitizeToolResult } from './useReActChat';
 
 const CONTEXT_DATA_PREFIX = 'ctx_';
 const MESSAGE_PAGE_SIZE = 25;
@@ -490,7 +490,7 @@ export function useChat({
                 ? {
                     ...s,
                     completedAt: Date.now(),
-                    toolResult: typeof config?.toolResult === 'object' ? JSON.stringify(config.toolResult, null, 2) : config?.toolResult,
+                    toolResult: sanitizeToolResult(config?.toolResult),
                     toolName: config?.toolName ?? s.toolName,
                   }
                 : s
