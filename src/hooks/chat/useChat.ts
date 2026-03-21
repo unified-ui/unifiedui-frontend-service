@@ -136,14 +136,18 @@ export function useChat({
   }, []);
 
   const createStep = useCallback((type: ReasoningStep['type'], config?: SSEStreamMessage['config']) => {
-    finalizeActiveStep();
+    if (type !== 'tool_call') {
+      finalizeActiveStep();
+    }
     const id = nextStepId();
     activeStepRef.current = id;
     const toolInput = config?.toolInput;
+    const toolCallId = config?.tool_call_id as string | undefined;
     const step: ReasoningStep = {
       id,
       type,
       content: '',
+      toolCallId,
       toolName: config?.toolName,
       toolInput: typeof toolInput === 'object' ? JSON.stringify(toolInput, null, 2) : toolInput,
       agentName: config?.agentName,
@@ -473,12 +477,16 @@ export function useChat({
       (config?: SSEStreamMessage['config']) => createStep('tool_call', config),
       (content: string) => appendStepContent(content),
       (config?: SSEStreamMessage['config']) => {
-        const stepId = activeStepRef.current;
-        if (stepId) {
-          setReActState(prev => ({
+        const endToolCallId = config?.tool_call_id as string | undefined;
+        setReActState(prev => {
+          const matchIdx = endToolCallId
+            ? prev.reasoningSteps.findIndex(s => s.toolCallId === endToolCallId)
+            : prev.reasoningSteps.findIndex(s => s.id === activeStepRef.current);
+          if (matchIdx === -1) return prev;
+          return {
             ...prev,
-            reasoningSteps: prev.reasoningSteps.map(s =>
-              s.id === stepId
+            reasoningSteps: prev.reasoningSteps.map((s, i) =>
+              i === matchIdx
                 ? {
                     ...s,
                     completedAt: Date.now(),
@@ -487,11 +495,8 @@ export function useChat({
                   }
                 : s
             ),
-            activeStepType: null,
-            activeStepContent: '',
-          }));
-          activeStepRef.current = '';
-        }
+          };
+        });
       },
       (config?: SSEStreamMessage['config']) => createStep('plan', config),
       (content: string) => appendStepContent(content),

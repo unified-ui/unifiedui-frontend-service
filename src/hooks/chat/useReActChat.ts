@@ -7,6 +7,7 @@ export interface ReasoningStep {
   id: string;
   type: ReasoningStepType;
   content: string;
+  toolCallId?: string;
   toolName?: string;
   toolInput?: string;
   toolResult?: string;
@@ -59,30 +60,46 @@ export function statusTracesToReActState(traces: StatusTrace[]): ReActStreamStat
 
   const steps: ReasoningStep[] = [];
   let stepIdx = 0;
-  let currentStep: ReasoningStep | null = null;
+  const stepsByToolCallId = new Map<string, ReasoningStep>();
+  let lastNonToolStep: ReasoningStep | null = null;
 
   for (const trace of traces) {
     const stepType = TRACE_TYPE_MAP[trace.type];
     if (stepType) {
-      currentStep = {
+      const toolCallId = trace.data?.tool_call_id as string | undefined;
+      const toolInputRaw = trace.data?.toolInput;
+      const step: ReasoningStep = {
         id: `persisted-${stepIdx++}`,
         type: stepType,
         content: trace.content || '',
+        toolCallId,
         toolName: trace.data?.toolName as string | undefined,
-        toolInput: trace.data?.toolInput as string | undefined,
+        toolInput: typeof toolInputRaw === 'object' ? JSON.stringify(toolInputRaw, null, 2) : toolInputRaw as string | undefined,
         toolResult: trace.data?.toolResult as string | undefined,
         agentName: trace.data?.agentName as string | undefined,
         agentId: trace.data?.agentId as string | undefined,
         startedAt: new Date(trace.timestamp).getTime(),
       };
-      steps.push(currentStep);
+      steps.push(step);
+      if (toolCallId) {
+        stepsByToolCallId.set(toolCallId, step);
+      }
+      if (stepType !== 'tool_call') {
+        lastNonToolStep = step;
+      }
     } else if (trace.type.endsWith('_end')) {
-      if (currentStep) {
-        currentStep.completedAt = new Date(trace.timestamp).getTime();
+      const endToolCallId = trace.data?.tool_call_id as string | undefined;
+      const matchedStep = endToolCallId
+        ? stepsByToolCallId.get(endToolCallId)
+        : lastNonToolStep;
+      if (matchedStep) {
+        matchedStep.completedAt = new Date(trace.timestamp).getTime();
         if (trace.data?.toolResult) {
-          currentStep.toolResult = trace.data.toolResult as string;
+          matchedStep.toolResult = trace.data.toolResult as string;
         }
-        currentStep = null;
+        if (!endToolCallId) {
+          lastNonToolStep = null;
+        }
       }
     }
   }
@@ -175,17 +192,19 @@ export function useReActChat(): UseReActChatReturn {
   }, [finalizeActiveStep]);
 
   const onToolCallStart = useCallback((config?: SSEStreamMessage['config']) => {
-    finalizeActiveStep();
     const id = nextStepId();
-    activeStepRef.current = id;
+    const toolCallId = config?.tool_call_id as string | undefined;
+    const toolInputRaw = config?.toolInput;
     const step: ReasoningStep = {
       id,
       type: 'tool_call',
       content: '',
+      toolCallId,
       toolName: config?.toolName,
-      toolInput: config?.toolInput,
+      toolInput: typeof toolInputRaw === 'object' ? JSON.stringify(toolInputRaw, null, 2) : toolInputRaw as string | undefined,
       startedAt: Date.now(),
     };
+    activeStepRef.current = id;
     setReActState(prev => ({
       ...prev,
       reasoningSteps: [...prev.reasoningSteps, step],
@@ -193,7 +212,7 @@ export function useReActChat(): UseReActChatReturn {
       activeStepContent: '',
       isReasoningExpanded: true,
     }));
-  }, [finalizeActiveStep]);
+  }, []);
 
   const onToolCallStream = useCallback((content: string) => {
     const stepId = activeStepRef.current;
@@ -208,25 +227,26 @@ export function useReActChat(): UseReActChatReturn {
   }, []);
 
   const onToolCallEnd = useCallback((config?: SSEStreamMessage['config']) => {
-    const stepId = activeStepRef.current;
-    if (stepId) {
-      setReActState(prev => ({
+    const endToolCallId = config?.tool_call_id as string | undefined;
+    setReActState(prev => {
+      const matchIdx = endToolCallId
+        ? prev.reasoningSteps.findIndex(s => s.toolCallId === endToolCallId)
+        : prev.reasoningSteps.findIndex(s => s.id === activeStepRef.current);
+      if (matchIdx === -1) return prev;
+      return {
         ...prev,
-        reasoningSteps: prev.reasoningSteps.map(s =>
-          s.id === stepId
+        reasoningSteps: prev.reasoningSteps.map((s, i) =>
+          i === matchIdx
             ? {
                 ...s,
                 completedAt: Date.now(),
-                toolResult: config?.toolResult as string | undefined,
+                toolResult: typeof config?.toolResult === 'object' ? JSON.stringify(config.toolResult, null, 2) : config?.toolResult as string | undefined,
                 toolName: config?.toolName ?? s.toolName,
               }
             : s
         ),
-        activeStepType: null,
-        activeStepContent: '',
-      }));
-      activeStepRef.current = '';
-    }
+      };
+    });
   }, []);
 
   const onPlanStart = useCallback((config?: SSEStreamMessage['config']) => {
