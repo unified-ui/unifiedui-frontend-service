@@ -15,6 +15,7 @@ import type { UnifiedUIAPIClient } from '../../api/client';
 import type { ReActStreamState, ReasoningStep } from './useReActChat';
 
 const CONTEXT_DATA_PREFIX = 'ctx_';
+const MESSAGE_PAGE_SIZE = 25;
 
 function extractContextDataFromSearchParams(
   searchParams: URLSearchParams
@@ -55,6 +56,8 @@ interface UseChatReturn {
   streamingContent: string;
   streamingMessageId: string | undefined;
   isLoadingMessages: boolean;
+  isLoadingMoreMessages: boolean;
+  hasMoreMessages: boolean;
   setIsLoadingMessages: React.Dispatch<React.SetStateAction<boolean>>;
   abortControllerRef: React.RefObject<AbortController | null>;
   justCreatedConversationRef: React.RefObject<string | null>;
@@ -69,6 +72,7 @@ interface UseChatReturn {
   handleCancelStream: () => void;
   resetStreamingState: () => void;
   loadConversationMessages: (convId: string) => Promise<void>;
+  loadMoreMessages: () => Promise<void>;
 }
 
 export function useChat({
@@ -94,6 +98,8 @@ export function useChat({
   const [streamingContent, setStreamingContent] = useState('');
   const [streamingMessageId, setStreamingMessageId] = useState<string | undefined>();
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isLoadingMoreMessages, setIsLoadingMoreMessages] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [reactions, setReactions] = useState<Map<string, ReactionResponse>>(new Map());
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -218,33 +224,40 @@ export function useChat({
     if (!apiClient || !tenantId) return;
 
     setIsLoadingMessages(true);
+    setHasMoreMessages(false);
     try {
       const [convData, messagesData] = await Promise.all([
         apiClient.getConversation(tenantId, convId),
-        apiClient.getMessages(tenantId, convId),
+        apiClient.getMessages(tenantId, convId, { limit: MESSAGE_PAGE_SIZE }),
       ]);
 
       setCurrentConversation(convData);
       const loadedMessages = [...messagesData.messages].reverse();
       setMessages(loadedMessages);
+      setHasMoreMessages(messagesData.hasMore);
       setIsLoadingMessages(false);
       setSelectedChatAgentId(convData.chat_agent_id);
 
-      const assistantMessages = loadedMessages.filter(m => m.type === 'assistant' && !m.id.startsWith('temp-'));
-      const reactionsMap = new Map<string, ReactionResponse>();
-      await Promise.all(
-        assistantMessages.map(async (msg) => {
-          try {
-            const res = await apiClient.getReactions(tenantId, convId, msg.id);
-            if (res.reactions.length > 0) {
-              reactionsMap.set(msg.id, res.reactions[0]);
+      const assistantMessageIds = loadedMessages
+        .filter(m => m.type === 'assistant' && !m.id.startsWith('temp-'))
+        .map(m => m.id);
+
+      if (assistantMessageIds.length > 0) {
+        try {
+          const bulkRes = await apiClient.getBulkReactions(tenantId, convId, assistantMessageIds);
+          const reactionsMap = new Map<string, ReactionResponse>();
+          for (const [msgId, msgReactions] of Object.entries(bulkRes.reactions)) {
+            if (msgReactions.length > 0) {
+              reactionsMap.set(msgId, msgReactions[0]);
             }
-          } catch {
-            // ignore
           }
-        })
-      );
-      setReactions(reactionsMap);
+          setReactions(reactionsMap);
+        } catch {
+          setReactions(new Map());
+        }
+      } else {
+        setReactions(new Map());
+      }
     } catch (error) {
       console.error('Failed to load conversation:', error);
       notifications.show({
@@ -257,6 +270,45 @@ export function useChat({
       if (isLoadingMessages) setIsLoadingMessages(false);
     }
   }, [apiClient, tenantId, nav, setCurrentConversation, setSelectedChatAgentId, isLoadingMessages]);
+
+  const loadMoreMessages = useCallback(async () => {
+    if (!apiClient || !tenantId || !conversationId || !hasMoreMessages || isLoadingMoreMessages) return;
+
+    setIsLoadingMoreMessages(true);
+    try {
+      const data = await apiClient.getMessages(tenantId, conversationId, {
+        limit: MESSAGE_PAGE_SIZE,
+        skip: messages.length,
+      });
+
+      const olderMessages = [...data.messages].reverse();
+      setMessages(prev => [...olderMessages, ...prev]);
+      setHasMoreMessages(data.hasMore);
+
+      const assistantIds = olderMessages
+        .filter(m => m.type === 'assistant' && !m.id.startsWith('temp-'))
+        .map(m => m.id);
+
+      if (assistantIds.length > 0) {
+        try {
+          const bulkRes = await apiClient.getBulkReactions(tenantId, conversationId, assistantIds);
+          setReactions(prev => {
+            const next = new Map(prev);
+            for (const [msgId, msgReactions] of Object.entries(bulkRes.reactions)) {
+              if (msgReactions.length > 0) {
+                next.set(msgId, msgReactions[0]);
+              }
+            }
+            return next;
+          });
+        } catch { /* ignore */ }
+      }
+    } catch (error) {
+      console.error('Failed to load more messages:', error);
+    } finally {
+      setIsLoadingMoreMessages(false);
+    }
+  }, [apiClient, tenantId, conversationId, hasMoreMessages, isLoadingMoreMessages, messages.length]);
 
   const executeStream = useCallback(async (
     content: string,
@@ -680,6 +732,8 @@ export function useChat({
     streamingContent,
     streamingMessageId,
     isLoadingMessages,
+    isLoadingMoreMessages,
+    hasMoreMessages,
     setIsLoadingMessages,
     abortControllerRef,
     justCreatedConversationRef,
@@ -694,5 +748,6 @@ export function useChat({
     setIsReasoningExpanded,
     resetStreamingState,
     loadConversationMessages,
+    loadMoreMessages,
   };
 }

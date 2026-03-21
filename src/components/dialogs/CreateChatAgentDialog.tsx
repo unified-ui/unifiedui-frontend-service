@@ -313,6 +313,7 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
         order_by: 'name',
         order_direction: 'asc',
         name: searchTerm || undefined,
+        fields: 'id,name,type',
       });
       // listCredentials returns an array directly, not an object with items property
       setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
@@ -323,14 +324,6 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
     }
   }, [apiClient, selectedTenant]);
 
-  // Load credentials when dialog opens
-  useEffect(() => {
-    if (opened) {
-      loadCredentials();
-    }
-  }, [opened, loadCredentials]);
-
-  // Reload credentials when search changes (debounced)
   useEffect(() => {
     if (opened && debouncedCredentialSearch !== undefined) {
       loadCredentials(debouncedCredentialSearch);

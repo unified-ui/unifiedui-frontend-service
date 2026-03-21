@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { Box, Badge, Text } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import { IconCheck } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import classes from './IframeWidget.module.css';
@@ -47,15 +48,25 @@ export const IframeWidget: FC<IframeWidgetProps> = ({
 
   const handleMessage = useCallback((event: MessageEvent) => {
     if (!expectedOrigin || event.origin !== expectedOrigin) return;
-    if (effectiveSubmitted || disabled) return;
 
     const data = event.data;
-    if (data && typeof data === 'object') {
-      const json = JSON.stringify(data);
-      setLocalSubmitted(true);
-      onSubmit(json);
+    if (!data || typeof data !== 'object') return;
+
+    if (effectiveSubmitted) return;
+
+    if (disabled) {
+      notifications.show({
+        title: t('iframe.submitBlockedTitle'),
+        message: t('iframe.submitBlockedMessage'),
+        color: 'yellow',
+      });
+      return;
     }
-  }, [expectedOrigin, effectiveSubmitted, disabled, onSubmit]);
+
+    const json = JSON.stringify(data);
+    setLocalSubmitted(true);
+    onSubmit(json);
+  }, [expectedOrigin, effectiveSubmitted, disabled, onSubmit, t]);
 
   useEffect(() => {
     window.addEventListener('message', handleMessage);
@@ -75,18 +86,24 @@ export const IframeWidget: FC<IframeWidgetProps> = ({
   const height = config.height ?? 400;
   const containerHeight = typeof height === 'number' ? `${height}px` : height;
 
+  const isLocked = effectiveSubmitted || disabled;
+
   return (
-    <Box className={classes.iframeWidget} style={{ height: containerHeight }}>
+    <Box
+      className={`${classes.iframeWidget} ${isLocked ? classes.iframeWidgetLocked : ''}`}
+      style={{ height: containerHeight }}
+    >
       {effectiveSubmitted && (
-        <Badge
-          leftSection={<IconCheck size={12} />}
-          variant="light"
-          color="green"
-          size="sm"
-          className={classes.submittedBadge}
-        >
-          {t('iframe.submitted')}
-        </Badge>
+        <Box className={classes.submittedOverlay}>
+          <Badge
+            leftSection={<IconCheck size={14} />}
+            variant="light"
+            color="green"
+            size="lg"
+          >
+            {t('iframe.submitted')}
+          </Badge>
+        </Box>
       )}
       {!config.url ? (
         <Text size="sm" c="dimmed">{t('iframe.noUrl')}</Text>
@@ -95,6 +112,7 @@ export const IframeWidget: FC<IframeWidgetProps> = ({
           ref={iframeRef}
           src={config.url}
           title="Widget"
+          className={effectiveSubmitted || disabled ? classes.iframeBlocked : undefined}
           style={{ width, height: '100%', border: 'none' }}
           sandbox="allow-scripts allow-same-origin allow-forms"
           allowFullScreen={config.allowFullscreen}

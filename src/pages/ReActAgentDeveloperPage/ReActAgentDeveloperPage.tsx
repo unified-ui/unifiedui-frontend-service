@@ -342,7 +342,9 @@ export const ReActAgentDeveloperPage: FC = () => {
   const loadModels = useCallback(async () => {
     if (!tenantId || !apiClient || modelsLoaded) return;
     try {
-      const models = await apiClient.listAIModels(tenantId) as AIModelResponse[];
+      const models = await apiClient.listAIModels(tenantId, {
+        fields: 'id,name,purpose_groups,is_active,provider',
+      }) as AIModelResponse[];
       const reactAgentModels = models.filter(m =>
         m.purpose_groups?.includes(AIModelPurposeGroupEnum.REACT_AGENT) && m.is_active
       );
@@ -354,7 +356,9 @@ export const ReActAgentDeveloperPage: FC = () => {
   const loadTools = useCallback(async () => {
     if (!tenantId || !apiClient || toolsLoaded) return;
     try {
-      const tools = await apiClient.listTools(tenantId) as ToolResponse[];
+      const tools = await apiClient.listTools(tenantId, {
+        fields: 'id,name,type,is_active',
+      }) as ToolResponse[];
       setAvailableTools(tools.filter(t => t.is_active));
       setToolsLoaded(true);
     } catch { /* empty */ }

@@ -102,8 +102,6 @@ export const ChatWidgetsPage: FC = () => {
   const [standardWidgetType, setStandardWidgetType] = useState<StandardWidgetType | null>(null);
   const [customPromptWidget, setCustomPromptWidget] = useState<{ id: string; name: string } | null>(null);
 
-  const allItems = useMemo(() => [...STANDARD_WIDGETS, ...items], [items]);
-
   const handleOpen = useCallback((id: string) => {
     if (id === '__standard_yesno__') {
       setStandardWidgetType('yesno');
@@ -156,7 +154,8 @@ export const ChatWidgetsPage: FC = () => {
       />
 
       <DataTable
-        items={allItems}
+        items={items}
+        staticItems={STANDARD_WIDGETS}
         isLoading={isLoading}
         isLoadingMore={isLoadingMore}
         hasMore={hasMore}

@@ -414,6 +414,7 @@ export const TenantSettingsPage: FC = () => {
         skip,
         limit: CUSTOM_GROUPS_PAGE_SIZE,
         name: debouncedCustomGroupsSearch || undefined,
+        fields: 'id,name,description',
       });
 
       if (reset) {
@@ -485,6 +486,7 @@ export const TenantSettingsPage: FC = () => {
         name: debouncedCredentialsSearch || undefined,
         order_by: 'name',
         order_direction: 'asc',
+        fields: 'id,name,type,description',
       }) as CredentialResponse[];
 
       if (reset) {
@@ -557,6 +559,7 @@ export const TenantSettingsPage: FC = () => {
         type: toolsTypeFilter.length > 0 ? toolsTypeFilter.join(',') : undefined,
         order_by: 'name',
         order_direction: 'asc',
+        fields: 'id,name,type',
       }) as ToolResponse[];
 
       if (reset) {
@@ -630,6 +633,7 @@ export const TenantSettingsPage: FC = () => {
         provider: aiModelsProviderFilter.length > 0 ? aiModelsProviderFilter.join(',') : undefined,
         order_by: 'name',
         order_direction: 'asc',
+        fields: 'id,name,type,provider,is_active,purpose_groups,description',
       });
 
       if (reset) {

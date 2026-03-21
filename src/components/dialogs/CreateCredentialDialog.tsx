@@ -16,7 +16,7 @@ import { IconKey } from '@tabler/icons-react';
 import { useIdentity } from '../../contexts';
 import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
 import { CredentialTypeEnum } from '../../api/types';
-import { TagInput } from '../common';
+import { TagInput, CredentialTestButton } from '../common';
 
 interface CreateCredentialDialogProps {
   opened: boolean;
@@ -37,6 +37,7 @@ interface FormValues {
   entra_tenant_id: string;
   entra_client_id: string;
   entra_client_secret: string;
+  entra_scopes: string[];
   tags: string[];
 }
 
@@ -65,6 +66,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
       entra_tenant_id: '',
       entra_client_id: '',
       entra_client_secret: '',
+      entra_scopes: ['https://graph.microsoft.com/.default'],
       tags: [],
     },
     validate: {
@@ -157,6 +159,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
           tenant_id: values.entra_tenant_id,
           client_id: values.entra_client_id,
           client_secret: values.entra_client_secret,
+          ...(values.entra_scopes.length > 0 && { scopes: values.entra_scopes }),
         });
       } else {
         secretValue = values.secret_value;
@@ -286,6 +289,18 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
                 required
                 withAsterisk
                 {...form.getInputProps('entra_client_secret')}
+              />
+              <TagInput
+                label="Scopes"
+                placeholder="e.g. https://graph.microsoft.com/.default"
+                value={form.values.entra_scopes}
+                onChange={(scopes) => form.setFieldValue('entra_scopes', scopes)}
+              />
+              <CredentialTestButton
+                tenantId={form.values.entra_tenant_id}
+                clientId={form.values.entra_client_id}
+                clientSecret={form.values.entra_client_secret}
+                scopes={form.values.entra_scopes}
               />
             </>
           )}

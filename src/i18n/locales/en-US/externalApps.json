@@ -7,6 +7,7 @@
   "noApps": "No external apps configured yet.",
   "noAppsDescription": "Add your first external app to get started.",
   "openApp": "Open App",
+  "entityName": "external app",
   "createDialog": {
     "title": "Add External App",
     "namePlaceholder": "e.g. My Dashboard",

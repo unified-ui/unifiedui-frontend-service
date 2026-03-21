@@ -49,6 +49,13 @@ const mainNavItemsTop: NavItem[] = [
       pathname === '/chat-agents' && !search.includes('type=REACT_AGENT'),
   },
   { icon: IconRobot, labelKey: 'auto', path: '/autonomous-agents', hasDataList: true, entityType: 'autonomous-agents' },
+  {
+    icon: IconAppWindow,
+    labelKey: 'apps',
+    path: '/external-apps',
+    requiredResourceAccess: 'external-apps',
+    envFlag: 'VITE_SHOW_EXTERNAL_APPS_PAGE',
+  },
 ];
 
 const mainNavItemsBottom: NavItem[] = [
@@ -62,13 +69,6 @@ const mainNavItemsBottom: NavItem[] = [
     matchFn: (pathname, search) =>
       (pathname === '/chat-agents' && search.includes('type=REACT_AGENT')) ||
       pathname.endsWith('/develop'),
-  },
-  {
-    icon: IconAppWindow,
-    labelKey: 'apps',
-    path: '/external-apps',
-    requiredResourceAccess: 'external-apps',
-    envFlag: 'VITE_SHOW_EXTERNAL_APPS_PAGE',
   },
 ];
 

@@ -1,6 +1,7 @@
 import type { FC, ReactNode } from 'react';
 import { useEffect, useLayoutEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { ScrollArea, Box, Text, Avatar, Stack, Loader, Paper, Tooltip, ActionIcon, CopyButton, Group, Button, Textarea } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 import { IconUser, IconSparkles, IconCopy, IconCheck, IconBinaryTree, IconThumbUp, IconThumbDown, IconThumbUpFilled, IconThumbDownFilled, IconArrowDown, IconEdit, IconTrash, IconAlertTriangle, IconRefresh, IconFile, IconPhoto, IconFileTypePdf, IconFileTypeDoc, IconFileTypeXls, IconFileTypePpt, IconFileText, IconMusic, IconFileCode } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -8,6 +9,7 @@ import type { MessageResponse, AttachmentMetadata, ReactionResponse, SurveyWidge
 import { StandardWidgetId, ChatWidgetTypeEnum } from '../../../api/types';
 import type { FormFieldConfig } from '../../../pages/WidgetDesignerPage/types';
 import type { ReActStreamState } from '../../../hooks/chat/useReActChat';
+import type { WidgetCache } from '../../../hooks/chat';
 import { statusTracesToReActState } from '../../../hooks/chat/useReActChat';
 import { useStreamSmoother } from '../../../hooks/chat';
 import { parseWidgetTag, isStandardWidgetId } from '../../../utils/widgetParser';
@@ -39,6 +41,10 @@ export interface ChatContentProps {
   onToggleReasoning?: () => void;
   alwaysExpandReasoning?: boolean;
   onSendMessage?: (content: string, extra?: Record<string, unknown>) => void;
+  onLoadMore?: () => Promise<void>;
+  hasMoreMessages?: boolean;
+  isLoadingMoreMessages?: boolean;
+  widgetCache?: WidgetCache;
 }
 
 export const ChatContent: FC<ChatContentProps> = ({
@@ -59,7 +65,12 @@ export const ChatContent: FC<ChatContentProps> = ({
   onToggleReasoning,
   alwaysExpandReasoning,
   onSendMessage,
+  onLoadMore,
+  hasMoreMessages,
+  isLoadingMoreMessages,
+  widgetCache,
 }) => {
+  const { t } = useTranslation('conversations');
   const smoothedContent = useStreamSmoother(streamingContent ?? '', isStreaming ?? false);
 
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -75,6 +86,8 @@ export const ChatContent: FC<ChatContentProps> = ({
   const userScrolledUpRef = useRef(false);
   const prevMessageCountRef = useRef(0);
   const pendingScrollToBottomRef = useRef(false);
+  const prevScrollHeightRef = useRef<number>(0);
+  const isPrependingRef = useRef(false);
 
   const setMessageRef = useCallback((extMessageId: string, element: HTMLDivElement | null) => {
     if (element) {
@@ -149,6 +162,11 @@ export const ChatContent: FC<ChatContentProps> = ({
   useEffect(() => {
     const prevCount = prevMessageCountRef.current;
     prevMessageCountRef.current = messages.length;
+
+    if (isPrependingRef.current) {
+      isPrependingRef.current = false;
+      return;
+    }
 
     const isBulkLoad = prevCount === 0 && messages.length > 1;
 
@@ -244,6 +262,22 @@ export const ChatContent: FC<ChatContentProps> = ({
     });
   }, [messages, smoothedContent, isStreaming]);
 
+  useLayoutEffect(() => {
+    if (!isPrependingRef.current) return;
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const newScrollHeight = viewport.scrollHeight;
+    viewport.scrollTop = newScrollHeight - prevScrollHeightRef.current;
+  }, [messages]);
+
+  const handleLoadMore = useCallback(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || !onLoadMore) return;
+    prevScrollHeightRef.current = viewport.scrollHeight;
+    isPrependingRef.current = true;
+    onLoadMore();
+  }, [onLoadMore]);
+
   const lastUserMessageId = (() => {
     for (let i = messages.length - 1; i >= 0; i--) {
       if (messages[i].type === 'user') return messages[i].id;
@@ -277,6 +311,24 @@ export const ChatContent: FC<ChatContentProps> = ({
       >
         <Box className={classes.scrollContentWrapper}>
           <Stack gap="lg" className={classes.messagesContainer}>
+            {onLoadMore && (
+              <Box className={classes.loadMoreContainer}>
+                {hasMoreMessages ? (
+                  <Button
+                    variant="subtle"
+                    size="xs"
+                    onClick={handleLoadMore}
+                    loading={isLoadingMoreMessages}
+                  >
+                    {t('loadMoreMessages')}
+                  </Button>
+                ) : (
+                  messages.length > 0 && (
+                    <Text size="xs" c="dimmed">{t('allMessagesDisplayed')}</Text>
+                  )
+                )}
+              </Box>
+            )}
             {messages.map((message, index) => {
               const messageExtId = message.type !== 'user' ? message.metadata?.extMessageId : undefined;
               const isUser = message.type === 'user';
@@ -331,6 +383,7 @@ export const ChatContent: FC<ChatContentProps> = ({
                   alwaysExpandReasoning={alwaysExpandReasoning}
                   isLastAssistantMessage={message.id === lastAssistantMessageId}
                   onSendMessage={onSendMessage}
+                  widgetCache={widgetCache}
                   nextUserMessageContent={nextUserMessageContent}
                   nextUserMessageExtra={nextUserMessageExtra}
                 />
@@ -466,6 +519,7 @@ interface MessageBubbleProps {
   onSendMessage?: (content: string, extra?: Record<string, unknown>) => void;
   nextUserMessageContent?: string;
   nextUserMessageExtra?: Record<string, unknown>;
+  widgetCache?: WidgetCache;
 }
 
 const MessageBubble: FC<MessageBubbleProps> = ({
@@ -489,6 +543,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
   onSendMessage,
   nextUserMessageContent,
   nextUserMessageExtra,
+  widgetCache,
 }) => {
   const isUser = message.type === 'user';
   const content = streamingContent || message.content;
@@ -651,6 +706,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
               onSendMessage={onSendMessage}
               nextUserMessageContent={nextUserMessageContent}
               nextUserMessageExtra={nextUserMessageExtra}
+              widgetCache={widgetCache}
             />
           )}
           {parsedWidget?.widget && parsedWidget.textAfter && (
@@ -905,6 +961,7 @@ interface WidgetRendererProps {
   onSendMessage?: (content: string, extra?: Record<string, unknown>) => void;
   nextUserMessageContent?: string;
   nextUserMessageExtra?: Record<string, unknown>;
+  widgetCache?: WidgetCache;
 }
 
 function parseSurveyAnswersFromMessage(content: string): Record<string, string> | undefined {
@@ -919,7 +976,7 @@ function parseSurveyAnswersFromMessage(content: string): Record<string, string> 
   return Object.keys(answers).length > 0 ? answers : undefined;
 }
 
-const WidgetRenderer: FC<WidgetRendererProps> = ({ widget, isInteractive, onSendMessage, nextUserMessageContent, nextUserMessageExtra }) => {
+const WidgetRenderer: FC<WidgetRendererProps> = ({ widget, isInteractive, onSendMessage, nextUserMessageContent, nextUserMessageExtra, widgetCache }) => {
   const handleYesNoSelect = useCallback((value: string) => {
     onSendMessage?.(value);
   }, [onSendMessage]);
@@ -968,6 +1025,7 @@ const WidgetRenderer: FC<WidgetRendererProps> = ({ widget, isInteractive, onSend
         onSendMessage={onSendMessage}
         nextUserMessageContent={nextUserMessageContent}
         nextUserMessageExtra={nextUserMessageExtra}
+        widgetCache={widgetCache}
       />
     );
   }
@@ -982,6 +1040,7 @@ interface CustomWidgetRendererProps {
   onSendMessage?: (content: string, extra?: Record<string, unknown>) => void;
   nextUserMessageContent?: string;
   nextUserMessageExtra?: Record<string, unknown>;
+  widgetCache?: WidgetCache;
 }
 
 const CustomWidgetRenderer: FC<CustomWidgetRendererProps> = ({
@@ -991,22 +1050,23 @@ const CustomWidgetRenderer: FC<CustomWidgetRendererProps> = ({
   onSendMessage,
   nextUserMessageContent,
   nextUserMessageExtra,
+  widgetCache,
 }) => {
-  const { apiClient, selectedTenant } = useIdentity();
+  const { selectedTenant } = useIdentity();
 
   const persistedConfig = nextUserMessageExtra?.widgetConfig as Record<string, unknown> | undefined;
   const persistedType = nextUserMessageExtra?.widgetType as string | undefined;
   const hasPersisted = !!persistedConfig && !!persistedType;
 
   const [widgetDef, setWidgetDef] = useState<ChatWidgetResponse | null>(null);
-  const [loading, setLoading] = useState(!hasPersisted && !!apiClient && !!selectedTenant?.id);
-  const [error, setError] = useState(!hasPersisted && (!apiClient || !selectedTenant?.id));
+  const [loading, setLoading] = useState(!hasPersisted && !!widgetCache && !!selectedTenant?.id);
+  const [error, setError] = useState(!hasPersisted && (!widgetCache || !selectedTenant?.id));
 
   useEffect(() => {
     if (hasPersisted) return;
-    if (!apiClient || !selectedTenant?.id) return;
+    if (!widgetCache || !selectedTenant?.id) return;
     let cancelled = false;
-    apiClient.getChatWidget(selectedTenant.id, widgetId)
+    widgetCache.getWidget(selectedTenant.id, widgetId)
       .then((def) => {
         if (!cancelled) {
           setWidgetDef(def);
@@ -1020,7 +1080,7 @@ const CustomWidgetRenderer: FC<CustomWidgetRendererProps> = ({
         }
       });
     return () => { cancelled = true; };
-  }, [apiClient, selectedTenant?.id, widgetId, hasPersisted]);
+  }, [widgetCache, selectedTenant?.id, widgetId, hasPersisted]);
 
   const activeType = hasPersisted ? persistedType : widgetDef?.type;
   const activeConfig = hasPersisted ? persistedConfig : widgetDef?.config;

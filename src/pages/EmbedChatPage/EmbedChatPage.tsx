@@ -10,7 +10,7 @@ import { loginRequest } from '../../auth/authConfig';
 import { useIdentity } from '../../contexts';
 import { ChatView, ChatHeader, ChatEmptyState } from '../../components/chat';
 import { TracingProvider, TracingSidebar, TracingVisualDialog } from '../../components/tracing';
-import { useChat, useConversationTracing } from '../../hooks';
+import { useChat, useConversationTracing, useWidgetCache } from '../../hooks';
 import type { ChatAgentResponse, ConversationResponse } from '../../api/types';
 import classes from './EmbedChatPage.module.css';
 
@@ -110,11 +110,14 @@ export const EmbedChatPage: FC = () => {
     onNavigate: handleNavigate,
   });
 
+  const widgetCache = useWidgetCache(apiClient);
+
   const handleNewChat = useCallback(() => {
     chat.resetStreamingState();
     setConversationId(undefined);
     setCurrentConversation(null);
-  }, [chat]);
+    widgetCache.clear();
+  }, [chat, widgetCache]);
 
   useEffect(() => {
     tracing.setMessagesRef(chat.messages);
@@ -234,6 +237,10 @@ export const EmbedChatPage: FC = () => {
         showReactions
         showTracing
         enableFileDrop
+        onLoadMore={chat.loadMoreMessages}
+        hasMoreMessages={chat.hasMoreMessages}
+        isLoadingMoreMessages={chat.isLoadingMoreMessages}
+        widgetCache={widgetCache}
       />
 
       {tracing.tracingDialogOpen && tracing.traces.length > 0 && (

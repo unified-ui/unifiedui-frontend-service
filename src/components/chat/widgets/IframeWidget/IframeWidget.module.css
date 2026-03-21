@@ -8,9 +8,29 @@
   min-height: 100px;
 }
 
+.iframeWidgetLocked {
+  overflow: hidden;
+  resize: none;
+}
+
 .submittedBadge {
   position: absolute;
   top: var(--spacing-sm);
   right: var(--spacing-sm);
   z-index: 1;
+}
+
+.submittedOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-overlay);
+  border-radius: var(--radius-md);
+}
+
+.iframeBlocked {
+  pointer-events: none;
 }

@@ -361,6 +361,7 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
         order_by: 'name',
         order_direction: 'asc',
         name: searchTerm || undefined,
+        fields: 'id,name,type',
       });
       setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
     } catch (error) {
@@ -510,21 +511,16 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
   // Load data when dialog opens or chatAgentId changes
   useEffect(() => {
     if (opened && chatAgentId) {
-      // If initialData is provided, use it; otherwise fetch
       if (initialData) {
         initializeFromData(initialData);
       } else {
         fetchChatAgent();
       }
-      // Always fetch principals (they're not in the list data)
       fetchPrincipals();
-      // Load credentials for dropdowns
-      loadCredentials();
     } else if (!opened) {
-      // Reset hasPrincipalsFetched when dialog closes
       setHasPrincipalsFetched(false);
     }
-  }, [opened, chatAgentId, initialData, initializeFromData, fetchChatAgent, fetchPrincipals, loadCredentials]);
+  }, [opened, chatAgentId, initialData, initializeFromData, fetchChatAgent, fetchPrincipals]);
 
   useEffect(() => {
     if (opened && debouncedCredentialSearch !== undefined) {

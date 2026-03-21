@@ -18,6 +18,7 @@ import { useIdentity } from '../../../contexts';
 import type { ChatWidgetResponse } from '../../../api/types';
 import { ChatWidgetTypeEnum } from '../../../api/types';
 import type { FormFieldConfig } from '../../../pages/WidgetDesignerPage/types';
+import type { WidgetCache } from '../../../hooks/chat';
 import { FormWidget } from '../widgets/FormWidget';
 import classes from './WidgetSidebar.module.css';
 
@@ -30,9 +31,10 @@ export interface WidgetInteraction {
 
 interface WidgetSidebarProps {
   interactions: WidgetInteraction[];
+  widgetCache?: WidgetCache;
 }
 
-export const WidgetSidebar: FC<WidgetSidebarProps> = ({ interactions }) => {
+export const WidgetSidebar: FC<WidgetSidebarProps> = ({ interactions, widgetCache }) => {
   const { t } = useTranslation('widgets');
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
@@ -50,6 +52,7 @@ export const WidgetSidebar: FC<WidgetSidebarProps> = ({ interactions }) => {
         interaction={interactions[selectedIndex]}
         index={selectedIndex}
         onBack={handleBack}
+        widgetCache={widgetCache}
       />
     );
   }
@@ -72,6 +75,7 @@ export const WidgetSidebar: FC<WidgetSidebarProps> = ({ interactions }) => {
                 interaction={interaction}
                 index={index}
                 onClick={() => handleSelect(index)}
+                widgetCache={widgetCache}
               />
             ))}
           </Stack>
@@ -85,21 +89,23 @@ interface WidgetListItemProps {
   interaction: WidgetInteraction;
   index: number;
   onClick: () => void;
+  widgetCache?: WidgetCache;
 }
 
-const WidgetListItem: FC<WidgetListItemProps> = ({ interaction, onClick }) => {
+const WidgetListItem: FC<WidgetListItemProps> = ({ interaction, onClick, widgetCache }) => {
   const { t } = useTranslation('widgets');
-  const { apiClient, selectedTenant } = useIdentity();
+  const { selectedTenant } = useIdentity();
   const [name, setName] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!apiClient || !selectedTenant?.id) return;
+    if (!selectedTenant?.id) return;
+    if (!widgetCache) return;
     let cancelled = false;
-    apiClient.getChatWidget(selectedTenant.id, interaction.widgetId)
+    widgetCache.getWidget(selectedTenant.id, interaction.widgetId)
       .then((def) => { if (!cancelled) setName(def.name); })
       .catch(() => { if (!cancelled) setName(interaction.widgetId.slice(0, 8)); });
     return () => { cancelled = true; };
-  }, [apiClient, selectedTenant?.id, interaction.widgetId]);
+  }, [selectedTenant?.id, interaction.widgetId, widgetCache]);
 
   return (
     <Box className={classes.listItem} onClick={onClick}>
@@ -124,11 +130,12 @@ interface WidgetDetailViewProps {
   interaction: WidgetInteraction;
   index: number;
   onBack: () => void;
+  widgetCache?: WidgetCache;
 }
 
-const WidgetDetailView: FC<WidgetDetailViewProps> = ({ interaction, onBack }) => {
+const WidgetDetailView: FC<WidgetDetailViewProps> = ({ interaction, onBack, widgetCache }) => {
   const { t } = useTranslation('widgets');
-  const { apiClient, selectedTenant } = useIdentity();
+  const { selectedTenant } = useIdentity();
   const [widgetDef, setWidgetDef] = useState<ChatWidgetResponse | null>(null);
   const [viewMode, setViewMode] = useState<string>('form');
 
@@ -136,13 +143,13 @@ const WidgetDetailView: FC<WidgetDetailViewProps> = ({ interaction, onBack }) =>
   const persistedType = interaction.extra?.widgetType as string | undefined;
   const hasPersisted = !!persistedConfig && !!persistedType;
 
-  const shouldFetch = !hasPersisted && !!apiClient && !!selectedTenant?.id;
+  const shouldFetch = !hasPersisted && !!widgetCache && !!selectedTenant?.id;
   const [loading, setLoading] = useState(shouldFetch);
 
   useEffect(() => {
-    if (!shouldFetch || !apiClient || !selectedTenant?.id) return;
+    if (!shouldFetch || !widgetCache || !selectedTenant?.id) return;
     let cancelled = false;
-    apiClient.getChatWidget(selectedTenant.id, interaction.widgetId)
+    widgetCache.getWidget(selectedTenant.id, interaction.widgetId)
       .then((def) => {
         if (!cancelled) {
           setWidgetDef(def);
@@ -156,7 +163,7 @@ const WidgetDetailView: FC<WidgetDetailViewProps> = ({ interaction, onBack }) =>
         if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
-  }, [shouldFetch, apiClient, selectedTenant?.id, interaction.widgetId]);
+  }, [shouldFetch, widgetCache, selectedTenant?.id, interaction.widgetId]);
 
   const activeType = hasPersisted ? persistedType : widgetDef?.type;
   const activeConfig = hasPersisted ? persistedConfig : widgetDef?.config;

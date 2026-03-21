@@ -8,6 +8,7 @@ import { ChatInput } from '../ChatInput';
 import type { ChatInputRef } from '../ChatInput';
 import type { MessageResponse, ReactionResponse } from '../../../api/types';
 import type { ReActStreamState } from '../../../hooks/chat/useReActChat';
+import type { WidgetCache } from '../../../hooks/chat';
 import classes from './ChatView.module.css';
 
 const NOOP = () => {};
@@ -48,6 +49,12 @@ export interface ChatViewProps {
   headerSlot?: ReactNode;
   tracingSlot?: ReactNode;
   widgetSlot?: ReactNode;
+
+  onLoadMore?: () => Promise<void>;
+  hasMoreMessages?: boolean;
+  isLoadingMoreMessages?: boolean;
+
+  widgetCache?: WidgetCache;
 }
 
 export const ChatView: FC<ChatViewProps> = ({
@@ -86,6 +93,12 @@ export const ChatView: FC<ChatViewProps> = ({
   headerSlot,
   tracingSlot,
   widgetSlot,
+
+  onLoadMore,
+  hasMoreMessages,
+  isLoadingMoreMessages,
+
+  widgetCache,
 }) => {
   const { t } = useTranslation();
   const chatInputRef = useRef<ChatInputRef>(null);
@@ -195,6 +208,10 @@ export const ChatView: FC<ChatViewProps> = ({
                 onToggleReasoning={onToggleReasoning}
                 alwaysExpandReasoning={alwaysExpandReasoning}
                 onSendMessage={onSendMessage ? handleContentSendMessage : undefined}
+                onLoadMore={onLoadMore}
+                hasMoreMessages={hasMoreMessages}
+                isLoadingMoreMessages={isLoadingMoreMessages}
+                widgetCache={widgetCache}
               />
             </Box>
             <ChatInput

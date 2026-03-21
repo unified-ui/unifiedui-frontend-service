@@ -287,6 +287,7 @@ export interface AttachmentMetadata {
 
 export interface GetMessagesResponse {
   messages: MessageResponse[];
+  hasMore: boolean;
 }
 
 export interface SearchMessagesResponse {
@@ -351,6 +352,10 @@ export interface ReactionResponse {
 
 export interface ListReactionsResponse {
   reactions: ReactionResponse[];
+}
+
+export interface BulkReactionsResponse {
+  reactions: Record<string, ReactionResponse[]>;
 }
 
 export interface UpsertReactionRequest {
@@ -1218,6 +1223,20 @@ export interface CredentialSecretResponse {
   secret_value: string;
 }
 
+export interface TestCredentialConnectionRequest {
+  credential_type: string;
+  tenant_id: string;
+  client_id: string;
+  client_secret: string;
+  scopes?: string[];
+}
+
+export interface TestCredentialConnectionResponse {
+  success: boolean;
+  message: string;
+  response_time_ms: number;
+}
+
 // ========== Chat Widget Types ==========
 
 export interface ChatWidgetResponse {
@@ -1380,6 +1399,7 @@ export interface AIModelResponse {
   credential_id?: string;
   priority: number;
   is_active: boolean;
+  tags: TagSummary[];
   created_at: string;
   updated_at: string;
   created_by?: string;
@@ -1417,10 +1437,12 @@ export interface ExternalAppResponse {
   description?: string;
   url: string;
   image_url?: string;
+  tags: TagSummary[];
   created_at: string;
   updated_at: string;
   created_by?: string;
   updated_by?: string;
+  my_permission?: string;
 }
 
 export interface CreateExternalAppRequest {
@@ -1646,6 +1668,11 @@ export interface SearchParams {
 export interface OrderParams {
   order_by?: string;
   order_direction?: 'asc' | 'desc';
+}
+
+export interface FieldSelectParams {
+  fields?: string;
+  ids?: string;
 }
 
 /** Query parameters for tenant principals endpoint */

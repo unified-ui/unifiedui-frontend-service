@@ -9,7 +9,7 @@ import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconBrain, IconCheck, IconX, IconAlertCircle, IconPlus } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
-import { FilterableSelect } from '../../common';
+import { FilterableSelect, TagInput } from '../../common';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import {
   AIModelTypeEnum,
@@ -19,6 +19,7 @@ import {
 import type { QuickListItemResponse } from '../../../api/types';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
 import { useFormDirtyGuard } from '../../../hooks';
+import { useTranslation } from 'react-i18next';
 import classes from './AIModelDialog.module.css';
 
 interface AIModelDialogProps {
@@ -38,6 +39,7 @@ interface FormValues {
   credential_id: string;
   priority: number;
   is_active: boolean;
+  tags: string[];
 }
 
 const MODEL_TYPES = [
@@ -81,6 +83,7 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
   modelId,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { t: tc } = useTranslation('common');
   const isEdit = !!modelId;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -103,6 +106,7 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
       credential_id: '',
       priority: 0,
       is_active: false,
+      tags: [],
     },
     validate: {
       name: (value) => {
@@ -146,6 +150,7 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
         credential_id: model.credential_id || '',
         priority: model.priority,
         is_active: model.is_active,
+        tags: model.tags?.map((t) => t.name) || [],
       });
       form.resetDirty();
     } catch {
@@ -189,8 +194,9 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
           priority: values.priority,
           is_active: values.is_active,
         });
+        await apiClient.setAIModelTags(selectedTenant.id, modelId, values.tags);
       } else {
-        await apiClient.createAIModel(selectedTenant.id, {
+        const created = await apiClient.createAIModel(selectedTenant.id, {
           name: values.name.trim(),
           description: values.description?.trim() || undefined,
           type: values.type as AIModelTypeEnum,
@@ -201,6 +207,9 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
           priority: values.priority,
           is_active: values.is_active,
         });
+        if (values.tags.length > 0) {
+          await apiClient.setAIModelTags(selectedTenant.id, created.id, values.tags);
+        }
       }
       form.reset();
       onSuccess?.();
@@ -470,6 +479,13 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
               />
             </div>
           </Group>
+
+          <TagInput
+            label={tc('tags')}
+            placeholder={tc('tagsPlaceholder')}
+            value={form.values.tags}
+            onChange={(tags) => form.setFieldValue('tags', tags)}
+          />
 
           <Box pos="relative">
             <Textarea

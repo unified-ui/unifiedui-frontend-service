@@ -7,6 +7,7 @@ export { useUnsavedChanges } from './useUnsavedChanges';
 export { useFormDirtyGuard } from './useFormDirtyGuard';
 export { usePermissions } from './usePermissions';
 export type { ResourceType, UsePermissionsReturn } from './usePermissions';
-export { useChat, useFileUpload } from './chat';
+export { useChat, useFileUpload, useWidgetCache } from './chat';
+export type { WidgetCache } from './chat';
 export { useConversationList, useConversationTracing, useConversationWidgets } from './conversation';
 export { useBranding } from './useBranding';

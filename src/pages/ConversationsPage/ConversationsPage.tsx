@@ -13,7 +13,7 @@ import { SearchConversationsDialog } from '../../components/dialogs/SearchConver
 import { TracingProvider, TracingSidebar, TracingVisualDialog } from '../../components/tracing';
 import { ConversationSidebar } from '../../components/conversation';
 import { ChatView, ChatHeader, ChatEmptyState, WidgetSidebar } from '../../components/chat';
-import { useConversationList, useChat, useConversationTracing, useConversationWidgets, useDelayedLoading } from '../../hooks';
+import { useConversationList, useChat, useConversationTracing, useConversationWidgets, useDelayedLoading, useWidgetCache } from '../../hooks';
 import classes from './ConversationsPage.module.css';
 
 /**
@@ -69,6 +69,8 @@ export const ConversationsPage: FC = () => {
     messages: chat.messages,
   });
 
+  const widgetCache = useWidgetCache(apiClient);
+
   useEffect(() => {
     tracing.setMessagesRef(chat.messages);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,6 +81,7 @@ export const ConversationsPage: FC = () => {
       convList.setCurrentConversation(null);
       chat.setMessages(prev => prev.length === 0 ? prev : []);
       chat.setIsLoadingMessages(false);
+      widgetCache.clear();
       return;
     }
 
@@ -89,6 +92,7 @@ export const ConversationsPage: FC = () => {
     }
 
     chat.loadConversationMessages(conversationId);
+    widgetCache.clear();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiClient, tenantId, conversationId]);
 
@@ -220,7 +224,7 @@ export const ConversationsPage: FC = () => {
   ) : undefined;
 
     const widgetSlot = widgets.widgetSidebarVisible && widgets.hasWidgets ? (
-      <WidgetSidebar interactions={widgets.interactions} />
+      <WidgetSidebar interactions={widgets.interactions} widgetCache={widgetCache} />
     ) : undefined;
 
   const headerSlot = (
@@ -366,6 +370,10 @@ export const ConversationsPage: FC = () => {
             widgetSlot={widgetSlot}
             emptyStateSlot={emptyStateSlot}
             focusTrigger={focusTrigger}
+            onLoadMore={chat.loadMoreMessages}
+            hasMoreMessages={chat.hasMoreMessages}
+            isLoadingMoreMessages={chat.isLoadingMoreMessages}
+            widgetCache={widgetCache}
           />
         </Box>
         </Box>

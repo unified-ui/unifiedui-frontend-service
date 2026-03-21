@@ -19,7 +19,9 @@
   },
   "iframe": {
     "submitted": "Data submitted",
-    "noUrl": "No URL configured for this widget."
+    "noUrl": "No URL configured for this widget.",
+    "submitBlockedTitle": "Submission not allowed",
+    "submitBlockedMessage": "Only the latest widget can accept submissions."
   },
   "sidebar": {
     "title": "Widgets",

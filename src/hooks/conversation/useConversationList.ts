@@ -102,6 +102,7 @@ export function useConversationList({
             limit: 100,
             order_by: 'name',
             order_direction: 'asc',
+            fields: 'id,name,type,is_active',
           }) as Promise<ChatAgentResponse[]>,
           apiClient.listConversationFavorites(tenantId, userId),
         ]);

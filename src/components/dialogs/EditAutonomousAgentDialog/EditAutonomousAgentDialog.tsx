@@ -182,6 +182,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         order_by: 'name',
         order_direction: 'asc',
         ...(searchTerm && { name: searchTerm }),
+        fields: 'id,name,type',
       });
       setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
     } catch (err) {
@@ -191,20 +192,12 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
     }
   }, [apiClient, selectedTenant]);
 
-  // Load credentials when dialog opens
-  useEffect(() => {
-    if (opened) {
-      loadCredentials();
-    } else {
-      // Reset search when dialog closes
-      setCredentialSearch('');
-    }
-  }, [opened, loadCredentials]);
-
-  // Reload credentials when search term changes (debounced)
   useEffect(() => {
     if (opened && debouncedCredentialSearch !== undefined) {
       loadCredentials(debouncedCredentialSearch || undefined);
+    }
+    if (!opened) {
+      setCredentialSearch('');
     }
   }, [opened, debouncedCredentialSearch, loadCredentials]);
 

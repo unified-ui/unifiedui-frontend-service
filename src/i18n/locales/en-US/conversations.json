@@ -55,6 +55,8 @@
   "dropFilesHere": "Drop files here",
   "filesAttached": "Files will be attached to your message",
   "loading": "Loading...",
+  "loadMoreMessages": "Load more",
+  "allMessagesDisplayed": "All messages displayed",
   "error": "Error",
   "failedToLoadConversations": "Failed to load conversations",
   "failedToUpdateFavorite": "Failed to update favorite",

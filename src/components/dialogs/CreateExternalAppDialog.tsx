@@ -1,9 +1,9 @@
 import { type FC, useState } from 'react';
 import {
-  Modal, TextInput, Textarea, Button, Group, Stack, Text, Box,
+  Modal, TextInput, Textarea, Button, Group, Stack, Text, Box, Alert,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconAppWindow } from '@tabler/icons-react';
+import { IconAlertCircle, IconAppWindow } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useIdentity } from '../../contexts';
 import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
@@ -29,6 +29,7 @@ export const CreateExternalAppDialog: FC<CreateExternalAppDialogProps> = ({
   const { t } = useTranslation('externalApps');
   const { t: tc } = useTranslation('common');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     initialValues: { name: '', description: '', url: '', image_url: '' },
@@ -57,6 +58,7 @@ export const CreateExternalAppDialog: FC<CreateExternalAppDialogProps> = ({
   const handleSubmit = async (values: FormValues) => {
     if (!apiClient || !selectedTenant) return;
     setIsSubmitting(true);
+    setError(null);
     try {
       const app = await apiClient.createExternalApp(selectedTenant.id, {
         name: values.name.trim(),
@@ -67,8 +69,13 @@ export const CreateExternalAppDialog: FC<CreateExternalAppDialogProps> = ({
       form.reset();
       onSuccess?.(app);
       onClose();
-    } catch {
-      /* handled by apiClient */
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '';
+      if (message.includes('already exists')) {
+        setError(tc('nameAlreadyExists'));
+      } else {
+        setError(tc('createFailed'));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -76,6 +83,7 @@ export const CreateExternalAppDialog: FC<CreateExternalAppDialogProps> = ({
 
   const handleClose = () => {
     form.reset();
+    setError(null);
     onClose();
   };
 
@@ -85,21 +93,19 @@ export const CreateExternalAppDialog: FC<CreateExternalAppDialogProps> = ({
       onClose={handleClose}
       title={
         <Group gap="sm">
-          <Box
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: 36, height: 36, borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500))',
-              color: 'white',
-            }}
-          >
-            <IconAppWindow size={20} />
-          </Box>
+          <IconAppWindow size={24} />
           <Text fw={600} size="lg">{t('createDialog.title')}</Text>
         </Group>
       }
       size="md"
+      centered
     >
+      {error && (
+        <Alert icon={<IconAlertCircle size={16} />} color="red" mb="md" onClose={() => setError(null)} withCloseButton>
+          {error}
+        </Alert>
+      )}
+
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">
           <TextInput
@@ -117,6 +123,12 @@ export const CreateExternalAppDialog: FC<CreateExternalAppDialogProps> = ({
             withAsterisk
             maxLength={2000}
             {...form.getInputProps('url')}
+          />
+          <TextInput
+            label={t('createDialog.imageUrlLabel')}
+            placeholder={t('createDialog.imageUrlPlaceholder')}
+            maxLength={2000}
+            {...form.getInputProps('image_url')}
           />
           <Box pos="relative">
             <Textarea
@@ -137,12 +149,6 @@ export const CreateExternalAppDialog: FC<CreateExternalAppDialogProps> = ({
               />
             </Box>
           </Box>
-          <TextInput
-            label={t('createDialog.imageUrlLabel')}
-            placeholder={t('createDialog.imageUrlPlaceholder')}
-            maxLength={2000}
-            {...form.getInputProps('image_url')}
-          />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={handleClose} disabled={isSubmitting}>
               {tc('cancel')}
