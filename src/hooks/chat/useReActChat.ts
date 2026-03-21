@@ -3,10 +3,28 @@ import type { SSEStreamMessage, StatusTrace } from '../../api/types';
 
 export type ReasoningStepType = 'reasoning' | 'tool_call' | 'plan' | 'sub_agent' | 'synthesis';
 
+function deepParseAndClean(value: unknown): unknown {
+  if (typeof value === 'string') {
+    try {
+      return deepParseAndClean(JSON.parse(value));
+    } catch {
+      return value.replace(/\r\n?/g, '\n');
+    }
+  }
+  if (Array.isArray(value)) return value.map(deepParseAndClean);
+  if (typeof value === 'object' && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, deepParseAndClean(v)])
+    );
+  }
+  return value;
+}
+
 export function sanitizeToolResult(value: unknown): string | undefined {
   if (value == null) return undefined;
-  const str = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
-  return str.replace(/\r/g, '');
+  const cleaned = deepParseAndClean(value);
+  if (typeof cleaned === 'object' && cleaned !== null) return JSON.stringify(cleaned, null, 2);
+  return String(cleaned);
 }
 
 export interface ReasoningStep {
@@ -136,10 +154,12 @@ function nextStepId(): string {
 export function useReActChat(): UseReActChatReturn {
   const [reActState, setReActState] = useState<ReActStreamState>(INITIAL_STATE);
   const activeStepRef = useRef<string>('');
+  const activeStepTypeRef = useRef<ReasoningStepType | null>(null);
 
   const resetReActState = useCallback(() => {
     setReActState(INITIAL_STATE);
     activeStepRef.current = '';
+    activeStepTypeRef.current = null;
   }, []);
 
   const setIsReasoningExpanded = useCallback((expanded: boolean) => {
@@ -158,12 +178,14 @@ export function useReActChat(): UseReActChatReturn {
       activeStepContent: '',
     }));
     activeStepRef.current = '';
+    activeStepTypeRef.current = null;
   }, []);
 
   const onReasoningStart = useCallback((config?: SSEStreamMessage['config']) => {
     finalizeActiveStep();
     const id = nextStepId();
     activeStepRef.current = id;
+    activeStepTypeRef.current = 'reasoning';
     const step: ReasoningStep = {
       id,
       type: 'reasoning',
@@ -198,6 +220,9 @@ export function useReActChat(): UseReActChatReturn {
   }, [finalizeActiveStep]);
 
   const onToolCallStart = useCallback((config?: SSEStreamMessage['config']) => {
+    if (activeStepTypeRef.current && activeStepTypeRef.current !== 'tool_call') {
+      finalizeActiveStep();
+    }
     const id = nextStepId();
     const toolCallId = config?.tool_call_id as string | undefined;
     const toolInputRaw = config?.toolInput;
@@ -211,6 +236,7 @@ export function useReActChat(): UseReActChatReturn {
       startedAt: Date.now(),
     };
     activeStepRef.current = id;
+    activeStepTypeRef.current = 'tool_call';
     setReActState(prev => ({
       ...prev,
       reasoningSteps: [...prev.reasoningSteps, step],
@@ -218,7 +244,7 @@ export function useReActChat(): UseReActChatReturn {
       activeStepContent: '',
       isReasoningExpanded: true,
     }));
-  }, []);
+  }, [finalizeActiveStep]);
 
   const onToolCallStream = useCallback((content: string) => {
     const stepId = activeStepRef.current;
@@ -239,8 +265,13 @@ export function useReActChat(): UseReActChatReturn {
         ? prev.reasoningSteps.findIndex(s => s.toolCallId === endToolCallId)
         : prev.reasoningSteps.findIndex(s => s.id === activeStepRef.current);
       if (matchIdx === -1) return prev;
+      const allToolsDone = prev.reasoningSteps.every((s, i) =>
+        s.type !== 'tool_call' || i === matchIdx || s.completedAt != null
+      );
       return {
         ...prev,
+        activeStepType: allToolsDone ? null : prev.activeStepType,
+        activeStepContent: allToolsDone ? '' : prev.activeStepContent,
         reasoningSteps: prev.reasoningSteps.map((s, i) =>
           i === matchIdx
             ? {
@@ -259,6 +290,7 @@ export function useReActChat(): UseReActChatReturn {
     finalizeActiveStep();
     const id = nextStepId();
     activeStepRef.current = id;
+    activeStepTypeRef.current = 'plan';
     const step: ReasoningStep = {
       id,
       type: 'plan',
@@ -295,6 +327,7 @@ export function useReActChat(): UseReActChatReturn {
     finalizeActiveStep();
     const id = nextStepId();
     activeStepRef.current = id;
+    activeStepTypeRef.current = 'sub_agent';
     const step: ReasoningStep = {
       id,
       type: 'sub_agent',
@@ -332,6 +365,7 @@ export function useReActChat(): UseReActChatReturn {
     finalizeActiveStep();
     const id = nextStepId();
     activeStepRef.current = id;
+    activeStepTypeRef.current = 'synthesis';
     const step: ReasoningStep = {
       id,
       type: 'synthesis',
