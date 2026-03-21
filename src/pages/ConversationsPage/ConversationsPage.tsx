@@ -202,13 +202,7 @@ export const ConversationsPage: FC = () => {
                 </Center>
               )}
             </Box>
-            <Box className={classes.mainArea}>
-              <ChatEmptyState
-                icon={<IconMessageCircle size={64} />}
-                title={t('conversations:startNewConversation')}
-                description={t('conversations:selectAgentToStart')}
-              />
-            </Box>
+            <Box className={classes.mainArea} />
           </Box>
         </Box>
       </MainLayout>

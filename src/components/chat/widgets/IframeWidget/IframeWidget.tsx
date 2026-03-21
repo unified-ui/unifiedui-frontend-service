@@ -39,6 +39,7 @@ export const IframeWidget: FC<IframeWidgetProps> = ({
   const { t } = useTranslation('widgets');
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [localSubmitted, setLocalSubmitted] = useState(false);
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
   const isSubmitted = !!submittedData;
   const effectiveSubmitted = isSubmitted || localSubmitted;
 
@@ -62,19 +63,20 @@ export const IframeWidget: FC<IframeWidgetProps> = ({
   }, [handleMessage]);
 
   useEffect(() => {
-    if (widgetData && iframeRef.current?.contentWindow && expectedOrigin) {
+    if (widgetData && loadedUrl === config.url && iframeRef.current?.contentWindow && expectedOrigin) {
       iframeRef.current.contentWindow.postMessage(
         { type: 'widget_data', data: widgetData },
         expectedOrigin,
       );
     }
-  }, [widgetData, expectedOrigin]);
+  }, [widgetData, expectedOrigin, loadedUrl, config.url]);
 
   const width = config.width ?? '100%';
   const height = config.height ?? 400;
+  const containerHeight = typeof height === 'number' ? `${height}px` : height;
 
   return (
-    <Box className={classes.iframeWidget}>
+    <Box className={classes.iframeWidget} style={{ height: containerHeight }}>
       {effectiveSubmitted && (
         <Badge
           leftSection={<IconCheck size={12} />}
@@ -93,9 +95,10 @@ export const IframeWidget: FC<IframeWidgetProps> = ({
           ref={iframeRef}
           src={config.url}
           title="Widget"
-          style={{ width, height: typeof height === 'number' ? `${height}px` : height, border: 'none' }}
+          style={{ width, height: '100%', border: 'none' }}
           sandbox="allow-scripts allow-same-origin allow-forms"
           allowFullScreen={config.allowFullscreen}
+          onLoad={() => setLoadedUrl(config.url)}
         />
       )}
     </Box>
