@@ -91,5 +91,6 @@
   "assistantMessage": "Assistant",
   "welcomeTitle": "What can I help you with?",
   "welcomeTitleWithAgent": "Chat with {{agentName}}",
-  "welcomeDescription": "Ask me anything or try one of these suggestions"
+  "welcomeDescription": "Ask me anything or try one of these suggestions",
+  "aiDisclaimer": "This chat uses AI to generate responses. AI can make mistakes. Please verify important information."
 }

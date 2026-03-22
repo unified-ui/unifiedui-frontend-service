@@ -1,5 +1,6 @@
 import type { FC, KeyboardEvent, DragEvent, ChangeEvent } from 'react';
 import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   ActionIcon,
@@ -40,6 +41,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
   placeholder = 'Ask me something... 🚀',
   maxLength = 32000,
 }, ref) => {
+  const { t } = useTranslation('conversations');
   const [content, setContent] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -246,7 +248,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
       </Box>
 
       <Text size="xs" c="dimmed" ta="center" className={classes.hint}>
-        Press Enter to send, Shift+Enter for new line
+        {t('aiDisclaimer')}
       </Text>
     </Box>
   );
