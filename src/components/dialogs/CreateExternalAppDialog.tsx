@@ -1,9 +1,10 @@
-import { type FC, useState } from 'react';
+import { type FC, useState, useMemo } from 'react';
 import {
-  Modal, TextInput, Textarea, Button, Group, Stack, Text, Box, Alert,
+  Modal, TextInput, Textarea, Button, Group, Stack, Text, Box, Alert, Image,
+  FileButton, ActionIcon,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconAlertCircle, IconAppWindow } from '@tabler/icons-react';
+import { IconAlertCircle, IconAppWindow, IconUpload, IconTrash } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useIdentity } from '../../contexts';
 import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
@@ -19,7 +20,6 @@ interface FormValues {
   name: string;
   description: string;
   url: string;
-  image_url: string;
 }
 
 export const CreateExternalAppDialog: FC<CreateExternalAppDialogProps> = ({
@@ -30,9 +30,15 @@ export const CreateExternalAppDialog: FC<CreateExternalAppDialogProps> = ({
   const { t: tc } = useTranslation('common');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const imagePreview = useMemo(
+    () => (imageFile ? URL.createObjectURL(imageFile) : null),
+    [imageFile],
+  );
 
   const form = useForm<FormValues>({
-    initialValues: { name: '', description: '', url: '', image_url: '' },
+    initialValues: { name: '', description: '', url: '' },
     validate: {
       name: (value) => {
         if (!value || value.trim().length === 0) return tc('validation.required', { field: tc('name') });
@@ -48,10 +54,6 @@ export const CreateExternalAppDialog: FC<CreateExternalAppDialogProps> = ({
         if (value && value.length > 2000) return tc('validation.maxLength', { field: tc('description'), max: 2000 });
         return null;
       },
-      image_url: (value) => {
-        if (value && value.length > 2000) return tc('validation.maxLength', { field: t('createDialog.imageUrlLabel'), max: 2000 });
-        return null;
-      },
     },
   });
 
@@ -60,13 +62,20 @@ export const CreateExternalAppDialog: FC<CreateExternalAppDialogProps> = ({
     setIsSubmitting(true);
     setError(null);
     try {
+      let imageFileId: string | undefined;
+      if (imageFile) {
+        const uploaded = await apiClient.uploadFile(selectedTenant.id, imageFile, 'APP_IMAGE');
+        imageFileId = uploaded.id;
+      }
+
       const app = await apiClient.createExternalApp(selectedTenant.id, {
         name: values.name.trim(),
         url: values.url.trim(),
         description: values.description?.trim() || undefined,
-        image_url: values.image_url?.trim() || undefined,
+        image_file_id: imageFileId,
       });
       form.reset();
+      setImageFile(null);
       onSuccess?.(app);
       onClose();
     } catch (err) {
@@ -83,6 +92,7 @@ export const CreateExternalAppDialog: FC<CreateExternalAppDialogProps> = ({
 
   const handleClose = () => {
     form.reset();
+    setImageFile(null);
     setError(null);
     onClose();
   };
@@ -124,12 +134,39 @@ export const CreateExternalAppDialog: FC<CreateExternalAppDialogProps> = ({
             maxLength={2000}
             {...form.getInputProps('url')}
           />
-          <TextInput
-            label={t('createDialog.imageUrlLabel')}
-            placeholder={t('createDialog.imageUrlPlaceholder')}
-            maxLength={2000}
-            {...form.getInputProps('image_url')}
-          />
+          <Box>
+            <Text size="sm" fw={500} mb={4}>{t('createDialog.imageLabel')}</Text>
+            <Group gap="sm" align="flex-start">
+              {imagePreview && (
+                <Box pos="relative">
+                  <Image src={imagePreview} w={120} h={80} radius="sm" fit="cover" />
+                  <ActionIcon
+                    size="xs"
+                    color="red"
+                    variant="filled"
+                    pos="absolute"
+                    top={4}
+                    right={4}
+                    onClick={() => setImageFile(null)}
+                  >
+                    <IconTrash size={12} />
+                  </ActionIcon>
+                </Box>
+              )}
+              <FileButton onChange={setImageFile} accept="image/*">
+                {(props) => (
+                  <Button
+                    {...props}
+                    variant="light"
+                    size="xs"
+                    leftSection={<IconUpload size={14} />}
+                  >
+                    {imageFile ? t('createDialog.changeImage') : t('createDialog.uploadImage')}
+                  </Button>
+                )}
+              </FileButton>
+            </Group>
+          </Box>
           <Box pos="relative">
             <Textarea
               label={tc('description')}

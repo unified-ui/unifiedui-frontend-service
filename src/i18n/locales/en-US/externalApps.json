@@ -14,7 +14,10 @@
     "urlPlaceholder": "e.g. https://app.example.com",
     "imageUrlPlaceholder": "e.g. https://example.com/logo.png",
     "urlLabel": "URL",
-    "imageUrlLabel": "Image URL"
+    "imageUrlLabel": "Image URL",
+    "imageLabel": "Image",
+    "uploadImage": "Upload Image",
+    "changeImage": "Change Image"
   },
   "editDialog": {
     "title": "Edit External App"

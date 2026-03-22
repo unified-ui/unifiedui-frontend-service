@@ -139,6 +139,8 @@ import type {
   AICapabilitiesResponse,
   TraceChatRequest,
   TraceChatResponse,
+  // File Types
+  FileUploadResponse,
   // Misc Types
   HealthCheckResponse,
   PrincipalTypeEnum,
@@ -919,6 +921,52 @@ export class UnifiedUIAPIClient {
 
   async syncRecentVisits(tenantId: string, userId: string, data: SyncRecentVisitsRequest): Promise<RecentVisitListResponse> {
     return this.request<RecentVisitListResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/recent-visits/sync`, data);
+  }
+
+  // ========== File Endpoints ==========
+
+  async uploadFile(
+    tenantId: string,
+    file: File,
+    contextType: string,
+    contextId?: string
+  ): Promise<FileUploadResponse> {
+    const token = await this.getAccessToken();
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('context_type', contextType);
+    if (contextId) {
+      formData.append('context_id', contextId);
+    }
+
+    const response = await fetch(
+      `${this.baseURL}/api/v1/platform-service/tenants/${tenantId}/files`,
+      {
+        method: 'POST',
+        headers,
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  getFileDownloadUrl(tenantId: string, fileId: string): string {
+    return `${this.baseURL}/api/v1/platform-service/tenants/${tenantId}/files/${fileId}/download`;
+  }
+
+  async getAccessTokenForDownload(): Promise<string | null> {
+    return this.getAccessToken();
   }
 
   // ========== Agent Service Endpoints ==========

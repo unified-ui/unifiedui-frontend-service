@@ -249,6 +249,7 @@ export const Sidebar: FC = () => {
   }, [location.pathname]);
 
   const handleNavItemHoverEnter = useCallback((item: NavItem) => {
+    return; // Feature disabled
     if (!item.hasDataList || !item.entityType) return;
     if (isOnEntityListPage(item.entityType)) return;
 
@@ -310,6 +311,7 @@ export const Sidebar: FC = () => {
   const isOnConversationsPage = location.pathname.startsWith('/conversations');
 
   const handleConversationsNavHoverEnter = useCallback(() => {
+    return; // Feature disabled
     if (isOnConversationsPage) return;
 
     if (conversationsCloseTimeoutRef.current) {

@@ -460,6 +460,7 @@ export function useChat({
       fileType: file.type,
       fileSize: file.size,
       fileCategory: file.type.startsWith('image/') ? 'image' : file.type.startsWith('audio/') ? 'audio' : 'file',
+      fileId: undefined as string | undefined,
     }));
 
     const optimisticUserMessage: MessageResponse = {
@@ -518,6 +519,33 @@ export function useChat({
     let files: FileAttachment[] | undefined;
     if (attachments && attachments.length > 0) {
       files = await filesToAttachments(attachments);
+
+      try {
+        const uploadResults = await Promise.all(
+          attachments.map(file =>
+            apiClient.uploadFile(tenantId, file, 'CHAT_ATTACHMENT', activeConversationId)
+          )
+        );
+        uploadResults.forEach((result, index) => {
+          if (attachmentsMetadata) {
+            attachmentsMetadata[index].fileId = result.id;
+          }
+          if (files) {
+            files[index].fileId = result.id;
+          }
+        });
+        if (attachmentsMetadata) {
+          setMessages(prev =>
+            prev.map(m =>
+              m.id === optimisticUserMessage.id
+                ? { ...m, attachmentsMetadata: [...attachmentsMetadata] }
+                : m
+            )
+          );
+        }
+      } catch (error) {
+        console.error('Failed to upload files to storage:', error);
+      }
     }
 
     try {

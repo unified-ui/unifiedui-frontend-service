@@ -279,10 +279,24 @@
   max-width: 180px;
 }
 
+.attachmentChipClickable {
+  cursor: pointer;
+}
+
+.attachmentChipClickable:hover {
+  background-color: var(--color-gray-200);
+  border-color: var(--color-gray-300);
+}
+
 [data-mantine-color-scheme="dark"] .attachmentChip {
   background-color: var(--color-dark-600);
   border-color: var(--color-dark-400);
   color: var(--color-gray-300);
+}
+
+[data-mantine-color-scheme="dark"] .attachmentChipClickable:hover {
+  background-color: var(--color-dark-500);
+  border-color: var(--color-dark-300);
 }
 
 .attachmentChipIcon {

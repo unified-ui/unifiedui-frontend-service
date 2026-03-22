@@ -875,19 +875,45 @@ interface FileAttachmentChipsProps {
 }
 
 const FileAttachmentChips: FC<FileAttachmentChipsProps> = ({ attachments }) => {
+  const { apiClient, selectedTenant } = useIdentity();
+
   if (!attachments || attachments.length === 0) return null;
+
+  const handleDownload = async (attachment: AttachmentMetadata) => {
+    if (!attachment.fileId || !apiClient || !selectedTenant) return;
+
+    const url = apiClient.getFileDownloadUrl(selectedTenant.id, attachment.fileId);
+    const token = await apiClient.getAccessTokenForDownload();
+    const response = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!response.ok) return;
+
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = attachment.fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+  };
 
   return (
     <Box className={classes.attachmentsContainer}>
       {attachments.map((attachment, index) => (
         <Tooltip
           key={index}
-          label={`${attachment.fileName} (${formatFileSize(attachment.fileSize)})`}
+          label={`${attachment.fileName} (${formatFileSize(attachment.fileSize)})${attachment.fileId ? ' — click to download' : ''}`}
           withArrow
           position="bottom"
           openDelay={1000}
         >
-          <Box className={classes.attachmentChip}>
+          <Box
+            className={`${classes.attachmentChip}${attachment.fileId ? ` ${classes.attachmentChipClickable}` : ''}`}
+            onClick={attachment.fileId ? () => handleDownload(attachment) : undefined}
+          >
             {getFileIcon(attachment)}
             <span className={classes.attachmentChipName}>{attachment.fileName}</span>
           </Box>

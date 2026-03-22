@@ -3,12 +3,12 @@ import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  SimpleGrid, Card, Image, Text, Group, Menu, ActionIcon,
+  SimpleGrid, Card, Text, Group, Menu, ActionIcon,
   Stack, Center, Loader, Badge, Popover,
 } from '@mantine/core';
 import { IconDots, IconEdit, IconTrash, IconAppWindow, IconShieldLock } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { PageHeader, ConfirmDeleteDialog } from '../../components/common';
+import { PageHeader, ConfirmDeleteDialog, AuthImage } from '../../components/common';
 import { CreateExternalAppDialog, EditExternalAppDialog } from '../../components/dialogs';
 import { useIdentity } from '../../contexts';
 import { usePermissions } from '../../hooks';
@@ -151,8 +151,8 @@ export const ExternalAppsPage: FC = () => {
               onClick={() => navigate(`/external-apps/${app.id}`)}
             >
               <Card.Section>
-                <Image
-                  src={app.image_url}
+                <AuthImage
+                  src={app.image_file_id || app.image_url}
                   height={160}
                   alt={app.name}
                   fallbackSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='160'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%234158D0'/%3E%3Cstop offset='50%25' stop-color='%23C850C0'/%3E%3Cstop offset='100%25' stop-color='%23FFCC70'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='160' fill='url(%23g)' rx='0'/%3E%3Ctext x='200' y='88' text-anchor='middle' font-family='system-ui,sans-serif' font-size='18' font-weight='600' fill='white' opacity='0.9'%3EApp%3C/text%3E%3C/svg%3E"

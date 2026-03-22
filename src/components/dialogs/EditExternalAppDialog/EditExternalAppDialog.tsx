@@ -1,17 +1,18 @@
 import type { FC } from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Modal, TextInput, Textarea, Button, Stack, Group,
   LoadingOverlay, Alert, Box, Text, SegmentedControl, Divider,
+  FileButton, ActionIcon, Image,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconAlertCircle, IconAppWindow, IconInfoCircle, IconShieldLock } from '@tabler/icons-react';
+import { IconAlertCircle, IconAppWindow, IconInfoCircle, IconShieldLock, IconUpload, IconTrash } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useIdentity } from '../../../contexts';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import { useEntityPermissions, usePermissions } from '../../../hooks';
 import { useFormDirtyGuard } from '../../../hooks';
-import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
+import { ManageAccessTable, TagInput, AddPrincipalDialog, AuthImage } from '../../common';
 import type { ExternalAppResponse, PrincipalTypeEnum } from '../../../api/types';
 import { PermissionActionEnum } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
@@ -23,7 +24,6 @@ interface FormValues {
   name: string;
   description: string;
   url: string;
-  image_url: string;
   tags: string[];
 }
 
@@ -50,6 +50,13 @@ export const EditExternalAppDialog: FC<EditExternalAppDialogProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAddPrincipalOpen, setIsAddPrincipalOpen] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
+
+  const imagePreview = useMemo(
+    () => (imageFile ? URL.createObjectURL(imageFile) : null),
+    [imageFile],
+  );
 
   const {
     principals,
@@ -67,7 +74,7 @@ export const EditExternalAppDialog: FC<EditExternalAppDialogProps> = ({
   });
 
   const form = useForm<FormValues>({
-    initialValues: { name: '', description: '', url: '', image_url: '', tags: [] },
+    initialValues: { name: '', description: '', url: '', tags: [] },
     validate: {
       name: (value) => {
         if (!value.trim()) return tc('validation.required', { field: tc('name') });
@@ -82,16 +89,17 @@ export const EditExternalAppDialog: FC<EditExternalAppDialogProps> = ({
     },
   });
 
-  useFormDirtyGuard(form.isDirty());
+  useFormDirtyGuard(form.isDirty() || !!imageFile || removeImage);
 
   const initializeFromData = useCallback(
     (data: ExternalAppResponse) => {
       setApp(data);
+      setImageFile(null);
+      setRemoveImage(false);
       form.setValues({
         name: data.name,
         description: data.description || '',
         url: data.url,
-        image_url: data.image_url || '',
         tags: data.tags?.map((t) => t.name) || [],
       });
       form.resetDirty();
@@ -136,11 +144,19 @@ export const EditExternalAppDialog: FC<EditExternalAppDialogProps> = ({
     setIsSaving(true);
     setError(null);
     try {
+      let imageFileId: string | undefined = app?.image_file_id;
+      if (imageFile) {
+        const uploaded = await apiClient.uploadFile(selectedTenant.id, imageFile, 'APP_IMAGE');
+        imageFileId = uploaded.id;
+      } else if (removeImage) {
+        imageFileId = undefined;
+      }
+
       await apiClient.updateExternalApp(selectedTenant.id, externalAppId, {
         name: values.name.trim(),
         url: values.url.trim(),
         description: values.description?.trim() || undefined,
-        image_url: values.image_url?.trim() || undefined,
+        image_file_id: imageFileId,
       });
 
       const currentTags = app?.tags?.map((t) => t.name) || [];
@@ -188,6 +204,8 @@ export const EditExternalAppDialog: FC<EditExternalAppDialogProps> = ({
 
   const handleClose = () => {
     form.reset();
+    setImageFile(null);
+    setRemoveImage(false);
     setError(null);
     setApp(null);
     onClose();
@@ -272,12 +290,54 @@ export const EditExternalAppDialog: FC<EditExternalAppDialogProps> = ({
                 maxLength={2000}
                 {...form.getInputProps('url')}
               />
-              <TextInput
-                label={t('createDialog.imageUrlLabel')}
-                placeholder={t('createDialog.imageUrlPlaceholder')}
-                maxLength={2000}
-                {...form.getInputProps('image_url')}
-              />
+              <Box>
+                <Text size="sm" fw={500} mb={4}>{t('createDialog.imageLabel')}</Text>
+                <Group gap="sm" align="flex-start">
+                  {imagePreview ? (
+                    <Box pos="relative">
+                      <Image src={imagePreview} w={120} h={80} radius="sm" fit="cover" />
+                      <ActionIcon
+                        size="xs"
+                        color="red"
+                        variant="filled"
+                        pos="absolute"
+                        top={4}
+                        right={4}
+                        onClick={() => setImageFile(null)}
+                      >
+                        <IconTrash size={12} />
+                      </ActionIcon>
+                    </Box>
+                  ) : !removeImage && (app?.image_file_id || app?.image_url) ? (
+                    <Box pos="relative">
+                      <AuthImage src={app?.image_file_id || app?.image_url} w={120} h={80} radius="sm" fit="cover" />
+                      <ActionIcon
+                        size="xs"
+                        color="red"
+                        variant="filled"
+                        pos="absolute"
+                        top={4}
+                        right={4}
+                        onClick={() => setRemoveImage(true)}
+                      >
+                        <IconTrash size={12} />
+                      </ActionIcon>
+                    </Box>
+                  ) : null}
+                  <FileButton onChange={(file) => { setImageFile(file); setRemoveImage(false); }} accept="image/*">
+                    {(props) => (
+                      <Button
+                        {...props}
+                        variant="light"
+                        size="xs"
+                        leftSection={<IconUpload size={14} />}
+                      >
+                        {imageFile || (!removeImage && (app?.image_file_id || app?.image_url)) ? t('createDialog.changeImage') : t('createDialog.uploadImage')}
+                      </Button>
+                    )}
+                  </FileButton>
+                </Group>
+              </Box>
               <TagInput
                 label={tc('tags')}
                 placeholder={tc('tagsPlaceholder')}
@@ -310,7 +370,7 @@ export const EditExternalAppDialog: FC<EditExternalAppDialogProps> = ({
                 <Button variant="default" onClick={handleClose} disabled={isSaving}>
                   {tc('cancel')}
                 </Button>
-                <Button type="submit" loading={isSaving} disabled={!form.isDirty()}>
+                <Button type="submit" loading={isSaving} disabled={!form.isDirty() && !imageFile && !removeImage}>
                   {tc('saveChanges')}
                 </Button>
               </Group>

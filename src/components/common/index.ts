@@ -33,6 +33,7 @@ export { OrganizationSettingsPanel } from './OrganizationSettingsPanel';
 export { OrganizationAccessPanel } from './OrganizationAccessPanel';
 export { GreetingMessagesInput } from './GreetingMessagesInput';
 export type { GreetingMessagesInputProps } from './GreetingMessagesInput';
+export { AuthImage } from './AuthImage';
 export { KeyValuePairsInput } from './KeyValuePairsInput';
 export type { KeyValuePairsInputProps, KeyValuePair } from './KeyValuePairsInput';
 export { ConnectionTestButton } from './ConnectionTestButton';

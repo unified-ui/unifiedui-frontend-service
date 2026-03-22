@@ -283,6 +283,22 @@ export interface AttachmentMetadata {
   fileType: string;
   fileSize: number;
   fileCategory: string;
+  fileId?: string;
+}
+
+export interface FileUploadResponse {
+  id: string;
+  tenant_id: string;
+  file_name: string;
+  file_size: number;
+  content_type: string;
+  storage_path: string;
+  context_type: string;
+  context_id: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface GetMessagesResponse {
@@ -301,6 +317,7 @@ export interface FileAttachment {
   filename?: string;
   mimeType?: string;
   detail?: 'low' | 'high' | 'auto';
+  fileId?: string;
 }
 
 export interface MessageContent {
@@ -1437,6 +1454,7 @@ export interface ExternalAppResponse {
   description?: string;
   url: string;
   image_url?: string;
+  image_file_id?: string;
   tags: TagSummary[];
   created_at: string;
   updated_at: string;
@@ -1450,6 +1468,7 @@ export interface CreateExternalAppRequest {
   description?: string;
   url: string;
   image_url?: string;
+  image_file_id?: string;
 }
 
 export interface UpdateExternalAppRequest {
@@ -1457,6 +1476,7 @@ export interface UpdateExternalAppRequest {
   description?: string;
   url?: string;
   image_url?: string;
+  image_file_id?: string;
 }
 
 // ========== AI Feature Types ==========
