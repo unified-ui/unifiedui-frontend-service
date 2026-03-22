@@ -81,6 +81,8 @@ const TENANT_BRANDINGS: Record<string, DeepPartial<BrandingConfig>> = {
       buttonBorderColor: 'rgba(255, 255, 255, 0.25)',
       buttonHoverBg: 'rgba(255, 255, 255, 0.08)',
     },
+
+    enabledIdps: ['microsoft', 'oidc', 'ldap'],
   },
 
   // ─── Example: Muster-Bank AG ────────────────────────────────

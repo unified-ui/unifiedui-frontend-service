@@ -19,6 +19,7 @@ import { TracingDialogDevelopmentPage } from '../pages/TracingDialogDevelopmentP
 import { ExternalAppsPage } from '../pages/ExternalAppsPage';
 import { ExternalAppPage } from '../pages/ExternalAppPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
+import { UnauthorizedPage } from '../pages/UnauthorizedPage';
 
 export const AppRoutes = () => {
   return (
@@ -28,7 +29,9 @@ export const AppRoutes = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login/token" element={<LoginTokenPage />} />
         <Route path="/auth/callback/cognito" element={<LoginPage />} />
+        <Route path="/auth/callback/oidc" element={<LoginPage />} />
         <Route path="/embed/chat/:agentId" element={<EmbedChatPage />} />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/tenant-settings" element={<ProtectedRoute><TenantSettingsPage /></ProtectedRoute>} />

@@ -113,5 +113,10 @@
   "testConnection": "Test Connection",
   "testConnectionFailed": "Failed to test connection",
   "testConnectionHintN8nChat": "This will trigger a test execution on your n8n instance",
-  "testConnectionHintWebhook": "This will trigger a test execution via the webhook"
+  "testConnectionHintWebhook": "This will trigger a test execution via the webhook",
+  "signOut": "Sign out",
+  "unauthorized": {
+    "title": "No Access",
+    "message": "You do not have access to any organization or tenant. Please contact your administrator."
+  }
 }

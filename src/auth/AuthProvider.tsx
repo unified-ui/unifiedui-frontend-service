@@ -1,16 +1,21 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import type { AccountInfo } from '@azure/msal-browser';
-import { authConfig, loginRequest } from './authConfig';
-import { useGoogleAuth } from './useGoogleAuth';
-import { useCognitoAuth } from './useCognitoAuth';
+import { loginRequest } from './authConfig';
+import type { IdentityProviderType } from './authConfig';
+import { useLdapAuth } from './useLdapAuth';
+import { useOidcAuth } from './useOidcAuth';
+
+const ACTIVE_PROVIDER_KEY = 'active_auth_provider';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   account: AccountInfo | null;
-  login: () => Promise<void>;
+  activeProvider: IdentityProviderType | null;
+  loginWithProvider: (provider: IdentityProviderType) => Promise<void>;
+  loginWithCredentials: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   switchAccount: () => Promise<void>;
   getAccessToken: () => Promise<string | null>;
@@ -32,97 +37,166 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-const MsalAuthProviderInner = ({ children }: AuthProviderProps) => {
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const [activeProvider, setActiveProvider] = useState<IdentityProviderType | null>(
+    () => sessionStorage.getItem(ACTIVE_PROVIDER_KEY) as IdentityProviderType | null
+  );
+
   const { instance, accounts, inProgress } = useMsal();
-  const isAuthenticated = useIsAuthenticated();
-  const isLoading = inProgress !== 'none';
+  const msalIsAuthenticated = useIsAuthenticated();
+  const ldapAuth = useLdapAuth();
+  const oidcAuth = useOidcAuth();
 
-  const login = async () => {
-    try {
-      await instance.loginRedirect({
-        scopes: loginRequest.scopes,
-      });
-    } catch (error) {
-      console.error('Login failed:', error);
+  const msalIsLoading = inProgress !== 'none';
+
+  const effectiveProvider = useMemo((): IdentityProviderType | null => {
+    if (activeProvider) return activeProvider;
+    if (ldapAuth.isAuthenticated) return 'ldap';
+    if (oidcAuth.isAuthenticated) return 'oidc';
+    if (msalIsAuthenticated) return 'microsoft';
+    return null;
+  }, [activeProvider, ldapAuth.isAuthenticated, oidcAuth.isAuthenticated, msalIsAuthenticated]);
+
+  const isAuthenticated = msalIsAuthenticated || ldapAuth.isAuthenticated || oidcAuth.isAuthenticated;
+  const isLoading = msalIsLoading || oidcAuth.isLoading || ldapAuth.isLoading;
+
+  const account = useMemo((): AccountInfo | null => {
+    switch (effectiveProvider) {
+      case 'ldap':
+        return ldapAuth.account;
+      case 'oidc':
+        return oidcAuth.account;
+      case 'microsoft':
+        return accounts[0] || null;
+      default:
+        if (ldapAuth.account) return ldapAuth.account;
+        if (oidcAuth.account) return oidcAuth.account;
+        return accounts[0] || null;
     }
-  };
+  }, [effectiveProvider, ldapAuth.account, oidcAuth.account, accounts]);
 
-  const logout = async () => {
-    try {
-      await instance.logoutRedirect();
-    } catch (error) {
-      console.error('Logout failed:', error);
+  const loginWithProvider = useCallback(async (provider: IdentityProviderType) => {
+    sessionStorage.setItem(ACTIVE_PROVIDER_KEY, provider);
+    setActiveProvider(provider);
+
+    switch (provider) {
+      case 'ldap':
+        break;
+      case 'oidc':
+        await oidcAuth.login();
+        break;
+      case 'microsoft':
+      default:
+        try {
+          await instance.loginRedirect({ scopes: loginRequest.scopes });
+        } catch (error) {
+          console.error('Login failed:', error);
+        }
+        break;
     }
-  };
+  }, [oidcAuth, instance]);
 
-  const switchAccount = async () => {
-    try {
-      await instance.loginRedirect({
-        scopes: loginRequest.scopes,
-        prompt: 'select_account',
-      });
-    } catch (error) {
-      console.error('Switch account failed:', error);
+  const loginWithCredentials = useCallback(async (username: string, password: string) => {
+    sessionStorage.setItem(ACTIVE_PROVIDER_KEY, 'ldap');
+    setActiveProvider('ldap');
+    await ldapAuth.loginWithCredentials(username, password);
+  }, [ldapAuth]);
+
+  const logout = useCallback(async () => {
+    sessionStorage.removeItem(ACTIVE_PROVIDER_KEY);
+    switch (effectiveProvider) {
+      case 'ldap':
+        await ldapAuth.logout();
+        break;
+      case 'oidc':
+        await oidcAuth.logout();
+        break;
+      case 'microsoft':
+      default:
+        try {
+          await instance.logoutRedirect();
+        } catch (error) {
+          console.error('Logout failed:', error);
+        }
+        break;
     }
-  };
+    setActiveProvider(null);
+  }, [effectiveProvider, ldapAuth, oidcAuth, instance]);
 
-  const getAccessToken = async (): Promise<string | null> => {
-    if (!isAuthenticated || accounts.length === 0) {
-      return null;
-    }
-
-    try {
-      const response = await instance.acquireTokenSilent({
-        scopes: loginRequest.scopes,
-        account: accounts[0],
-      });
-      return response.accessToken;
-    } catch (error) {
-      console.error('Token acquisition failed, trying popup:', error);
+  const switchAccount = useCallback(async () => {
+    if (effectiveProvider === 'microsoft') {
       try {
-        const response = await instance.acquireTokenPopup({
+        await instance.loginRedirect({
           scopes: loginRequest.scopes,
-          account: accounts[0],
+          prompt: 'select_account',
         });
-        return response.accessToken;
-      } catch (popupError) {
-        console.error('Token popup failed:', popupError);
-        return null;
+      } catch (error) {
+        console.error('Switch account failed:', error);
       }
+    } else {
+      await logout();
     }
-  };
+  }, [effectiveProvider, instance, logout]);
 
-  const getFoundryToken = async (): Promise<string | null> => {
-    if (!isAuthenticated || accounts.length === 0) {
-      return null;
+  const getAccessToken = useCallback(async (): Promise<string | null> => {
+    switch (effectiveProvider) {
+      case 'ldap':
+        return ldapAuth.getAccessToken();
+      case 'oidc':
+        return oidcAuth.getAccessToken();
+      case 'microsoft': {
+        if (!msalIsAuthenticated || accounts.length === 0) return null;
+        try {
+          const response = await instance.acquireTokenSilent({
+            scopes: loginRequest.scopes,
+            account: accounts[0],
+          });
+          return response.accessToken;
+        } catch {
+          try {
+            const response = await instance.acquireTokenPopup({
+              scopes: loginRequest.scopes,
+              account: accounts[0],
+            });
+            return response.accessToken;
+          } catch {
+            return null;
+          }
+        }
+      }
+      default:
+        return null;
     }
+  }, [effectiveProvider, ldapAuth, oidcAuth, msalIsAuthenticated, accounts, instance]);
 
+  const getFoundryToken = useCallback(async (): Promise<string | null> => {
+    if (effectiveProvider !== 'microsoft' || !msalIsAuthenticated || accounts.length === 0) return null;
     try {
       const response = await instance.acquireTokenSilent({
         scopes: ['https://ai.azure.com/.default'],
         account: accounts[0],
       });
       return response.accessToken;
-    } catch (error) {
-      console.error('Foundry token acquisition failed:', error);
+    } catch {
       try {
         const response = await instance.acquireTokenPopup({
           scopes: ['https://ai.azure.com/.default'],
           account: accounts[0],
         });
         return response.accessToken;
-      } catch (popupError) {
-        console.error('Foundry token popup failed:', popupError);
+      } catch {
         return null;
       }
     }
-  };
+  }, [effectiveProvider, msalIsAuthenticated, accounts, instance]);
 
   const value: AuthContextType = {
-    isLoading,
     isAuthenticated,
-    account: accounts[0] || null,
-    login,
+    isLoading,
+    account,
+    activeProvider: effectiveProvider,
+    loginWithProvider,
+    loginWithCredentials,
     logout,
     switchAccount,
     getAccessToken,
@@ -130,50 +204,4 @@ const MsalAuthProviderInner = ({ children }: AuthProviderProps) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-const GoogleAuthProviderInner = ({ children }: AuthProviderProps) => {
-  const googleAuth = useGoogleAuth();
-
-  const value: AuthContextType = {
-    isAuthenticated: googleAuth.isAuthenticated,
-    isLoading: googleAuth.isLoading,
-    account: googleAuth.account,
-    login: googleAuth.login,
-    logout: googleAuth.logout,
-    switchAccount: googleAuth.logout,
-    getAccessToken: googleAuth.getAccessToken,
-    getFoundryToken: googleAuth.getFoundryToken,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-const CognitoAuthProviderInner = ({ children }: AuthProviderProps) => {
-  const cognitoAuth = useCognitoAuth();
-
-  const value: AuthContextType = {
-    isAuthenticated: cognitoAuth.isAuthenticated,
-    isLoading: cognitoAuth.isLoading,
-    account: cognitoAuth.account,
-    login: cognitoAuth.login,
-    logout: cognitoAuth.logout,
-    switchAccount: cognitoAuth.logout,
-    getAccessToken: cognitoAuth.getAccessToken,
-    getFoundryToken: cognitoAuth.getFoundryToken,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const AuthProvider = ({ children }: AuthProviderProps) => {
-  switch (authConfig.provider) {
-    case 'google':
-      return <GoogleAuthProviderInner>{children}</GoogleAuthProviderInner>;
-    case 'aws_cognito':
-      return <CognitoAuthProviderInner>{children}</CognitoAuthProviderInner>;
-    case 'microsoft':
-    default:
-      return <MsalAuthProviderInner>{children}</MsalAuthProviderInner>;
-  }
 };

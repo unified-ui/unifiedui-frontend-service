@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Loader, Stack, Text, Paper, Grid } from '@mantine/core';
+import { Button, Loader, Stack, Text, Paper, Grid, TextInput, PasswordInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconBrain, IconLogout } from '@tabler/icons-react';
+import { IconBrain, IconLogout, IconArrowLeft } from '@tabler/icons-react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../../auth';
-import { authConfig, enabledProviders } from '../../auth/authConfig';
+import { enabledProviders } from '../../auth/authConfig';
 import type { IdentityProviderType } from '../../auth/authConfig';
 import { useIdentity } from '../../contexts';
 import { useBranding } from '../../hooks/useBranding';
@@ -99,9 +99,13 @@ const IDP_BUTTONS: IdpButtonConfig[] = [
 export const LoginPage = () => {
   const { t } = useTranslation('login');
   const branding = useBranding();
-  const { isAuthenticated, login, logout, account } = useAuth();
+  const { isAuthenticated, loginWithProvider, loginWithCredentials, logout, account, activeProvider } = useAuth();
   const { user, tenants, selectedTenant, isLoading: identityLoading } = useIdentity();
   const [isLoading, setIsLoading] = useState(false);
+  const [showLdapForm, setShowLdapForm] = useState(false);
+  const [ldapUsername, setLdapUsername] = useState('');
+  const [ldapPassword, setLdapPassword] = useState('');
+  const [ldapError, setLdapError] = useState<string | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -114,10 +118,10 @@ export const LoginPage = () => {
     }
   }, [isAuthenticated, identityLoading, user, navigate, searchParams, location.pathname]);
 
-  const handleLogin = async () => {
+  const handleProviderLogin = async (provider: IdentityProviderType) => {
     setIsLoading(true);
     try {
-      await login();
+      await loginWithProvider(provider);
     } catch (error) {
       console.error('Login failed:', error);
       setIsLoading(false);
@@ -130,6 +134,20 @@ export const LoginPage = () => {
       await logout();
     } catch (error) {
       console.error('Logout failed:', error);
+      setIsLoading(false);
+    }
+  };
+
+  const handleLdapLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginWithCredentials) return;
+
+    setIsLoading(true);
+    setLdapError(null);
+    try {
+      await loginWithCredentials(ldapUsername, ldapPassword);
+    } catch (error) {
+      setLdapError(error instanceof Error ? error.message : t('ldapLoginFailed'));
       setIsLoading(false);
     }
   };
@@ -287,11 +305,86 @@ export const LoginPage = () => {
           </h1>
 
           <div className={classes.authButtons}>
-            {IDP_BUTTONS
+            {showLdapForm ? (
+              <form onSubmit={handleLdapLogin} autoComplete="off">
+                <Stack gap="md">
+                  <button
+                    type="button"
+                    className={classes.authButton}
+                    onClick={() => {
+                      setShowLdapForm(false);
+                      setLdapError(null);
+                    }}
+                    style={{
+                      borderColor: 'transparent',
+                      color: branding.login.textColor,
+                      justifyContent: 'flex-start',
+                      height: 'auto',
+                      padding: '0.5rem 0',
+                    }}
+                  >
+                    <IconArrowLeft size={18} />
+                    <span>{t('backToProviders')}</span>
+                  </button>
+                  <TextInput
+                    name="ldap-user"
+                    label={t('ldapUsername')}
+                    placeholder={t('ldapUsernamePlaceholder')}
+                    value={ldapUsername}
+                    onChange={(e) => setLdapUsername(e.currentTarget.value)}
+                    required
+                    autoFocus
+                    autoComplete="username"
+                    styles={{
+                      label: { color: branding.login.textColor },
+                      input: {
+                        borderColor: branding.login.buttonBorderColor,
+                        backgroundColor: 'transparent',
+                        color: branding.login.textColor,
+                      },
+                    }}
+                  />
+                  <PasswordInput
+                    name="ldap-pass"
+                    label={t('ldapPassword')}
+                    placeholder={t('ldapPasswordPlaceholder')}
+                    value={ldapPassword}
+                    onChange={(e) => setLdapPassword(e.currentTarget.value)}
+                    required
+                    autoComplete="new-password"
+                    styles={{
+                      label: { color: branding.login.textColor },
+                      input: {
+                        borderColor: branding.login.buttonBorderColor,
+                        backgroundColor: 'transparent',
+                        color: branding.login.textColor,
+                      },
+                    }}
+                  />
+                  {ldapError && (
+                    <Text size="sm" c="red">
+                      {ldapError}
+                    </Text>
+                  )}
+                  <Button
+                    type="submit"
+                    loading={isLoading}
+                    fullWidth
+                    size="md"
+                    style={{
+                      borderColor: branding.login.buttonBorderColor,
+                    }}
+                  >
+                    {t('ldapSignIn')}
+                  </Button>
+                </Stack>
+              </form>
+            ) : (
+              IDP_BUTTONS
               .filter((btn) => branding.enabledIdps.includes(btn.provider))
               .map((btn) => {
                 const isConfigured = enabledProviders.includes(btn.provider);
-                const isActive = authConfig.provider === btn.provider;
+                const isActive = activeProvider === btn.provider;
                 const Icon = btn.icon;
 
                 const handleClick = () => {
@@ -304,7 +397,11 @@ export const LoginPage = () => {
                     });
                     return;
                   }
-                  handleLogin();
+                  if (btn.provider === 'ldap') {
+                    setShowLdapForm(true);
+                    return;
+                  }
+                  handleProviderLogin(btn.provider);
                 };
 
                 return (
@@ -328,7 +425,8 @@ export const LoginPage = () => {
                     <span>{t(btn.labelKey)}</span>
                   </button>
                 );
-              })}
+              })
+            )}
           </div>
         </div>
       </div>
