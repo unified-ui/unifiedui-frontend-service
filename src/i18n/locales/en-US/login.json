@@ -10,7 +10,7 @@
   "continueWithKerberos": "Continue with Kerberos",
   "continueWithSAML": "Continue with SAML",
   "continueWithOkta": "Continue with Okta",
-  "continueWithOIDC": "Continue with OpenID Connect",
+  "continueWithOIDC": "Continue with OIDC Zitadel",
   "backToProviders": "Back to sign-in options",
   "ldapUsername": "Username",
   "ldapUsernamePlaceholder": "Enter your username",

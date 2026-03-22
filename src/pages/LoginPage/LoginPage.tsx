@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, Loader, Stack, Text, Paper, Grid, TextInput, PasswordInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconBrain, IconLogout, IconArrowLeft } from '@tabler/icons-react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../auth';
 import { enabledProviders } from '../../auth/authConfig';
 import type { IdentityProviderType } from '../../auth/authConfig';
@@ -76,7 +76,7 @@ const PROVIDER_DISPLAY_NAMES: Record<IdentityProviderType, string> = {
   kerberos: 'Kerberos',
   saml: 'SAML',
   okta: 'Okta',
-  oidc: 'OpenID Connect',
+  oidc: 'OIDC Zitadel',
 };
 
 interface IdpButtonConfig {
@@ -108,15 +108,14 @@ export const LoginPage = () => {
   const [ldapError, setLdapError] = useState<string | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const location = useLocation();
 
   // Auto-redirect when authenticated
   useEffect(() => {
-    if (isAuthenticated && !identityLoading && user && location.pathname === '/login') {
+    if (isAuthenticated && !identityLoading && user) {
       const redirectUrl = searchParams.get('redirect') || '/dashboard';
       navigate(redirectUrl, { replace: true });
     }
-  }, [isAuthenticated, identityLoading, user, navigate, searchParams, location.pathname]);
+  }, [isAuthenticated, identityLoading, user, navigate, searchParams]);
 
   const handleProviderLogin = async (provider: IdentityProviderType) => {
     setIsLoading(true);

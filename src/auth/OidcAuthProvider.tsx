@@ -81,7 +81,7 @@ export const OidcAuthProvider: FC<OidcAuthProviderProps> = ({ children }) => {
           setUser(callbackUser);
           setAccount(mapUserToAccount(callbackUser));
           setIsAuthenticated(true);
-          window.history.replaceState({}, '', '/');
+          window.history.replaceState({}, '', '/login');
         } catch (error) {
           console.error('OIDC callback failed:', error);
         } finally {

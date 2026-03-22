@@ -10,10 +10,10 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute: FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
-  const { isSystemAdmin, organization, tenants, isLoading: identityLoading } = useIdentity();
+  const { user, isSystemAdmin, organization, tenants, isLoading: identityLoading } = useIdentity();
   const location = useLocation();
 
-  if (isLoading || identityLoading) {
+  if (isLoading || identityLoading || (isAuthenticated && !user)) {
     return (
       <Center h="100vh">
         <Loader size="xl" />
