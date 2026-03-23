@@ -1,61 +1,183 @@
 .page {
   height: 100%;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.designerGrid {
+.header {
+  flex-shrink: 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  background: var(--bg-app);
+}
+
+.canvasArea {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-lg);
+  overflow: hidden;
+}
+
+.canvasScrollOuter {
+  flex: 1;
+  min-height: 0;
+  margin-right: calc(-1 * var(--spacing-md));
+  overflow: hidden;
+}
+
+.canvasScrollInner {
+  max-height: 100%;
+  min-height: 200px;
+  overflow-y: auto;
+  padding-right: var(--spacing-md);
+}
+
+.canvasCard {
+  background: var(--bg-paper);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-lg);
+  min-height: 400px;
+}
+
+.fieldGrid {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: var(--spacing-md);
-  flex: 1;
-  min-height: 0;
-  height: calc(100vh - 180px);
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--spacing-sm);
 }
 
-.leftPanel {
-  overflow: hidden;
-  height: 100%;
-}
-
-.rightPanel {
-  min-height: 0;
-  height: 100%;
-}
-
-.canvas {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.preview {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.canvasField {
+.fieldCard {
   cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
   transition:
-    background-color 150ms ease,
-    border-color 150ms ease;
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  position: relative;
 }
 
-.canvasField:hover {
-  background-color: var(--surface-hover);
+.fieldCard:hover {
+  box-shadow: var(--shadow-xs);
 }
 
-.canvasFieldSelected {
+.fieldCardSelected {
   border-color: var(--mantine-color-primary-5);
-  background-color: var(--mantine-color-primary-0);
+  box-shadow: var(--shadow-sm);
 }
 
-[data-mantine-color-scheme="dark"] .canvasFieldSelected {
-  background-color: var(--mantine-color-primary-9);
+[data-mantine-color-scheme="dark"] .fieldCardSelected {
+  border-color: var(--mantine-color-primary-4);
 }
 
-.gripIcon {
-  color: var(--text-tertiary);
+.fieldActions {
+  position: absolute;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.fieldCard:hover .fieldActions,
+.fieldCardSelected .fieldActions {
+  opacity: 1;
+}
+
+.sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border-default);
+  background: var(--bg-paper);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebarScrollOuter {
+  flex: 1;
+  min-height: 0;
+  margin-right: calc(-1 * var(--spacing-md));
+  overflow: hidden;
+}
+
+.sidebarScrollInner {
+  max-height: 100%;
+  min-height: 200px;
+  overflow-y: auto;
+  padding-right: var(--spacing-md);
+  padding: var(--spacing-md);
+  padding-right: var(--spacing-md);
+}
+
+.sidebarHeader {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
+}
+
+.addFieldBar {
+  margin-top: var(--spacing-md);
+}
+
+.addFieldGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-xs);
+}
+
+.addFieldButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: 1px solid var(--border-light);
+  background: var(--bg-paper);
+  transition: background var(--transition-fast);
+}
+
+.addFieldButton:hover {
+  background: var(--bg-hover);
+}
+
+.submitBar {
+  margin-top: var(--spacing-lg);
+}
+
+.gripHandle {
+  color: var(--text-disabled);
   cursor: grab;
   flex-shrink: 0;
+}
+
+.emptyCanvas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl) var(--spacing-lg);
+  color: var(--text-secondary);
+}
+
+.sectionToggle {
+  cursor: pointer;
+  user-select: none;
+  padding: var(--spacing-xs) 0;
+  border-top: 1px solid var(--border-light);
+  margin-top: var(--spacing-sm);
+}
+
+.passwordWarning {
+  margin-top: var(--spacing-sm);
 }

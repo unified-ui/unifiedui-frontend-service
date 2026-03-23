@@ -105,3 +105,32 @@ describe('parseWidgetTag — empty/missing d=', () => {
     expect(result.textBefore).toBe('Fill this out:');
   });
 });
+
+describe('parseWidgetTag — mode attribute', () => {
+  it('should default to interactive mode when no mode specified', () => {
+    const content = '<$_WGET _id=abc d={} />';
+    const result = parseWidgetTag(content);
+    expect(result.widget!.mode).toBe('interactive');
+  });
+
+  it('should parse mode=readonly', () => {
+    const content = '<$_WGET _id=abc d={"name":"John"} mode=readonly />';
+    const result = parseWidgetTag(content);
+    expect(result.widget!.mode).toBe('readonly');
+    expect(result.widget!.data).toEqual({ name: 'John' });
+  });
+
+  it('should treat unknown mode values as interactive', () => {
+    const content = '<$_WGET _id=abc d={} mode=unknown />';
+    const result = parseWidgetTag(content);
+    expect(result.widget!.mode).toBe('interactive');
+  });
+
+  it('should parse readonly mode without data', () => {
+    const content = '<$_WGET _id=abc mode=readonly />';
+    const result = parseWidgetTag(content);
+    expect(result.widget).not.toBeNull();
+    expect(result.widget!.mode).toBe('readonly');
+    expect(result.widget!.data).toEqual({});
+  });
+});
