@@ -16,6 +16,7 @@
   flex: 1;
   min-height: 0;
   background: var(--bg-app);
+  gap: var(--spacing-lg);
 }
 
 .canvasArea {
@@ -23,7 +24,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-lg);
+  margin: var(--spacing-lg) 0 var(--spacing-lg) 0;
   overflow: hidden;
 }
 
@@ -32,6 +33,7 @@
   min-height: 0;
   margin-right: calc(-1 * var(--spacing-md));
   overflow: hidden;
+  border-radius: var(--radius-lg);
 }
 
 .canvasScrollInner {
@@ -43,10 +45,21 @@
 
 .canvasCard {
   background: var(--bg-paper);
-  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   padding: var(--spacing-lg);
   min-height: 400px;
+}
+
+.demoContainer {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-paper);
+  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  overflow: hidden;
 }
 
 .fieldGrid {
@@ -95,11 +108,13 @@
 .sidebar {
   width: 320px;
   flex-shrink: 0;
-  border-left: 1px solid var(--border-default);
   background: var(--bg-paper);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin: var(--spacing-lg) 0 var(--spacing-lg) 0;
 }
 
 .sidebarScrollOuter {
@@ -113,9 +128,9 @@
   max-height: 100%;
   min-height: 200px;
   overflow-y: auto;
-  padding-right: var(--spacing-md);
-  padding: var(--spacing-md);
-  padding-right: var(--spacing-md);
+  overflow-x: hidden;
+  padding: var(--spacing-md) calc(var(--spacing-md) * 2) var(--spacing-md)
+    var(--spacing-md);
 }
 
 .sidebarHeader {
@@ -180,4 +195,95 @@
 
 .passwordWarning {
   margin-top: var(--spacing-sm);
+}
+
+.tabBar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  border-bottom: 2px solid var(--border-default);
+  margin-bottom: var(--spacing-md);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.tabBarScroll {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  white-space: nowrap;
+  transition: border-color var(--transition-fast);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.tab:hover {
+  background: var(--bg-hover);
+}
+
+.tabActive {
+  border-bottom-color: var(--mantine-color-primary-5);
+  font-weight: 600;
+}
+
+.tabLabel {
+  font-size: var(--font-size-sm);
+  user-select: none;
+}
+
+.tabClose {
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.tab:hover .tabClose {
+  opacity: 1;
+}
+
+.tabAdd {
+  padding: var(--spacing-xs);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+}
+
+.tabAdd:hover {
+  background: var(--bg-hover);
+}
+
+.demoFrame {
+  width: 100%;
+  min-height: 500px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--bg-paper);
+}
+
+.dataSourceItem {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.scriptButton {
+  position: relative;
+}
+
+.visibilityRule {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-xs);
 }

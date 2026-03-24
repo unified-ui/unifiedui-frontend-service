@@ -27,11 +27,10 @@ import {
   IconMinus,
   IconArrowAutofitHeight,
   IconAlertTriangle,
-  IconPhotoScan,
   IconHome,
-  IconPlus,
   IconColumns,
   IconTable,
+  IconBraces,
 } from '@tabler/icons-react';
 
 export type FieldType =
@@ -63,11 +62,10 @@ export type FieldType =
   | 'divider'
   | 'spacer'
   | 'alert'
-  | 'image_display'
   | 'address'
-  | 'repeater'
   | 'key_value'
-  | 'table_input';
+  | 'table_input'
+  | 'json';
 
 export type ValidationTrigger = 'onBlur' | 'onChange' | 'onSubmit';
 
@@ -219,15 +217,15 @@ export interface FieldTypeCategory {
 export const FIELD_TYPE_CATEGORIES: FieldTypeCategory[] = [
   {
     key: 'input',
-    types: ['text', 'textarea', 'number', 'email', 'url', 'phone', 'password', 'date', 'time', 'color'],
+    types: ['text', 'textarea', 'number', 'email', 'url', 'phone', 'password', 'date', 'time', 'datetime', 'color'],
   },
   {
     key: 'selection',
-    types: ['select', 'multi_select', 'radio', 'checkbox', 'toggle', 'rating', 'slider'],
+    types: ['select', 'multi_select', 'radio', 'checkbox', 'toggle', 'rating', 'slider', 'range_slider'],
   },
   {
     key: 'richContent',
-    types: ['file', 'image'],
+    types: ['file', 'image', 'signature', 'rich_text'],
   },
   {
     key: 'layout',
@@ -235,7 +233,7 @@ export const FIELD_TYPE_CATEGORIES: FieldTypeCategory[] = [
   },
   {
     key: 'composite',
-    types: ['address', 'repeater', 'key_value'],
+    types: ['address', 'key_value', 'table_input', 'json'],
   },
 ];
 
@@ -268,11 +266,10 @@ export const FIELD_TYPE_ICONS: Record<FieldType, FC<{ size?: number }>> = {
   divider: IconMinus,
   spacer: IconArrowAutofitHeight,
   alert: IconAlertTriangle,
-  image_display: IconPhotoScan,
   address: IconHome,
-  repeater: IconPlus,
   key_value: IconColumns,
   table_input: IconTable,
+  json: IconBraces,
 };
 
 export const RESERVED_FIELD_IDS = ['submit', 'form', 'tab', 'widget'];
@@ -287,7 +284,6 @@ export const NON_INPUT_FIELDS: FieldType[] = [
   'divider',
   'spacer',
   'alert',
-  'image_display',
 ];
 
 export function generateFieldId(label: string): string {
@@ -345,11 +341,10 @@ export function createDefaultField(type: FieldType, existingFields: WidgetFieldC
     divider: 'Divider',
     spacer: 'Spacer',
     alert: 'Alert',
-    image_display: 'Image',
     address: 'Address',
-    repeater: 'Repeater',
     key_value: 'Key Value',
     table_input: 'Table',
+    json: 'JSON',
   };
 
   const label = labelMap[type];
@@ -371,14 +366,21 @@ export function createDefaultField(type: FieldType, existingFields: WidgetFieldC
   }
   if (type === 'textarea') {
     config.rows = 4;
+    config.autoResize = false;
+  }
+  if (type === 'number') {
+    config.step = 1;
   }
   if (type === 'slider') {
     config.min = 0;
     config.max = 100;
     config.step = 1;
+    config.showValue = true;
   }
   if (type === 'rating') {
     config.maxRating = 5;
+    config.icon = 'star';
+    config.allowHalf = false;
   }
   if (type === 'heading') {
     config.level = 'h3';
@@ -389,9 +391,51 @@ export function createDefaultField(type: FieldType, existingFields: WidgetFieldC
   if (type === 'alert') {
     config.variant = 'info';
   }
-  if (type === 'file' || type === 'image') {
+  if (type === 'divider') {
+    config.style = 'solid';
+  }
+  if (type === 'file') {
     config.maxSize = 10;
     config.maxFiles = 1;
+    config.dragDrop = true;
+  }
+  if (type === 'image') {
+    config.maxSize = 10;
+    config.maxFiles = 1;
+    config.crop = false;
+  }
+  if (type === 'toggle') {
+    config.onLabel = '';
+    config.offLabel = '';
+  }
+  if (type === 'color') {
+    config.format = 'hex';
+  }
+  if (type === 'signature') {
+    config.penColor = '#000000';
+    config.penWidth = 2;
+    config.backgroundColor = '#ffffff';
+  }
+  if (type === 'url') {
+    config.allowedProtocols = ['https'];
+  }
+  if (type === 'time') {
+    config.step = 15;
+  }
+  if (type === 'address') {
+    config.requiredParts = ['street', 'city', 'zip', 'country'];
+  }
+  if (type === 'key_value') {
+    config.keyLabel = 'Key';
+    config.valueLabel = 'Value';
+  }
+  if (type === 'table_input') {
+    config.columns = ['Column 1', 'Column 2'];
+    config.minRows = 1;
+  }
+  if (type === 'json') {
+    config.rows = 6;
+    config.validateJson = true;
   }
 
   return {

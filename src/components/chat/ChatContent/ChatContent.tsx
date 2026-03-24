@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { MessageResponse, AttachmentMetadata, ReactionResponse, SurveyWidgetData, YesNoWidgetData, ChatWidgetResponse } from '../../../api/types';
 import { StandardWidgetId, ChatWidgetTypeEnum } from '../../../api/types';
-import type { FormFieldConfig } from '../../../pages/WidgetDesignerPage/types';
+import type { WidgetTab } from '../../../pages/WidgetDesignerPage/types';
 import type { ReActStreamState } from '../../../hooks/chat/useReActChat';
 import type { WidgetCache } from '../../../hooks/chat';
 import { statusTracesToReActState } from '../../../hooks/chat/useReActChat';
@@ -1125,14 +1125,20 @@ const CustomWidgetRenderer: FC<CustomWidgetRendererProps> = ({
   if (error || (!hasPersisted && !widgetDef)) return <Text size="xs" c="dimmed">Widget not available</Text>;
 
   if (activeType === ChatWidgetTypeEnum.FORM) {
-    const fields = (activeConfig?.fields as FormFieldConfig[]) || [];
+    const tabs = (activeConfig?.tabs as WidgetTab[]) ?? [];
+    const settings = (activeConfig?.settings as Record<string, unknown>) ?? {};
+    const enableTabs = settings.enableTabs === true;
+    const submitButtonText = settings.submitButtonText as string | undefined;
     return (
       <FormWidget
-        fields={fields}
+        tabs={tabs}
+        enableTabs={enableTabs}
         onSubmit={handleSubmit}
         disabled={!isInteractive}
         submittedData={nextUserMessageContent}
         widgetData={widgetData}
+        submitButtonText={submitButtonText}
+        maxHeight={500}
       />
     );
   }

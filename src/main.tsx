@@ -31,8 +31,8 @@ const OidcWrapper = authConfig.oidc ? OidcAuthProvider : OidcAuthProviderUnconfi
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ColorSchemeScript defaultColorScheme="auto" />
-    <MantineProvider theme={theme} defaultColorScheme="auto">
+    <ColorSchemeScript defaultColorScheme="dark" />
+    <MantineProvider theme={theme} defaultColorScheme="dark">
       <Notifications position="top-right" />
       <I18nextProvider i18n={i18n}>
         <MsalProvider instance={msalInstance}>

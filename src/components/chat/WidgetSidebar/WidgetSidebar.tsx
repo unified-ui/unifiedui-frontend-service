@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { useIdentity } from '../../../contexts';
 import type { ChatWidgetResponse } from '../../../api/types';
 import { ChatWidgetTypeEnum } from '../../../api/types';
-import type { FormFieldConfig } from '../../../pages/WidgetDesignerPage/types';
+import type { WidgetTab } from '../../../pages/WidgetDesignerPage/types';
 import type { WidgetCache } from '../../../hooks/chat';
 import { FormWidget } from '../widgets/FormWidget';
 import classes from './WidgetSidebar.module.css';
@@ -211,10 +211,12 @@ const WidgetDetailView: FC<WidgetDetailViewProps> = ({ interaction, onBack, widg
             <Code block>{formattedJson}</Code>
           ) : isFormType && activeConfig ? (
             <FormWidget
-              fields={(activeConfig.fields as FormFieldConfig[]) || []}
+              tabs={(activeConfig.tabs as WidgetTab[]) ?? []}
+              enableTabs={(activeConfig.settings as Record<string, unknown>)?.enableTabs === true}
               onSubmit={() => {}}
               disabled
               submittedData={interaction.submittedData}
+              maxHeight={500}
             />
           ) : !interaction.submittedData ? (
             <Text size="sm" c="dimmed">{t('sidebar.notSubmitted')}</Text>

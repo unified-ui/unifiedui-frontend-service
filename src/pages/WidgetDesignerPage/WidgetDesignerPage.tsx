@@ -9,19 +9,38 @@ import {
   LoadingOverlay,
   SegmentedControl,
   Kbd,
+  Alert,
 } from '@mantine/core';
-import { IconDeviceFloppy, IconArrowLeft, IconArrowBackUp, IconArrowForwardUp } from '@tabler/icons-react';
+import { notifications } from '@mantine/notifications';
+import { IconDeviceFloppy, IconArrowLeft, IconArrowBackUp, IconArrowForwardUp, IconAlertTriangle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { useIdentity } from '../../contexts';
 import { loadWidgetSchema, schemaToConfig } from './schemaMigration';
-import { validateSchema } from './schemaValidation';
 import { useUndoRedo } from './useUndoRedo';
-import { createDefaultField, type FieldType, type WidgetFormSchema, type WidgetFieldConfig, type DesignerMode } from './types';
+import { useAutoSaveDraft } from './useAutoSaveDraft';
+import { createDefaultField, type FieldType, type WidgetFormSchema, type WidgetFieldConfig, type WidgetTab, type DesignerMode, type DataSourceConfig } from './types';
 import { FieldCanvas } from './FieldCanvas';
 import { AddFieldPanel } from './AddFieldPanel';
 import { PropertiesPanel } from './PropertiesPanel';
+import { TabBar } from './TabBar';
+import { DemoModeRenderer } from './DemoModeRenderer';
+import { ImportExportActions } from './ImportExportActions';
 import classes from './WidgetDesignerPage.module.css';
 
 const EMPTY_SCHEMA: WidgetFormSchema = {
@@ -45,9 +64,18 @@ export const WidgetDesignerPage: FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<DesignerMode>('edit');
   const [addFieldOpen, setAddFieldOpen] = useState(false);
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const { hasDraft, draftTimestamp, restoreDraft, discardDraft, clearDraft } =
+    useAutoSaveDraft(widgetId, schema, savedSchema, isLoading);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor),
+  );
 
   const hasChanges = savedSchema !== undefined && JSON.stringify(schema) !== JSON.stringify(savedSchema);
-  const activeTabIndex = 0;
   const activeTab = schema.tabs[activeTabIndex];
   const fields = activeTab?.fields ?? [];
 
@@ -63,7 +91,6 @@ export const WidgetDesignerPage: FC = () => {
 
   useEffect(() => {
     if (!widgetId || !apiClient || !selectedTenant) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true);
     apiClient.getChatWidget(selectedTenant.id, widgetId)
       .then((widget) => {
@@ -97,8 +124,9 @@ export const WidgetDesignerPage: FC = () => {
   }, [selectedFieldId, updateFields]);
 
   const handleFieldChange = useCallback((updated: WidgetFieldConfig) => {
-    updateFields((prev) => prev.map((f) => f.id === updated.id ? updated : f));
-  }, [updateFields]);
+    updateFields((prev) => prev.map((f) => f.id === selectedFieldId ? updated : f));
+    if (updated.id !== selectedFieldId) setSelectedFieldId(updated.id);
+  }, [updateFields, selectedFieldId]);
 
   const handleMoveField = useCallback((id: string, direction: 'up' | 'down') => {
     updateFields((prev) => {
@@ -113,21 +141,91 @@ export const WidgetDesignerPage: FC = () => {
     });
   }, [updateFields]);
 
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      updateFields((prev) => {
+        const oldIndex = prev.findIndex((f) => f.id === active.id);
+        const newIndex = prev.findIndex((f) => f.id === over.id);
+        return arrayMove(prev, oldIndex, newIndex);
+      });
+    }
+  }, [updateFields]);
+
   const handleSettingsChange = useCallback((settings: WidgetFormSchema['settings']) => {
     setSchema({ ...schema, settings });
   }, [schema, setSchema]);
 
+  const handleDataSourcesChange = useCallback((dataSources: DataSourceConfig[]) => {
+    setSchema({ ...schema, dataSources });
+  }, [schema, setSchema]);
+
+  const handleScriptsChange = useCallback((scripts: WidgetFormSchema['scripts']) => {
+    setSchema({ ...schema, scripts });
+  }, [schema, setSchema]);
+
+  const handleAddTab = useCallback(() => {
+    const newTab: WidgetTab = {
+      id: `tab_${Date.now()}`,
+      label: `${t('tabs.newTab')} ${schema.tabs.length + 1}`,
+      fields: [],
+    };
+    setSchema({ ...schema, tabs: [...schema.tabs, newTab] });
+    setActiveTabIndex(schema.tabs.length);
+  }, [schema, setSchema, t]);
+
+  const handleRemoveTab = useCallback((index: number) => {
+    if (schema.tabs.length <= 1) return;
+    const newTabs = schema.tabs.filter((_, i) => i !== index);
+    setSchema({ ...schema, tabs: newTabs });
+    setActiveTabIndex((prev) => Math.min(prev, newTabs.length - 1));
+    setSelectedFieldId(null);
+  }, [schema, setSchema]);
+
+  const handleRenameTab = useCallback((index: number, label: string) => {
+    setSchema({
+      ...schema,
+      tabs: schema.tabs.map((tab, i) => (i === index ? { ...tab, label } : tab)),
+    });
+  }, [schema, setSchema]);
+
+  const handleMoveTab = useCallback((fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    const newTabs = arrayMove(schema.tabs, fromIndex, toIndex);
+    setSchema({ ...schema, tabs: newTabs });
+    if (activeTabIndex === fromIndex) setActiveTabIndex(toIndex);
+    else if (activeTabIndex === toIndex) setActiveTabIndex(fromIndex);
+  }, [schema, setSchema, activeTabIndex]);
+
+  const handleRestoreDraft = useCallback(() => {
+    const draft = restoreDraft();
+    if (draft) {
+      reset(draft);
+    }
+  }, [restoreDraft, reset]);
+
+  const handleImportSchema = useCallback((imported: WidgetFormSchema) => {
+    reset(imported);
+    setActiveTabIndex(0);
+    setSelectedFieldId(null);
+  }, [reset]);
+
   const handleSave = useCallback(async () => {
     if (!widgetId || !apiClient || !selectedTenant) return;
 
-    const errors = validateSchema(schema);
-    if (errors.length > 0) return;
-
-    await apiClient.updateChatWidget(selectedTenant.id, widgetId, {
-      config: schemaToConfig(schema),
-    });
-    setSavedSchema(structuredClone(schema));
-  }, [schema, widgetId, apiClient, selectedTenant]);
+    setIsSaving(true);
+    try {
+      await apiClient.updateChatWidget(selectedTenant.id, widgetId, {
+        config: schemaToConfig(schema),
+      });
+      setSavedSchema(structuredClone(schema));
+      clearDraft();
+    } catch {
+      notifications.show({ message: t('widgetSaveFailed'), color: 'red' });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [schema, widgetId, apiClient, selectedTenant, clearDraft, t]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -143,15 +241,55 @@ export const WidgetDesignerPage: FC = () => {
           handleRemoveField(selectedFieldId);
         }
       }
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        if (selectedFieldId && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA' && document.activeElement?.tagName !== 'SELECT') {
+          e.preventDefault();
+          handleMoveField(selectedFieldId, e.key === 'ArrowUp' ? 'up' : 'down');
+        }
+      }
     };
+
+    const handleMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-field-card]') || target.closest('[data-no-deselect]') || target.closest('[data-sidebar]')) return;
+      setSelectedFieldId(null);
+    };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleMouseDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleMouseDown);
+    };
   });
 
   return (
     <MainLayout>
       <div className={classes.page}>
         <LoadingOverlay visible={isLoading} />
+
+        {hasDraft && (
+          <Alert
+            icon={<IconAlertTriangle size={14} />}
+            color="yellow"
+            variant="light"
+            withCloseButton
+            onClose={discardDraft}
+            m="sm"
+          >
+            <Group gap="sm">
+              <Text size="sm">
+                {t('draft.found', { date: draftTimestamp ? new Date(draftTimestamp).toLocaleString() : '' })}
+              </Text>
+              <Button size="xs" variant="light" onClick={handleRestoreDraft}>
+                {t('draft.restore')}
+              </Button>
+              <Button size="xs" variant="subtle" onClick={discardDraft}>
+                {t('draft.discard')}
+              </Button>
+            </Group>
+          </Alert>
+        )}
 
         <div className={classes.header}>
           <Group justify="space-between">
@@ -177,10 +315,16 @@ export const WidgetDesignerPage: FC = () => {
                 ]}
                 size="xs"
               />
+              <ImportExportActions
+                schema={schema}
+                widgetName={widgetName}
+                onImport={handleImportSchema}
+              />
               <Button
                 leftSection={<IconDeviceFloppy size={16} />}
                 onClick={handleSave}
                 disabled={!hasChanges}
+                loading={isSaving}
                 size="sm"
               >
                 {t('saveWidget')}
@@ -190,7 +334,9 @@ export const WidgetDesignerPage: FC = () => {
         </div>
 
         <div className={classes.body}>
-          <div className={classes.canvasArea}>
+          <div
+            className={classes.canvasArea}
+          >
             {schema.settings.title && (
               <Title order={4} mb="sm">{schema.settings.title}</Title>
             )}
@@ -198,26 +344,54 @@ export const WidgetDesignerPage: FC = () => {
               <Text size="sm" c="dimmed" mb="md">{schema.settings.description}</Text>
             )}
 
-            <div className={classes.canvasScrollOuter}>
-              <div className={classes.canvasScrollInner}>
-                <div className={classes.canvasCard}>
-                  <AddFieldPanel
-                    opened={addFieldOpen}
-                    onClose={() => setAddFieldOpen(false)}
-                    onAddField={handleAddField}
-                    target={<span />}
-                  />
-                  <FieldCanvas
-                    fields={fields}
-                    selectedFieldId={selectedFieldId}
-                    onSelectField={setSelectedFieldId}
-                    onRemoveField={handleRemoveField}
-                    onMoveField={handleMoveField}
-                    onOpenAddField={() => setAddFieldOpen(true)}
-                  />
+            {schema.settings.enableTabs && mode === 'edit' && (
+              <TabBar
+                tabs={schema.tabs}
+                activeTabIndex={activeTabIndex}
+                onSelectTab={(i) => { setActiveTabIndex(i); setSelectedFieldId(null); }}
+                onAddTab={handleAddTab}
+                onRemoveTab={handleRemoveTab}
+                onRenameTab={handleRenameTab}
+                onMoveTab={handleMoveTab}
+              />
+            )}
+
+            {mode === 'edit' ? (
+              <div className={classes.canvasScrollOuter}>
+                <div className={classes.canvasScrollInner}>
+                  <div className={classes.canvasCard}>
+                    <AddFieldPanel
+                      opened={addFieldOpen}
+                      onClose={() => setAddFieldOpen(false)}
+                      onAddField={handleAddField}
+                    />
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext
+                        items={fields.map((f) => f.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <FieldCanvas
+                          fields={fields}
+                          selectedFieldId={selectedFieldId}
+                          onSelectField={setSelectedFieldId}
+                          onRemoveField={handleRemoveField}
+                          onMoveField={handleMoveField}
+                          onOpenAddField={() => setAddFieldOpen(true)}
+                        />
+                      </SortableContext>
+                    </DndContext>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className={classes.demoContainer}>
+                <DemoModeRenderer schema={schema} />
+              </div>
+            )}
           </div>
 
           {mode === 'edit' && (
@@ -227,6 +401,8 @@ export const WidgetDesignerPage: FC = () => {
               allFields={allFields}
               onFieldChange={handleFieldChange}
               onSchemaSettingsChange={handleSettingsChange}
+              onDataSourcesChange={handleDataSourcesChange}
+              onScriptsChange={handleScriptsChange}
             />
           )}
         </div>

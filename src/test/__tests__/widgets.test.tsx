@@ -6,7 +6,21 @@ import { SurveyWidget } from '../../components/chat/widgets/SurveyWidget';
 import { FormWidget } from '../../components/chat/widgets/FormWidget';
 import type { SurveyWidgetData } from '../../api/types';
 import { parseWidgetTag, isStandardWidgetId } from '../../utils/widgetParser';
-import type { FormFieldConfig } from '../../pages/WidgetDesignerPage/types';
+import type { WidgetFieldConfig, WidgetTab } from '../../pages/WidgetDesignerPage/types';
+
+const makeField = (overrides: Partial<WidgetFieldConfig> & { id: string; type: string }): WidgetFieldConfig => ({
+  label: '',
+  layout: { colSpan: 12 },
+  validation: [],
+  config: {},
+  ...overrides,
+} as WidgetFieldConfig);
+
+const makeTab = (fields: WidgetFieldConfig[]): WidgetTab => ({
+  id: 'tab-1',
+  label: 'General',
+  fields,
+});
 
 describe('YesNoWidget', () => {
   it('renders default Yes/No labels', () => {
@@ -156,15 +170,16 @@ describe('SurveyWidget', () => {
 });
 
 describe('FormWidget', () => {
-  const fields: FormFieldConfig[] = [
-    { id: 'f1', type: 'text', label: 'Name', placeholder: 'Enter name', required: true },
-    { id: 'f2', type: 'select', label: 'Color', options: ['Red', 'Blue', 'Green'] },
-    { id: 'f3', type: 'toggle', label: 'Active', default_value: false },
+  const fields: WidgetFieldConfig[] = [
+    makeField({ id: 'f1', type: 'text', label: 'Name', placeholder: 'Enter name', validation: [{ type: 'required', message: 'Required' }] }),
+    makeField({ id: 'f2', type: 'select', label: 'Color', config: { options: ['Red', 'Blue', 'Green'] } }),
+    makeField({ id: 'f3', type: 'toggle', label: 'Active', defaultValue: false }),
   ];
+  const tabs: WidgetTab[] = [makeTab(fields)];
 
   it('renders form fields', () => {
     renderWithProviders(
-      <FormWidget fields={fields} onSubmit={() => {}} />
+      <FormWidget tabs={tabs} onSubmit={() => {}} />
     );
     expect(screen.getByLabelText(/Name/)).toBeInTheDocument();
     expect(screen.getByText('Color')).toBeInTheDocument();
@@ -174,7 +189,7 @@ describe('FormWidget', () => {
   it('submits form data as JSON', () => {
     const onSubmit = vi.fn();
     renderWithProviders(
-      <FormWidget fields={fields} onSubmit={onSubmit} />
+      <FormWidget tabs={tabs} onSubmit={onSubmit} />
     );
 
     fireEvent.change(screen.getByLabelText(/Name/), { target: { value: 'Alice' } });
@@ -188,7 +203,7 @@ describe('FormWidget', () => {
   it('shows submitted state with badge', () => {
     const submittedData = JSON.stringify({ Name: 'Alice', Color: 'Red', Active: true });
     renderWithProviders(
-      <FormWidget fields={fields} onSubmit={() => {}} submittedData={submittedData} />
+      <FormWidget tabs={tabs} onSubmit={() => {}} submittedData={submittedData} />
     );
     expect(screen.getByText('Form submitted')).toBeInTheDocument();
     expect(screen.queryByText('Submit')).not.toBeInTheDocument();
@@ -196,14 +211,14 @@ describe('FormWidget', () => {
 
   it('disables fields when disabled prop is true', () => {
     renderWithProviders(
-      <FormWidget fields={fields} onSubmit={() => {}} disabled />
+      <FormWidget tabs={tabs} onSubmit={() => {}} disabled />
     );
     expect(screen.getByLabelText(/Name/)).toBeDisabled();
   });
 
   it('pre-fills from widgetData', () => {
     renderWithProviders(
-      <FormWidget fields={fields} onSubmit={() => {}} widgetData={{ f1: 'Prefilled' }} />
+      <FormWidget tabs={tabs} onSubmit={() => {}} widgetData={{ f1: 'Prefilled' }} />
     );
     expect(screen.getByLabelText(/Name/)).toHaveValue('Prefilled');
   });

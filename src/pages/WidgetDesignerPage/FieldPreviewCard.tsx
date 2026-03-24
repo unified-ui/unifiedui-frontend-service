@@ -18,9 +18,15 @@ import {
   Tooltip,
   ActionIcon,
   Box,
+  ColorInput,
+  RangeSlider,
+  Stack,
+  Button,
 } from '@mantine/core';
-import { IconInfoCircle, IconUpload } from '@tabler/icons-react';
+import { IconInfoCircle, IconUpload, IconSignature, IconBold, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { WidgetFieldConfig } from './types';
 
 interface FieldPreviewCardProps {
@@ -124,7 +130,7 @@ export const FieldPreviewCard: FC<FieldPreviewCardProps> = ({ field }) => {
       return (
         <Box>
           <FieldLabel label={field.label} tooltip={field.tooltip} required={isRequired} />
-          <TextInput placeholder={field.placeholder ?? '#000000'} disabled={field.disabled} type="color" size="sm" />
+          <ColorInput placeholder={field.placeholder ?? '#000000'} disabled={field.disabled} size="sm" />
         </Box>
       );
 
@@ -154,17 +160,21 @@ export const FieldPreviewCard: FC<FieldPreviewCardProps> = ({ field }) => {
         </Box>
       );
 
-    case 'radio':
+    case 'radio': {
+      const isHorizontal = field.config.layout === 'horizontal';
       return (
         <Box>
           <FieldLabel label={field.label} tooltip={field.tooltip} required={isRequired} />
           <Radio.Group>
-            {options.map((opt) => (
-              <Radio key={opt} value={opt} label={opt} disabled={field.disabled} mb={4} />
-            ))}
+            <Group gap={isHorizontal ? 'md' : 0} style={{ flexDirection: isHorizontal ? 'row' : 'column' }}>
+              {options.map((opt) => (
+                <Radio key={opt} value={opt} label={opt} disabled={field.disabled} mb={isHorizontal ? 0 : 4} />
+              ))}
+            </Group>
           </Radio.Group>
         </Box>
       );
+    }
 
     case 'checkbox':
       return (
@@ -224,6 +234,134 @@ export const FieldPreviewCard: FC<FieldPreviewCardProps> = ({ field }) => {
         </Box>
       );
 
+    case 'datetime':
+      return (
+        <Box>
+          <FieldLabel label={field.label} tooltip={field.tooltip} required={isRequired} />
+          <TextInput placeholder={field.placeholder ?? 'YYYY-MM-DDTHH:MM'} disabled={field.disabled} type="datetime-local" size="sm" />
+        </Box>
+      );
+
+    case 'range_slider':
+      return (
+        <Box>
+          <FieldLabel label={field.label} tooltip={field.tooltip} required={isRequired} />
+          <RangeSlider
+            min={(field.config.min as number) ?? 0}
+            max={(field.config.max as number) ?? 100}
+            step={(field.config.step as number) ?? 1}
+            disabled={field.disabled}
+          />
+        </Box>
+      );
+
+    case 'signature':
+      return (
+        <Box>
+          <FieldLabel label={field.label} tooltip={field.tooltip} required={isRequired} />
+          <Box
+            style={{
+              border: '1px dashed var(--border-default)',
+              borderRadius: 'var(--radius-md)',
+              padding: 'var(--spacing-lg)',
+              textAlign: 'center',
+            }}
+          >
+            <IconSignature size={24} style={{ opacity: 0.4 }} />
+            <Text size="xs" c="dimmed" mt={4}>{t('preview.signHere')}</Text>
+          </Box>
+        </Box>
+      );
+
+    case 'rich_text':
+      return (
+        <Box>
+          <FieldLabel label={field.label} tooltip={field.tooltip} required={isRequired} />
+          <Box
+            style={{
+              border: '1px solid var(--border-default)',
+              borderRadius: 'var(--radius-md)',
+              minHeight: 120,
+              padding: 'var(--spacing-xs)',
+            }}
+          >
+            <Group gap={4} mb={4} pb={4} style={{ borderBottom: '1px solid var(--border-light)' }}>
+              <IconBold size={14} style={{ opacity: 0.5 }} />
+              <Text size="xs" c="dimmed">{t('preview.richTextPlaceholder')}</Text>
+            </Group>
+          </Box>
+        </Box>
+      );
+
+    case 'address':
+      return (
+        <Box>
+          <FieldLabel label={field.label} tooltip={field.tooltip} required={isRequired} />
+          <Stack gap="xs">
+            <TextInput placeholder={t('preview.addressStreet')} size="sm" disabled={field.disabled} />
+            <Group gap="xs" grow>
+              <TextInput placeholder={t('preview.addressCity')} size="sm" disabled={field.disabled} />
+              <TextInput placeholder={t('preview.addressZip')} size="sm" disabled={field.disabled} />
+            </Group>
+            <TextInput placeholder={t('preview.addressCountry')} size="sm" disabled={field.disabled} />
+          </Stack>
+        </Box>
+      );
+
+    case 'key_value':
+      return (
+        <Box>
+          <FieldLabel label={field.label} tooltip={field.tooltip} required={isRequired} />
+          <Stack gap="xs">
+            <Group gap="xs" grow>
+              <TextInput placeholder={(field.config.keyLabel as string) ?? t('preview.keyValueKey')} size="sm" disabled={field.disabled} />
+              <TextInput placeholder={(field.config.valueLabel as string) ?? t('preview.keyValueValue')} size="sm" disabled={field.disabled} />
+            </Group>
+            <Button variant="light" size="xs" leftSection={<IconPlus size={14} />} fullWidth>
+              {t('preview.addRow')}
+            </Button>
+          </Stack>
+        </Box>
+      );
+
+    case 'table_input': {
+      const columns = (field.config.columns as string[]) ?? ['Column 1', 'Column 2'];
+      return (
+        <Box>
+          <FieldLabel label={field.label} tooltip={field.tooltip} required={isRequired} />
+          <Box
+            style={{
+              border: '1px solid var(--border-default)',
+              borderRadius: 'var(--radius-md)',
+              overflow: 'hidden',
+            }}
+          >
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ background: 'var(--bg-app)' }}>
+                  {columns.map((col, i) => (
+                    <th key={i} style={{ padding: '6px 10px', borderBottom: '1px solid var(--border-default)', textAlign: 'left', fontWeight: 500 }}>{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  {columns.map((_, i) => (
+                    <td key={i} style={{ padding: '6px 10px', borderBottom: '1px solid var(--border-light)' }}>
+                      <Text size="xs" c="dimmed">—</Text>
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </Box>
+          <Button variant="light" size="xs" leftSection={<IconPlus size={14} />} fullWidth mt={4}>
+            {t('preview.addRow')}
+          </Button>
+        </Box>
+      );
+    }
+
     case 'heading':
       return (
         <Title order={((field.config.level as string)?.replace('h', '') ? Number((field.config.level as string).replace('h', '')) : 3) as 1 | 2 | 3 | 4 | 5 | 6}>
@@ -233,9 +371,13 @@ export const FieldPreviewCard: FC<FieldPreviewCardProps> = ({ field }) => {
 
     case 'paragraph':
       return (
-        <Text size="sm" c="dimmed">
-          {(field.config.content as string) ?? field.label ?? t('fieldTypes.paragraph')}
-        </Text>
+        <Box>
+          <Text component="div" size="sm" c="dimmed">
+            <Markdown remarkPlugins={[remarkGfm]}>
+              {(field.config.content as string) ?? field.label ?? t('fieldTypes.paragraph')}
+            </Markdown>
+          </Text>
+        </Box>
       );
 
     case 'divider':
@@ -252,8 +394,26 @@ export const FieldPreviewCard: FC<FieldPreviewCardProps> = ({ field }) => {
           color={field.config.variant === 'error' ? 'red' : field.config.variant === 'warning' ? 'yellow' : field.config.variant === 'success' ? 'green' : 'blue'}
           title={field.config.title as string | undefined}
         >
-          {(field.config.content as string) ?? ''}
+          <Text component="div" size="sm">
+            <Markdown remarkPlugins={[remarkGfm]}>
+              {(field.config.content as string) ?? ''}
+            </Markdown>
+          </Text>
         </Alert>
+      );
+
+    case 'json':
+      return (
+        <Box>
+          <FieldLabel label={field.label} tooltip={field.tooltip} required={isRequired} />
+          <Textarea
+            placeholder={field.placeholder || '{ }'}
+            rows={(field.config.rows as number) ?? 6}
+            disabled={field.disabled}
+            size="sm"
+            styles={{ input: { fontFamily: 'monospace', fontSize: 13 } }}
+          />
+        </Box>
       );
 
     default:

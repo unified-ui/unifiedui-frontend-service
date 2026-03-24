@@ -185,14 +185,14 @@ describe('FIELD_TYPE_ICONS', () => {
     });
   });
 
-  it('should have icons for all 33 field types', () => {
+  it('should have icons for all field types', () => {
     const types: FieldType[] = [
       'text', 'textarea', 'number', 'email', 'url', 'phone', 'password',
       'date', 'time', 'datetime', 'color', 'select', 'multi_select',
       'radio', 'checkbox', 'toggle', 'rating', 'slider', 'range_slider',
       'file', 'image', 'signature', 'rich_text', 'heading', 'paragraph',
-      'divider', 'spacer', 'alert', 'image_display', 'address', 'repeater',
-      'key_value', 'table_input',
+      'divider', 'spacer', 'alert', 'address',
+      'key_value', 'table_input', 'json',
     ];
     types.forEach((type) => {
       expect(FIELD_TYPE_ICONS[type]).toBeDefined();
