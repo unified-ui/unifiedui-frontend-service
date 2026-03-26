@@ -28,10 +28,13 @@ import {
   Tabs,
   Stack,
 } from '@mantine/core';
-import { IconCheck, IconUpload, IconAlertTriangle, IconInfoCircle, IconCircleCheck, IconAlertCircle } from '@tabler/icons-react';
+import { IconCheck, IconUpload, IconAlertTriangle, IconInfoCircle, IconCircleCheck, IconAlertCircle, IconPlus, IconX } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import type { WidgetFieldConfig, WidgetTab } from '../../../../pages/WidgetDesignerPage/types';
 import classes from './FormWidget.module.css';
+
+type KVRow = { key: string; value: string };
+type TableRow = Record<string, string>;
 
 interface FormWidgetProps {
   tabs: WidgetTab[];
@@ -212,7 +215,13 @@ const FieldRenderer: FC<{
   value: FieldValue;
   onChange: (id: string, value: FieldValue) => void;
   disabled: boolean;
-}> = ({ field, value, onChange, disabled }) => {
+  error?: string;
+  kvRows: Record<string, KVRow[]>;
+  tableRows: Record<string, TableRow[]>;
+  onKvRowsChange: (fieldId: string, rows: KVRow[]) => void;
+  onTableRowsChange: (fieldId: string, rows: TableRow[]) => void;
+}> = ({ field, value, onChange, disabled, error, kvRows, tableRows, onKvRowsChange, onTableRowsChange }) => {
+  const { t } = useTranslation('widgets');
   const isRequired = field.validation.some((v) => v.type === 'required');
   const fieldDisabled = disabled || field.disabled === true;
   const { config } = field;
@@ -232,6 +241,7 @@ const FieldRenderer: FC<{
           value={(value as string) ?? ''}
           onChange={(e) => onChange(field.id, e.currentTarget.value)}
           disabled={fieldDisabled}
+          error={error}
         />
       );
 
@@ -245,6 +255,7 @@ const FieldRenderer: FC<{
           value={(value as string) ?? ''}
           onChange={(e) => onChange(field.id, e.currentTarget.value)}
           disabled={fieldDisabled}
+          error={error}
         />
       );
 
@@ -261,6 +272,7 @@ const FieldRenderer: FC<{
           value={(value as string) ?? ''}
           onChange={(e) => onChange(field.id, e.currentTarget.value)}
           disabled={fieldDisabled}
+          error={error}
         />
       );
 
@@ -277,6 +289,7 @@ const FieldRenderer: FC<{
           value={value === '' ? '' : Number(value)}
           onChange={(val) => onChange(field.id, val)}
           disabled={fieldDisabled}
+          error={error}
         />
       );
 
@@ -344,6 +357,7 @@ const FieldRenderer: FC<{
           value={(value as string) || null}
           onChange={(val) => onChange(field.id, val ?? '')}
           disabled={fieldDisabled}
+          error={error}
         />
       );
 
@@ -358,6 +372,7 @@ const FieldRenderer: FC<{
           value={(value as string[]) ?? []}
           onChange={(val) => onChange(field.id, val)}
           disabled={fieldDisabled}
+          error={error}
         />
       );
 
@@ -533,30 +548,67 @@ const FieldRenderer: FC<{
         </Box>
       );
 
-    case 'key_value':
+    case 'key_value': {
+      const rows = kvRows[field.id] ?? [{ key: '', value: '' }];
+      const keyLabel = (config.keyLabel as string) ?? 'Key';
+      const valLabel = (config.valueLabel as string) ?? 'Value';
       return (
         <Box>
           {field.label && <Text size="sm" fw={500} mb={4}>{field.label}</Text>}
+          {error && <Text size="xs" c="red" mb={4}>{error}</Text>}
           <Paper withBorder p="sm">
             <Stack gap="xs">
               <Group grow gap="xs">
-                <Text size="xs" fw={500}>{(config.keyLabel as string) ?? 'Key'}</Text>
-                <Text size="xs" fw={500}>{(config.valueLabel as string) ?? 'Value'}</Text>
+                <Text size="xs" fw={500}>{keyLabel}</Text>
+                <Text size="xs" fw={500}>{valLabel}</Text>
+                {!fieldDisabled && <Box style={{ width: 28 }} />}
               </Group>
-              <Group grow gap="xs">
-                <TextInput size="sm" placeholder={(config.keyLabel as string) ?? 'Key'} disabled={fieldDisabled} />
-                <TextInput size="sm" placeholder={(config.valueLabel as string) ?? 'Value'} disabled={fieldDisabled} />
-              </Group>
+              {rows.map((row, i) => (
+                <Group key={i} grow gap="xs" wrap="nowrap">
+                  <TextInput size="sm" placeholder={keyLabel} disabled={fieldDisabled}
+                    value={row.key}
+                    onChange={(e) => {
+                      const next = [...rows];
+                      next[i] = { ...row, key: e.currentTarget.value };
+                      onKvRowsChange(field.id, next);
+                    }}
+                  />
+                  <TextInput size="sm" placeholder={valLabel} disabled={fieldDisabled}
+                    value={row.value}
+                    onChange={(e) => {
+                      const next = [...rows];
+                      next[i] = { ...row, value: e.currentTarget.value };
+                      onKvRowsChange(field.id, next);
+                    }}
+                  />
+                  {!fieldDisabled && (
+                    <ActionIcon size="sm" variant="subtle" color="red" disabled={rows.length <= 1}
+                      onClick={() => onKvRowsChange(field.id, rows.filter((_, idx) => idx !== i))}>
+                      <IconX size={12} />
+                    </ActionIcon>
+                  )}
+                </Group>
+              ))}
+              {!fieldDisabled && (
+                <Button size="xs" variant="light" leftSection={<IconPlus size={12} />}
+                  onClick={() => onKvRowsChange(field.id, [...rows, { key: '', value: '' }])}>
+                  {t('form.addRow')}
+                </Button>
+              )}
             </Stack>
           </Paper>
         </Box>
       );
+    }
 
     case 'table_input': {
       const cols = (config.columns as string[]) ?? ['Column 1', 'Column 2'];
+      const emptyRow: TableRow = Object.fromEntries(cols.map((c) => [c, '']));
+      const rows = tableRows[field.id] ?? [{ ...emptyRow }];
       return (
         <Box>
           {field.label && <Text size="sm" fw={500} mb={4}>{field.label}</Text>}
+          {error && <Text size="xs" c="red" mb={4}>{error}</Text>}
           <Paper withBorder style={{ overflow: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
@@ -564,19 +616,43 @@ const FieldRenderer: FC<{
                   {cols.map((col) => (
                     <th key={col} className={classes.tableHeader}>{col}</th>
                   ))}
+                  {!fieldDisabled && <th style={{ width: 32 }} />}
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  {cols.map((col) => (
-                    <td key={col} className={classes.tableCell}>
-                      <TextInput size="xs" variant="unstyled" disabled={fieldDisabled} />
-                    </td>
-                  ))}
-                </tr>
+                {rows.map((row, ri) => (
+                  <tr key={ri}>
+                    {cols.map((col) => (
+                      <td key={col} className={classes.tableCell}>
+                        <TextInput size="xs" variant="unstyled" disabled={fieldDisabled}
+                          value={row[col] ?? ''}
+                          onChange={(e) => {
+                            const next = [...rows];
+                            next[ri] = { ...row, [col]: e.currentTarget.value };
+                            onTableRowsChange(field.id, next);
+                          }}
+                        />
+                      </td>
+                    ))}
+                    {!fieldDisabled && (
+                      <td className={classes.tableCell}>
+                        <ActionIcon size="xs" variant="subtle" color="red" disabled={rows.length <= 1}
+                          onClick={() => onTableRowsChange(field.id, rows.filter((_, idx) => idx !== ri))}>
+                          <IconX size={10} />
+                        </ActionIcon>
+                      </td>
+                    )}
+                  </tr>
+                ))}
               </tbody>
             </table>
           </Paper>
+          {!fieldDisabled && (
+            <Button size="xs" variant="light" mt={4} leftSection={<IconPlus size={12} />}
+              onClick={() => onTableRowsChange(field.id, [...rows, { ...emptyRow }])}>
+              {t('form.addRow')}
+            </Button>
+          )}
         </Box>
       );
     }
@@ -629,7 +705,12 @@ const FieldGrid: FC<{
   values: Record<string, FieldValue>;
   onChange: (id: string, value: FieldValue) => void;
   disabled: boolean;
-}> = ({ fields, values, onChange, disabled }) => (
+  errors: Record<string, string>;
+  kvRows: Record<string, KVRow[]>;
+  tableRows: Record<string, TableRow[]>;
+  onKvRowsChange: (fieldId: string, rows: KVRow[]) => void;
+  onTableRowsChange: (fieldId: string, rows: TableRow[]) => void;
+}> = ({ fields, values, onChange, disabled, errors, kvRows, tableRows, onKvRowsChange, onTableRowsChange }) => (
   <SimpleGrid cols={12} spacing="sm" style={{ alignItems: 'start' }}>
     {fields.map((field) => (
       <Box key={field.id} style={{ gridColumn: `span ${field.layout.colSpan}` }}>
@@ -638,6 +719,11 @@ const FieldGrid: FC<{
           value={values[field.id]}
           onChange={onChange}
           disabled={disabled}
+          error={errors[field.id]}
+          kvRows={kvRows}
+          tableRows={tableRows}
+          onKvRowsChange={onKvRowsChange}
+          onTableRowsChange={onTableRowsChange}
         />
       </Box>
     ))}
@@ -669,15 +755,63 @@ export const FormWidget: FC<FormWidgetProps> = ({
     parsedSubmitted ?? buildInitialValues(allFields, widgetData),
   );
   const [localSubmitted, setLocalSubmitted] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [kvRows, setKvRows] = useState<Record<string, KVRow[]>>({});
+  const [tableRows, setTableRows] = useState<Record<string, TableRow[]>>({});
 
   const effectiveDisabled = disabled || isSubmitted || localSubmitted;
   const effectiveSubmitted = isSubmitted || localSubmitted;
 
   const handleChange = useCallback((fieldId: string, value: FieldValue) => {
     setValues(prev => ({ ...prev, [fieldId]: value }));
+    setErrors(prev => {
+      if (!prev[fieldId]) return prev;
+      const next = { ...prev };
+      delete next[fieldId];
+      return next;
+    });
+  }, []);
+
+  const handleKvRowsChange = useCallback((fieldId: string, rows: KVRow[]) => {
+    setKvRows(prev => ({ ...prev, [fieldId]: rows }));
+    setErrors(prev => {
+      if (!prev[fieldId]) return prev;
+      const next = { ...prev };
+      delete next[fieldId];
+      return next;
+    });
+  }, []);
+
+  const handleTableRowsChange = useCallback((fieldId: string, rows: TableRow[]) => {
+    setTableRows(prev => ({ ...prev, [fieldId]: rows }));
+    setErrors(prev => {
+      if (!prev[fieldId]) return prev;
+      const next = { ...prev };
+      delete next[fieldId];
+      return next;
+    });
   }, []);
 
   const handleSubmit = useCallback(() => {
+    const newErrors: Record<string, string> = {};
+    for (const field of allFields) {
+      if (NON_VALUE_TYPES.has(field.type)) continue;
+      const isReq = field.validation.some((v) => v.type === 'required');
+      if (!isReq) continue;
+      const val = values[field.id];
+      const empty =
+        val === null || val === undefined || val === '' ||
+        (Array.isArray(val) && val.length === 0) ||
+        (val instanceof File === false && val === 0 && field.type === 'rating');
+      if (empty) {
+        newErrors[field.id] = t('form.required');
+      }
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     const result: Record<string, unknown> = {};
     for (const field of allFields) {
       if (NON_VALUE_TYPES.has(field.type)) continue;
@@ -689,12 +823,22 @@ export const FormWidget: FC<FormWidgetProps> = ({
         }
         continue;
       }
+      if (field.type === 'key_value') {
+        const rows = kvRows[field.id] ?? [{ key: '', value: '' }];
+        result[key] = rows.filter(r => r.key || r.value);
+        continue;
+      }
+      if (field.type === 'table_input') {
+        const rows = tableRows[field.id] ?? [];
+        result[key] = rows.filter(r => Object.values(r).some(v => v));
+        continue;
+      }
       result[key] = val ?? '';
     }
     const json = JSON.stringify(result);
     setLocalSubmitted(true);
     onSubmit(json);
-  }, [allFields, values, onSubmit]);
+  }, [allFields, values, kvRows, tableRows, onSubmit, t]);
 
   if (allFields.length === 0) return null;
 
@@ -742,14 +886,14 @@ export const FormWidget: FC<FormWidgetProps> = ({
           <div style={scrollStyle}>
             {tabs.map((tab) => (
               <Tabs.Panel key={tab.id} value={tab.id} pt="md">
-                <FieldGrid fields={tab.fields} values={values} onChange={handleChange} disabled={effectiveDisabled} />
+                <FieldGrid fields={tab.fields} values={values} onChange={handleChange} disabled={effectiveDisabled} errors={errors} kvRows={kvRows} tableRows={tableRows} onKvRowsChange={handleKvRowsChange} onTableRowsChange={handleTableRowsChange} />
               </Tabs.Panel>
             ))}
           </div>
         </Tabs>
       ) : (
         <div style={contentScrollStyle}>
-          <FieldGrid fields={allFields} values={values} onChange={handleChange} disabled={effectiveDisabled} />
+          <FieldGrid fields={allFields} values={values} onChange={handleChange} disabled={effectiveDisabled} errors={errors} kvRows={kvRows} tableRows={tableRows} onKvRowsChange={handleKvRowsChange} onTableRowsChange={handleTableRowsChange} />
         </div>
       )}
 

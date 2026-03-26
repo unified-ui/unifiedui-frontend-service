@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import { Text, ActionIcon, Group, Box, Button } from '@mantine/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { IconGripVertical, IconX, IconArrowUp, IconArrowDown } from '@tabler/icons-react';
+import { IconGripVertical, IconX, IconArrowUp, IconArrowDown, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import type { WidgetFieldConfig } from './types';
 import { FieldPreviewCard } from './FieldPreviewCard';
@@ -70,8 +70,23 @@ interface FieldCanvasProps {
   onSelectField: (id: string | null) => void;
   onRemoveField: (id: string) => void;
   onMoveField: (id: string, direction: 'up' | 'down') => void;
-  onOpenAddField: () => void;
+  onOpenAddField: (insertIndex?: number) => void;
 }
+
+const InsertButton: FC<{ onClick: () => void }> = ({ onClick }) => (
+  <div className={classes.insertRow} style={{ gridColumn: 'span 12' }}>
+    <ActionIcon
+      size="md"
+      variant="filled"
+      color="primary"
+      radius="xl"
+      className={classes.insertButton}
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+    >
+      <IconPlus size={16} />
+    </ActionIcon>
+  </div>
+);
 
 export const FieldCanvas: FC<FieldCanvasProps> = ({
   fields,
@@ -97,7 +112,7 @@ export const FieldCanvas: FC<FieldCanvasProps> = ({
           <Text size="sm" c="dimmed" mb="md">{t('emptyCanvas.description')}</Text>
         </div>
         <div className={classes.addFieldBar}>
-          <Button variant="light" fullWidth onClick={onOpenAddField}>
+          <Button variant="light" fullWidth onClick={() => onOpenAddField()}>
             {t('addField')}
           </Button>
         </div>
@@ -108,21 +123,24 @@ export const FieldCanvas: FC<FieldCanvasProps> = ({
   return (
     <div onClick={handleCanvasClick}>
       <div className={classes.fieldGrid}>
+        <InsertButton onClick={() => onOpenAddField(0)} />
         {fields.map((field, index) => (
-          <SortableFieldCard
-            key={field.id}
-            field={field}
-            index={index}
-            total={fields.length}
-            isSelected={selectedFieldId === field.id}
-            onSelect={onSelectField}
-            onRemove={onRemoveField}
-            onMove={onMoveField}
-          />
+          <Box key={field.id} style={{ display: 'contents' }}>
+            <SortableFieldCard
+              field={field}
+              index={index}
+              total={fields.length}
+              isSelected={selectedFieldId === field.id}
+              onSelect={onSelectField}
+              onRemove={onRemoveField}
+              onMove={onMoveField}
+            />
+            <InsertButton onClick={() => onOpenAddField(index + 1)} />
+          </Box>
         ))}
       </div>
       <div className={classes.addFieldBar}>
-        <Button variant="light" fullWidth onClick={onOpenAddField}>
+        <Button variant="light" fullWidth onClick={() => onOpenAddField()}>
           {t('addField')}
         </Button>
       </div>

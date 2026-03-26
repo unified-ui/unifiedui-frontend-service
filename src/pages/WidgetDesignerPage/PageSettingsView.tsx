@@ -2,15 +2,13 @@ import type { FC } from 'react';
 import { useState } from 'react';
 import {
   Stack,
-  Text,
   TextInput,
   Textarea,
   Switch,
-  Group,
   Badge,
   Button,
 } from '@mantine/core';
-import { IconSettings, IconCode } from '@tabler/icons-react';
+import { IconCode } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import type { WidgetFieldConfig, WidgetFormSchema, DataSourceConfig } from './types';
 import { Section } from './Section';
@@ -36,11 +34,6 @@ export const PageSettingsView: FC<PageSettingsViewProps> = ({ schema, allFields,
 
   return (
     <Stack gap="sm">
-      <Group gap="sm">
-        <IconSettings size={16} />
-        <Text fw={600} size="sm">{t('pageSettings.title')}</Text>
-      </Group>
-
       <Section label={t('sections.general')} defaultOpen>
         <Stack gap="xs">
           <TextInput

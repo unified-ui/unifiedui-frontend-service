@@ -15,7 +15,9 @@
     "submit": "Submit",
     "submitted": "Form submitted",
     "selectPlaceholder": "Select an option...",
-    "chooseFile": "Choose file..."
+    "chooseFile": "Choose file...",
+    "addRow": "Add Row",
+    "required": "This field is required"
   },
   "iframe": {
     "submitted": "Data submitted",

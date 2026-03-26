@@ -131,6 +131,43 @@
   margin-top: var(--spacing-md);
 }
 
+.insertRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  position: relative;
+  cursor: pointer;
+}
+
+.insertRow::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: 3px;
+  background: transparent;
+  transition: background var(--transition-fast);
+}
+
+.insertRow:hover::before {
+  background: var(--mantine-color-primary-5);
+}
+
+.insertButton {
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  z-index: 1;
+  box-shadow: var(--shadow-sm);
+}
+
+.insertRow:hover .insertButton {
+  opacity: 1;
+}
+
 .addFieldGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

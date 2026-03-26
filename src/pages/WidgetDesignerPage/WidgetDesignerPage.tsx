@@ -1,9 +1,10 @@
 import type { FC } from 'react';
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   Title,
   Group,
   Text,
+  TextInput,
   Button,
   ActionIcon,
   LoadingOverlay,
@@ -64,8 +65,12 @@ export const WidgetDesignerPage: FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<DesignerMode>('edit');
   const [addFieldOpen, setAddFieldOpen] = useState(false);
+  const [insertIndex, setInsertIndex] = useState<number | undefined>(undefined);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editNameValue, setEditNameValue] = useState('');
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   const { hasDraft, draftTimestamp, restoreDraft, discardDraft, clearDraft } =
     useAutoSaveDraft(widgetId, schema, savedSchema, isLoading);
@@ -114,9 +119,18 @@ export const WidgetDesignerPage: FC = () => {
 
   const handleAddField = useCallback((type: FieldType) => {
     const newField = createDefaultField(type, allFields);
-    updateFields((prev) => [...prev, newField]);
+    if (insertIndex !== undefined) {
+      updateFields((prev) => {
+        const next = [...prev];
+        next.splice(insertIndex, 0, newField);
+        return next;
+      });
+    } else {
+      updateFields((prev) => [...prev, newField]);
+    }
     setSelectedFieldId(newField.id);
-  }, [allFields, updateFields]);
+    setInsertIndex(undefined);
+  }, [allFields, updateFields, insertIndex]);
 
   const handleRemoveField = useCallback((id: string) => {
     updateFields((prev) => prev.filter((f) => f.id !== id));
@@ -251,7 +265,7 @@ export const WidgetDesignerPage: FC = () => {
 
     const handleMouseDown = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.closest('[data-field-card]') || target.closest('[data-no-deselect]') || target.closest('[data-sidebar]')) return;
+      if (target.closest('[data-field-card]') || target.closest('[data-no-deselect]') || target.closest('[data-sidebar]') || target.closest('[data-mantine-portal]') || target.closest('.mantine-Popover-dropdown') || target.closest('.mantine-Select-dropdown') || target.closest('.mantine-Combobox-dropdown')) return;
       setSelectedFieldId(null);
     };
 
@@ -297,7 +311,41 @@ export const WidgetDesignerPage: FC = () => {
               <ActionIcon variant="subtle" onClick={() => navigate('/chat-widgets')}>
                 <IconArrowLeft size={20} />
               </ActionIcon>
-              <Title order={3}>{widgetName || t('title')}</Title>
+              {isEditingName ? (
+                <TextInput
+                  ref={nameInputRef}
+                  value={editNameValue}
+                  onChange={(e) => setEditNameValue(e.currentTarget.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const trimmed = editNameValue.trim();
+                      if (trimmed) setWidgetName(trimmed);
+                      setIsEditingName(false);
+                    }
+                    if (e.key === 'Escape') setIsEditingName(false);
+                  }}
+                  onBlur={() => {
+                    const trimmed = editNameValue.trim();
+                    if (trimmed) setWidgetName(trimmed);
+                    setIsEditingName(false);
+                  }}
+                  size="sm"
+                  styles={{ input: { fontWeight: 700, fontSize: 'var(--mantine-h3-font-size)' } }}
+                  data-no-deselect
+                />
+              ) : (
+                <Title
+                  order={3}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    setEditNameValue(widgetName || t('title'));
+                    setIsEditingName(true);
+                    setTimeout(() => nameInputRef.current?.focus(), 0);
+                  }}
+                >
+                  {widgetName || t('title')}
+                </Title>
+              )}
             </Group>
             <Group gap="xs">
               <ActionIcon variant="subtle" disabled={!canUndo} onClick={undo} title={`${t('undo')} (${Kbd ? '⌘Z' : 'Ctrl+Z'})`}>
@@ -372,7 +420,7 @@ export const WidgetDesignerPage: FC = () => {
                     <>
                       <AddFieldPanel
                         opened={addFieldOpen}
-                        onClose={() => setAddFieldOpen(false)}
+                        onClose={() => { setAddFieldOpen(false); setInsertIndex(undefined); }}
                         onAddField={handleAddField}
                       />
                       <DndContext
@@ -390,7 +438,7 @@ export const WidgetDesignerPage: FC = () => {
                             onSelectField={setSelectedFieldId}
                             onRemoveField={handleRemoveField}
                             onMoveField={handleMoveField}
-                            onOpenAddField={() => setAddFieldOpen(true)}
+                            onOpenAddField={(idx) => { setInsertIndex(idx); setAddFieldOpen(true); }}
                           />
                         </SortableContext>
                       </DndContext>
