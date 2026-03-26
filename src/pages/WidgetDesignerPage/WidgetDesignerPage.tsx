@@ -356,9 +356,18 @@ export const WidgetDesignerPage: FC = () => {
               />
             )}
 
-            <div className={classes.canvasScrollOuter}>
-              <div className={classes.canvasScrollInner}>
-                <div className={classes.canvasCard}>
+            <div
+              className={classes.canvasScrollOuter}
+              style={mode === 'demo' ? { display: 'flex', flexDirection: 'column' } : undefined}
+            >
+              <div
+                className={classes.canvasScrollInner}
+                style={mode === 'demo' ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' } : undefined}
+              >
+                <div
+                  className={classes.canvasCard}
+                  style={mode === 'demo' ? { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } : undefined}
+                >
                   {mode === 'edit' ? (
                     <>
                       <AddFieldPanel

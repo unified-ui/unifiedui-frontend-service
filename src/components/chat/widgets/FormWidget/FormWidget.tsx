@@ -42,6 +42,7 @@ interface FormWidgetProps {
   widgetData?: Record<string, unknown>;
   submitButtonText?: string;
   maxHeight?: number;
+  fillHeight?: boolean;
 }
 
 type FieldValue = string | number | boolean | string[] | [number, number] | File | null;
@@ -652,6 +653,7 @@ export const FormWidget: FC<FormWidgetProps> = ({
   widgetData,
   submitButtonText,
   maxHeight,
+  fillHeight,
 }) => {
   const { t } = useTranslation('widgets');
   const allFields = useMemo(() => getAllFields(tabs), [tabs]);
@@ -696,18 +698,28 @@ export const FormWidget: FC<FormWidgetProps> = ({
 
   if (allFields.length === 0) return null;
 
-  const tabsStyle = maxHeight ? { maxHeight } : {};
-
-  const scrollStyle = maxHeight
-    ? { maxHeight: maxHeight - 80, overflowY: 'auto' as const, paddingRight: 8 }
+  const fillStyle = fillHeight
+    ? { flex: 1, minHeight: 0, display: 'flex' as const, flexDirection: 'column' as const }
     : {};
 
-  const contentScrollStyle = maxHeight
-    ? { maxHeight, overflowY: 'auto' as const, paddingRight: 8 }
-    : {};
+  const tabsStyle = fillHeight
+    ? { flex: 1, minHeight: 0, display: 'flex' as const, flexDirection: 'column' as const, overflow: 'hidden' as const }
+    : maxHeight ? { maxHeight } : {};
+
+  const scrollStyle = fillHeight
+    ? { flex: 1, overflowY: 'auto' as const, minHeight: 0, paddingRight: 8 }
+    : maxHeight
+      ? { maxHeight: maxHeight - 80, overflowY: 'auto' as const, paddingRight: 8 }
+      : {};
+
+  const contentScrollStyle = fillHeight
+    ? { flex: 1, overflowY: 'auto' as const, minHeight: 0, paddingRight: 8 }
+    : maxHeight
+      ? { maxHeight, overflowY: 'auto' as const, paddingRight: 8 }
+      : {};
 
   return (
-    <Box className={classes.formWidget}>
+    <Box className={classes.formWidget} style={fillStyle}>
       {effectiveSubmitted && (
         <Badge
           leftSection={<IconCheck size={12} />}

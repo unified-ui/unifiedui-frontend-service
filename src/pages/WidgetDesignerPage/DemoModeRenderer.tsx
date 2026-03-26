@@ -24,16 +24,16 @@ export const DemoModeRenderer: FC<DemoModeRendererProps> = ({ schema }) => {
   }, []);
 
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <FormWidget
         tabs={schema.tabs}
         enableTabs={schema.settings.enableTabs}
         onSubmit={handleSubmit}
         submitButtonText={schema.settings.submitButtonText}
-        maxHeight={600}
+        fillHeight
       />
 
-      <Group justify="center" mt="sm">
+      <Group justify="center" mt="sm" style={{ flexShrink: 0 }}>
         <Button
           variant="light"
           size="sm"
@@ -60,6 +60,6 @@ export const DemoModeRenderer: FC<DemoModeRendererProps> = ({ schema }) => {
           )}
         </Box>
       </Modal>
-    </>
+    </div>
   );
 };
