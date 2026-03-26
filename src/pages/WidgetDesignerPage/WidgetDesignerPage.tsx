@@ -356,42 +356,42 @@ export const WidgetDesignerPage: FC = () => {
               />
             )}
 
-            {mode === 'edit' ? (
-              <div className={classes.canvasScrollOuter}>
-                <div className={classes.canvasScrollInner}>
-                  <div className={classes.canvasCard}>
-                    <AddFieldPanel
-                      opened={addFieldOpen}
-                      onClose={() => setAddFieldOpen(false)}
-                      onAddField={handleAddField}
-                    />
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={handleDragEnd}
-                    >
-                      <SortableContext
-                        items={fields.map((f) => f.id)}
-                        strategy={verticalListSortingStrategy}
+            <div className={classes.canvasScrollOuter}>
+              <div className={classes.canvasScrollInner}>
+                <div className={classes.canvasCard}>
+                  {mode === 'edit' ? (
+                    <>
+                      <AddFieldPanel
+                        opened={addFieldOpen}
+                        onClose={() => setAddFieldOpen(false)}
+                        onAddField={handleAddField}
+                      />
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
                       >
-                        <FieldCanvas
-                          fields={fields}
-                          selectedFieldId={selectedFieldId}
-                          onSelectField={setSelectedFieldId}
-                          onRemoveField={handleRemoveField}
-                          onMoveField={handleMoveField}
-                          onOpenAddField={() => setAddFieldOpen(true)}
-                        />
-                      </SortableContext>
-                    </DndContext>
-                  </div>
+                        <SortableContext
+                          items={fields.map((f) => f.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <FieldCanvas
+                            fields={fields}
+                            selectedFieldId={selectedFieldId}
+                            onSelectField={setSelectedFieldId}
+                            onRemoveField={handleRemoveField}
+                            onMoveField={handleMoveField}
+                            onOpenAddField={() => setAddFieldOpen(true)}
+                          />
+                        </SortableContext>
+                      </DndContext>
+                    </>
+                  ) : (
+                    <DemoModeRenderer schema={schema} />
+                  )}
                 </div>
               </div>
-            ) : (
-              <div className={classes.demoContainer}>
-                <DemoModeRenderer schema={schema} />
-              </div>
-            )}
+            </div>
           </div>
 
           {mode === 'edit' && (

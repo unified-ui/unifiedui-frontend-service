@@ -42,7 +42,6 @@ interface FormWidgetProps {
   widgetData?: Record<string, unknown>;
   submitButtonText?: string;
   maxHeight?: number;
-  stretch?: boolean;
 }
 
 type FieldValue = string | number | boolean | string[] | [number, number] | File | null;
@@ -653,7 +652,6 @@ export const FormWidget: FC<FormWidgetProps> = ({
   widgetData,
   submitButtonText,
   maxHeight,
-  stretch = false,
 }) => {
   const { t } = useTranslation('widgets');
   const allFields = useMemo(() => getAllFields(tabs), [tabs]);
@@ -698,20 +696,18 @@ export const FormWidget: FC<FormWidgetProps> = ({
 
   if (allFields.length === 0) return null;
 
-  const tabsStyle = stretch
-    ? { flex: 1, minHeight: 0 }
-    : maxHeight ? { maxHeight } : {};
+  const tabsStyle = maxHeight ? { maxHeight } : {};
 
-  const scrollStyle = stretch
-    ? { flex: 1, minHeight: 0, overflowY: 'auto' as const }
-    : maxHeight ? { maxHeight: maxHeight - 80, overflowY: 'auto' as const } : {};
+  const scrollStyle = maxHeight
+    ? { maxHeight: maxHeight - 80, overflowY: 'auto' as const, paddingRight: 8 }
+    : {};
 
-  const contentScrollStyle = stretch
-    ? { flex: 1, minHeight: 0, overflowY: 'auto' as const }
-    : maxHeight ? { maxHeight, overflowY: 'auto' as const } : {};
+  const contentScrollStyle = maxHeight
+    ? { maxHeight, overflowY: 'auto' as const, paddingRight: 8 }
+    : {};
 
   return (
-    <Box className={`${classes.formWidget}${stretch ? ` ${classes.formWidgetStretch}` : ''}`}>
+    <Box className={classes.formWidget}>
       {effectiveSubmitted && (
         <Badge
           leftSection={<IconCheck size={12} />}
@@ -746,7 +742,7 @@ export const FormWidget: FC<FormWidgetProps> = ({
       )}
 
       {!effectiveSubmitted && (
-        <Button mt="md" onClick={handleSubmit} disabled={effectiveDisabled} fullWidth style={{ flexShrink: 0 }}>
+        <Button mt="md" onClick={handleSubmit} disabled={effectiveDisabled} fullWidth>
           {submitButtonText ?? t('form.submit')}
         </Button>
       )}

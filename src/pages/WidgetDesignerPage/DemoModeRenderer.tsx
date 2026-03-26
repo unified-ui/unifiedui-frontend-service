@@ -30,7 +30,7 @@ export const DemoModeRenderer: FC<DemoModeRendererProps> = ({ schema }) => {
         enableTabs={schema.settings.enableTabs}
         onSubmit={handleSubmit}
         submitButtonText={schema.settings.submitButtonText}
-        stretch
+        maxHeight={600}
       />
 
       <Group justify="center" mt="sm">

@@ -6,16 +6,6 @@
   position: relative;
 }
 
-.formWidgetStretch {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  border: none;
-  margin-top: 0;
-  padding: 0;
-}
-
 .submittedBadge {
   position: absolute;
   top: var(--spacing-sm);
