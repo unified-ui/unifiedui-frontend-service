@@ -71,6 +71,7 @@ export const WidgetDesignerPage: FC = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editNameValue, setEditNameValue] = useState('');
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const savedNameRef = useRef('');
 
   const { hasDraft, draftTimestamp, restoreDraft, discardDraft, clearDraft } =
     useAutoSaveDraft(widgetId, schema, savedSchema, isLoading);
@@ -100,6 +101,7 @@ export const WidgetDesignerPage: FC = () => {
     apiClient.getChatWidget(selectedTenant.id, widgetId)
       .then((widget) => {
         setWidgetName(widget.name);
+        savedNameRef.current = widget.name;
         const loaded = loadWidgetSchema((widget.config ?? {}) as Record<string, unknown>);
         reset(loaded);
         setSavedSchema(structuredClone(loaded));
@@ -230,6 +232,7 @@ export const WidgetDesignerPage: FC = () => {
     setIsSaving(true);
     try {
       await apiClient.updateChatWidget(selectedTenant.id, widgetId, {
+        name: widgetName,
         config: schemaToConfig(schema),
       });
       setSavedSchema(structuredClone(schema));
@@ -239,7 +242,13 @@ export const WidgetDesignerPage: FC = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [schema, widgetId, apiClient, selectedTenant, clearDraft, t]);
+  }, [schema, widgetId, widgetName, apiClient, selectedTenant, clearDraft, t]);
+
+  useEffect(() => {
+    if (!widgetName || widgetName === savedNameRef.current) return;
+    savedNameRef.current = widgetName;
+    handleSave();
+  }, [widgetName, handleSave]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -318,15 +327,16 @@ export const WidgetDesignerPage: FC = () => {
                   onChange={(e) => setEditNameValue(e.currentTarget.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      const trimmed = editNameValue.trim();
-                      if (trimmed) setWidgetName(trimmed);
-                      setIsEditingName(false);
+                      e.preventDefault();
+                      nameInputRef.current?.blur();
                     }
                     if (e.key === 'Escape') setIsEditingName(false);
                   }}
                   onBlur={() => {
                     const trimmed = editNameValue.trim();
-                    if (trimmed) setWidgetName(trimmed);
+                    if (trimmed && trimmed !== widgetName) {
+                      setWidgetName(trimmed);
+                    }
                     setIsEditingName(false);
                   }}
                   size="sm"

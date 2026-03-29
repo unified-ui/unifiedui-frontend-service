@@ -21,7 +21,7 @@ interface ScriptEditorDialogProps {
   title: string;
   script: string;
   onSave: (script: string) => void;
-  mode: 'validation' | 'fieldChange' | 'formLoad' | 'beforeSubmit';
+  mode: 'validation' | 'onFieldChange' | 'onFormLoad' | 'onBeforeSubmit';
   fieldIds?: string[];
 }
 
@@ -55,7 +55,7 @@ const TEMPLATES: Record<string, { label: string; code: string }[]> = {
 }`,
     },
   ],
-  fieldChange: [
+  onFieldChange: [
     {
       label: 'Show/Hide Field',
       code: `function onFieldChange(fieldId, fields, actions) {
@@ -77,7 +77,7 @@ const TEMPLATES: Record<string, { label: string; code: string }[]> = {
 }`,
     },
   ],
-  formLoad: [
+  onFormLoad: [
     {
       label: 'Initialize Fields',
       code: `function onFormLoad(fields, actions, context) {
@@ -86,7 +86,7 @@ const TEMPLATES: Record<string, { label: string; code: string }[]> = {
 }`,
     },
   ],
-  beforeSubmit: [
+  onBeforeSubmit: [
     {
       label: 'Confirm & Validate',
       code: `function onBeforeSubmit(fields, actions, context) {
@@ -113,6 +113,15 @@ export const ScriptEditorDialog: FC<ScriptEditorDialogProps> = ({
   const [code, setCode] = useState(script);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [mockData, setMockData] = useState('{}');
+  const [prevOpened, setPrevOpened] = useState(false);
+
+  if (opened && !prevOpened) {
+    setCode(script);
+    setTestResult(null);
+    setPrevOpened(true);
+  } else if (!opened && prevOpened) {
+    setPrevOpened(false);
+  }
 
   const templates = TEMPLATES[mode] ?? [];
 

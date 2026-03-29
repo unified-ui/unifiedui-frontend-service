@@ -30,6 +30,9 @@ export const DemoModeRenderer: FC<DemoModeRendererProps> = ({ schema }) => {
         enableTabs={schema.settings.enableTabs}
         onSubmit={handleSubmit}
         submitButtonText={schema.settings.submitButtonText}
+        description={schema.settings.description}
+        successMessage={schema.settings.successMessage}
+        scripts={schema.scripts}
         fillHeight
       />
 

@@ -27,10 +27,12 @@ import {
   PasswordInput,
   Tabs,
   Stack,
+  ActionIcon,
+  Tooltip,
 } from '@mantine/core';
 import { IconCheck, IconUpload, IconAlertTriangle, IconInfoCircle, IconCircleCheck, IconAlertCircle, IconPlus, IconX } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import type { WidgetFieldConfig, WidgetTab } from '../../../../pages/WidgetDesignerPage/types';
+import type { WidgetFieldConfig, WidgetTab, VisibilityConfig, VisibilityRule } from '../../../../pages/WidgetDesignerPage/types';
 import classes from './FormWidget.module.css';
 
 type KVRow = { key: string; value: string };
@@ -46,6 +48,13 @@ interface FormWidgetProps {
   submitButtonText?: string;
   maxHeight?: number;
   fillHeight?: boolean;
+  description?: string;
+  successMessage?: string;
+  scripts?: {
+    onFormLoad?: string;
+    onBeforeSubmit?: string;
+    onFieldChange?: string;
+  };
 }
 
 type FieldValue = string | number | boolean | string[] | [number, number] | File | null;
@@ -56,6 +65,52 @@ const NON_VALUE_TYPES = new Set([
 
 function getAllFields(tabs: WidgetTab[]): WidgetFieldConfig[] {
   return tabs.flatMap((tab) => tab.fields);
+}
+
+function evaluateRule(rule: VisibilityRule, values: Record<string, FieldValue>): boolean {
+  const fieldVal = values[rule.fieldId];
+  const ruleVal = rule.value;
+
+  switch (rule.operator) {
+    case 'is_empty':
+      return fieldVal === null || fieldVal === undefined || fieldVal === '' ||
+        (Array.isArray(fieldVal) && fieldVal.length === 0);
+    case 'is_not_empty':
+      return fieldVal !== null && fieldVal !== undefined && fieldVal !== '' &&
+        !(Array.isArray(fieldVal) && fieldVal.length === 0);
+    case 'equals':
+      return String(fieldVal) === String(ruleVal);
+    case 'not_equals':
+      return String(fieldVal) !== String(ruleVal);
+    case 'contains':
+      if (Array.isArray(fieldVal)) return fieldVal.includes(String(ruleVal));
+      return String(fieldVal ?? '').includes(String(ruleVal ?? ''));
+    case 'not_contains':
+      if (Array.isArray(fieldVal)) return !fieldVal.includes(String(ruleVal));
+      return !String(fieldVal ?? '').includes(String(ruleVal ?? ''));
+    case 'gt': return Number(fieldVal) > Number(ruleVal);
+    case 'lt': return Number(fieldVal) < Number(ruleVal);
+    case 'gte': return Number(fieldVal) >= Number(ruleVal);
+    case 'lte': return Number(fieldVal) <= Number(ruleVal);
+    case 'in': {
+      const list = Array.isArray(ruleVal) ? ruleVal.map(String) : String(ruleVal).split(',').map(s => s.trim());
+      return list.includes(String(fieldVal));
+    }
+    case 'not_in': {
+      const list = Array.isArray(ruleVal) ? ruleVal.map(String) : String(ruleVal).split(',').map(s => s.trim());
+      return !list.includes(String(fieldVal));
+    }
+    default: return true;
+  }
+}
+
+function evaluateVisibility(
+  visibility: VisibilityConfig | undefined,
+  values: Record<string, FieldValue>,
+): boolean {
+  if (!visibility || visibility.rules.length === 0) return true;
+  const results = visibility.rules.map((rule) => evaluateRule(rule, values));
+  return visibility.condition === 'AND' ? results.every(Boolean) : results.some(Boolean);
 }
 
 function buildInitialValues(
@@ -226,6 +281,12 @@ const FieldRenderer: FC<{
   const fieldDisabled = disabled || field.disabled === true;
   const { config } = field;
 
+  const wrapWithTooltip = (content: React.ReactElement) => {
+    if (!field.tooltip) return content;
+    return <Tooltip label={field.tooltip} multiline maw={300} withArrow position="top-start">{content}</Tooltip>;
+  };
+
+  const renderField = () => {
   switch (field.type) {
     case 'text':
     case 'email':
@@ -304,6 +365,7 @@ const FieldRenderer: FC<{
           value={(value as string) ?? ''}
           onChange={(e) => onChange(field.id, e.currentTarget.value)}
           disabled={fieldDisabled}
+          error={error}
         />
       );
 
@@ -317,6 +379,7 @@ const FieldRenderer: FC<{
           value={(value as string) ?? ''}
           onChange={(e) => onChange(field.id, e.currentTarget.value)}
           disabled={fieldDisabled}
+          error={error}
         />
       );
 
@@ -331,6 +394,7 @@ const FieldRenderer: FC<{
           value={(value as string) ?? ''}
           onChange={(e) => onChange(field.id, e.currentTarget.value)}
           disabled={fieldDisabled}
+          error={error}
         />
       );
 
@@ -343,6 +407,7 @@ const FieldRenderer: FC<{
           value={(value as string) ?? '#000000'}
           onChange={(val) => onChange(field.id, val)}
           disabled={fieldDisabled}
+          error={error}
         />
       );
 
@@ -384,6 +449,7 @@ const FieldRenderer: FC<{
           required={isRequired}
           value={(value as string) ?? ''}
           onChange={(val) => onChange(field.id, val)}
+          error={error}
         >
           <Group mt="xs" gap="md">
             {opts.map((opt) => (
@@ -402,6 +468,7 @@ const FieldRenderer: FC<{
           required={isRequired}
           value={(value as string[]) ?? []}
           onChange={(val) => onChange(field.id, val)}
+          error={error}
         >
           <Group mt="xs" gap="md">
             {opts.map((opt) => (
@@ -414,13 +481,17 @@ const FieldRenderer: FC<{
 
     case 'toggle':
       return (
-        <Switch
-          label={field.label}
-          size="sm"
-          checked={value === true}
-          onChange={(e) => onChange(field.id, e.currentTarget.checked)}
-          disabled={fieldDisabled}
-        />
+        <Box>
+          <Switch
+            label={field.label}
+            size="sm"
+            checked={value === true}
+            onChange={(e) => onChange(field.id, e.currentTarget.checked)}
+            disabled={fieldDisabled}
+            error={error}
+          />
+          {error && <Text size="xs" c="red" mt={2}>{error}</Text>}
+        </Box>
       );
 
     case 'rating':
@@ -435,6 +506,7 @@ const FieldRenderer: FC<{
             readOnly={fieldDisabled}
             size="md"
           />
+          {error && <Text size="xs" c="red" mt={2}>{error}</Text>}
         </Box>
       );
 
@@ -452,6 +524,7 @@ const FieldRenderer: FC<{
             size="sm"
             label={config.showValue ? undefined : null}
           />
+          {error && <Text size="xs" c="red" mt={2}>{error}</Text>}
         </Box>
       );
 
@@ -468,6 +541,7 @@ const FieldRenderer: FC<{
             disabled={fieldDisabled}
             size="sm"
           />
+          {error && <Text size="xs" c="red" mt={2}>{error}</Text>}
         </Box>
       );
 
@@ -483,6 +557,7 @@ const FieldRenderer: FC<{
           value={value as File | null}
           onChange={(file) => onChange(field.id, file)}
           disabled={fieldDisabled}
+          error={error}
         />
       );
 
@@ -496,6 +571,7 @@ const FieldRenderer: FC<{
           value={(value as string) ?? ''}
           onChange={(e) => onChange(field.id, e.currentTarget.value)}
           disabled={fieldDisabled}
+          error={error}
         />
       );
 
@@ -545,6 +621,7 @@ const FieldRenderer: FC<{
               }}
             />
           </Stack>
+          {error && <Text size="xs" c="red" mt={2}>{error}</Text>}
         </Box>
       );
 
@@ -698,6 +775,9 @@ const FieldRenderer: FC<{
         />
       );
   }
+  };
+
+  return wrapWithTooltip(renderField());
 };
 
 const FieldGrid: FC<{
@@ -712,21 +792,24 @@ const FieldGrid: FC<{
   onTableRowsChange: (fieldId: string, rows: TableRow[]) => void;
 }> = ({ fields, values, onChange, disabled, errors, kvRows, tableRows, onKvRowsChange, onTableRowsChange }) => (
   <SimpleGrid cols={12} spacing="sm" style={{ alignItems: 'start' }}>
-    {fields.map((field) => (
-      <Box key={field.id} style={{ gridColumn: `span ${field.layout.colSpan}` }}>
-        <FieldRenderer
-          field={field}
-          value={values[field.id]}
-          onChange={onChange}
-          disabled={disabled}
-          error={errors[field.id]}
-          kvRows={kvRows}
-          tableRows={tableRows}
-          onKvRowsChange={onKvRowsChange}
-          onTableRowsChange={onTableRowsChange}
-        />
-      </Box>
-    ))}
+    {fields.map((field) => {
+      if (!evaluateVisibility(field.visibility, values)) return null;
+      return (
+        <Box key={field.id} style={{ gridColumn: `span ${field.layout.colSpan}` }}>
+          <FieldRenderer
+            field={field}
+            value={values[field.id]}
+            onChange={onChange}
+            disabled={disabled}
+            error={errors[field.id]}
+            kvRows={kvRows}
+            tableRows={tableRows}
+            onKvRowsChange={onKvRowsChange}
+            onTableRowsChange={onTableRowsChange}
+          />
+        </Box>
+      );
+    })}
   </SimpleGrid>
 );
 
@@ -740,6 +823,9 @@ export const FormWidget: FC<FormWidgetProps> = ({
   submitButtonText,
   maxHeight,
   fillHeight,
+  description,
+  successMessage,
+  scripts,
 }) => {
   const { t } = useTranslation('widgets');
   const allFields = useMemo(() => getAllFields(tabs), [tabs]);
@@ -762,15 +848,43 @@ export const FormWidget: FC<FormWidgetProps> = ({
   const effectiveDisabled = disabled || isSubmitted || localSubmitted;
   const effectiveSubmitted = isSubmitted || localSubmitted;
 
+  const runScript = useCallback((code: string, fieldValues: Record<string, FieldValue>, extra?: Record<string, unknown>): unknown => {
+    try {
+      const fn = new Function('fields', 'actions', 'context', code + '\nreturn typeof onFormLoad === "function" ? onFormLoad(fields, actions, context) : typeof onBeforeSubmit === "function" ? onBeforeSubmit(fields, actions, context) : typeof onFieldChange === "function" ? onFieldChange(context?.fieldId, fields, actions) : undefined;');
+      const valuesObj: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(fieldValues)) {
+        valuesObj[k] = v;
+      }
+      const actions = {
+        setFieldValue: (id: string, val: FieldValue) => {
+          setValues(prev => ({ ...prev, [id]: val }));
+        },
+      };
+      return fn(valuesObj, actions, { tenantId: 'local', userId: 'local', locale: navigator.language, ...extra });
+    } catch {
+      return undefined;
+    }
+  }, []);
+
+  const formLoadRan = useRef(false);
+  useEffect(() => {
+    if (formLoadRan.current || !scripts?.onFormLoad || isSubmitted) return;
+    formLoadRan.current = true;
+    runScript(scripts.onFormLoad, values);
+  }, [scripts?.onFormLoad, isSubmitted, runScript, values]);
+
   const handleChange = useCallback((fieldId: string, value: FieldValue) => {
     setValues(prev => ({ ...prev, [fieldId]: value }));
+    if (scripts?.onFieldChange) {
+      try { runScript(scripts.onFieldChange, { ...values, [fieldId]: value }, { fieldId }); } catch { /* ignore */ }
+    }
     setErrors(prev => {
       if (!prev[fieldId]) return prev;
       const next = { ...prev };
       delete next[fieldId];
       return next;
     });
-  }, []);
+  }, [scripts, runScript, values]);
 
   const handleKvRowsChange = useCallback((fieldId: string, rows: KVRow[]) => {
     setKvRows(prev => ({ ...prev, [fieldId]: rows }));
@@ -796,20 +910,117 @@ export const FormWidget: FC<FormWidgetProps> = ({
     const newErrors: Record<string, string> = {};
     for (const field of allFields) {
       if (NON_VALUE_TYPES.has(field.type)) continue;
-      const isReq = field.validation.some((v) => v.type === 'required');
-      if (!isReq) continue;
+      if (!evaluateVisibility(field.visibility, values)) continue;
       const val = values[field.id];
-      const empty =
-        val === null || val === undefined || val === '' ||
-        (Array.isArray(val) && val.length === 0) ||
-        (val instanceof File === false && val === 0 && field.type === 'rating');
-      if (empty) {
-        newErrors[field.id] = t('form.required');
+
+      for (const rule of field.validation) {
+        if (newErrors[field.id]) break;
+        switch (rule.type) {
+          case 'required': {
+            if (field.type === 'key_value') {
+              const rows = kvRows[field.id] ?? [{ key: '', value: '' }];
+              if (!rows.some(r => r.key.trim() || r.value.trim())) {
+                newErrors[field.id] = rule.message ?? t('form.required');
+              }
+            } else if (field.type === 'table_input') {
+              const tRows = tableRows[field.id] ?? [];
+              if (!tRows.some(r => Object.values(r).some(v => v.trim()))) {
+                newErrors[field.id] = rule.message ?? t('form.required');
+              }
+            } else {
+              const empty =
+                val === null || val === undefined || val === '' ||
+                (Array.isArray(val) && val.length === 0) ||
+                (!(val instanceof File) && val === 0 && field.type === 'rating');
+              if (empty) newErrors[field.id] = rule.message ?? t('form.required');
+            }
+            break;
+          }
+          case 'minLength': {
+            const min = Number(rule.params?.value ?? 0);
+            if (typeof val === 'string' && val.length > 0 && val.length < min) {
+              newErrors[field.id] = rule.message ?? t('form.minLength', { min });
+            }
+            break;
+          }
+          case 'maxLength': {
+            const max = Number(rule.params?.value ?? Infinity);
+            if (typeof val === 'string' && val.length > max) {
+              newErrors[field.id] = rule.message ?? t('form.maxLength', { max });
+            }
+            break;
+          }
+          case 'min': {
+            const minVal = Number(rule.params?.value ?? -Infinity);
+            if (typeof val === 'number' && val < minVal) {
+              newErrors[field.id] = rule.message ?? t('form.min', { min: minVal });
+            }
+            break;
+          }
+          case 'max': {
+            const maxVal = Number(rule.params?.value ?? Infinity);
+            if (typeof val === 'number' && val > maxVal) {
+              newErrors[field.id] = rule.message ?? t('form.max', { max: maxVal });
+            }
+            break;
+          }
+          case 'pattern': {
+            const regex = rule.params?.regex as string;
+            if (regex && typeof val === 'string' && val.length > 0) {
+              try {
+                if (!new RegExp(regex).test(val)) {
+                  newErrors[field.id] = rule.message ?? t('form.pattern');
+                }
+              } catch { /* invalid regex */ }
+            }
+            break;
+          }
+          case 'email': {
+            if (typeof val === 'string' && val.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+              newErrors[field.id] = rule.message ?? t('form.email');
+            }
+            break;
+          }
+          case 'url': {
+            if (typeof val === 'string' && val.length > 0) {
+              try { new URL(val); } catch {
+                newErrors[field.id] = rule.message ?? t('form.url');
+              }
+            }
+            break;
+          }
+          case 'minSelections': {
+            const min = Number(rule.params?.value ?? 0);
+            if (Array.isArray(val) && val.length < min) {
+              newErrors[field.id] = rule.message ?? t('form.minSelections', { min });
+            }
+            break;
+          }
+          case 'maxSelections': {
+            const max = Number(rule.params?.value ?? Infinity);
+            if (Array.isArray(val) && val.length > max) {
+              newErrors[field.id] = rule.message ?? t('form.maxSelections', { max });
+            }
+            break;
+          }
+        }
+      }
+
+      if (!newErrors[field.id] && field.type === 'email' && typeof val === 'string' && val.length > 0) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) newErrors[field.id] = t('form.email');
+      }
+      if (!newErrors[field.id] && field.type === 'url' && typeof val === 'string' && val.length > 0) {
+        try { new URL(val); } catch { newErrors[field.id] = t('form.url'); }
       }
     }
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
+    }
+
+    if (scripts?.onBeforeSubmit) {
+      const result = runScript(scripts.onBeforeSubmit, values);
+      if (result === false) return;
     }
 
     const result: Record<string, unknown> = {};
@@ -838,7 +1049,7 @@ export const FormWidget: FC<FormWidgetProps> = ({
     const json = JSON.stringify(result);
     setLocalSubmitted(true);
     onSubmit(json);
-  }, [allFields, values, kvRows, tableRows, onSubmit, t]);
+  }, [allFields, values, kvRows, tableRows, onSubmit, t, scripts, runScript]);
 
   if (allFields.length === 0) return null;
 
@@ -872,19 +1083,23 @@ export const FormWidget: FC<FormWidgetProps> = ({
           size="sm"
           className={classes.submittedBadge}
         >
-          {t('form.submitted')}
+          {successMessage ?? t('form.submitted')}
         </Badge>
+      )}
+
+      {description && !effectiveSubmitted && (
+        <Text size="sm" c="dimmed" mb="sm">{description}</Text>
       )}
 
       {hasTabs ? (
         <Tabs defaultValue={tabs[0].id} classNames={{ root: classes.tabsRoot, panel: classes.tabPanel }} style={tabsStyle}>
           <Tabs.List className={classes.tabsList}>
-            {tabs.map((tab) => (
+            {tabs.filter((tab) => evaluateVisibility(tab.visibility, values)).map((tab) => (
               <Tabs.Tab key={tab.id} value={tab.id} size="sm">{tab.label}</Tabs.Tab>
             ))}
           </Tabs.List>
           <div style={scrollStyle}>
-            {tabs.map((tab) => (
+            {tabs.filter((tab) => evaluateVisibility(tab.visibility, values)).map((tab) => (
               <Tabs.Panel key={tab.id} value={tab.id} pt="md">
                 <FieldGrid fields={tab.fields} values={values} onChange={handleChange} disabled={effectiveDisabled} errors={errors} kvRows={kvRows} tableRows={tableRows} onKvRowsChange={handleKvRowsChange} onTableRowsChange={handleTableRowsChange} />
               </Tabs.Panel>

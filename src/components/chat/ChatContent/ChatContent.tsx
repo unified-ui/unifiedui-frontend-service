@@ -1129,6 +1129,9 @@ const CustomWidgetRenderer: FC<CustomWidgetRendererProps> = ({
     const settings = (activeConfig?.settings as Record<string, unknown>) ?? {};
     const enableTabs = settings.enableTabs === true;
     const submitButtonText = settings.submitButtonText as string | undefined;
+    const description = settings.description as string | undefined;
+    const successMessage = settings.successMessage as string | undefined;
+    const chatScripts = (activeConfig as Record<string, unknown>)?.scripts as Record<string, string> | undefined;
     return (
       <FormWidget
         tabs={tabs}
@@ -1138,6 +1141,9 @@ const CustomWidgetRenderer: FC<CustomWidgetRendererProps> = ({
         submittedData={nextUserMessageContent}
         widgetData={widgetData}
         submitButtonText={submitButtonText}
+        description={description}
+        successMessage={successMessage}
+        scripts={chatScripts}
         maxHeight={500}
       />
     );

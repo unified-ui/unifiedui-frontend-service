@@ -17,7 +17,16 @@
     "selectPlaceholder": "Select an option...",
     "chooseFile": "Choose file...",
     "addRow": "Add Row",
-    "required": "This field is required"
+    "required": "This field is required",
+    "minLength": "Minimum {{min}} characters required",
+    "maxLength": "Maximum {{max}} characters allowed",
+    "min": "Value must be at least {{min}}",
+    "max": "Value must be at most {{max}}",
+    "pattern": "Invalid format",
+    "email": "Invalid email address",
+    "url": "Invalid URL",
+    "minSelections": "Select at least {{min}} options",
+    "maxSelections": "Select at most {{max}} options"
   },
   "iframe": {
     "submitted": "Data submitted",

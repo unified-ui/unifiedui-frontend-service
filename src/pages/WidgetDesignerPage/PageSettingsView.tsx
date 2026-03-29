@@ -25,7 +25,7 @@ interface PageSettingsViewProps {
 
 export const PageSettingsView: FC<PageSettingsViewProps> = ({ schema, allFields, onChange, onDataSourcesChange, onScriptsChange }) => {
   const { t } = useTranslation('widgetDesigner');
-  const [scriptEditor, setScriptEditor] = useState<{ opened: boolean; mode: 'formLoad' | 'beforeSubmit' | 'fieldChange' }>({ opened: false, mode: 'formLoad' });
+  const [scriptEditor, setScriptEditor] = useState<{ opened: boolean; mode: 'onFormLoad' | 'onBeforeSubmit' | 'onFieldChange' }>({ opened: false, mode: 'onFormLoad' });
   const settings = schema.settings;
 
   const update = (partial: Partial<WidgetFormSchema['settings']>) => {
@@ -105,7 +105,7 @@ export const PageSettingsView: FC<PageSettingsViewProps> = ({ schema, allFields,
             variant="light"
             size="xs"
             leftSection={<IconCode size={12} />}
-            onClick={() => setScriptEditor({ opened: true, mode: 'formLoad' })}
+            onClick={() => setScriptEditor({ opened: true, mode: 'onFormLoad' })}
             fullWidth
           >
             {t('scripts.onFormLoad')}
@@ -115,7 +115,7 @@ export const PageSettingsView: FC<PageSettingsViewProps> = ({ schema, allFields,
             variant="light"
             size="xs"
             leftSection={<IconCode size={12} />}
-            onClick={() => setScriptEditor({ opened: true, mode: 'beforeSubmit' })}
+            onClick={() => setScriptEditor({ opened: true, mode: 'onBeforeSubmit' })}
             fullWidth
           >
             {t('scripts.onBeforeSubmit')}
@@ -125,7 +125,7 @@ export const PageSettingsView: FC<PageSettingsViewProps> = ({ schema, allFields,
             variant="light"
             size="xs"
             leftSection={<IconCode size={12} />}
-            onClick={() => setScriptEditor({ opened: true, mode: 'fieldChange' })}
+            onClick={() => setScriptEditor({ opened: true, mode: 'onFieldChange' })}
             fullWidth
           >
             {t('scripts.onFieldChange')}
