@@ -2,8 +2,8 @@ import type { FC } from 'react';
 import { useState } from 'react';
 import { Modal, TextInput, Textarea, Button, Stack, Group, Box } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { useIdentity } from '../../contexts';
-import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
+import { useIdentity } from '../../../contexts';
+import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 
 interface CreateCustomGroupDialogProps {
   opened: boolean;

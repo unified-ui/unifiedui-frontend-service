@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import type { FC } from 'react';
 import { Modal, Text, Group, Box } from '@mantine/core';
 import { IconMessageShare } from '@tabler/icons-react';
-import { useIdentity } from '../../contexts';
-import { ManageAccessTable, AddPrincipalDialog } from '../common';
-import type { SelectedPrincipal } from '../common/AddPrincipalDialog/AddPrincipalDialog';
-import type { ConversationResponse, PrincipalWithRolesResponse } from '../../api/types';
-import { PrincipalTypeEnum, PermissionActionEnum } from '../../api/types';
-import type { PrincipalPermission } from '../common/ManageAccessTable/ManageAccessTable';
+import { useIdentity } from '../../../contexts';
+import { ManageAccessTable, AddPrincipalDialog } from '../../common';
+import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
+import type { ConversationResponse, PrincipalWithRolesResponse } from '../../../api/types';
+import { PrincipalTypeEnum, PermissionActionEnum } from '../../../api/types';
+import type { PrincipalPermission } from '../../common/ManageAccessTable/ManageAccessTable';
 import classes from './ShareConversationDialog.module.css';
 
 interface ShareConversationDialogProps {

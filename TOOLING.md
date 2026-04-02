@@ -128,7 +128,6 @@ Strict mode enabled with:
 | `ci-tests-and-lint.yml`  | push/PR to `main`/`develop` | Tests, lint, type check, build       |
 | `ci-pr-branch-check.yml` | PR open/sync                | Branch naming + PR target validation |
 | `codeql.yml`             | push/PR/weekly              | Security scanning                    |
-| `dependency-review.yml`  | PR to `main`/`develop`      | License + severity check             |
 | `auto-labeler.yml`       | PR open/sync                | Label PR by changed files            |
 | `pr-size-labeler.yml`    | PR open/sync                | Label PR by size (XS–XL)             |
 | `release-drafter.yml`    | push to `main`              | Draft GitHub Release                 |
@@ -138,7 +137,6 @@ Strict mode enabled with:
 
 - **Dependabot** updates dependencies weekly (Mondays 09:00 CET)
 - **CodeQL** scans for vulnerabilities on every push and weekly
-- **Dependency Review** blocks PRs with high-severity or GPL-3.0/AGPL-3.0 deps
 - **npm audit** should be run periodically: `npm audit`
 - **detect-private-key** pre-commit hook prevents accidental key commits
 

@@ -19,19 +19,19 @@ import {
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconRobot, IconPlus, IconAlertCircle } from '@tabler/icons-react';
-import { useIdentity } from '../../contexts';
+import { useIdentity } from '../../../contexts';
 import { useTranslation } from 'react-i18next';
-import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
+import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import {
   AutonomousAgentTypeEnum,
   CredentialTypeEnum,
   type CredentialResponse,
   type N8NAutonomousAgentConfig,
-} from '../../api/types';
-import { TagInput, KeyValuePairsInput, ConnectionTestButton, FilterableSelect } from '../common';
-import type { KeyValuePair } from '../common';
-import { TestConnectionType } from '../../api/types';
-import { CreateCredentialDialog } from './CreateCredentialDialog';
+} from '../../../api/types';
+import { TagInput, KeyValuePairsInput, ConnectionTestButton, FilterableSelect } from '../../common';
+import type { KeyValuePair } from '../../common';
+import { TestConnectionType } from '../../../api/types';
+import { CreateCredentialDialog } from '../CreateCredentialDialog';
 
 const AUTONOMOUS_AGENT_TYPES = [
   { value: AutonomousAgentTypeEnum.N8N, label: 'n8n' },

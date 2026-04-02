@@ -10,7 +10,20 @@ src/
 │
 ├── api/                        # API layer
 │   ├── client.ts               # UnifiedUIAPIClient (~130 methods)
-│   ├── types.ts                # All API types + enums (~1370 lines)
+│   ├── types/                  # API types split by domain
+│   │   ├── index.ts            # Barrel re-export (backward compatible)
+│   │   ├── common.ts           # Shared enums, query params, common response types
+│   │   ├── agent-config.ts     # N8N, Foundry, autonomous agent configs
+│   │   ├── message.ts          # Message, SSE, reaction types
+│   │   ├── trace.ts            # Full + legacy trace types
+│   │   ├── tag.ts              # Tag types
+│   │   ├── identity.ts         # Principal, identity, MeResponse
+│   │   ├── tenant.ts           # Tenant CRUD types
+│   │   ├── organization.ts     # Organization types
+│   │   ├── chat-agent.ts       # Chat agent, ReACT version, unified principal
+│   │   ├── resource.ts         # Autonomous agent, conversation, credential, widget, group, tool
+│   │   ├── ai.ts               # AI model + AI feature types
+│   │   └── dashboard.ts        # Health, dashboard, search, recent visits, favorites
 │   └── index.ts                # Barrel export
 │
 ├── auth/                       # Authentication

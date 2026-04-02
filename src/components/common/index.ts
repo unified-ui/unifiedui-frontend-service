@@ -40,3 +40,4 @@ export { ConnectionTestButton } from './ConnectionTestButton';
 export { CredentialTestButton } from './CredentialTestButton';
 export { FilterableSelect } from './FilterableSelect';
 export type { FilterableSelectProps } from './FilterableSelect';
+export { UnifiedDialog } from './UnifiedDialog';

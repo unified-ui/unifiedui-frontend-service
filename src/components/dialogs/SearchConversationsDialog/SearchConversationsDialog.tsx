@@ -15,7 +15,7 @@ import {
   Loader,
   Center,
 } from '@mantine/core';
-import { DelayedTooltip } from '../common';
+import { DelayedTooltip } from '../../common';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconSearch, IconMessage, IconX, IconClock, IconUser, IconRobot } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
@@ -23,8 +23,8 @@ import type {
   ConversationResponse,
   ChatAgentResponse,
   MessageResponse,
-} from '../../api/types';
-import type { UnifiedUIAPIClient } from '../../api/client';
+} from '../../../api/types';
+import type { UnifiedUIAPIClient } from '../../../api/client';
 import classes from './SearchConversationsDialog.module.css';
 
 interface SearchConversationsDialogProps {

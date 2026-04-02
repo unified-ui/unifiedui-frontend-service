@@ -12,6 +12,7 @@
 | Folder structure changed                           | Update `react-structure.instructions.md`                   |
 | New API resource added                             | Update `api-client.instructions.md`                        |
 | Design tokens added/changed                        | Update `design-system.instructions.md`                     |
+| New security-relevant pattern (XSS, auth, secrets) | Update `security.instructions.md`                          |
 | New context created                                | Update `react-structure.instructions.md` contexts table    |
 | New route added                                    | Update `react-structure.instructions.md` routes table      |
 
@@ -50,6 +51,7 @@ After completing work, ask yourself:
 | `components/layout.instructions.md`      | MainLayout, Sidebar, Header                                  |
 | `components/data-table.instructions.md`  | DataTable, toolbar, infinite scroll, filtering               |
 | `components/tracing.instructions.md`     | Trace visualization, canvas, hierarchy, context              |
+| `security.instructions.md`               | XSS, secrets management, secure API calls, URL safety        |
 
 ---
 

@@ -12,7 +12,7 @@ import {
 import { useForm } from '@mantine/form';
 import { IconBuilding } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useIdentity } from '../../contexts';
+import { useIdentity } from '../../../contexts';
 
 interface CreateOrganizationDialogProps {
   opened: boolean;

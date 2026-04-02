@@ -21,9 +21,9 @@ import {
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconSparkles, IconPlus, IconAlertCircle } from '@tabler/icons-react';
-import { useIdentity } from '../../contexts';
+import { useIdentity } from '../../../contexts';
 import { useTranslation } from 'react-i18next';
-import { GenerateWithAIButton } from '../common/GenerateWithAIButton';
+import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import {
   ChatAgentTypeEnum,
   N8NApiVersionEnum,
@@ -36,11 +36,11 @@ import {
   type N8NChatAgentConfig,
   type FoundryChatAgentConfig,
   type RestApiChatAgentConfig,
-} from '../../api/types';
-import { TagInput, ConnectionTestButton, FilterableSelect } from '../common';
-import { GreetingMessagesInput } from '../common';
-import { TestConnectionType } from '../../api/types';
-import { CreateCredentialDialog } from './CreateCredentialDialog';
+} from '../../../api/types';
+import { TagInput, ConnectionTestButton, FilterableSelect } from '../../common';
+import { GreetingMessagesInput } from '../../common';
+import { TestConnectionType } from '../../../api/types';
+import { CreateCredentialDialog } from '../CreateCredentialDialog';
 
 const CHAT_AGENT_TYPES = [
   { value: ChatAgentTypeEnum.REACT_AGENT, label: 'ReACT Agent' },

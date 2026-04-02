@@ -1,9 +1,0 @@
-name: "CodeQL Config"
-
-paths-ignore:
-  - examples
-  - coverage
-  - "**/*.test.ts"
-  - "**/*.test.tsx"
-  - "**/*.spec.ts"
-  - "**/*.spec.tsx"
