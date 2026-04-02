@@ -11,9 +11,8 @@ import { MainLayout } from '../../components/layout/MainLayout';
 import { PageHeader, ConfirmDeleteDialog, AuthImage } from '../../components/common';
 import { CreateExternalAppDialog, EditExternalAppDialog } from '../../components/dialogs';
 import { useIdentity } from '../../contexts';
-import { usePermissions } from '../../hooks';
+import { usePermissions, useDialogParams } from '../../hooks';
 import type { ExternalAppResponse } from '../../api/types';
-import type { EditDialogTab } from '../../components/dialogs/EditExternalAppDialog';
 import classes from './ExternalAppsPage.module.css';
 
 const MAX_VISIBLE_TAGS = 3;
@@ -78,13 +77,10 @@ export const ExternalAppsPage: FC = () => {
   const { canCreate, isResourceAdmin } = usePermissions();
   const canCreateApp = canCreate('external-apps');
   const isAdmin = isResourceAdmin('external-apps');
+  const { dialog, selectedId, dialogTab, openDialog, closeDialog, setDialogTab } = useDialogParams();
 
   const [apps, setApps] = useState<ExternalAppResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingApp, setEditingApp] = useState<ExternalAppResponse | null>(null);
-  const [editDialogTab, setEditDialogTab] = useState<EditDialogTab>('details');
-  const [deletingApp, setDeletingApp] = useState<ExternalAppResponse | null>(null);
 
   const fetchApps = useCallback(async () => {
     if (!selectedTenant || !apiClient) return;
@@ -104,15 +100,15 @@ export const ExternalAppsPage: FC = () => {
   }, [fetchApps]);
 
   const handleDelete = useCallback(async () => {
-    if (!selectedTenant || !deletingApp || !apiClient) return;
+    if (!selectedTenant || !selectedId || !apiClient) return;
     try {
-      await apiClient.deleteExternalApp(selectedTenant.id, deletingApp.id);
-      setDeletingApp(null);
+      await apiClient.deleteExternalApp(selectedTenant.id, selectedId);
+      closeDialog();
       fetchApps();
     } catch {
       /* handled by apiClient */
     }
-  }, [apiClient, selectedTenant, deletingApp, fetchApps]);
+  }, [apiClient, selectedTenant, selectedId, fetchApps, closeDialog]);
 
   if (isLoading) {
     return (
@@ -128,7 +124,7 @@ export const ExternalAppsPage: FC = () => {
         title={t('title')}
         description={t('description')}
         actionLabel={canCreateApp ? t('addApp') : undefined}
-        onAction={canCreateApp ? () => setIsCreateOpen(true) : undefined}
+        onAction={canCreateApp ? () => openDialog('new') : undefined}
       />
 
       {apps.length === 0 ? (
@@ -175,14 +171,14 @@ export const ExternalAppsPage: FC = () => {
                     <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
                       <Menu.Item
                         leftSection={<IconEdit size={14} />}
-                        onClick={() => { setEditDialogTab('details'); setEditingApp(app); }}
+                        onClick={() => openDialog('edit', { selectedId: app.id, dialogTab: 'details' })}
                       >
                         {tc('edit')}
                       </Menu.Item>
                       {(isAdmin || app.my_permission === 'ADMIN') && (
                         <Menu.Item
                           leftSection={<IconShieldLock size={14} />}
-                          onClick={() => { setEditDialogTab('iam'); setEditingApp(app); }}
+                          onClick={() => openDialog('edit', { selectedId: app.id, dialogTab: 'iam' })}
                         >
                           {tc('manageAccess')}
                         </Menu.Item>
@@ -191,7 +187,7 @@ export const ExternalAppsPage: FC = () => {
                         <Menu.Item
                           leftSection={<IconTrash size={14} />}
                           color="red"
-                          onClick={() => setDeletingApp(app)}
+                          onClick={() => openDialog('delete', { selectedId: app.id })}
                         >
                           {tc('delete')}
                         </Menu.Item>
@@ -212,28 +208,28 @@ export const ExternalAppsPage: FC = () => {
       )}
 
       <CreateExternalAppDialog
-        opened={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
+        opened={dialog === 'new'}
+        onClose={closeDialog}
         onSuccess={fetchApps}
       />
 
-      {editingApp && (
+      {dialog === 'edit' && selectedId && (
         <EditExternalAppDialog
-          opened={!!editingApp}
-          externalAppId={editingApp.id}
-          initialData={editingApp}
-          activeTab={editDialogTab}
-          onClose={() => setEditingApp(null)}
+          opened
+          externalAppId={selectedId}
+          initialData={apps.find((a) => a.id === selectedId) || null}
+          activeTab={(dialogTab as 'details' | 'iam') || 'details'}
+          onClose={closeDialog}
           onSuccess={fetchApps}
-          onTabChange={setEditDialogTab}
+          onTabChange={(tab) => setDialogTab(tab)}
         />
       )}
 
       <ConfirmDeleteDialog
-        opened={!!deletingApp}
-        onClose={() => setDeletingApp(null)}
+        opened={dialog === 'delete' && !!selectedId}
+        onClose={closeDialog}
         onConfirm={handleDelete}
-        itemName={deletingApp?.name}
+        itemName={apps.find((a) => a.id === selectedId)?.name}
       />
     </MainLayout>
   );

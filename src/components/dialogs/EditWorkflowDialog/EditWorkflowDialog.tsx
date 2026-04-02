@@ -34,7 +34,7 @@ import { PermissionActionEnum, AutonomousAgentTypeEnum, CredentialTypeEnum, Test
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
 import { useFormDirtyGuard } from '../../../hooks';
-import classes from './EditAutonomousAgentDialog.module.css';
+import classes from './EditWorkflowDialog.module.css';
 
 export type EditDialogTab = 'details' | 'iam';
 
@@ -58,7 +58,7 @@ interface FormValues {
   n8n_default_query_params: KeyValuePair[];
 }
 
-export interface EditAutonomousAgentDialogProps {
+export interface EditWorkflowDialogProps {
   opened: boolean;
   autonomousAgentId: string | null;
   initialData?: AutonomousAgentResponse | null;
@@ -68,7 +68,7 @@ export interface EditAutonomousAgentDialogProps {
   onTabChange?: (tab: EditDialogTab) => void;
 }
 
-export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
+export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
   opened,
   autonomousAgentId,
   initialData,
@@ -250,7 +250,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
       initializeFromData(data);
     } catch (err) {
       console.error('Failed to fetch autonomous agent:', err);
-      setError('Failed to load autonomous agent details');
+      setError('Failed to load workflow details');
     } finally {
       setIsLoading(false);
     }
@@ -410,7 +410,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
                     {autonomousAgent.is_active ? 'Active' : 'Inactive'}
                   </Badge>
                   <Text size="xs" c="dimmed">
-                    Autonomous Agent
+                    Workflow
                   </Text>
                 </Group>
               )}
@@ -490,7 +490,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
                 </Badge>
                 <Switch
                   label="Active"
-                  description="Enable or disable this autonomous agent"
+                  description="Enable or disable this workflow"
                   checked={form.values.is_active}
                   onChange={(e) => form.setFieldValue('is_active', e.currentTarget.checked)}
                   classNames={{ track: classes.switchTrack }}
@@ -676,7 +676,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
               onRoleChange={handleRoleChangeWithTypes}
               onDeletePrincipal={handleDeletePrincipalWithTypes}
               onAddPrincipal={() => setIsAddPrincipalOpen(true)}
-              entityName="autonomous agent"
+              entityName="workflow"
               onRefreshPrincipal={async (principalId, principalType) => {
                 if (!apiClient || !selectedTenant) return;
                 await apiClient.refreshPrincipal(principalId, { tenant_id: selectedTenant.id, type: principalType as 'IDENTITY_USER' | 'IDENTITY_GROUP' });
@@ -691,7 +691,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         opened={isAddPrincipalOpen}
         onClose={() => setIsAddPrincipalOpen(false)}
         onSubmit={handleAddPrincipalsWithRole}
-        entityName="autonomous agent"
+        entityName="workflow"
         existingPrincipalIds={principals.map((p) => p.principalId)}
       />
 

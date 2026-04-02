@@ -10,7 +10,7 @@ interface KeyboardShortcutHandlers {
 
 const PAGE_CREATE_ACTIONS: Record<string, string> = {
   '/chat-agents': 'chat-agents',
-  '/autonomous-agents': 'autonomous-agents',
+  '/workflows': 'autonomous-agents',
   '/chat-widgets': 'chat-widgets',
 };
 

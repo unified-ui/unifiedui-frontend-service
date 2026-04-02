@@ -159,6 +159,11 @@ export interface APIClientConfig {
   onSuccess?: (message: string) => void;
 }
 
+export interface RequestOptions {
+  noCache?: boolean;
+  silent?: boolean;
+}
+
 // ========== API Client ==========
 
 export class UnifiedUIAPIClient {
@@ -181,7 +186,7 @@ export class UnifiedUIAPIClient {
     path: string,
     body?: unknown,
     successMessage?: string,
-    options?: { noCache?: boolean; additionalHeaders?: Record<string, string> }
+    options?: RequestOptions & { additionalHeaders?: Record<string, string> }
   ): Promise<T> {
     try {
       const token = await this.getAccessToken();
@@ -230,7 +235,7 @@ export class UnifiedUIAPIClient {
 
       return data;
     } catch (error) {
-      if (this.onError && error instanceof Error) {
+      if (this.onError && error instanceof Error && !options?.silent) {
         this.onError(error);
       }
       throw error;
@@ -256,7 +261,7 @@ export class UnifiedUIAPIClient {
 
   // ========== Identity Endpoints ==========
 
-  async getMe(options?: { noCache?: boolean }): Promise<MeResponse> {
+  async getMe(options?: RequestOptions): Promise<MeResponse> {
     return this.request<MeResponse>('GET', '/api/v1/platform-service/identity/me', undefined, undefined, options);
   }
 
@@ -359,7 +364,7 @@ export class UnifiedUIAPIClient {
   async listChatAgents(
     tenantId: string,
     params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
-    options?: { noCache?: boolean }
+    options?: RequestOptions
   ): Promise<ChatAgentResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<ChatAgentResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents${query}`, undefined, undefined, options);
@@ -411,7 +416,7 @@ export class UnifiedUIAPIClient {
   async listAutonomousAgents(
     tenantId: string,
     params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
-    options?: { noCache?: boolean }
+    options?: RequestOptions
   ): Promise<AutonomousAgentResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<AutonomousAgentResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents${query}`, undefined, undefined, options);
@@ -422,15 +427,15 @@ export class UnifiedUIAPIClient {
   }
 
   async createAutonomousAgent(tenantId: string, data: CreateAutonomousAgentRequest): Promise<AutonomousAgentResponse> {
-    return this.request<AutonomousAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents`, data, 'Autonomous agent created successfully');
+    return this.request<AutonomousAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents`, data, 'Workflow created successfully');
   }
 
   async updateAutonomousAgent(tenantId: string, agentId: string, data: UpdateAutonomousAgentRequest): Promise<AutonomousAgentResponse> {
-    return this.request<AutonomousAgentResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}`, data, 'Autonomous agent updated successfully');
+    return this.request<AutonomousAgentResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}`, data, 'Workflow updated successfully');
   }
 
   async deleteAutonomousAgent(tenantId: string, agentId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}`, undefined, 'Autonomous agent deleted successfully');
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}`, undefined, 'Workflow deleted successfully');
   }
 
   // ========== Autonomous Agent Permissions ==========
@@ -478,7 +483,7 @@ export class UnifiedUIAPIClient {
 
   // ========== Conversation Endpoints ==========
 
-  async listConversations(tenantId: string, params?: PaginationParams & OrderParams & FieldSelectParams & { name?: string; view?: 'quick-list' }, options?: { noCache?: boolean }): Promise<ConversationResponse[] | ConversationQuickListItemResponse[]> {
+  async listConversations(tenantId: string, params?: PaginationParams & OrderParams & FieldSelectParams & { name?: string; view?: 'quick-list' }, options?: RequestOptions): Promise<ConversationResponse[] | ConversationQuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<ConversationResponse[] | ConversationQuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/conversations${query}`, undefined, undefined, options);
   }
@@ -530,7 +535,7 @@ export class UnifiedUIAPIClient {
   async listCredentials(
     tenantId: string,
     params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
-    options?: { noCache?: boolean }
+    options?: RequestOptions
   ): Promise<CredentialResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<CredentialResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/credentials${query}`, undefined, undefined, options);
@@ -601,7 +606,7 @@ export class UnifiedUIAPIClient {
   async listChatWidgets(
     tenantId: string,
     params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
-    options?: { noCache?: boolean }
+    options?: RequestOptions
   ): Promise<ChatWidgetResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<ChatWidgetResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-widgets${query}`, undefined, undefined, options);
@@ -653,7 +658,7 @@ export class UnifiedUIAPIClient {
   async listTools(
     tenantId: string,
     params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
-    options?: { noCache?: boolean }
+    options?: RequestOptions
   ): Promise<ToolResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<ToolResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/tools${query}`, undefined, undefined, options);
@@ -1544,7 +1549,7 @@ export class UnifiedUIAPIClient {
   async listAIModels(
     tenantId: string,
     params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams,
-    options?: { noCache?: boolean }
+    options?: RequestOptions
   ): Promise<AIModelResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<AIModelResponse[]>(
@@ -1595,7 +1600,7 @@ export class UnifiedUIAPIClient {
   async listExternalApps(
     tenantId: string,
     params?: PaginationParams & OrderParams & FieldSelectParams,
-    options?: { noCache?: boolean }
+    options?: RequestOptions
   ): Promise<ExternalAppResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<ExternalAppResponse[]>(

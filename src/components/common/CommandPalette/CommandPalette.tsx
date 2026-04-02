@@ -39,7 +39,7 @@ const ENTITY_ICONS: Record<string, FC<{ size?: number }>> = {
 
 const ENTITY_ROUTES: Record<string, string> = {
   chat_agent: '/chat-agents',
-  autonomous_agent: '/autonomous-agents',
+  autonomous_agent: '/workflows',
   conversation: '/conversations',
 };
 

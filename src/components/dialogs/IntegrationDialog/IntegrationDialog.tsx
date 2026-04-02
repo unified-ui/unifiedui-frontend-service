@@ -216,7 +216,7 @@ export const IntegrationDialog: FC<IntegrationDialogProps> = ({
             <IconPlug size={20} />
           </Box>
           <Text fw={600} size="lg">
-            Integrate Autonomous Agent
+            Integrate Workflow
           </Text>
         </Group>
       }

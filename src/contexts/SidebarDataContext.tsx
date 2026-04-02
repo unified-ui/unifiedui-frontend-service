@@ -7,7 +7,7 @@ export type EntityType = 'chat-agents' | 'autonomous-agents' | 'chat-widgets' | 
 
 interface SidebarDataState {
   chatAgents: QuickListItemResponse[];
-  autonomousAgents: QuickListItemResponse[];
+  workflows: QuickListItemResponse[];
   chatWidgets: QuickListItemResponse[];
   conversations: ConversationQuickListItemResponse[];
 }
@@ -35,18 +35,18 @@ interface FetchedState {
 
 interface SidebarDataContextType {
   chatAgents: QuickListItemResponse[];
-  autonomousAgents: QuickListItemResponse[];
+  workflows: QuickListItemResponse[];
   chatWidgets: QuickListItemResponse[];
   conversations: ConversationQuickListItemResponse[];
   loadingStates: LoadingState;
   errorStates: ErrorState;
   fetchChatAgents: () => Promise<void>;
-  fetchAutonomousAgents: () => Promise<void>;
+  fetchWorkflows: () => Promise<void>;
   fetchChatWidgets: () => Promise<void>;
   fetchConversations: () => Promise<void>;
   fetchEntityData: (entityType: EntityType) => Promise<void>;
   refreshChatAgents: () => Promise<void>;
-  refreshAutonomousAgents: () => Promise<void>;
+  refreshWorkflows: () => Promise<void>;
   refreshChatWidgets: () => Promise<void>;
   refreshConversations: () => Promise<void>;
   refreshEntityData: (entityType: EntityType) => Promise<void>;
@@ -65,7 +65,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
 
   const [data, setData] = useState<SidebarDataState>({
     chatAgents: [],
-    autonomousAgents: [],
+    workflows: [],
     chatWidgets: [],
     conversations: [],
   });
@@ -106,7 +106,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
   useEffect(() => {
     if (selectedTenant?.id && selectedTenant.id !== previousTenantIdRef.current) {
       previousTenantIdRef.current = selectedTenant.id;
-      setData({ chatAgents: [], autonomousAgents: [], chatWidgets: [], conversations: [] });
+      setData({ chatAgents: [], workflows: [], chatWidgets: [], conversations: [] });
       setFetchedStates({ 'chat-agents': false, 'autonomous-agents': false, 'chat-widgets': false, conversations: false });
       setErrorStates({ 'chat-agents': null, 'autonomous-agents': null, 'chat-widgets': null, conversations: null });
     }
@@ -140,7 +140,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     }
   }, [apiClient, selectedTenant]);
 
-  const fetchAutonomousAgents = useCallback(async (noCache = false) => {
+  const fetchWorkflows = useCallback(async (noCache = false) => {
     if (!apiClient || !selectedTenant) return;
 
     if (!noCache && fetchedStatesRef.current['autonomous-agents']) {
@@ -157,7 +157,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
         noCache ? { noCache: true } : undefined
       );
       if (Array.isArray(result)) {
-        setData(prev => ({ ...prev, autonomousAgents: result as QuickListItemResponse[] }));
+        setData(prev => ({ ...prev, workflows: result as QuickListItemResponse[] }));
         setFetchedStates(prev => ({ ...prev, 'autonomous-agents': true }));
       }
     } catch (error) {
@@ -230,7 +230,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
         await fetchChatAgents(false);
         break;
       case 'autonomous-agents':
-        await fetchAutonomousAgents(false);
+        await fetchWorkflows(false);
         break;
       case 'chat-widgets':
         await fetchChatWidgets(false);
@@ -239,15 +239,15 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
         await fetchConversations(false);
         break;
     }
-  }, [fetchChatAgents, fetchAutonomousAgents, fetchChatWidgets, fetchConversations]);
+  }, [fetchChatAgents, fetchWorkflows, fetchChatWidgets, fetchConversations]);
 
   const refreshChatAgents = useCallback(async () => {
     await fetchChatAgents(true);
   }, [fetchChatAgents]);
 
-  const refreshAutonomousAgents = useCallback(async () => {
-    await fetchAutonomousAgents(true);
-  }, [fetchAutonomousAgents]);
+  const refreshWorkflows = useCallback(async () => {
+    await fetchWorkflows(true);
+  }, [fetchWorkflows]);
 
   const refreshChatWidgets = useCallback(async () => {
     await fetchChatWidgets(true);
@@ -263,7 +263,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
         await refreshChatAgents();
         break;
       case 'autonomous-agents':
-        await refreshAutonomousAgents();
+        await refreshWorkflows();
         break;
       case 'chat-widgets':
         await refreshChatWidgets();
@@ -272,7 +272,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
         await refreshConversations();
         break;
     }
-  }, [refreshChatAgents, refreshAutonomousAgents, refreshChatWidgets, refreshConversations]);
+  }, [refreshChatAgents, refreshWorkflows, refreshChatWidgets, refreshConversations]);
 
   const hasFetched = useCallback((entityType: EntityType): boolean => {
     return fetchedStatesRef.current[entityType] || false;
@@ -281,7 +281,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
   const clearCache = useCallback(() => {
     setData({
       chatAgents: [],
-      autonomousAgents: [],
+      workflows: [],
       chatWidgets: [],
       conversations: [],
     });
@@ -300,24 +300,24 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
   }, []);
 
   const stableFetchChatAgents = useCallback(() => fetchChatAgents(false), [fetchChatAgents]);
-  const stableFetchAutonomousAgents = useCallback(() => fetchAutonomousAgents(false), [fetchAutonomousAgents]);
+  const stableFetchWorkflows = useCallback(() => fetchWorkflows(false), [fetchWorkflows]);
   const stableFetchChatWidgets = useCallback(() => fetchChatWidgets(false), [fetchChatWidgets]);
   const stableFetchConversations = useCallback(() => fetchConversations(false), [fetchConversations]);
 
   const value: SidebarDataContextType = {
     chatAgents: data.chatAgents,
-    autonomousAgents: data.autonomousAgents,
+    workflows: data.workflows,
     chatWidgets: data.chatWidgets,
     conversations: data.conversations,
     loadingStates,
     errorStates,
     fetchChatAgents: stableFetchChatAgents,
-    fetchAutonomousAgents: stableFetchAutonomousAgents,
+    fetchWorkflows: stableFetchWorkflows,
     fetchChatWidgets: stableFetchChatWidgets,
     fetchConversations: stableFetchConversations,
     fetchEntityData,
     refreshChatAgents,
-    refreshAutonomousAgents,
+    refreshWorkflows,
     refreshChatWidgets,
     refreshConversations,
     refreshEntityData,

@@ -18,7 +18,7 @@ import { usePermissions, type ResourceType } from '../../../hooks';
 import { SidebarDataList, type DataListItem } from './SidebarDataList';
 import {
   CreateChatAgentDialog,
-  CreateAutonomousAgentDialog,
+  CreateWorkflowDialog,
   CreateChatWidgetDialog,
 } from '../../dialogs';
 import { FavoriteResourceTypeEnum } from '../../../api/types';
@@ -37,7 +37,7 @@ interface NavItem {
 }
 
 const mainNavItemsTop: NavItem[] = [
-  { icon: IconHome, iconFilled: IconHomeFilled, labelKey: 'home', path: '/dashboard' },
+  { icon: IconHome, iconFilled: IconHomeFilled, labelKey: 'home', path: '/home' },
   { icon: IconMessages, iconFilled: IconMessageFilled, labelKey: 'chats', path: '/conversations' },
   {
     icon: IconSparkles,
@@ -48,7 +48,7 @@ const mainNavItemsTop: NavItem[] = [
     matchFn: (pathname, search) =>
       pathname === '/chat-agents' && !search.includes('type=REACT_AGENT'),
   },
-  { icon: IconRobot, labelKey: 'auto', path: '/autonomous-agents', hasDataList: true, entityType: 'autonomous-agents' },
+  { icon: IconRobot, labelKey: 'workflows', path: '/workflows', hasDataList: true, entityType: 'autonomous-agents' },
   {
     icon: IconAppWindow,
     labelKey: 'apps',
@@ -73,7 +73,7 @@ const mainNavItemsBottom: NavItem[] = [
 ];
 
 const bottomNavItems: NavItem[] = [
-  { icon: IconSettings, iconFilled: IconSettingsFilled, labelKey: 'settings', path: '/tenant-settings' },
+  { icon: IconSettings, iconFilled: IconSettingsFilled, labelKey: 'settings', path: '/tenant-settings?tab=iam' },
 ];
 
 interface EntityConfig {
@@ -93,7 +93,7 @@ export const Sidebar: FC = () => {
 
   const {
     chatAgents,
-    autonomousAgents,
+    workflows,
     chatWidgets,
     conversations,
     loadingStates,
@@ -103,7 +103,7 @@ export const Sidebar: FC = () => {
     fetchConversations,
     refreshEntityData,
     refreshChatAgents,
-    refreshAutonomousAgents,
+    refreshWorkflows,
     refreshChatWidgets,
     refreshConversations,
   } = useSidebarData();
@@ -182,7 +182,7 @@ export const Sidebar: FC = () => {
   const conversationsCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const [isChatAgentDialogOpen, setIsChatAgentDialogOpen] = useState(false);
-  const [isAutonomousAgentDialogOpen, setIsAutonomousAgentDialogOpen] = useState(false);
+  const [isWorkflowDialogOpen, setIsWorkflowDialogOpen] = useState(false);
   const [isChatWidgetDialogOpen, setIsChatWidgetDialogOpen] = useState(false);
 
   const entityConfigs = useMemo<Partial<Record<EntityType, EntityConfig>>>(() => ({
@@ -194,11 +194,11 @@ export const Sidebar: FC = () => {
       getLink: (id) => `/conversations?chat-agent=${id}`,
     },
     'autonomous-agents': {
-      title: t('autonomousAgents'),
+      title: t('workflows'),
       icon: <IconRobot size={24} />,
-      addButtonLabel: t('addAutonomousAgent'),
+      addButtonLabel: t('addWorkflow'),
       fetchData: () => fetchEntityData('autonomous-agents'),
-      getLink: (id) => `/autonomous-agents/${id}`,
+      getLink: (id) => `/workflows/${id}`,
     },
     'chat-widgets': {
       title: t('chatWidgets'),
@@ -221,11 +221,11 @@ export const Sidebar: FC = () => {
           icon: <EntityAvatar entityType="chat-agent" size="xs" />,
         }));
       case 'autonomous-agents':
-        return autonomousAgents.map(agent => ({
+        return workflows.map(agent => ({
           id: agent.id,
           name: agent.name,
           link: entityConfigs['autonomous-agents']!.getLink(agent.id),
-          icon: <EntityAvatar entityType="autonomous-agent" size="xs" />,
+          icon: <EntityAvatar entityType="workflow" size="xs" />,
         }));
       case 'chat-widgets':
         return chatWidgets.map(widget => ({
@@ -237,12 +237,12 @@ export const Sidebar: FC = () => {
       default:
         return [];
     }
-  }, [activeEntity, chatAgents, autonomousAgents, chatWidgets, entityConfigs]);
+  }, [activeEntity, chatAgents, workflows, chatWidgets, entityConfigs]);
 
   const isOnEntityListPage = useCallback((entityType: EntityType) => {
     const entityPaths: Partial<Record<EntityType, string>> = {
       'chat-agents': '/chat-agents',
-      'autonomous-agents': '/autonomous-agents',
+      'autonomous-agents': '/workflows',
       'chat-widgets': '/chat-widgets',
     };
     return location.pathname === entityPaths[entityType];
@@ -425,7 +425,7 @@ export const Sidebar: FC = () => {
         setIsChatAgentDialogOpen(true);
         break;
       case 'autonomous-agents':
-        setIsAutonomousAgentDialogOpen(true);
+        setIsWorkflowDialogOpen(true);
         break;
       case 'chat-widgets':
         setIsChatWidgetDialogOpen(true);
@@ -437,9 +437,9 @@ export const Sidebar: FC = () => {
     refreshChatAgents();
   }, [refreshChatAgents]);
 
-  const handleAutonomousAgentCreated = useCallback(() => {
-    refreshAutonomousAgents();
-  }, [refreshAutonomousAgents]);
+  const handleWorkflowCreated = useCallback(() => {
+    refreshWorkflows();
+  }, [refreshWorkflows]);
 
   const handleChatWidgetCreated = useCallback(() => {
     refreshChatWidgets();
@@ -576,10 +576,10 @@ export const Sidebar: FC = () => {
         onClose={() => setIsChatAgentDialogOpen(false)}
         onSuccess={handleChatAgentCreated}
       />
-      <CreateAutonomousAgentDialog
-        opened={isAutonomousAgentDialogOpen}
-        onClose={() => setIsAutonomousAgentDialogOpen(false)}
-        onSuccess={handleAutonomousAgentCreated}
+      <CreateWorkflowDialog
+        opened={isWorkflowDialogOpen}
+        onClose={() => setIsWorkflowDialogOpen(false)}
+        onSuccess={handleWorkflowCreated}
       />
       <CreateChatWidgetDialog
         opened={isChatWidgetDialogOpen}

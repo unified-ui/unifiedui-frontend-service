@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { MainLayout } from '../../components/layout/MainLayout';
-import { PageHeader, DataTable, ConfirmDeleteDialog, EntityAvatar } from '../../components/common';
+import { PageHeader, DataTable, ConfirmDeleteDialog, ConfirmDialog, EntityAvatar } from '../../components/common';
 import type { DataTableItem } from '../../components/common';
 import { CreateChatWidgetDialog, EditChatWidgetDialog, StandardWidgetPromptDialog } from '../../components/dialogs';
 import type { StandardWidgetType } from '../../components/dialogs';
@@ -90,11 +90,12 @@ export const ChatWidgetsPage: FC = () => {
 
   const {
     items, isLoading, isLoadingMore, hasMore, error, searchValue, sortBy, filters,
-    availableTags, isCreateDialogOpen, deleteDialog, isDeleting, editItemId, editTab,
+    availableTags, isCreateDialogOpen, deleteDialog, deactivateDialog, isDeleting, selectedId, editTab,
     rawDataRef, setIsCreateDialogOpen, handleLoadMore, handleSearchChange, handleTagSearch,
     handleSortChange, handleFilterChange, handleEdit, handleEditClose, handleEditTabChange,
     handleEditSuccess, handleManageAccess, handleDuplicate, handleStatusChange,
-    handleDeleteClick, handleDeleteConfirm, handleDeleteClose, handleCreateSuccess,
+    handleDeleteClick, handleDeleteConfirm, handleDeleteClose, handleDeactivateConfirm,
+    handleDeactivateClose, handleCreateSuccess,
   } = useEntityList<ChatWidgetResponse>(config);
 
   const [standardWidgetType, setStandardWidgetType] = useState<StandardWidgetType | null>(null);
@@ -134,7 +135,7 @@ export const ChatWidgetsPage: FC = () => {
     <EntityAvatar entityType="chat-widget" size="sm" />
   ), []);
   // eslint-disable-next-line react-hooks/refs
-  const editInitialData = editItemId ? rawDataRef.current.get(editItemId) || null : null;
+  const editInitialData = selectedId ? rawDataRef.current.get(selectedId) || null : null;
   const handleWidgetCreated = useCallback((widget?: ChatWidgetResponse) => {
     handleCreateSuccess();
     if (widget?.type === ChatWidgetTypeEnum.FORM) {
@@ -191,8 +192,8 @@ export const ChatWidgetsPage: FC = () => {
       />
 
       <EditChatWidgetDialog
-        opened={!!editItemId}
-        chatWidgetId={editItemId}
+        opened={!!selectedId}
+        chatWidgetId={selectedId}
         initialData={editInitialData}
         activeTab={editTab}
         onClose={handleEditClose}
@@ -215,6 +216,17 @@ export const ChatWidgetsPage: FC = () => {
         itemName={deleteDialog.name}
         itemType="Chat Widget"
         isLoading={isDeleting}
+      />
+
+      <ConfirmDialog
+        opened={deactivateDialog.open}
+        onClose={handleDeactivateClose}
+        onConfirm={handleDeactivateConfirm}
+        type="warning"
+        title="Deactivate Chat Widget"
+        message={<>Are you sure you want to deactivate <strong>{deactivateDialog.name}</strong>? It will no longer be available until reactivated.</>}
+        confirmLabel="Deactivate"
+        cancelLabel="Cancel"
       />
     </MainLayout>
   );

@@ -1,5 +1,5 @@
 export { CreateChatAgentDialog } from './CreateChatAgentDialog';
-export { CreateAutonomousAgentDialog } from './CreateAutonomousAgentDialog';
+export { CreateWorkflowDialog } from './CreateWorkflowDialog';
 export { CreateChatWidgetDialog } from './CreateChatWidgetDialog';
 export { CreateCredentialDialog } from './CreateCredentialDialog';
 export { CreateCustomGroupDialog } from './CreateCustomGroupDialog';
@@ -8,7 +8,7 @@ export { CreateTenantDialog } from './CreateTenantDialog';
 export { CreateToolDialog } from './CreateToolDialog';
 export { CreateExternalAppDialog } from './CreateExternalAppDialog';
 export { EditChatAgentDialog, type EditDialogTab } from './EditChatAgentDialog';
-export { EditAutonomousAgentDialog } from './EditAutonomousAgentDialog';
+export { EditWorkflowDialog } from './EditWorkflowDialog';
 export { EditChatWidgetDialog } from './EditChatWidgetDialog';
 export { EditCredentialDialog } from './EditCredentialDialog';
 export { EditCustomGroupDialog } from './EditCustomGroupDialog';

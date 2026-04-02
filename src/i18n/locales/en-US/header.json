@@ -29,10 +29,10 @@
   "commands": "Commands",
   "navigation": "Navigation",
   "createChatAgent": "Create Chat Agent",
-  "createAutonomousAgent": "Create Autonomous Agent",
+  "createAutonomousAgent": "Create Workflow",
   "createChatWidget": "Create Chat Widget",
   "openSettings": "Open Settings",
-  "goToDashboard": "Go to Dashboard",
+  "goToDashboard": "Go to Home",
   "goToChatWidgets": "Go to Chat Widgets",
   "goToWidgetDesigner": "Go to Widget Designer"
 }

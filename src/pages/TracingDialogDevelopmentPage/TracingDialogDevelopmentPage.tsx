@@ -157,7 +157,7 @@ export const TracingDialogDevelopmentPage: FC = () => {
             </Group>
 
             <Text size="sm" c="dimmed" mb="lg">
-              Enter a Conversation ID or Autonomous Agent ID to open the Tracing visualization as a dialog.
+              Enter a Conversation ID or Workflow ID to open the Tracing visualization as a dialog.
             </Text>
 
             {/* Conversation ID Input */}
@@ -182,7 +182,7 @@ export const TracingDialogDevelopmentPage: FC = () => {
               {/* Autonomous Agent ID Input */}
               <Group gap="sm">
                 <TextInput
-                  placeholder="Enter Autonomous Agent ID"
+                  placeholder="Enter Workflow ID"
                   value={autonomousAgentIdInput}
                   onChange={(e) => setAutonomousAgentIdInput(e.target.value)}
                   style={{ flex: 1 }}

@@ -29,7 +29,9 @@ import {
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { Breadcrumbs } from '../../components/common';
+import { EditChatWidgetDialog } from '../../components/dialogs';
 import { useIdentity } from '../../contexts';
+import { useDialogParams } from '../../hooks';
 import type { ChatWidgetResponse } from '../../api/types';
 import classes from './IframeWidgetPreviewPage.module.css';
 
@@ -52,6 +54,7 @@ export const IframeWidgetPreviewPage: FC = () => {
   const { widgetId } = useParams<{ widgetId: string }>();
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
+  const { dialog, openDialog, closeDialog } = useDialogParams();
 
   const [widget, setWidget] = useState<ChatWidgetResponse | null>(null);
   const [config, setConfig] = useState<IframeConfig>(DEFAULT_CONFIG);
@@ -173,7 +176,7 @@ export const IframeWidgetPreviewPage: FC = () => {
             <Button
               variant="light"
               leftSection={<IconEdit size={16} />}
-              onClick={() => navigate(`/chat-widgets/${widgetId}/edit`)}
+              onClick={() => openDialog('edit')}
             >
               Edit Details
             </Button>
@@ -275,6 +278,14 @@ export const IframeWidgetPreviewPage: FC = () => {
           </Paper>
         </div>
       </Stack>
+
+      <EditChatWidgetDialog
+        opened={dialog === 'edit'}
+        chatWidgetId={widgetId || null}
+        initialData={widget || undefined}
+        onClose={closeDialog}
+        onSuccess={loadWidget}
+      />
     </MainLayout>
   );
 };

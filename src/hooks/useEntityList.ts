@@ -35,8 +35,9 @@ interface UseEntityListReturn<TResponse> {
   availableTags: string[];
   isCreateDialogOpen: boolean;
   deleteDialog: { open: boolean; id: string; name: string };
+  deactivateDialog: { open: boolean; id: string; name: string };
   isDeleting: boolean;
-  editItemId: string | null;
+  selectedId: string | null;
   editTab: EditDialogTab;
   rawDataRef: React.MutableRefObject<Map<string, TResponse>>;
   setIsCreateDialogOpen: (open: boolean) => void;
@@ -55,6 +56,8 @@ interface UseEntityListReturn<TResponse> {
   handleDeleteClick: (id: string) => void;
   handleDeleteConfirm: () => Promise<void>;
   handleDeleteClose: () => void;
+  handleDeactivateConfirm: () => Promise<void>;
+  handleDeactivateClose: () => void;
   handleCreateSuccess: () => void;
   refetch: () => void;
 }
@@ -96,8 +99,14 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
   const [searchParams, setSearchParams] = useSearchParams();
   const { apiClient, selectedTenant } = useIdentity();
 
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
+  const [isCreateDialogOpen, setIsCreateDialogOpenState] = useState(() => searchParams.get('dialog') === 'new');
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string; name: string }>(() => {
+    const dialog = searchParams.get('dialog');
+    return dialog === 'delete'
+      ? { open: true, id: searchParams.get('selectedId') || '', name: '' }
+      : { open: false, id: '', name: '' };
+  });
+  const [deactivateDialog, setDeactivateDialog] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
   const [isDeleting, setIsDeleting] = useState(false);
   const [items, setItems] = useState<DataTableItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -106,7 +115,8 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>(() => getStoredSort(sortStorageKey));
 
-  const editItemId = searchParams.get('editItemId');
+  const dialogParam = searchParams.get('dialog');
+  const selectedId = searchParams.get('selectedId');
   const editTab = (searchParams.get('tab') as EditDialogTab) || 'details';
 
   const [filters, setFilters] = useState<FilterState>({ tags: [], status: 'all' });
@@ -124,6 +134,23 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
   const rawDataRef = useRef<Map<string, TResponse>>(new Map());
 
   const [availableTags, setAvailableTags] = useState<string[]>([]);
+
+  const setIsCreateDialogOpen = useCallback((open: boolean) => {
+    setIsCreateDialogOpenState(open);
+    if (open) {
+      setSearchParams({ dialog: 'new' });
+    } else {
+      setSearchParams({});
+    }
+  }, [setSearchParams]);
+
+  useEffect(() => {
+    if (dialogParam === 'new' && !isCreateDialogOpen) {
+      setIsCreateDialogOpenState(true);
+    } else if (dialogParam !== 'new' && isCreateDialogOpen) {
+      setIsCreateDialogOpenState(false);
+    }
+  }, [dialogParam, isCreateDialogOpen]);
 
   const fetchTags = useCallback(async (nameFilter?: string) => {
     if (!apiClient || !selectedTenant) return;
@@ -259,11 +286,11 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
   }, []);
 
   const handleEdit = useCallback((id: string) => {
-    setSearchParams({ editItemId: id, tab: 'details' });
+    setSearchParams({ dialog: 'edit', selectedId: id, tab: 'details' });
   }, [setSearchParams]);
 
   const handleManageAccess = useCallback((id: string) => {
-    setSearchParams({ editItemId: id, tab: 'iam' });
+    setSearchParams({ dialog: 'edit', selectedId: id, tab: 'iam' });
   }, [setSearchParams]);
 
   const handleEditClose = useCallback(() => {
@@ -271,10 +298,10 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
   }, [setSearchParams]);
 
   const handleEditTabChange = useCallback((tab: EditDialogTab) => {
-    if (editItemId) {
-      setSearchParams({ editItemId, tab });
+    if (selectedId) {
+      setSearchParams({ dialog: 'edit', selectedId, tab });
     }
-  }, [editItemId, setSearchParams]);
+  }, [selectedId, setSearchParams]);
 
   const handleEditSuccess = useCallback(() => {
     fetchEntities(true, debouncedSearch, debouncedFilters);
@@ -288,6 +315,12 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
   const handleStatusChange = useCallback(async (id: string, isActive: boolean) => {
     if (!apiClient || !selectedTenant) return;
 
+    if (!isActive) {
+      const item = items.find(i => i.id === id);
+      setDeactivateDialog({ open: true, id, name: item?.name || '' });
+      return;
+    }
+
     try {
       await updateEntity(selectedTenant.id, id, { is_active: isActive });
       setItems(prev => prev.map(item =>
@@ -297,12 +330,13 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
       console.error('Error updating entity status:', err);
       fetchEntities(true, debouncedSearch, debouncedFilters);
     }
-  }, [apiClient, selectedTenant, updateEntity, fetchEntities, debouncedSearch, debouncedFilters]);
+  }, [apiClient, selectedTenant, updateEntity, fetchEntities, debouncedSearch, debouncedFilters, items]);
 
   const handleDeleteClick = useCallback((id: string) => {
     const item = items.find(i => i.id === id);
     setDeleteDialog({ open: true, id, name: item?.name || '' });
-  }, [items]);
+    setSearchParams({ dialog: 'delete', selectedId: id });
+  }, [items, setSearchParams]);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!apiClient || !selectedTenant || !deleteDialog.id) return;
@@ -322,6 +356,26 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
 
   const handleDeleteClose = useCallback(() => {
     setDeleteDialog({ open: false, id: '', name: '' });
+    setSearchParams({});
+  }, [setSearchParams]);
+
+  const handleDeactivateConfirm = useCallback(async () => {
+    if (!apiClient || !selectedTenant || !deactivateDialog.id) return;
+
+    try {
+      await updateEntity(selectedTenant.id, deactivateDialog.id, { is_active: false });
+      setItems(prev => prev.map(item =>
+        item.id === deactivateDialog.id ? { ...item, isActive: false } : item
+      ));
+      setDeactivateDialog({ open: false, id: '', name: '' });
+    } catch (err) {
+      console.error('Error deactivating entity:', err);
+      fetchEntities(true, debouncedSearch, debouncedFilters);
+    }
+  }, [apiClient, selectedTenant, deactivateDialog.id, updateEntity, fetchEntities, debouncedSearch, debouncedFilters]);
+
+  const handleDeactivateClose = useCallback(() => {
+    setDeactivateDialog({ open: false, id: '', name: '' });
   }, []);
 
   const handleCreateSuccess = useCallback(() => {
@@ -345,8 +399,9 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
     availableTags,
     isCreateDialogOpen,
     deleteDialog,
+    deactivateDialog,
     isDeleting,
-    editItemId,
+    selectedId,
     editTab,
     rawDataRef,
     setIsCreateDialogOpen,
@@ -365,6 +420,8 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
     handleDeleteClick,
     handleDeleteConfirm,
     handleDeleteClose,
+    handleDeactivateConfirm,
+    handleDeactivateClose,
     handleCreateSuccess,
     refetch,
   };

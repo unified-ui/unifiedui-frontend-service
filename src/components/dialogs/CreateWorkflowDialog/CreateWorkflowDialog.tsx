@@ -41,7 +41,7 @@ const API_VERSIONS = [
   { value: 'v1', label: 'v1' },
 ];
 
-interface CreateAutonomousAgentDialogProps {
+interface CreateWorkflowDialogProps {
   opened: boolean;
   onClose: () => void;
   onSuccess?: () => void;
@@ -63,7 +63,7 @@ interface FormValues {
   n8n_default_query_params: KeyValuePair[];
 }
 
-export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> = ({
+export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
   opened,
   onClose,
   onSuccess,
@@ -284,7 +284,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
         title={
           <Group gap="sm">
             <IconRobot size={24} />
-            <Text fw={600} size="lg">Create Autonomous Agent</Text>
+            <Text fw={600} size="lg">Create Workflow</Text>
           </Group>
         }
         size="lg"

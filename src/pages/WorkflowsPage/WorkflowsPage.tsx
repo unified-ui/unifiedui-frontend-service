@@ -3,9 +3,9 @@ import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { MainLayout } from '../../components/layout/MainLayout';
-import { PageHeader, DataTable, ConfirmDeleteDialog, EntityAvatar } from '../../components/common';
+import { PageHeader, DataTable, ConfirmDeleteDialog, ConfirmDialog, EntityAvatar } from '../../components/common';
 import type { DataTableItem } from '../../components/common';
-import { CreateAutonomousAgentDialog, EditAutonomousAgentDialog } from '../../components/dialogs';
+import { CreateWorkflowDialog, EditWorkflowDialog } from '../../components/dialogs';
 import { useIdentity, useSidebarData, useFavorites } from '../../contexts';
 import { useEntityList, usePermissions } from '../../hooks';
 import type { AutonomousAgentResponse } from '../../api/types';
@@ -13,13 +13,13 @@ import { FavoriteResourceTypeEnum } from '../../api/types';
 
 const SORT_STORAGE_KEY = 'unified-ui:sort:autonomous-agents';
 
-export const AutonomousAgentsPage: FC = () => {
+export const WorkflowsPage: FC = () => {
   const navigate = useNavigate();
   const { apiClient } = useIdentity();
-  const { refreshAutonomousAgents } = useSidebarData();
+  const { refreshWorkflows } = useSidebarData();
   const { isFavorite: checkFavorite, toggleFavorite } = useFavorites();
   const { canCreate } = usePermissions();
-  const canCreateAgent = canCreate('autonomous-agents');
+  const canCreateWorkflow = canCreate('autonomous-agents');
 
   const isFavorite = useCallback(
     (id: string) => checkFavorite(FavoriteResourceTypeEnum.AUTONOMOUS_AGENT, id),
@@ -35,7 +35,7 @@ export const AutonomousAgentsPage: FC = () => {
     id: agent.id,
     name: agent.name,
     description: agent.description,
-    type: 'Autonomous',
+    type: 'Workflow',
     tags: agent.tags?.map(tag => tag.name) || [],
     isActive: agent.is_active,
     my_permission: agent.my_permission,
@@ -67,26 +67,27 @@ export const AutonomousAgentsPage: FC = () => {
 
   const config = useMemo(() => ({
     sortStorageKey: SORT_STORAGE_KEY,
-    errorMessage: 'Failed to load autonomous agents',
+    errorMessage: 'Failed to load workflows',
     listEntities,
     listTags,
     updateEntity,
     deleteEntity,
     mapToTableItem,
-    refreshSidebar: refreshAutonomousAgents,
-  }), [listEntities, listTags, updateEntity, deleteEntity, mapToTableItem, refreshAutonomousAgents]);
+    refreshSidebar: refreshWorkflows,
+  }), [listEntities, listTags, updateEntity, deleteEntity, mapToTableItem, refreshWorkflows]);
 
   const {
     items, isLoading, isLoadingMore, hasMore, error, searchValue, sortBy, filters,
-    availableTags, isCreateDialogOpen, deleteDialog, isDeleting, editItemId, editTab,
+    availableTags, isCreateDialogOpen, deleteDialog, deactivateDialog, isDeleting, selectedId, editTab,
     rawDataRef, setIsCreateDialogOpen, handleLoadMore, handleSearchChange, handleTagSearch,
     handleSortChange, handleFilterChange, handleEdit, handleEditClose, handleEditTabChange,
     handleEditSuccess, handleManageAccess, handleDuplicate, handleStatusChange,
-    handleDeleteClick, handleDeleteConfirm, handleDeleteClose, handleCreateSuccess,
+    handleDeleteClick, handleDeleteConfirm, handleDeleteClose, handleDeactivateConfirm,
+    handleDeactivateClose, handleCreateSuccess,
   } = useEntityList<AutonomousAgentResponse>(config);
 
   const handleOpen = useCallback((id: string) => {
-    navigate(`/autonomous-agents/${id}`);
+    navigate(`/workflows/${id}`);
   }, [navigate]);
 
   const handleShare = useCallback((_id: string) => {
@@ -99,19 +100,19 @@ export const AutonomousAgentsPage: FC = () => {
   }, []);
 
   const renderIcon = useCallback(() => (
-    <EntityAvatar entityType="autonomous-agent" size="sm" />
+    <EntityAvatar entityType="workflow" size="sm" />
   ), []);
 
   // eslint-disable-next-line react-hooks/refs
-  const editInitialData = editItemId ? rawDataRef.current.get(editItemId) || null : null;
+  const editInitialData = selectedId ? rawDataRef.current.get(selectedId) || null : null;
 
   return (
     <MainLayout>
       <PageHeader
-        title="Autonomous Agents"
-        description="Manage your autonomous AI agents. These agents can perform tasks independently without user interaction."
-        actionLabel="Create Autonomous Agent"
-        onAction={canCreateAgent ? () => setIsCreateDialogOpen(true) : undefined}
+        title="Workflows"
+        description="Manage your workflow agents. These agents can perform tasks independently without user interaction."
+        actionLabel="Create Workflow"
+        onAction={canCreateWorkflow ? () => setIsCreateDialogOpen(true) : undefined}
       />
 
       <DataTable
@@ -121,10 +122,10 @@ export const AutonomousAgentsPage: FC = () => {
         hasMore={hasMore}
         error={error}
         showStatus={true}
-        searchPlaceholder="Search autonomous agents..."
-        emptyMessage="No autonomous agents found"
-        emptyActionLabel="Create Autonomous Agent"
-        onEmptyAction={canCreateAgent ? () => setIsCreateDialogOpen(true) : undefined}
+        searchPlaceholder="Search workflows..."
+        emptyMessage="No workflows found"
+        emptyActionLabel="Create Workflow"
+        onEmptyAction={canCreateWorkflow ? () => setIsCreateDialogOpen(true) : undefined}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         availableTags={availableTags}
@@ -148,15 +149,15 @@ export const AutonomousAgentsPage: FC = () => {
         onToggleFavorite={handleToggleFavorite}
       />
 
-      <CreateAutonomousAgentDialog
+      <CreateWorkflowDialog
         opened={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onSuccess={handleCreateSuccess}
       />
 
-      <EditAutonomousAgentDialog
-        opened={!!editItemId}
-        autonomousAgentId={editItemId}
+      <EditWorkflowDialog
+        opened={!!selectedId}
+        autonomousAgentId={selectedId}
         initialData={editInitialData}
         activeTab={editTab}
         onClose={handleEditClose}
@@ -169,8 +170,19 @@ export const AutonomousAgentsPage: FC = () => {
         onClose={handleDeleteClose}
         onConfirm={handleDeleteConfirm}
         itemName={deleteDialog.name}
-        itemType="Autonomous Agent"
+        itemType="Workflow"
         isLoading={isDeleting}
+      />
+
+      <ConfirmDialog
+        opened={deactivateDialog.open}
+        onClose={handleDeactivateClose}
+        onConfirm={handleDeactivateConfirm}
+        type="warning"
+        title="Deactivate Workflow"
+        message={<>Are you sure you want to deactivate <strong>{deactivateDialog.name}</strong>? It will no longer be available until reactivated.</>}
+        confirmLabel="Deactivate"
+        cancelLabel="Cancel"
       />
     </MainLayout>
   );

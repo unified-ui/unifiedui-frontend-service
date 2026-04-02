@@ -15,13 +15,13 @@ import classes from './DashboardPage.module.css';
 
 const STAT_CARDS = [
   { key: 'chat_agents' as const, icon: IconSparkles, color: 'var(--color-primary-100)', iconColor: 'var(--color-primary-600)', route: '/chat-agents' },
-  { key: 'autonomous_agents' as const, icon: IconRobot, color: 'var(--color-secondary-100)', iconColor: 'var(--color-secondary-600)', route: '/autonomous-agents' },
+  { key: 'autonomous_agents' as const, icon: IconRobot, color: 'var(--color-secondary-100)', iconColor: 'var(--color-secondary-600)', route: '/workflows' },
   { key: 'conversations' as const, icon: IconMessages, color: 'var(--color-accent-100)', iconColor: 'var(--color-accent-600)', route: '/conversations' },
 ] as const;
 
 const FAVORITE_ROUTE_MAP: Record<string, string> = {
   [FavoriteResourceTypeEnum.CHAT_AGENT]: '/chat-agents',
-  [FavoriteResourceTypeEnum.AUTONOMOUS_AGENT]: '/autonomous-agents',
+  [FavoriteResourceTypeEnum.AUTONOMOUS_AGENT]: '/workflows',
   [FavoriteResourceTypeEnum.CONVERSATION]: '/conversations',
 };
 
@@ -39,7 +39,7 @@ const FAVORITE_TYPE_TO_ENTITY: Record<string, EntityAvatarType> = {
 
 const RESOURCE_ROUTE_MAP: Record<string, string> = {
   chat_agent: '/chat-agents',
-  autonomous_agent: '/autonomous-agents',
+  autonomous_agent: '/workflows',
   conversation: '/conversations',
 };
 
@@ -56,7 +56,7 @@ export const DashboardPage: FC = () => {
   const { user, selectedTenant, apiClient, isLoading: isIdentityLoading } = useIdentity();
   const { favorites } = useFavorites();
   const { recentVisits } = useRecentVisits();
-  const { chatAgents, autonomousAgents } = useSidebarData();
+  const { chatAgents, workflows } = useSidebarData();
 
   const [stats, setStats] = useState<DashboardStatsResponse | null>(null);
   const [isStatsLoading, setIsStatsLoading] = useState(true);
@@ -93,7 +93,7 @@ export const DashboardPage: FC = () => {
     const entityMap = new Map<string, string>();
 
     chatAgents.forEach(app => entityMap.set(app.id, app.name));
-    autonomousAgents.forEach(agent => entityMap.set(agent.id, agent.name));
+    workflows.forEach(agent => entityMap.set(agent.id, agent.name));
 
     for (const [type, ids] of favorites.entries()) {
       for (const id of ids) {
@@ -103,7 +103,7 @@ export const DashboardPage: FC = () => {
     }
 
     return items.slice(0, 6);
-  }, [favorites, chatAgents, autonomousAgents]);
+  }, [favorites, chatAgents, workflows]);
 
   const recentItems = useMemo(() => recentVisits.slice(0, 6), [recentVisits]);
 

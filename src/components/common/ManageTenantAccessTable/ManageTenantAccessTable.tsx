@@ -44,9 +44,9 @@ export const TENANT_ROLE_OPTIONS: { value: TenantPermissionEnum; label: string; 
   // Conversations
   { value: 'CONVERSATIONS_ADMIN', label: 'Conversations Admin', description: 'Manage all conversations', category: 'Conversations' },
   { value: 'CONVERSATIONS_CREATOR', label: 'Conversations Creator', description: 'Create new conversations', category: 'Conversations' },
-  // Autonomous Agents
-  { value: 'AUTONOMOUS_AGENTS_ADMIN', label: 'Autonomous Agents Admin', description: 'Manage all autonomous agents', category: 'Autonomous Agents' },
-  { value: 'AUTONOMOUS_AGENTS_CREATOR', label: 'Autonomous Agents Creator', description: 'Create new autonomous agents', category: 'Autonomous Agents' },
+  // Workflows
+  { value: 'AUTONOMOUS_AGENTS_ADMIN', label: 'Workflows Admin', description: 'Manage all workflows', category: 'Workflows' },
+  { value: 'AUTONOMOUS_AGENTS_CREATOR', label: 'Workflows Creator', description: 'Create new workflows', category: 'Workflows' },
   // Chat Widgets
   { value: 'CHAT_WIDGETS_ADMIN', label: 'Chat Widgets Admin', description: 'Manage all chat widgets', category: 'Chat Widgets' },
   { value: 'CHAT_WIDGETS_CREATOR', label: 'Chat Widgets Creator', description: 'Create new chat widgets', category: 'Chat Widgets' },

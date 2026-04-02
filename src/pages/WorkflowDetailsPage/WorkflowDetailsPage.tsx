@@ -35,17 +35,17 @@ import { MainLayout } from '../../components/layout/MainLayout';
 import { SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip, Breadcrumbs, EntityAvatar, WorkflowRunsTable } from '../../components/common';
 import type { TracesSortState, TraceDatePreset } from '../../components/common';
 import { TracingVisualDialog } from '../../components/tracing';
-import { EditAutonomousAgentDialog } from '../../components/dialogs/EditAutonomousAgentDialog';
-import type { EditDialogTab } from '../../components/dialogs/EditAutonomousAgentDialog';
+import { EditWorkflowDialog } from '../../components/dialogs/EditWorkflowDialog';
+import type { EditDialogTab } from '../../components/dialogs/EditWorkflowDialog';
 import { IntegrationDialog } from '../../components/dialogs/IntegrationDialog';
 import { ImportTraceDialog } from '../../components/dialogs/ImportTraceDialog';
 import { StartWorkflowDialog } from '../../components/dialogs/StartWorkflowDialog';
 import { useIdentity } from '../../contexts';
 import { useSidebarData } from '../../contexts/SidebarDataContext';
 import { useRecentVisits } from '../../contexts';
-import { useDelayedLoading } from '../../hooks';
+import { useDelayedLoading, useDialogParams } from '../../hooks';
 import type { AutonomousAgentResponse, FullTraceResponse, TracesListParams } from '../../api/types';
-import classes from './AutonomousAgentDetailsPage.module.css';
+import classes from './WorkflowDetailsPage.module.css';
 
 // ============================================================================
 // Constants
@@ -82,12 +82,12 @@ function datePresetToRange(preset: TraceDatePreset): { created_after?: string; c
 // Component
 // ============================================================================
 
-export const AutonomousAgentDetailsPage: FC = () => {
+export const WorkflowDetailsPage: FC = () => {
   const { agentId } = useParams<{ agentId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
-  const { refreshAutonomousAgents } = useSidebarData();
+  const { refreshWorkflows } = useSidebarData();
   const { trackVisit } = useRecentVisits();
 
   // ---- Agent data ----
@@ -110,13 +110,8 @@ export const AutonomousAgentDetailsPage: FC = () => {
     [setSearchParams]
   );
 
-  // ---- Edit Dialog ----
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editDialogTab, setEditDialogTab] = useState<EditDialogTab>('details');
-
-  // ---- Integration Dialog ----
-  const [integrationDialogOpen, setIntegrationDialogOpen] = useState(false);
-  const [integrationDialogTab, setIntegrationDialogTab] = useState<'post' | 'put'>('post');
+  // ---- Dialog params ----
+  const { dialog, dialogTab, openDialog, closeDialog, setDialogTab } = useDialogParams();
 
   // ---- Traces ----
   const [traces, setTraces] = useState<FullTraceResponse[]>([]);
@@ -132,11 +127,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
   const [traceToDelete, setTraceToDelete] = useState<FullTraceResponse | null>(null);
   const [deleteTraceLoading, setDeleteTraceLoading] = useState(false);
 
-  // ---- Import trace dialog ----
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
-
-  // ---- Start workflow dialog ----
-  const [startWorkflowDialogOpen, setStartWorkflowDialogOpen] = useState(false);
+  // ---- Start workflow ----
   const [runsAutoRefreshTrigger, setRunsAutoRefreshTrigger] = useState(0);
 
   // ---- Auto-refresh timer ----
@@ -167,7 +158,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
       const data = await apiClient.getAutonomousAgent(selectedTenant.id, agentId);
       setAgent(data);
     } catch {
-      setAgentError('Failed to load autonomous agent');
+      setAgentError('Failed to load workflow');
     } finally {
       setAgentLoading(false);
     }
@@ -447,10 +438,10 @@ export const AutonomousAgentDetailsPage: FC = () => {
 
   // ---- Edit ----
   const handleEditSuccess = useCallback(() => {
-    setEditDialogOpen(false);
+    closeDialog();
     fetchAgent();
-    refreshAutonomousAgents();
-  }, [fetchAgent, refreshAutonomousAgents]);
+    refreshWorkflows();
+  }, [fetchAgent, refreshWorkflows, closeDialog]);
 
   // ---- Computed ----
   const postEndpointUrl = useMemo(() => {
@@ -482,7 +473,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
   return (
     <MainLayout>
           <Breadcrumbs items={[
-            { label: 'Autonomous Agents', path: '/autonomous-agents' },
+            { label: 'Workflows', path: '/workflows' },
             { label: agent?.name || '' },
           ]} />
 
@@ -492,10 +483,10 @@ export const AutonomousAgentDetailsPage: FC = () => {
                 {agentError}
               </Alert>
               <Group>
-                <ActionIcon variant="subtle" onClick={() => navigate('/autonomous-agents')}>
+                <ActionIcon variant="subtle" onClick={() => navigate('/workflows')}>
                   <IconArrowLeft size={20} />
                 </ActionIcon>
-                <Text c="dimmed">Back to Autonomous Agents</Text>
+                <Text c="dimmed">Back to Workflows</Text>
               </Group>
             </Stack>
           )}
@@ -504,7 +495,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
             <>
           <div className={classes.header}>
             <Group gap="sm" mb="xs">
-              <EntityAvatar entityType="autonomous-agent" size="md" />
+              <EntityAvatar entityType="workflow" size="md" />
               {showAgentSkeleton ? (
                 <Skeleton height={28} width={200} radius="sm" />
               ) : (
@@ -517,7 +508,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                   <ActionIcon
                     variant="subtle"
                     color="gray"
-                    onClick={() => setEditDialogOpen(true)}
+                    onClick={() => openDialog('edit', { dialogTab: 'details' })}
                   >
                     <IconEdit size={18} />
                   </ActionIcon>
@@ -614,7 +605,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                       size="xs"
                       variant="light"
                       leftSection={<IconPlayerPlay size={14} />}
-                      onClick={() => setStartWorkflowDialogOpen(true)}
+                      onClick={() => openDialog('start-workflow')}
                     >
                       Start Workflow
                     </Button>
@@ -635,7 +626,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                   onReImport={handleReImportTrace}
                   onDelete={setTraceToDelete}
                   showReImport={agent?.type === 'N8N'}
-                  onImport={() => setImportDialogOpen(true)}
+                  onImport={() => openDialog('import-trace')}
                   showImport={agent?.type === 'N8N'}
                 />
             </Tabs.Panel>
@@ -648,7 +639,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                   agentId={agentId!}
                   agentType={agent.type}
                   onRunClick={handleRunClick}
-                  onStartWorkflow={() => setStartWorkflowDialogOpen(true)}
+                  onStartWorkflow={() => openDialog('start-workflow')}
                   showStartWorkflow={!!n8nConfig?.webhook_url}
                   autoRefreshTrigger={runsAutoRefreshTrigger}
                 />
@@ -686,8 +677,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                               color="gray"
                               size="sm"
                               onClick={() => {
-                                setIntegrationDialogTab('post');
-                                setIntegrationDialogOpen(true);
+                                openDialog('integrate-workflow', { dialogTab: 'post' });
                               }}
                             >
                               <IconBraces size={14} />
@@ -720,8 +710,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                               color="gray"
                               size="sm"
                               onClick={() => {
-                                setIntegrationDialogTab('put');
-                                setIntegrationDialogOpen(true);
+                                openDialog('integrate-workflow', { dialogTab: 'put' });
                               }}
                             >
                               <IconBraces size={14} />
@@ -816,17 +805,16 @@ export const AutonomousAgentDetailsPage: FC = () => {
       )}
 
       {/* Edit Dialog */}
-      <EditAutonomousAgentDialog
-        opened={editDialogOpen}
+      <EditWorkflowDialog
+        opened={dialog === 'edit'}
         autonomousAgentId={agentId || null}
         initialData={agent}
-        activeTab={editDialogTab}
-        onClose={() => { setEditDialogOpen(false); setEditDialogTab('details'); }}
+        activeTab={(dialogTab as EditDialogTab) || 'details'}
+        onClose={closeDialog}
         onSuccess={handleEditSuccess}
-        onTabChange={setEditDialogTab}
+        onTabChange={(tab) => setDialogTab(tab)}
       />
 
-      {/* Confirm Rotate Key Dialog */}
       <ConfirmDeleteDialog
         opened={confirmRotateKey !== null}
         onClose={() => setConfirmRotateKey(null)}
@@ -837,19 +825,17 @@ export const AutonomousAgentDetailsPage: FC = () => {
         isLoading={rotatingKey !== null}
       />
 
-      {/* Integration Dialog */}
       {selectedTenant && agentId && (
         <IntegrationDialog
-          opened={integrationDialogOpen}
-          onClose={() => setIntegrationDialogOpen(false)}
+          opened={dialog === 'integrate-workflow'}
+          onClose={closeDialog}
           tenantId={selectedTenant.id}
           agentId={agentId}
-          defaultTab={integrationDialogTab}
+          defaultTab={(dialogTab as 'post' | 'put') || 'post'}
           allowApiKeys={agent?.allow_api_keys}
         />
       )}
 
-      {/* Confirm Delete Trace Dialog */}
       <ConfirmDeleteDialog
         opened={traceToDelete !== null}
         onClose={() => setTraceToDelete(null)}
@@ -860,22 +846,20 @@ export const AutonomousAgentDetailsPage: FC = () => {
         isLoading={deleteTraceLoading}
       />
 
-      {/* Import Trace Dialog */}
       {agentId && agent && (
         <ImportTraceDialog
-          opened={importDialogOpen}
-          onClose={() => setImportDialogOpen(false)}
+          opened={dialog === 'import-trace'}
+          onClose={closeDialog}
           onSuccess={() => fetchTraces(true)}
           agentId={agentId}
           agentType={agent.type}
         />
       )}
 
-      {/* Start Workflow Dialog */}
       {agentId && (
         <StartWorkflowDialog
-          opened={startWorkflowDialogOpen}
-          onClose={() => setStartWorkflowDialogOpen(false)}
+          opened={dialog === 'start-workflow'}
+          onClose={closeDialog}
           onSuccess={handleStartWorkflowSuccess}
           agentId={agentId}
           defaultBody={n8nConfig?.default_body}
