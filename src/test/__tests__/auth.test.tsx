@@ -82,16 +82,21 @@ describe('authConfig', () => {
     expect(ALL_IDENTITY_PROVIDERS.length).toBeGreaterThanOrEqual(3);
   });
 
-  it('defaults provider to microsoft when env is not set', async () => {
+  it('defaults to ldap being enabled when no provider env vars are set', async () => {
     vi.stubEnv('VITE_AUTH_PROVIDER', '');
-    const { authConfig } = await import('../../auth/authConfig');
-    expect(authConfig.provider).toBe('microsoft');
+    vi.stubEnv('VITE_MSAL_CLIENT_ID', '');
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', '');
+    vi.stubEnv('VITE_COGNITO_REGION', '');
+    vi.stubEnv('VITE_COGNITO_USER_POOL_ID', '');
+    vi.stubEnv('VITE_COGNITO_CLIENT_ID', '');
+    const { enabledProviders } = await import('../../auth/authConfig');
+    expect(enabledProviders).toContain('ldap');
   });
 
-  it('uses custom auth provider from env', async () => {
-    vi.stubEnv('VITE_AUTH_PROVIDER', 'google');
-    const { authConfig } = await import('../../auth/authConfig');
-    expect(authConfig.provider).toBe('google');
+  it('enables microsoft provider when MSAL env vars are set', async () => {
+    vi.stubEnv('VITE_MSAL_CLIENT_ID', 'msal-id');
+    const { enabledProviders } = await import('../../auth/authConfig');
+    expect(enabledProviders).toContain('microsoft');
   });
 
   it('includes google config when VITE_GOOGLE_CLIENT_ID is set', async () => {
@@ -134,15 +139,18 @@ describe('authConfig', () => {
     expect(enabledProviders).toContain('google');
   });
 
-  it('falls back to provider type when no configs are available', async () => {
+  it('only includes ldap when no provider configs are available', async () => {
     vi.stubEnv('VITE_MSAL_CLIENT_ID', '');
     vi.stubEnv('VITE_GOOGLE_CLIENT_ID', '');
     vi.stubEnv('VITE_COGNITO_REGION', '');
     vi.stubEnv('VITE_COGNITO_USER_POOL_ID', '');
     vi.stubEnv('VITE_COGNITO_CLIENT_ID', '');
-    vi.stubEnv('VITE_AUTH_PROVIDER', 'google');
+    vi.stubEnv('VITE_OIDC_AUTHORITY', '');
+    vi.stubEnv('VITE_OIDC_CLIENT_ID', '');
     const { enabledProviders } = await import('../../auth/authConfig');
-    expect(enabledProviders).toContain('google');
+    expect(enabledProviders).toContain('ldap');
+    expect(enabledProviders).not.toContain('google');
+    expect(enabledProviders).not.toContain('microsoft');
   });
 
   it('redirectUri uses current window.location.origin', async () => {
