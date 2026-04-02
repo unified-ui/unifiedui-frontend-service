@@ -39,7 +39,16 @@ const DEFAULT_BRANDING: BrandingConfig = {
     baseFontSize: 16,
   },
 
-  enabledIdps: ['microsoft', 'google', 'aws_cognito', 'ldap', 'kerberos', 'saml', 'okta', 'oidc'],
+  enabledIdps: [
+    'microsoft',
+    'google',
+    'aws_cognito',
+    'ldap',
+    // 'kerberos',
+    // 'saml',
+    // 'okta',
+    'oidc',
+  ],
 };
 
 // ─── Customer Brandings (Overrides) ──────────────────────────
@@ -72,6 +81,8 @@ const TENANT_BRANDINGS: Record<string, DeepPartial<BrandingConfig>> = {
       buttonBorderColor: 'rgba(255, 255, 255, 0.25)',
       buttonHoverBg: 'rgba(255, 255, 255, 0.08)',
     },
+
+    enabledIdps: ['microsoft', 'oidc', 'ldap'],
   },
 
   // ─── Example: Muster-Bank AG ────────────────────────────────

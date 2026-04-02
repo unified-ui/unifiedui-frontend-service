@@ -10,7 +10,8 @@ export type ResourceType =
   | 'credentials'
   | 'custom-groups'
   | 'tools'
-  | 'tenant-ai-models';
+  | 'tenant-ai-models'
+  | 'external-apps';
 
 const CREATOR_ROLES: Record<ResourceType, TenantPermissionEnum> = {
   'chat-agents': TenantPermissionEnum.CHAT_AGENTS_CREATOR,
@@ -21,6 +22,7 @@ const CREATOR_ROLES: Record<ResourceType, TenantPermissionEnum> = {
   'custom-groups': TenantPermissionEnum.CUSTOM_GROUP_CREATOR,
   'tools': TenantPermissionEnum.REACT_AGENT_CREATOR,
   'tenant-ai-models': TenantPermissionEnum.TENANT_AI_MODELS_ADMIN,
+  'external-apps': TenantPermissionEnum.EXTERNAL_APPS_CREATOR,
 };
 
 const ADMIN_ROLES: Record<ResourceType, TenantPermissionEnum> = {
@@ -32,6 +34,7 @@ const ADMIN_ROLES: Record<ResourceType, TenantPermissionEnum> = {
   'custom-groups': TenantPermissionEnum.CUSTOM_GROUPS_ADMIN,
   'tools': TenantPermissionEnum.REACT_AGENT_ADMIN,
   'tenant-ai-models': TenantPermissionEnum.TENANT_AI_MODELS_ADMIN,
+  'external-apps': TenantPermissionEnum.EXTERNAL_APPS_ADMIN,
 };
 
 const ORG_BYPASS_ROLES: ReadonlySet<string> = new Set([

@@ -240,6 +240,13 @@ export const OrganizationAccessPanel: FC<OrganizationAccessPanelProps> = ({ isOr
         onLoadMore={handleLoadMore}
         roleOptions={ORG_ROLE_OPTIONS}
         showStatusColumn={false}
+        onRefreshPrincipal={async (principalId, principalType) => {
+          if (!apiClient) return;
+          const tenantId = organization?.id;
+          if (!tenantId) return;
+          await apiClient.refreshPrincipal(principalId, { tenant_id: tenantId, type: principalType as 'IDENTITY_USER' | 'IDENTITY_GROUP' });
+          await fetchPrincipals(true);
+        }}
       />
 
       <AddPrincipalDialog

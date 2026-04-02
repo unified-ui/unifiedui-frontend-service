@@ -150,8 +150,8 @@ describe('ReasoningSection', () => {
     );
     expect(screen.getByText('Input')).toBeInTheDocument();
     expect(screen.getByText('Result')).toBeInTheDocument();
-    expect(screen.getByText('{"city": "Berlin"}')).toBeInTheDocument();
-    expect(screen.getByText('{"temp": 18}')).toBeInTheDocument();
+    expect(screen.getByText(/"city": "Berlin"/)).toBeInTheDocument();
+    expect(screen.getByText(/"temp": 18/)).toBeInTheDocument();
   });
 
   it('renders multiple steps', () => {

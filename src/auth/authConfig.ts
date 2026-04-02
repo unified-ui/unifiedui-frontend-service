@@ -7,7 +7,6 @@ export const ALL_IDENTITY_PROVIDERS: IdentityProviderType[] = [
 ];
 
 export interface AuthConfig {
-  provider: IdentityProviderType;
   microsoft?: {
     clientId: string;
     authority: string;
@@ -22,9 +21,16 @@ export interface AuthConfig {
     clientId: string;
     domain: string;
   };
+  oidc?: {
+    authority: string;
+    clientId: string;
+    redirectUri: string;
+    scope: string;
+  };
+  ldap?: {
+    apiBaseUrl: string;
+  };
 }
-
-const VITE_AUTH_PROVIDER = (import.meta.env.VITE_AUTH_PROVIDER as IdentityProviderType) || 'microsoft';
 
 const MSAL_CLIENT_ID = import.meta.env.VITE_MSAL_CLIENT_ID || '';
 const MSAL_AUTHORITY = import.meta.env.VITE_MSAL_AUTHORITY || 'https://login.microsoftonline.com/common';
@@ -37,8 +43,14 @@ const COGNITO_USER_POOL_ID = import.meta.env.VITE_COGNITO_USER_POOL_ID || '';
 const COGNITO_CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID || '';
 const COGNITO_DOMAIN = import.meta.env.VITE_COGNITO_DOMAIN || '';
 
+const OIDC_AUTHORITY = import.meta.env.VITE_OIDC_AUTHORITY || '';
+const OIDC_CLIENT_ID = import.meta.env.VITE_OIDC_CLIENT_ID || '';
+const OIDC_REDIRECT_URI = import.meta.env.VITE_OIDC_REDIRECT_URI || '';
+const OIDC_SCOPE = import.meta.env.VITE_OIDC_SCOPE || 'openid profile email';
+
+const LDAP_API_BASE_URL = import.meta.env.VITE_LDAP_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
 export const authConfig: AuthConfig = {
-  provider: VITE_AUTH_PROVIDER,
   microsoft: MSAL_CLIENT_ID
     ? {
         clientId: MSAL_CLIENT_ID,
@@ -60,6 +72,18 @@ export const authConfig: AuthConfig = {
           domain: COGNITO_DOMAIN,
         }
       : undefined,
+  oidc:
+    OIDC_AUTHORITY && OIDC_CLIENT_ID
+      ? {
+          authority: OIDC_AUTHORITY,
+          clientId: OIDC_CLIENT_ID,
+          redirectUri: OIDC_REDIRECT_URI || window.location.origin + '/auth/callback/oidc',
+          scope: OIDC_SCOPE,
+        }
+      : undefined,
+  ldap: {
+    apiBaseUrl: LDAP_API_BASE_URL,
+  },
 };
 
 export const enabledProviders: IdentityProviderType[] = (() => {
@@ -67,7 +91,9 @@ export const enabledProviders: IdentityProviderType[] = (() => {
   if (authConfig.microsoft) providers.push('microsoft');
   if (authConfig.google) providers.push('google');
   if (authConfig.awsCognito) providers.push('aws_cognito');
-  return providers.length > 0 ? providers : [authConfig.provider];
+  if (authConfig.oidc) providers.push('oidc');
+  if (authConfig.ldap) providers.push('ldap');
+  return providers;
 })();
 
 export const msalConfig = {

@@ -145,10 +145,6 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
   }, [apiClient, selectedTenant, listTags]);
 
   useEffect(() => {
-    fetchTags();
-  }, [fetchTags]);
-
-  useEffect(() => {
     fetchTags(debouncedTagSearch || undefined);
   }, [debouncedTagSearch, fetchTags]);
 

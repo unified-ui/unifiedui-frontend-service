@@ -11,3 +11,5 @@ export type { ChatEmptyStateProps } from './ChatEmptyState';
 export { FeedbackDialog } from './FeedbackDialog';
 export type { FeedbackDialogProps } from './FeedbackDialog';
 export { ReasoningSection } from './ReasoningSection';
+export { WidgetSidebar } from './WidgetSidebar';
+export type { WidgetInteraction } from './WidgetSidebar';

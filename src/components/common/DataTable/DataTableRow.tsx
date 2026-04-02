@@ -38,6 +38,7 @@ export interface DataTableItem {
   isActive?: boolean;
   isPinned?: boolean;
   my_permission?: string;
+  hideActions?: boolean;
 }
 
 interface DataTableRowProps {
@@ -50,6 +51,7 @@ interface DataTableRowProps {
   onManageAccess?: (id: string) => void;
   onDuplicate?: (id: string) => void;
   onEmbedSetup?: (id: string) => void;
+  onIntegrationPrompt?: (id: string) => void;
   onPin?: (id: string, isPinned: boolean) => void;
   onDelete?: (id: string) => void;
   onRowClick?: (id: string) => void;
@@ -73,6 +75,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
   onManageAccess,
   onDuplicate,
   onEmbedSetup,
+  onIntegrationPrompt,
   onPin,
   onDelete,
   onRowClick,
@@ -212,6 +215,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
             </div>
           )}
 
+          {!item.hideActions && (
           <Menu shadow="md" position="bottom-end" withinPortal>
           <Menu.Target>
             <ActionIcon variant="subtle" color="gray" onClick={(e) => e.stopPropagation()}>
@@ -271,6 +275,16 @@ export const DataTableRow: FC<DataTableRowProps> = ({
               >
                 Embed Agent
               </Menu.Item>
+            )}            {onIntegrationPrompt && (
+              <Menu.Item
+                leftSection={<IconCode size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onIntegrationPrompt(item.id);
+                }}
+              >
+                Integration Prompt
+              </Menu.Item>
             )}            <Menu.Divider />
             <Menu.Item
               leftSection={item.isPinned ? <IconPinned size={14} /> : <IconPin size={14} />}
@@ -298,6 +312,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
             )}
           </Menu.Dropdown>
         </Menu>
+          )}
         </Group>
       </Group>
     </Paper>

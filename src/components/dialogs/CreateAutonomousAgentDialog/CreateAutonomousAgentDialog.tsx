@@ -20,6 +20,7 @@ import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconRobot, IconPlus, IconAlertCircle } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
+import { useTranslation } from 'react-i18next';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import {
   AutonomousAgentTypeEnum,
@@ -27,7 +28,9 @@ import {
   type CredentialResponse,
   type N8NAutonomousAgentConfig,
 } from '../../../api/types';
-import { TagInput } from '../../common';
+import { TagInput, KeyValuePairsInput, ConnectionTestButton, FilterableSelect } from '../../common';
+import type { KeyValuePair } from '../../common';
+import { TestConnectionType } from '../../../api/types';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
 
 const AUTONOMOUS_AGENT_TYPES = [
@@ -54,6 +57,10 @@ interface FormValues {
   n8n_api_version: string;
   n8n_workflow_endpoint: string;
   n8n_api_api_key_credential_id: string;
+  n8n_enable_start_workflow: boolean;
+  n8n_webhook_url: string;
+  n8n_default_body: string;
+  n8n_default_query_params: KeyValuePair[];
 }
 
 export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> = ({
@@ -62,6 +69,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
   onSuccess,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { t } = useTranslation('common');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
@@ -80,6 +88,10 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
       n8n_api_version: 'v1',
       n8n_workflow_endpoint: '',
       n8n_api_api_key_credential_id: '',
+      n8n_enable_start_workflow: false,
+      n8n_webhook_url: '',
+      n8n_default_body: '{}',
+      n8n_default_query_params: [],
     },
     validate: {
       name: (value) => {
@@ -127,6 +139,19 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
         }
         return null;
       },
+      n8n_default_body: (value, values) => {
+        if (values.type === AutonomousAgentTypeEnum.N8N && values.n8n_enable_start_workflow) {
+          const trimmed = value.trim();
+          if (trimmed && trimmed !== '{}') {
+            try {
+              JSON.parse(trimmed);
+            } catch {
+              return 'Invalid JSON';
+            }
+          }
+        }
+        return null;
+      },
     },
   });
 
@@ -141,6 +166,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
         order_by: 'name',
         order_direction: 'asc',
         ...(searchTerm && { name: searchTerm }),
+        fields: 'id,name,type',
       });
       setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
     } catch (error) {
@@ -150,20 +176,12 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
     }
   }, [apiClient, selectedTenant]);
 
-  // Load credentials when dialog opens
-  useEffect(() => {
-    if (opened) {
-      loadCredentials();
-    } else {
-      // Reset search when dialog closes
-      setCredentialSearch('');
-    }
-  }, [opened, loadCredentials]);
-
-  // Reload credentials when search term changes (debounced)
   useEffect(() => {
     if (opened && debouncedCredentialSearch !== undefined) {
       loadCredentials(debouncedCredentialSearch || undefined);
+    }
+    if (!opened) {
+      setCredentialSearch('');
     }
   }, [opened, debouncedCredentialSearch, loadCredentials]);
 
@@ -188,6 +206,21 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
           workflow_endpoint: values.n8n_workflow_endpoint.trim(),
           api_api_key_credential_id: values.n8n_api_api_key_credential_id,
         };
+        if (values.n8n_enable_start_workflow && values.n8n_webhook_url.trim()) {
+          config.webhook_url = values.n8n_webhook_url.trim();
+          const bodyTrimmed = values.n8n_default_body.trim();
+          if (bodyTrimmed && bodyTrimmed !== '{}') {
+            try {
+              config.default_body = JSON.parse(bodyTrimmed) as Record<string, unknown>;
+            } catch { /* ignore invalid JSON, will be empty */ }
+          }
+          const filledPairs = values.n8n_default_query_params.filter((p) => p.key.trim());
+          if (filledPairs.length > 0) {
+            config.default_query_params = Object.fromEntries(
+              filledPairs.map((p) => [p.key.trim(), p.value])
+            );
+          }
+        }
       }
 
       // Create the autonomous agent
@@ -300,10 +333,71 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
                   withAsterisk
                   {...form.getInputProps('n8n_workflow_endpoint')}
                 />
+                <ConnectionTestButton
+                  testType={TestConnectionType.N8N_WORKFLOW}
+                  url={form.values.n8n_workflow_endpoint}
+                  credentialId={form.values.n8n_api_api_key_credential_id || undefined}
+                  disabled={!form.values.n8n_workflow_endpoint || !form.values.n8n_api_api_key_credential_id}
+                />
+
+                <Switch
+                  label="Enable Start Workflow"
+                  description="Allow triggering the workflow via webhook with optional defaults"
+                  checked={form.values.n8n_enable_start_workflow}
+                  onChange={(e) => form.setFieldValue('n8n_enable_start_workflow', e.currentTarget.checked)}
+                />
+
+                {form.values.n8n_enable_start_workflow && (
+                  <>
+                    <TextInput
+                      label="Webhook URL"
+                      placeholder="https://your-n8n.com/webhook/my-hook"
+                      description="Webhook URL to trigger the workflow"
+                      required
+                      withAsterisk
+                      {...form.getInputProps('n8n_webhook_url')}
+                    />
+                    <ConnectionTestButton
+                      testType={TestConnectionType.N8N_WEBHOOK}
+                      url={form.values.n8n_webhook_url}
+                      disabled={!form.values.n8n_webhook_url}
+                      hint={t('testConnectionHintWebhook')}
+                    />
+                    <Textarea
+                      label="Default Body (JSON)"
+                      placeholder="{}"
+                      description="Pre-filled request body when starting the workflow"
+                      minRows={3}
+                      maxRows={6}
+                      autosize
+                      styles={{ input: { fontFamily: 'monospace' } }}
+                      value={form.values.n8n_default_body}
+                      error={form.errors.n8n_default_body}
+                      onChange={(e) => form.setFieldValue('n8n_default_body', e.currentTarget.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Tab') {
+                          e.preventDefault();
+                          const ta = e.currentTarget;
+                          const s = ta.selectionStart;
+                          const end = ta.selectionEnd;
+                          const val = form.values.n8n_default_body;
+                          form.setFieldValue('n8n_default_body', val.substring(0, s) + '  ' + val.substring(end));
+                          requestAnimationFrame(() => { ta.selectionStart = ta.selectionEnd = s + 2; });
+                        }
+                      }}
+                    />
+                    <KeyValuePairsInput
+                      label="Default Query Params"
+                      description="Key-value pairs pre-filled when starting the workflow"
+                      value={form.values.n8n_default_query_params}
+                      onChange={(pairs) => form.setFieldValue('n8n_default_query_params', pairs)}
+                    />
+                  </>
+                )}
 
                 {/* API Key Credential with Add Button */}
                 <Group gap="xs" align="flex-end">
-                  <Select
+                  <FilterableSelect
                     label="API Key Credential"
                     placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
                     required
@@ -311,9 +405,8 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
                     data={apiKeyCredentials}
                     rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                     disabled={isLoadingCredentials}
-                    searchable
-                    onSearchChange={setCredentialSearch}
                     nothingFoundMessage="No credentials found"
+                    onFilterChange={setCredentialSearch}
                     style={{ flex: 1 }}
                     {...form.getInputProps('n8n_api_api_key_credential_id')}
                   />

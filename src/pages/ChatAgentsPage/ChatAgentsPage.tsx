@@ -96,7 +96,7 @@ export const ChatAgentsPage: FC = () => {
       if (agent?.type === 'REACT_AGENT') {
         navigate(`/chat-agents/${id}/develop`);
       } else {
-        navigate(`/conversations?chat-agent=${id}&selected-chatAgentId=${id}`);
+        navigate(`/conversations?agent=${id}&selected=${id}`);
       }
     }
   }, [navigate, rawDataRef, isReactView]);
@@ -144,7 +144,7 @@ export const ChatAgentsPage: FC = () => {
         onRowClick={handleOpen}
         onOpen={handleOpen}
         onEdit={handleEdit}
-        onShare={handleManageAccess}
+        onManageAccess={handleManageAccess}
         onDuplicate={handleDuplicate}
         onEmbedSetup={handleEmbedSetup}
         onDelete={handleDeleteClick}

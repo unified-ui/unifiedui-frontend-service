@@ -3,12 +3,14 @@ import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Group,
-  Select,
   Text,
   ActionIcon,
   Menu,
   Tooltip,
   Box,
+  Modal,
+  Button,
+  ThemeIcon,
   Stack,
 } from '@mantine/core';
 import {
@@ -19,13 +21,13 @@ import {
   IconChevronDown,
   IconSparkles,
   IconChartDots,
+  IconPuzzle,
   IconFileText,
   IconFileTypePdf,
   IconFileTypeJs,
   IconCode,
 } from '@tabler/icons-react';
-import { DelayedTooltip } from '../../common';
-import { ConfirmDeleteDialog } from '../../common';
+import { ConfirmDeleteDialog, FilterableSelect } from '../../common';
 import type { ChatAgentResponse, ConversationResponse, MessageResponse } from '../../../api/types';
 import classes from './ChatHeader.module.css';
 
@@ -37,12 +39,16 @@ export interface ChatHeaderProps {
   isFavorite?: boolean;
   tracingSidebarVisible?: boolean;
   hasTraces?: boolean;
+  widgetSidebarVisible?: boolean;
+  hasWidgets?: boolean;
   messages?: MessageResponse[];
   onChatAgentChange: (chatAgentId: string) => void;
+  onNewChatWithAgent?: (chatAgentId: string) => void;
   onShare?: () => void;
   onToggleFavorite?: () => void;
   onDelete?: () => void;
   onToggleTracingSidebar?: () => void;
+  onToggleWidgetSidebar?: () => void;
   onEmbedSetup?: () => void;
 }
 
@@ -54,18 +60,23 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
   isFavorite = false,
   tracingSidebarVisible = false,
   hasTraces = false,
+  widgetSidebarVisible = false,
+  hasWidgets = false,
   messages = [],
   onChatAgentChange,
+  onNewChatWithAgent,
   onShare,
   onToggleFavorite,
   onDelete,
   onToggleTracingSidebar,
+  onToggleWidgetSidebar,
   onEmbedSetup,
 }) => {
-  const selectedApp = chatAgents.find(a => a.id === selectedChatAgentId);
   const { t } = useTranslation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [switchAgentDialogOpen, setSwitchAgentDialogOpen] = useState(false);
+  const [pendingSwitchAgentId, setPendingSwitchAgentId] = useState<string | null>(null);
 
   const handleExportMarkdown = () => {
     const title = conversation?.name || 'Conversation';
@@ -121,6 +132,28 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
     }
   };
 
+  const handleAgentChange = (agentId: string) => {
+    if (!isNewChat) {
+      setPendingSwitchAgentId(agentId);
+      setSwitchAgentDialogOpen(true);
+    } else {
+      onChatAgentChange(agentId);
+    }
+  };
+
+  const handleSwitchAgentConfirm = () => {
+    if (pendingSwitchAgentId) {
+      onNewChatWithAgent?.(pendingSwitchAgentId);
+    }
+    setSwitchAgentDialogOpen(false);
+    setPendingSwitchAgentId(null);
+  };
+
+  const handleSwitchAgentCancel = () => {
+    setSwitchAgentDialogOpen(false);
+    setPendingSwitchAgentId(null);
+  };
+
   const chatAgentOptions = chatAgents
     .filter(app => app.is_active)
     .map(app => ({
@@ -135,45 +168,34 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
     <div className={classes.header}>
       <Group justify="space-between" align="center" wrap="nowrap" className={classes.headerContent}>
         <Box className={classes.leftSection}>
-          {isNewChat ? (
-            <Select
-              placeholder={t('conversations:selectAgent')}
-              data={chatAgentOptions}
-              value={selectedChatAgentId}
-              onChange={(value) => value && onChatAgentChange(value)}
-              leftSection={<IconSparkles size={18} />}
-              rightSection={<IconChevronDown size={16} />}
-              className={classes.chatAgentSelect}
-              searchable
-              nothingFoundMessage={t('conversations:noAgentsFound')}
-              comboboxProps={{ position: 'bottom-start', shadow: 'md' }}
-            />
-          ) : (
-            <Box className={classes.chatAgentInfo}>
-              <Group gap="xs" wrap="nowrap">
-                <IconSparkles size={20} className={classes.chatAgentIcon} />
-                <Stack gap={0}>
-                  <DelayedTooltip label={selectedApp?.name || t('conversations:unknownAgent')}>
-                    <Text size="sm" fw={600} lineClamp={1}>
-                      {selectedApp?.name || t('conversations:unknownAgent')}
-                    </Text>
-                  </DelayedTooltip>
-                  {selectedApp?.description && (
-                    <DelayedTooltip label={selectedApp.description}>
-                      <Text size="xs" c="dimmed" lineClamp={1}>
-                        {selectedApp.description}
-                      </Text>
-                    </DelayedTooltip>
-                  )}
-                </Stack>
-              </Group>
-            </Box>
-          )}
+          <FilterableSelect
+            placeholder={t('conversations:selectAgent')}
+            data={chatAgentOptions}
+            value={selectedChatAgentId}
+            onChange={(value) => value && handleAgentChange(value)}
+            leftSection={<IconSparkles size={18} />}
+            rightSection={<IconChevronDown size={16} />}
+            className={classes.chatAgentSelect}
+            nothingFoundMessage={t('conversations:noAgentsFound')}
+            comboboxProps={{ position: 'bottom-start', shadow: 'md' }}
+          />
         </Box>
 
         <Group gap="xs" className={classes.rightSection}>
           {selectedChatAgentId && (
             <>
+              <Tooltip label={widgetSidebarVisible ? t('widgets:sidebar.hideWidgets') : t('widgets:sidebar.showWidgets')}>
+                <ActionIcon
+                  variant={widgetSidebarVisible ? 'filled' : 'subtle'}
+                  color={widgetSidebarVisible ? 'primary' : undefined}
+                  onClick={onToggleWidgetSidebar}
+                  aria-label="Toggle widget sidebar"
+                  disabled={isNewChat || !hasWidgets}
+                >
+                  <IconPuzzle size={18} />
+                </ActionIcon>
+              </Tooltip>
+
               <Tooltip label={tracingSidebarVisible ? t('tracing:hideTracing') : t('tracing:showTracing')}>
                 <ActionIcon
                   variant={tracingSidebarVisible ? 'filled' : 'subtle'}
@@ -272,6 +294,37 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
         itemType="Conversation"
         isLoading={isDeleting}
       />
+
+      <Modal
+        opened={switchAgentDialogOpen}
+        onClose={handleSwitchAgentCancel}
+        title={
+          <Group gap="sm">
+            <ThemeIcon color="primary" variant="light" size="lg" radius="xl">
+              <IconSparkles size={20} />
+            </ThemeIcon>
+            <Text fw={600} size="lg">{t('conversations:switchAgentTitle')}</Text>
+          </Group>
+        }
+        centered
+        size="sm"
+      >
+        <Stack gap="lg" mt="md">
+          <Text size="sm" c="dimmed">
+            {t('conversations:switchAgentMessage', {
+              agentName: chatAgents.find(a => a.id === pendingSwitchAgentId)?.name || t('conversations:unknownAgent'),
+            })}
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={handleSwitchAgentCancel}>
+              {t('conversations:cancel')}
+            </Button>
+            <Button onClick={handleSwitchAgentConfirm}>
+              {t('conversations:switchAgentConfirm')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </div>
   );
 };

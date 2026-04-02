@@ -23,7 +23,7 @@ import { useIdentity } from '../../../contexts';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import { useEntityPermissions, usePermissions } from '../../../hooks';
 import { useFormDirtyGuard } from '../../../hooks';
-import { ManageAccessTable, TagInput, AddPrincipalDialog } from '../../common';
+import { ManageAccessTable, TagInput, AddPrincipalDialog, CredentialTestButton } from '../../common';
 import type { CredentialResponse, PrincipalTypeEnum } from '../../../api/types';
 import { PermissionActionEnum, CredentialTypeEnum } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
@@ -40,6 +40,11 @@ interface FormValues {
   secret_value: string;
   username: string;
   password: string;
+  // For ENTRA_ID_APP_REGISTRATION
+  entra_tenant_id: string;
+  entra_client_id: string;
+  entra_client_secret: string;
+  entra_scopes: string[];
 }
 
 export interface EditCredentialDialogProps {
@@ -66,6 +71,7 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
   const { isGlobalAdmin } = usePermissions();
   const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission === 'ADMIN';
   const [credential, setCredential] = useState<CredentialResponse | null>(null);
+  const [originalClientSecret, setOriginalClientSecret] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,6 +102,10 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
       secret_value: '',
       username: '',
       password: '',
+      entra_tenant_id: '',
+      entra_client_id: '',
+      entra_client_secret: '',
+      entra_scopes: ['https://graph.microsoft.com/.default'],
     },
     validate: {
       name: (value) => {
@@ -110,8 +120,41 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
 
   // Initialize form from data
   const initializeFromData = useCallback(
-    (data: CredentialResponse) => {
+    async (data: CredentialResponse) => {
       setCredential(data);
+
+      let entraValues = {
+        entra_tenant_id: '',
+        entra_client_id: '',
+        entra_client_secret: '',
+        entra_scopes: ['https://graph.microsoft.com/.default'] as string[],
+      };
+
+      if (
+        data.type === CredentialTypeEnum.ENTRA_ID_APP_REGISTRATION &&
+        apiClient &&
+        selectedTenant
+      ) {
+        try {
+          const secretResp = await apiClient.getCredentialSecret(
+            selectedTenant.id,
+            data.id
+          );
+          const parsed = JSON.parse(secretResp.secret_value) as Record<string, unknown>;
+          setOriginalClientSecret((parsed.client_secret as string) || '');
+          entraValues = {
+            entra_tenant_id: (parsed.tenant_id as string) || '',
+            entra_client_id: (parsed.client_id as string) || '',
+            entra_client_secret: '',
+            entra_scopes: Array.isArray(parsed.scopes)
+              ? (parsed.scopes as string[])
+              : ['https://graph.microsoft.com/.default'],
+          };
+        } catch {
+          // Fall back to empty values if secret fetch fails
+        }
+      }
+
       form.setValues({
         name: data.name,
         description: data.description || '',
@@ -120,11 +163,12 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
         secret_value: '',
         username: '',
         password: '',
+        ...entraValues,
       });
       form.resetDirty();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [apiClient, selectedTenant]
   );
 
   // Fetch credential details
@@ -187,6 +231,16 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
         if (values.secret_value.trim()) {
           secretValue = values.secret_value.trim();
         }
+      } else if (credential?.type === CredentialTypeEnum.ENTRA_ID_APP_REGISTRATION) {
+        const clientSecret = values.entra_client_secret.trim() || originalClientSecret;
+        if (values.entra_tenant_id.trim() && values.entra_client_id.trim() && clientSecret) {
+          secretValue = JSON.stringify({
+            tenant_id: values.entra_tenant_id.trim(),
+            client_id: values.entra_client_id.trim(),
+            client_secret: clientSecret,
+            ...(values.entra_scopes.length > 0 && { scopes: values.entra_scopes }),
+          });
+        }
       }
 
       // Update credential
@@ -246,6 +300,7 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
     form.reset();
     setError(null);
     setCredential(null);
+    setOriginalClientSecret('');
     onClose();
   };
 
@@ -385,6 +440,39 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
                 </>
               )}
 
+              {credential?.type === CredentialTypeEnum.ENTRA_ID_APP_REGISTRATION && (
+                <>
+                  <TextInput
+                    label={t('credentials:newTenantId')}
+                    placeholder={t('credentials:newTenantId')}
+                    {...form.getInputProps('entra_tenant_id')}
+                  />
+                  <TextInput
+                    label={t('credentials:newClientId')}
+                    placeholder={t('credentials:newClientId')}
+                    {...form.getInputProps('entra_client_id')}
+                  />
+                  <PasswordInput
+                    label={t('credentials:newClientSecret')}
+                    placeholder={t('credentials:leaveEmptyToKeep')}
+                    description={t('credentials:fillOnlyToChangeClientSecret')}
+                    {...form.getInputProps('entra_client_secret')}
+                  />
+                  <TagInput
+                    label={t('credentials:newScopes')}
+                    placeholder="e.g. https://graph.microsoft.com/.default"
+                    value={form.values.entra_scopes}
+                    onChange={(scopes) => form.setFieldValue('entra_scopes', scopes)}
+                  />
+                  <CredentialTestButton
+                    tenantId={form.values.entra_tenant_id}
+                    clientId={form.values.entra_client_id}
+                    clientSecret={form.values.entra_client_secret}
+                    scopes={form.values.entra_scopes}
+                  />
+                </>
+              )}
+
               <TagInput
                 label="Tags"
                 placeholder="Enter a tag and press Space to add..."
@@ -435,6 +523,11 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
               onDeletePrincipal={handleDeletePrincipalWithTypes}
               onAddPrincipal={() => setIsAddPrincipalOpen(true)}
               entityName="credential"
+              onRefreshPrincipal={async (principalId, principalType) => {
+                if (!apiClient || !selectedTenant) return;
+                await apiClient.refreshPrincipal(principalId, { tenant_id: selectedTenant.id, type: principalType as 'IDENTITY_USER' | 'IDENTITY_GROUP' });
+                await fetchPrincipals(false);
+              }}
             />
           </Box>
         )}

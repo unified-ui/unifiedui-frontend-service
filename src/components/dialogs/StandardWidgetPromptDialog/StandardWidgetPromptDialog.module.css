@@ -1,0 +1,24 @@
+.codeBlock {
+  position: relative;
+  padding: var(--spacing-md);
+  padding-top: var(--spacing-lg);
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+}
+
+.codeContent {
+  font-family: monospace;
+  font-size: var(--font-size-xs);
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}
+
+.copyButtonWrapper {
+  position: absolute;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+  z-index: 1;
+}

@@ -25,6 +25,7 @@ interface DataTableProps {
   onManageAccess?: (id: string) => void;
   onDuplicate?: (id: string) => void;
   onEmbedSetup?: (id: string) => void;
+  onIntegrationPrompt?: (id: string) => void;
   onPin?: (id: string, isPinned: boolean) => void;
   onDelete?: (id: string) => void;
   onRowClick?: (id: string) => void;
@@ -44,6 +45,7 @@ interface DataTableProps {
   enableSelection?: boolean;
   onBulkDelete?: (ids: string[]) => void;
   onBulkStatusToggle?: (ids: string[], isActive: boolean) => void;
+  staticItems?: DataTableItem[];
 }
 
 export const DataTable: FC<DataTableProps> = ({
@@ -63,6 +65,7 @@ export const DataTable: FC<DataTableProps> = ({
   onManageAccess,
   onDuplicate,
   onEmbedSetup,
+  onIntegrationPrompt,
   onPin,
   onDelete,
   onRowClick,
@@ -82,6 +85,7 @@ export const DataTable: FC<DataTableProps> = ({
   enableSelection = false,
   onBulkDelete,
   onBulkStatusToggle,
+  staticItems = [],
 }) => {
   const { t } = useTranslation('common');
   const [internalSearchValue, setInternalSearchValue] = useState('');
@@ -147,8 +151,22 @@ export const DataTable: FC<DataTableProps> = ({
       });
     }
 
+    if (staticItems.length > 0) {
+      let filteredStatic = [...staticItems];
+      if (searchValue) {
+        const query = searchValue.toLowerCase();
+        filteredStatic = filteredStatic.filter(
+          (item) =>
+            item.name.toLowerCase().includes(query) ||
+            item.description?.toLowerCase().includes(query) ||
+            item.type?.toLowerCase().includes(query)
+        );
+      }
+      return [...filteredStatic, ...result];
+    }
+
     return result;
-  }, [items, searchValue, sortBy, filters, externalSortBy, isExternalSearch, isExternalFilters, isFavorite]);
+  }, [items, searchValue, sortBy, filters, externalSortBy, isExternalSearch, isExternalFilters, isFavorite, staticItems]);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -315,7 +333,17 @@ export const DataTable: FC<DataTableProps> = ({
 
       {showLoadingSkeleton ? (
         <Stack gap="xs" className={classes.tableBody} p="xs">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {staticItems.map((item) => (
+            <DataTableRow
+              key={item.id}
+              item={item}
+              showStatus={showStatus}
+              onOpen={onOpen}
+              onRowClick={onRowClick}
+              icon={renderIcon?.(item)}
+            />
+          ))}
+          {Array.from({ length: Math.max(1, 5 - staticItems.length) }).map((_, i) => (
             <Group
               key={i}
               wrap="nowrap"
@@ -377,6 +405,7 @@ export const DataTable: FC<DataTableProps> = ({
                     onManageAccess={onManageAccess}
                     onDuplicate={onDuplicate}
                     onEmbedSetup={onEmbedSetup}
+                    onIntegrationPrompt={onIntegrationPrompt}
                     onPin={onPin}
                     onDelete={onDelete}
                     onRowClick={onRowClick}

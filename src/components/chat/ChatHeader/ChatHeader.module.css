@@ -29,15 +29,3 @@
 .chatAgentSelect input {
   font-weight: var(--font-weight-medium);
 }
-
-.chatAgentInfo {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-md);
-  background-color: var(--bg-app);
-  max-width: 350px;
-}
-
-.chatAgentIcon {
-  color: var(--color-primary-500);
-  flex-shrink: 0;
-}

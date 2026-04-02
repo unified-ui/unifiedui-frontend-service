@@ -15,7 +15,8 @@ export type EntityType =
   | 'credential'
   | 'chat-widget'
   | 'conversation'
-  | 'tool';
+  | 'tool'
+  | 'external-app';
 
 interface UseEntityPermissionsOptions {
   entityType: EntityType;
@@ -128,6 +129,14 @@ export const useEntityPermissions = ({
             apiClient.setToolPermission(tenantId, entityId, data),
           deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
             apiClient.deleteToolPermission(tenantId, entityId, principalId, principalType, role),
+        };
+      case 'external-app':
+        return {
+          getPrincipals: () => apiClient.getExternalAppPrincipals(tenantId, entityId),
+          setPermission: (data: { principal_id: string; principal_type: PrincipalTypeEnum; role: PermissionActionEnum }) =>
+            apiClient.setExternalAppPermission(tenantId, entityId, data),
+          deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
+            apiClient.deleteExternalAppPermission(tenantId, entityId, principalId, principalType, role),
         };
       default:
         return null;

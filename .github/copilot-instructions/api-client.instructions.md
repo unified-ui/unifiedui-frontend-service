@@ -153,6 +153,58 @@ Most resources follow this pattern:
 
 ---
 
+## Selective Field Fetching — Mandatory
+
+All list endpoints support `fields` and `ids` query parameters via `FieldSelectParams`. **Always request only the fields your component actually uses.**
+
+### Rules
+
+1. **Every list call MUST specify `fields`** unless it needs the full response (e.g., `rawDataRef` for edit dialogs).
+2. The `id` and `my_permission` fields are **always included** by the backend — no need to list them.
+3. Use `ids` to batch-fetch specific entities by ID (comma-separated).
+4. Sidebar calls using `view: 'quick-list'` already return minimal data — no `fields` needed there.
+
+### Pattern
+
+```typescript
+// Dropdown/selector — only needs id + name + type
+const credentials = await apiClient.listCredentials(tenantId, {
+  limit: 100,
+  order_by: "name",
+  order_direction: "asc",
+  fields: "id,name,type",
+});
+
+// Settings table — only needs display columns
+const tools = await apiClient.listTools(tenantId, {
+  skip,
+  limit: 50,
+  order_by: "name",
+  order_direction: "asc",
+  fields: "id,name,type",
+});
+
+// DataTable list pages (useEntityList) — do NOT use fields
+// because rawDataRef stores full entities for edit dialog initialization
+```
+
+### Current Field Selections
+
+| Call Site                                  | fields                                                       |
+| ------------------------------------------ | ------------------------------------------------------------ |
+| Credential dropdowns (create/edit dialogs) | `id,name,type`                                               |
+| useConversationList chat agents            | `id,name,is_active`                                          |
+| ReActAgentDeveloperPage AI models          | `id,name,purpose_groups,is_active,provider`                  |
+| ReActAgentDeveloperPage tools              | `id,name,type,is_active`                                     |
+| TenantSettings custom groups               | `id,name,description`                                        |
+| TenantSettings credentials                 | `id,name,type,description`                                   |
+| TenantSettings tools                       | `id,name,type`                                               |
+| TenantSettings AI models                   | `id,name,type,provider,is_active,purpose_groups,description` |
+| DataTable pages (useEntityList)            | _not used_ — rawDataRef needs full data                      |
+| Sidebar (SidebarDataContext)               | _not used_ — already uses `view: 'quick-list'`               |
+
+---
+
 ## SSE Streaming
 
 For chat messages, the client uses `EventSource`-style streaming via `fetch` with `ReadableStream`:

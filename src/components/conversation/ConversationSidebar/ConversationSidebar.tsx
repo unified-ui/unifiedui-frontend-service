@@ -18,7 +18,6 @@ import {
   CopyButton,
 } from '@mantine/core';
 import {
-  IconPlus,
   IconSearch,
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand,
@@ -110,7 +109,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
 
   const [chatAgentSelectDialogOpen, setChatAgentSelectDialogOpen] = useState(false);
 
-  const selectedChatAgentId = searchParams.get('selected-chatAgentId');
+  const selectedChatAgentId = searchParams.get('selected');
 
   const selectedChatAgent = useMemo(() => {
     if (!selectedChatAgentId) return null;
@@ -127,15 +126,14 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
 
   const handleClearFilter = useCallback(() => {
     const newParams = new URLSearchParams(searchParams);
-    newParams.delete('selected-chatAgentId');
+    newParams.delete('selected');
     setSearchParams(newParams, { replace: true });
   }, [searchParams, setSearchParams]);
 
   const handleSelectChatAgent = useCallback((app: QuickListItemResponse) => {
     const newParams = new URLSearchParams(searchParams);
-    newParams.set('selected-chatAgentId', app.id);
-    newParams.set('chatAgentId', app.id);
-    newParams.set('chat-agent', app.id);
+    newParams.set('selected', app.id);
+    newParams.set('agent', app.id);
     setSearchParams(newParams, { replace: true });
   }, [searchParams, setSearchParams]);
 
@@ -300,7 +298,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
             className={classes.newChatButtonCollapsed}
             onClick={onNewChat}
           >
-            <IconPlus size={18} />
+            <IconEdit size={18} />
           </ActionIcon>
         </Tooltip>
       </div>
@@ -319,22 +317,28 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
         >
           <IconLayoutSidebarLeftCollapse size={20} />
         </ActionIcon>
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          onClick={onSearchOpen}
-          aria-label="Search"
-          className={classes.headerButton}
-        >
-          <IconSearch size={18} />
-        </ActionIcon>
-      </div>
-
-      <div className={classes.actions}>
-        <UnstyledButton className={classes.newChatButton} onClick={onNewChat}>
-          <IconPlus size={18} />
-          <Text size="sm">{t('conversations:newChat')}</Text>
-        </UnstyledButton>
+        <Group gap={4}>
+          <Tooltip label={t('conversations:newChat')} position="bottom">
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              onClick={onNewChat}
+              aria-label={t('conversations:newChat')}
+              className={classes.headerButton}
+            >
+              <IconEdit size={18} />
+            </ActionIcon>
+          </Tooltip>
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            onClick={onSearchOpen}
+            aria-label="Search"
+            className={classes.headerButton}
+          >
+            <IconSearch size={18} />
+          </ActionIcon>
+        </Group>
       </div>
 
       <div className={classes.groupToggle}>

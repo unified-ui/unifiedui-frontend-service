@@ -46,12 +46,17 @@
   "selectAgent": "Select Chat Agent",
   "noAgentsFound": "No agents found",
   "unknownAgent": "Unknown Agent",
+  "switchAgentTitle": "Switch Agent",
+  "switchAgentMessage": "Do you want to start a new chat with \"{{agentName}}\"?",
+  "switchAgentConfirm": "Start New Chat",
   "shareConversation": "Share conversation",
   "streamingError": "An error occurred while generating the response.",
   "fileUpload": "Attach files",
   "dropFilesHere": "Drop files here",
   "filesAttached": "Files will be attached to your message",
   "loading": "Loading...",
+  "loadMoreMessages": "Load more",
+  "allMessagesDisplayed": "All messages displayed",
   "error": "Error",
   "failedToLoadConversations": "Failed to load conversations",
   "failedToUpdateFavorite": "Failed to update favorite",
@@ -83,5 +88,9 @@
   "resultsFound_other": "{{count}} results found",
   "recentConversations": "{{count}} recent conversations",
   "userMessage": "You",
-  "assistantMessage": "Assistant"
+  "assistantMessage": "Assistant",
+  "welcomeTitle": "What can I help you with?",
+  "welcomeTitleWithAgent": "Chat with {{agentName}}",
+  "welcomeDescription": "Ask me anything or try one of these suggestions",
+  "aiDisclaimer": "This chat uses AI to generate responses. AI can make mistakes. Please verify important information."
 }

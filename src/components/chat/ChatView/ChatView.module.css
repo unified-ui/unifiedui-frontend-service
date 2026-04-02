@@ -26,10 +26,42 @@
   overflow: hidden;
 }
 
+.widgetSidebarWrapper {
+  width: 320px;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .contentArea {
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  padding-bottom: 2.5rem;
+}
+
+.welcomeLayout {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: var(--spacing-lg);
+  animation: welcomeFadeIn 400ms ease-out;
+}
+
+@keyframes welcomeFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Drop zone overlay */

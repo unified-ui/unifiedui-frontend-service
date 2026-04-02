@@ -46,6 +46,7 @@ vi.mock('../../auth', () => ({
     isAuthenticated: true,
     login: vi.fn(),
     logout: vi.fn(),
+    switchAccount: vi.fn(),
     account: { username: 'john@example.com' },
   }),
 }));

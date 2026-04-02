@@ -26,6 +26,10 @@
   "createdAt": "Created at",
   "updatedAt": "Last updated",
   "tags": "Tags",
+  "tagsPlaceholder": "Enter a tag and press Space to add...",
+  "details": "Details",
+  "manageAccess": "Manage Access",
+  "saveChanges": "Save Changes",
   "duplicate": "Duplicate",
   "pin": "Pin",
   "unpin": "Unpin",
@@ -38,6 +42,7 @@
   "deleteFailed": "Failed to delete. Please try again.",
   "createFailed": "Failed to create. Please try again.",
   "updateFailed": "Failed to update. Please try again.",
+  "nameAlreadyExists": "A resource with this name already exists.",
   "loadFailed": "Failed to load data. Please try again.",
   "errorLoadingChatAgents": "Failed to load chat agents",
   "errorLoadingAutonomousAgents": "Failed to load autonomous agents",
@@ -98,5 +103,20 @@
     "preview": "Chat Preview",
     "width": "Width",
     "height": "Height"
+  },
+  "greetingMessages": {
+    "title": "Greeting Messages",
+    "description": "Suggested prompts shown to users when starting a new chat.",
+    "placeholder": "Enter a starter prompt...",
+    "maxReached": "Maximum greeting messages reached"
+  },
+  "testConnection": "Test Connection",
+  "testConnectionFailed": "Failed to test connection",
+  "testConnectionHintN8nChat": "This will trigger a test execution on your n8n instance",
+  "testConnectionHintWebhook": "This will trigger a test execution via the webhook",
+  "signOut": "Sign out",
+  "unauthorized": {
+    "title": "No Access",
+    "message": "You do not have access to any organization or tenant. Please contact your administrator."
   }
 }

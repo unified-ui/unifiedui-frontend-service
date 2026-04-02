@@ -2,6 +2,7 @@ import type {
   // Common Types
   PaginationParams,
   FilterParams,
+  FieldSelectParams,
   SearchParams,
   OrderParams,
   QuickListItemResponse,
@@ -43,6 +44,8 @@ import type {
   UpdateAutonomousAgentRequest,
   SetAutonomousAgentPermissionRequest,
   AutonomousAgentKeyResponse,
+  ListWorkflowRunsResponse,
+  WorkflowRunRetryResponse,
   // Conversation Types
   ConversationResponse,
   ConversationQuickListItemResponse,
@@ -55,6 +58,8 @@ import type {
   UpdateCredentialRequest,
   SetCredentialPermissionRequest,
   CredentialSecretResponse,
+  TestCredentialConnectionRequest,
+  TestCredentialConnectionResponse,
   // Chat Widget Types
   ChatWidgetResponse,
   CreateChatWidgetRequest,
@@ -102,6 +107,7 @@ import type {
   UpsertReactionRequest,
   ReactionResponse,
   ListReactionsResponse,
+  BulkReactionsResponse,
   GetTracesResponse,
   BatchUpdateTracesRequest,
   UpdateTracesResponse,
@@ -115,6 +121,10 @@ import type {
   AIModelResponse,
   CreateAIModelRequest,
   UpdateAIModelRequest,
+  // External App Types
+  ExternalAppResponse,
+  CreateExternalAppRequest,
+  UpdateExternalAppRequest,
   // AI Feature Types
   GenerateDescriptionRequest,
   GenerateDescriptionResponse,
@@ -124,9 +134,13 @@ import type {
   SummarizeTraceResponse,
   TestModelRequest,
   TestModelResponse,
+  TestConnectionRequest,
+  TestConnectionResponse,
   AICapabilitiesResponse,
   TraceChatRequest,
   TraceChatResponse,
+  // File Types
+  FileUploadResponse,
   // Misc Types
   HealthCheckResponse,
   PrincipalTypeEnum,
@@ -257,7 +271,7 @@ export class UnifiedUIAPIClient {
   }
 
   async refreshPrincipal(principalId: string, data: RefreshPrincipalRequest): Promise<PrincipalResponse> {
-    return this.request<PrincipalResponse>('PUT', `/api/v1/platform-service/identity/principals/${principalId}`, data, 'Principal refreshed successfully');
+    return this.request<PrincipalResponse>('PUT', `/api/v1/platform-service/identity/principals/${principalId}/refresh`, data, 'Principal refreshed successfully');
   }
 
   // ========== Tenant Endpoints ==========
@@ -344,7 +358,7 @@ export class UnifiedUIAPIClient {
 
   async listChatAgents(
     tenantId: string,
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
+    params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise<ChatAgentResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
@@ -396,7 +410,7 @@ export class UnifiedUIAPIClient {
 
   async listAutonomousAgents(
     tenantId: string,
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
+    params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise<AutonomousAgentResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
@@ -464,7 +478,7 @@ export class UnifiedUIAPIClient {
 
   // ========== Conversation Endpoints ==========
 
-  async listConversations(tenantId: string, params?: PaginationParams & OrderParams & { name?: string; view?: 'quick-list' }, options?: { noCache?: boolean }): Promise<ConversationResponse[] | ConversationQuickListItemResponse[]> {
+  async listConversations(tenantId: string, params?: PaginationParams & OrderParams & FieldSelectParams & { name?: string; view?: 'quick-list' }, options?: { noCache?: boolean }): Promise<ConversationResponse[] | ConversationQuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<ConversationResponse[] | ConversationQuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/conversations${query}`, undefined, undefined, options);
   }
@@ -515,7 +529,7 @@ export class UnifiedUIAPIClient {
 
   async listCredentials(
     tenantId: string,
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
+    params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise<CredentialResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
@@ -544,6 +558,16 @@ export class UnifiedUIAPIClient {
     return this.request<CredentialSecretResponse>(
       'GET',
       `/api/v1/platform-service/tenants/${tenantId}/credentials/${credentialId}/secret`
+    );
+  }
+
+  // ========== Credential Connection Test ==========
+
+  async testCredentialConnection(tenantId: string, data: TestCredentialConnectionRequest): Promise<TestCredentialConnectionResponse> {
+    return this.request<TestCredentialConnectionResponse>(
+      'POST',
+      `/api/v1/platform-service/tenants/${tenantId}/credentials/test-connection`,
+      data
     );
   }
 
@@ -576,7 +600,7 @@ export class UnifiedUIAPIClient {
 
   async listChatWidgets(
     tenantId: string,
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
+    params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise<ChatWidgetResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
@@ -628,7 +652,7 @@ export class UnifiedUIAPIClient {
 
   async listTools(
     tenantId: string,
-    params?: PaginationParams & OrderParams & FilterParams & { view?: 'quick-list' },
+    params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
     options?: { noCache?: boolean }
   ): Promise<ToolResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
@@ -710,7 +734,7 @@ export class UnifiedUIAPIClient {
 
   // ========== Custom Group Endpoints ==========
 
-  async listCustomGroups(tenantId: string, params?: PaginationParams & { name?: string }): Promise<CustomGroupResponse[]> {
+  async listCustomGroups(tenantId: string, params?: PaginationParams & FieldSelectParams & { name?: string }): Promise<CustomGroupResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<CustomGroupResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/custom-groups${query}`);
   }
@@ -747,7 +771,7 @@ export class UnifiedUIAPIClient {
 
   // ========== Tag Endpoints ==========
 
-  async listTags(tenantId: string, params?: PaginationParams & { name?: string }): Promise<TagListResponse> {
+  async listTags(tenantId: string, params?: PaginationParams & FieldSelectParams & { name?: string }): Promise<TagListResponse> {
     const query = this.buildQueryString(params || {});
     return this.request<TagListResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/tags${query}`);
   }
@@ -897,6 +921,52 @@ export class UnifiedUIAPIClient {
 
   async syncRecentVisits(tenantId: string, userId: string, data: SyncRecentVisitsRequest): Promise<RecentVisitListResponse> {
     return this.request<RecentVisitListResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/recent-visits/sync`, data);
+  }
+
+  // ========== File Endpoints ==========
+
+  async uploadFile(
+    tenantId: string,
+    file: File,
+    contextType: string,
+    contextId?: string
+  ): Promise<FileUploadResponse> {
+    const token = await this.getAccessToken();
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('context_type', contextType);
+    if (contextId) {
+      formData.append('context_id', contextId);
+    }
+
+    const response = await fetch(
+      `${this.baseURL}/api/v1/platform-service/tenants/${tenantId}/files`,
+      {
+        method: 'POST',
+        headers,
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  getFileDownloadUrl(tenantId: string, fileId: string): string {
+    return `${this.baseURL}/api/v1/platform-service/tenants/${tenantId}/files/${fileId}/download`;
+  }
+
+  async getAccessTokenForDownload(): Promise<string | null> {
+    return this.getAccessToken();
   }
 
   // ========== Agent Service Endpoints ==========
@@ -1082,6 +1152,18 @@ export class UnifiedUIAPIClient {
     );
   }
 
+  async getBulkReactions(
+    tenantId: string,
+    conversationId: string,
+    messageIds: string[]
+  ): Promise<BulkReactionsResponse> {
+    const query = this.buildQueryString({ messageIds: messageIds.join(',') });
+    return this.agentServiceRequest<BulkReactionsResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/conversations/${conversationId}/reactions${query}`
+    );
+  }
+
   /**
    * Send a message with SSE streaming.
    * Returns an async generator that yields SSE events.
@@ -1136,6 +1218,7 @@ export class UnifiedUIAPIClient {
       message: data.message,
       invokeConfig: data.invokeConfig,
       extConversationId: data.extConversationId,
+      extra: data.extra,
     };
 
     const response = await fetch(
@@ -1391,6 +1474,64 @@ export class UnifiedUIAPIClient {
     );
   }
 
+  /**
+   * Import a trace for an autonomous agent by execution ID.
+   */
+  async importAutonomousAgentTrace(
+    tenantId: string,
+    agentId: string,
+    data: { type: string; executionId: string; sessionId?: string }
+  ): Promise<{ id: string }> {
+    return this.agentServiceRequest<{ id: string }>(
+      'PUT',
+      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces/import`,
+      data,
+      'Trace imported successfully'
+    );
+  }
+
+  async listWorkflowRuns(
+    tenantId: string,
+    agentId: string,
+    params?: { limit?: number; cursor?: string; status?: string }
+  ): Promise<ListWorkflowRunsResponse> {
+    const query = this.buildQueryString(params || {});
+    return this.request<ListWorkflowRunsResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/workflow-runs${query}`
+    );
+  }
+
+  async retryWorkflowRun(
+    tenantId: string,
+    agentId: string,
+    executionId: string
+  ): Promise<WorkflowRunRetryResponse> {
+    return this.request<WorkflowRunRetryResponse>(
+      'POST',
+      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/workflow-runs/${executionId}/retry`
+    );
+  }
+
+  async startWorkflow(
+    tenantId: string,
+    agentId: string,
+    body?: Record<string, unknown>,
+    files?: { name: string; mimeType: string; data: string }[],
+    queryParams?: Record<string, string>
+  ): Promise<Record<string, unknown>> {
+    const payload: Record<string, unknown> = {};
+    if (body) payload.body = body;
+    if (files && files.length > 0) payload.files = files;
+    if (queryParams && Object.keys(queryParams).length > 0) payload.queryParams = queryParams;
+    return this.request<Record<string, unknown>>(
+      'POST',
+      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/workflow-start`,
+      Object.keys(payload).length > 0 ? payload : undefined,
+      'Workflow started successfully'
+    );
+  }
+
   async deleteTrace(tenantId: string, traceId: string): Promise<void> {
     return this.agentServiceRequest<void>(
       'DELETE',
@@ -1402,7 +1543,7 @@ export class UnifiedUIAPIClient {
 
   async listAIModels(
     tenantId: string,
-    params?: PaginationParams & OrderParams & FilterParams,
+    params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams,
     options?: { noCache?: boolean }
   ): Promise<AIModelResponse[]> {
     const query = this.buildQueryString(params || {});
@@ -1449,6 +1590,112 @@ export class UnifiedUIAPIClient {
     );
   }
 
+  // ========== External App Endpoints ==========
+
+  async listExternalApps(
+    tenantId: string,
+    params?: PaginationParams & OrderParams & FieldSelectParams,
+    options?: { noCache?: boolean }
+  ): Promise<ExternalAppResponse[]> {
+    const query = this.buildQueryString(params || {});
+    return this.request<ExternalAppResponse[]>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/external-apps${query}`,
+      undefined, undefined, options
+    );
+  }
+
+  async getExternalApp(tenantId: string, externalAppId: string): Promise<ExternalAppResponse> {
+    return this.request<ExternalAppResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/external-apps/${externalAppId}`
+    );
+  }
+
+  async createExternalApp(tenantId: string, data: CreateExternalAppRequest): Promise<ExternalAppResponse> {
+    return this.request<ExternalAppResponse>(
+      'POST',
+      `/api/v1/platform-service/tenants/${tenantId}/external-apps`,
+      data,
+      'External app created successfully'
+    );
+  }
+
+  async updateExternalApp(
+    tenantId: string,
+    externalAppId: string,
+    data: UpdateExternalAppRequest
+  ): Promise<ExternalAppResponse> {
+    return this.request<ExternalAppResponse>(
+      'PATCH',
+      `/api/v1/platform-service/tenants/${tenantId}/external-apps/${externalAppId}`,
+      data,
+      'External app updated successfully'
+    );
+  }
+
+  async deleteExternalApp(tenantId: string, externalAppId: string): Promise<void> {
+    return this.request<void>(
+      'DELETE',
+      `/api/v1/platform-service/tenants/${tenantId}/external-apps/${externalAppId}`,
+      undefined,
+      'External app deleted successfully'
+    );
+  }
+
+  // ========== External App Permissions ==========
+
+  async getExternalAppPrincipals(tenantId: string, externalAppId: string): Promise<ResourcePrincipalsResponse> {
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/external-apps/${externalAppId}/principals`);
+  }
+
+  async setExternalAppPermission(tenantId: string, externalAppId: string, data: SetChatWidgetPermissionRequest): Promise<PrincipalWithRolesResponse> {
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/external-apps/${externalAppId}/principals`, data, 'Permission added successfully');
+  }
+
+  async deleteExternalAppPermission(
+    tenantId: string,
+    externalAppId: string,
+    principalId: string,
+    principalType: PrincipalTypeEnum,
+    role: PermissionActionEnum
+  ): Promise<void> {
+    return this.request<void>(
+      'DELETE',
+      `/api/v1/platform-service/tenants/${tenantId}/external-apps/${externalAppId}/principals`,
+      { principal_id: principalId, principal_type: principalType, role },
+      'Permission removed successfully'
+    );
+  }
+
+  // ========== External App Tags ==========
+
+  async getExternalAppTags(tenantId: string, externalAppId: string): Promise<ResourceTagsResponse> {
+    return this.getResourceTags(tenantId, 'external-apps', externalAppId);
+  }
+
+  async setExternalAppTags(tenantId: string, externalAppId: string, tags: string[]): Promise<ResourceTagsResponse> {
+    return this.setResourceTags(tenantId, 'external-apps', externalAppId, { tags });
+  }
+
+  async listExternalAppTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
+    return this.listResourceTypeTags(tenantId, 'external-apps', params);
+  }
+
+  // ========== AI Model Tags ==========
+
+  async getAIModelTags(tenantId: string, modelId: string): Promise<ResourceTagsResponse> {
+    return this.getResourceTags(tenantId, 'ai-models', modelId);
+  }
+
+  async setAIModelTags(tenantId: string, modelId: string, tags: string[]): Promise<ResourceTagsResponse> {
+    return this.setResourceTags(tenantId, 'ai-models', modelId, { tags });
+  }
+
+  async listAIModelTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
+    return this.listResourceTypeTags(tenantId, 'ai-models', params);
+  }
+
   // ========== AI Feature Endpoints ==========
 
   async generateDescription(
@@ -1492,6 +1739,23 @@ export class UnifiedUIAPIClient {
       'POST',
       `/api/v1/agent-service/tenants/${tenantId}/ai/test-model`,
       data
+    );
+  }
+
+  async testConnection(
+    tenantId: string,
+    data: TestConnectionRequest,
+    foundryToken?: string
+  ): Promise<TestConnectionResponse> {
+    const additionalHeaders = foundryToken
+      ? { 'X-Microsoft-Foundry-API-Key': foundryToken }
+      : undefined;
+    return this.agentServiceRequest<TestConnectionResponse>(
+      'POST',
+      `/api/v1/agent-service/tenants/${tenantId}/connections/test`,
+      data,
+      undefined,
+      additionalHeaders
     );
   }
 

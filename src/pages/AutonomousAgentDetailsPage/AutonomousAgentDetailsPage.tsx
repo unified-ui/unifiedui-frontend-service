@@ -17,6 +17,7 @@ import {
   Box,
   TextInput,
   Skeleton,
+  Button,
 } from '@mantine/core';
 import {
   IconArrowLeft,
@@ -27,14 +28,18 @@ import {
   IconListDetails,
   IconInfoCircle,
   IconBraces,
+  IconPlayerPlay,
+  IconHistory,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip, Breadcrumbs, EntityAvatar } from '../../components/common';
+import { SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip, Breadcrumbs, EntityAvatar, WorkflowRunsTable } from '../../components/common';
 import type { TracesSortState, TraceDatePreset } from '../../components/common';
 import { TracingVisualDialog } from '../../components/tracing';
 import { EditAutonomousAgentDialog } from '../../components/dialogs/EditAutonomousAgentDialog';
 import type { EditDialogTab } from '../../components/dialogs/EditAutonomousAgentDialog';
 import { IntegrationDialog } from '../../components/dialogs/IntegrationDialog';
+import { ImportTraceDialog } from '../../components/dialogs/ImportTraceDialog';
+import { StartWorkflowDialog } from '../../components/dialogs/StartWorkflowDialog';
 import { useIdentity } from '../../contexts';
 import { useSidebarData } from '../../contexts/SidebarDataContext';
 import { useRecentVisits } from '../../contexts';
@@ -48,7 +53,7 @@ import classes from './AutonomousAgentDetailsPage.module.css';
 
 const PAGE_SIZE = 20;
 
-type DetailsTab = 'traces' | 'details';
+type DetailsTab = 'traces' | 'runs' | 'details';
 
 function datePresetToRange(preset: TraceDatePreset): { created_after?: string; created_before?: string } {
   if (preset === 'all') return {};
@@ -126,6 +131,18 @@ export const AutonomousAgentDetailsPage: FC = () => {
   // ---- Delete trace ----
   const [traceToDelete, setTraceToDelete] = useState<FullTraceResponse | null>(null);
   const [deleteTraceLoading, setDeleteTraceLoading] = useState(false);
+
+  // ---- Import trace dialog ----
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+
+  // ---- Start workflow dialog ----
+  const [startWorkflowDialogOpen, setStartWorkflowDialogOpen] = useState(false);
+  const [runsAutoRefreshTrigger, setRunsAutoRefreshTrigger] = useState(0);
+
+  // ---- Auto-refresh timer ----
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [autoRefreshCountdown, setAutoRefreshCountdown] = useState(5);
+  const autoRefreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ---- Tracing Dialog ----
   const traceIdParam = searchParams.get('traceId');
@@ -238,6 +255,106 @@ export const AutonomousAgentDetailsPage: FC = () => {
     fetchTraces(true);
   }, [fetchTraces]);
 
+  // ---- Auto-refresh logic ----
+  const startAutoRefresh = useCallback(() => {
+    setAutoRefresh(true);
+    setAutoRefreshCountdown(5);
+  }, []);
+
+  const stopAutoRefresh = useCallback(() => {
+    setAutoRefresh(false);
+    setAutoRefreshCountdown(5);
+    if (autoRefreshIntervalRef.current) {
+      clearInterval(autoRefreshIntervalRef.current);
+      autoRefreshIntervalRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    autoRefreshIntervalRef.current = setInterval(() => {
+      setAutoRefreshCountdown((prev) => {
+        if (prev <= 1) {
+          fetchTraces(true);
+          return 5;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (autoRefreshIntervalRef.current) {
+        clearInterval(autoRefreshIntervalRef.current);
+        autoRefreshIntervalRef.current = null;
+      }
+    };
+  }, [autoRefresh, fetchTraces]);
+
+  const handleStartWorkflowSuccess = useCallback(() => {
+    fetchTraces(true);
+    startAutoRefresh();
+    setRunsAutoRefreshTrigger((prev) => prev + 1);
+  }, [fetchTraces, startAutoRefresh]);
+
+  // ---- Open trace dialog ----
+  const handleTraceRowClick = useCallback(
+    async (trace: FullTraceResponse) => {
+      if (!apiClient || !selectedTenant) return;
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('traceId', trace.id);
+        return next;
+      });
+      setTraceDialogLoading(true);
+      setTraceDialogOpen(true);
+      try {
+        const fullTrace = await apiClient.getTrace(selectedTenant.id, trace.id);
+        setSelectedTrace(fullTrace);
+      } catch {
+        setSelectedTrace(null);
+      } finally {
+        setTraceDialogLoading(false);
+      }
+    },
+    [apiClient, selectedTenant, setSearchParams]
+  );
+
+  const handleRunClick = useCallback(
+    async (executionId: string) => {
+      if (!apiClient || !selectedTenant || !agentId || !agent) return;
+
+      const existingTrace = traces.find((t) => t.referenceId === executionId);
+      if (existingTrace) {
+        handleTraceRowClick(existingTrace);
+        return;
+      }
+
+      setTraceDialogLoading(true);
+      setTraceDialogOpen(true);
+      try {
+        const result = await apiClient.importAutonomousAgentTrace(selectedTenant.id, agentId, {
+          type: agent.type,
+          executionId,
+        });
+        const fullTrace = await apiClient.getTrace(selectedTenant.id, result.id);
+        setSelectedTrace(fullTrace);
+        setSearchParams((prev) => {
+          const next = new URLSearchParams(prev);
+          next.set('traceId', result.id);
+          return next;
+        });
+        fetchTraces(true);
+      } catch {
+        setSelectedTrace(null);
+        setTraceDialogOpen(false);
+      } finally {
+        setTraceDialogLoading(false);
+      }
+    },
+    [apiClient, selectedTenant, agentId, agent, traces, handleTraceRowClick, setSearchParams, fetchTraces]
+  );
+
   const handleReImportTrace = useCallback(
     async (trace: FullTraceResponse) => {
       if (!apiClient || !selectedTenant || !agentId) return;
@@ -264,31 +381,6 @@ export const AutonomousAgentDetailsPage: FC = () => {
       setDeleteTraceLoading(false);
     }
   }, [apiClient, selectedTenant, traceToDelete, fetchTraces]);
-
-  // ---- Open trace dialog ----
-  const handleTraceRowClick = useCallback(
-    async (trace: FullTraceResponse) => {
-      if (!apiClient || !selectedTenant) return;
-      // Update URL
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        next.set('traceId', trace.id);
-        return next;
-      });
-      // Fetch full trace with nodes
-      setTraceDialogLoading(true);
-      setTraceDialogOpen(true);
-      try {
-        const fullTrace = await apiClient.getTrace(selectedTenant.id, trace.id);
-        setSelectedTrace(fullTrace);
-      } catch {
-        setSelectedTrace(null);
-      } finally {
-        setTraceDialogLoading(false);
-      }
-    },
-    [apiClient, selectedTenant, setSearchParams]
-  );
 
   const handleTraceDialogClose = useCallback(() => {
     setTraceDialogOpen(false);
@@ -375,7 +467,14 @@ export const AutonomousAgentDetailsPage: FC = () => {
 
   const n8nConfig = useMemo(() => {
     if (!agent || agent.type !== 'N8N') return null;
-    const cfg = agent.config as { api_version?: string; workflow_endpoint?: string; api_api_key_credential_id?: string };
+    const cfg = agent.config as {
+      api_version?: string;
+      workflow_endpoint?: string;
+      api_api_key_credential_id?: string;
+      webhook_url?: string;
+      default_body?: Record<string, unknown>;
+      default_query_params?: Record<string, string>;
+    };
     return cfg;
   }, [agent]);
 
@@ -477,6 +576,15 @@ export const AutonomousAgentDetailsPage: FC = () => {
               >
                 Traces
               </Tabs.Tab>
+              {agent?.type === 'N8N' && (
+                <Tabs.Tab
+                  value="runs"
+                  leftSection={<IconHistory size={16} />}
+                  className={classes.tab}
+                >
+                  Runs
+                </Tabs.Tab>
+              )}
               <Tabs.Tab
                 value="details"
                 leftSection={<IconInfoCircle size={16} />}
@@ -487,6 +595,31 @@ export const AutonomousAgentDetailsPage: FC = () => {
             </Tabs.List>
 
             <Tabs.Panel value="traces" className={classes.tabPanel}>
+                {n8nConfig?.webhook_url && (
+                  <Group gap="sm" mb="sm" justify="flex-end">
+                    {autoRefresh && (
+                      <Tooltip label="Click to stop auto-refresh">
+                        <Badge
+                          variant="light"
+                          color="blue"
+                          size="sm"
+                          style={{ cursor: 'pointer' }}
+                          onClick={stopAutoRefresh}
+                        >
+                          Refreshing in {autoRefreshCountdown}s
+                        </Badge>
+                      </Tooltip>
+                    )}
+                    <Button
+                      size="xs"
+                      variant="light"
+                      leftSection={<IconPlayerPlay size={14} />}
+                      onClick={() => setStartWorkflowDialogOpen(true)}
+                    >
+                      Start Workflow
+                    </Button>
+                  </Group>
+                )}
                 <TracesTable
                   traces={traces}
                   isLoading={tracesLoading}
@@ -502,8 +635,25 @@ export const AutonomousAgentDetailsPage: FC = () => {
                   onReImport={handleReImportTrace}
                   onDelete={setTraceToDelete}
                   showReImport={agent?.type === 'N8N'}
+                  onImport={() => setImportDialogOpen(true)}
+                  showImport={agent?.type === 'N8N'}
                 />
             </Tabs.Panel>
+
+            {agent?.type === 'N8N' && (
+              <Tabs.Panel value="runs" className={classes.tabPanel}>
+                <WorkflowRunsTable
+                  apiClient={apiClient ?? null}
+                  tenantId={selectedTenant?.id ?? ''}
+                  agentId={agentId!}
+                  agentType={agent.type}
+                  onRunClick={handleRunClick}
+                  onStartWorkflow={() => setStartWorkflowDialogOpen(true)}
+                  showStartWorkflow={!!n8nConfig?.webhook_url}
+                  autoRefreshTrigger={runsAutoRefreshTrigger}
+                />
+              </Tabs.Panel>
+            )}
 
             <Tabs.Panel value="details" className={classes.tabPanel}>
               <div className={classes.tabPanelScrollWrapper}>
@@ -628,6 +778,12 @@ export const AutonomousAgentDetailsPage: FC = () => {
                         readOnly
                         styles={{ input: { cursor: 'default' } }}
                       />
+                      <TextInput
+                        label="Webhook URL"
+                        value={n8nConfig.webhook_url || '—'}
+                        readOnly
+                        styles={{ input: { cursor: 'default' } }}
+                      />
                     </Stack>
                   </div>
                 )}
@@ -703,6 +859,29 @@ export const AutonomousAgentDetailsPage: FC = () => {
         confirmButtonText="Delete"
         isLoading={deleteTraceLoading}
       />
+
+      {/* Import Trace Dialog */}
+      {agentId && agent && (
+        <ImportTraceDialog
+          opened={importDialogOpen}
+          onClose={() => setImportDialogOpen(false)}
+          onSuccess={() => fetchTraces(true)}
+          agentId={agentId}
+          agentType={agent.type}
+        />
+      )}
+
+      {/* Start Workflow Dialog */}
+      {agentId && (
+        <StartWorkflowDialog
+          opened={startWorkflowDialogOpen}
+          onClose={() => setStartWorkflowDialogOpen(false)}
+          onSuccess={handleStartWorkflowSuccess}
+          agentId={agentId}
+          defaultBody={n8nConfig?.default_body}
+          defaultQueryParams={n8nConfig?.default_query_params}
+        />
+      )}
     </MainLayout>
   );
 };

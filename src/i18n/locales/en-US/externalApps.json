@@ -1,0 +1,27 @@
+{
+  "title": "External Apps",
+  "description": "Manage external applications integrated with your tenant.",
+  "addApp": "Add App",
+  "editApp": "Edit App",
+  "deleteApp": "Delete App",
+  "noApps": "No external apps configured yet.",
+  "noAppsDescription": "Add your first external app to get started.",
+  "openApp": "Open App",
+  "entityName": "external app",
+  "createDialog": {
+    "title": "Add External App",
+    "namePlaceholder": "e.g. My Dashboard",
+    "urlPlaceholder": "e.g. https://app.example.com",
+    "imageUrlPlaceholder": "e.g. https://example.com/logo.png",
+    "urlLabel": "URL",
+    "imageUrlLabel": "Image URL",
+    "imageLabel": "Image",
+    "uploadImage": "Upload Image",
+    "changeImage": "Change Image"
+  },
+  "editDialog": {
+    "title": "Edit External App"
+  },
+  "deleteConfirmMessage": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+  "loadFailed": "Failed to load external apps"
+}

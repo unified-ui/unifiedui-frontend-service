@@ -1,0 +1,17 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.keyInput {
+  flex: 1;
+}
+
+.valueInput {
+  flex: 1;
+}
+
+.removeButton {
+  flex-shrink: 0;
+}

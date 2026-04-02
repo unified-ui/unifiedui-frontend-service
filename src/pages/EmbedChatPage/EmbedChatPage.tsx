@@ -10,7 +10,7 @@ import { loginRequest } from '../../auth/authConfig';
 import { useIdentity } from '../../contexts';
 import { ChatView, ChatHeader, ChatEmptyState } from '../../components/chat';
 import { TracingProvider, TracingSidebar, TracingVisualDialog } from '../../components/tracing';
-import { useChat, useConversationTracing } from '../../hooks';
+import { useChat, useConversationTracing, useWidgetCache } from '../../hooks';
 import type { ChatAgentResponse, ConversationResponse } from '../../api/types';
 import classes from './EmbedChatPage.module.css';
 
@@ -110,11 +110,14 @@ export const EmbedChatPage: FC = () => {
     onNavigate: handleNavigate,
   });
 
+  const widgetCache = useWidgetCache(apiClient);
+
   const handleNewChat = useCallback(() => {
     chat.resetStreamingState();
     setConversationId(undefined);
     setCurrentConversation(null);
-  }, [chat]);
+    widgetCache.clear();
+  }, [chat, widgetCache]);
 
   useEffect(() => {
     tracing.setMessagesRef(chat.messages);
@@ -170,6 +173,8 @@ export const EmbedChatPage: FC = () => {
       icon={<IconMessageCircle size={64} />}
       title={chatAgent?.name || t('embedChatAgent', { agentId })}
       description={chatAgent?.description || ''}
+      promptStarters={chatAgent?.greeting_messages}
+      onStarterClick={chatAgent ? (msg) => chat.handleSendMessage(msg) : undefined}
     />
   ) : undefined;
 
@@ -224,12 +229,18 @@ export const EmbedChatPage: FC = () => {
         highlightedExtMessageId={tracing.highlightedMessageExtId}
         highlightedUserMessageId={tracing.highlightedUserMessageId}
         inputDisabled={!selectedChatAgentId}
+        reActState={chat.hasReasoningSteps ? chat.reActState : undefined}
+        onToggleReasoning={() => chat.setIsReasoningExpanded(!chat.reActState.isReasoningExpanded)}
         headerSlot={headerSlot}
         emptyStateSlot={emptyStateSlot}
         tracingSlot={tracingSlot}
         showReactions
         showTracing
         enableFileDrop
+        onLoadMore={chat.loadMoreMessages}
+        hasMoreMessages={chat.hasMoreMessages}
+        isLoadingMoreMessages={chat.isLoadingMoreMessages}
+        widgetCache={widgetCache}
       />
 
       {tracing.tracingDialogOpen && tracing.traces.length > 0 && (

@@ -9,6 +9,7 @@ import {
   IconBrandWechat,
   IconRobot,
   IconBrain,
+  IconAppWindow,
 } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSidebarData, useFavorites, type EntityType } from '../../../contexts';
@@ -32,6 +33,7 @@ interface NavItem {
   entityType?: EntityType;
   matchFn?: (pathname: string, search: string) => boolean;
   requiredResourceAccess?: ResourceType;
+  envFlag?: string;
 }
 
 const mainNavItemsTop: NavItem[] = [
@@ -47,6 +49,13 @@ const mainNavItemsTop: NavItem[] = [
       pathname === '/chat-agents' && !search.includes('type=REACT_AGENT'),
   },
   { icon: IconRobot, labelKey: 'auto', path: '/autonomous-agents', hasDataList: true, entityType: 'autonomous-agents' },
+  {
+    icon: IconAppWindow,
+    labelKey: 'apps',
+    path: '/external-apps',
+    requiredResourceAccess: 'external-apps',
+    envFlag: 'VITE_SHOW_EXTERNAL_APPS_PAGE',
+  },
 ];
 
 const mainNavItemsBottom: NavItem[] = [
@@ -56,6 +65,7 @@ const mainNavItemsBottom: NavItem[] = [
     labelKey: 'reactAgents',
     path: '/chat-agents?type=REACT_AGENT',
     requiredResourceAccess: 'tools',
+    envFlag: 'VITE_SHOW_RE_ACT_AGENT_DEVELOPMENT_PAGE',
     matchFn: (pathname, search) =>
       (pathname === '/chat-agents' && search.includes('type=REACT_AGENT')) ||
       pathname.endsWith('/develop'),
@@ -101,16 +111,24 @@ export const Sidebar: FC = () => {
   const { isFavorite: checkFavorite, toggleFavorite } = useFavorites();
   const { canCreate } = usePermissions();
 
+  const isEnvFlagEnabled = useCallback((flag?: string): boolean => {
+    if (!flag) return true;
+    const value = import.meta.env[flag];
+    return value !== 'false' && value !== '0';
+  }, []);
+
   const visibleNavItemsTop = useMemo(
     () => mainNavItemsTop.filter(item =>
-      !item.requiredResourceAccess || canCreate(item.requiredResourceAccess)),
-    [canCreate],
+      isEnvFlagEnabled(item.envFlag) &&
+      (!item.requiredResourceAccess || canCreate(item.requiredResourceAccess))),
+    [canCreate, isEnvFlagEnabled],
   );
 
   const visibleNavItemsBottom = useMemo(
     () => mainNavItemsBottom.filter(item =>
-      !item.requiredResourceAccess || canCreate(item.requiredResourceAccess)),
-    [canCreate],
+      isEnvFlagEnabled(item.envFlag) &&
+      (!item.requiredResourceAccess || canCreate(item.requiredResourceAccess))),
+    [canCreate, isEnvFlagEnabled],
   );
 
   const ENTITY_TO_FAVORITE_TYPE: Record<string, FavoriteResourceTypeEnum> = useMemo(() => ({
@@ -157,11 +175,11 @@ export const Sidebar: FC = () => {
   const [isHoveringConversationsSidebar, setIsHoveringConversationsSidebar] = useState(false);
   const [conversationsRefreshing, setConversationsRefreshing] = useState(false);
 
-  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const conversationsHoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const conversationsCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const conversationsHoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const conversationsCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const [isChatAgentDialogOpen, setIsChatAgentDialogOpen] = useState(false);
   const [isAutonomousAgentDialogOpen, setIsAutonomousAgentDialogOpen] = useState(false);
@@ -231,12 +249,13 @@ export const Sidebar: FC = () => {
   }, [location.pathname]);
 
   const handleNavItemHoverEnter = useCallback((item: NavItem) => {
+    return; // Feature disabled
     if (!item.hasDataList || !item.entityType) return;
-    if (isOnEntityListPage(item.entityType)) return;
+    if (isOnEntityListPage(item.entityType as EntityType)) return;
 
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
+      closeTimeoutRef.current = undefined;
     }
 
     setIsHoveringNavItem(true);
@@ -260,7 +279,7 @@ export const Sidebar: FC = () => {
 
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
-      hoverTimeoutRef.current = null;
+      hoverTimeoutRef.current = undefined;
     }
 
     closeTimeoutRef.current = setTimeout(() => {
@@ -275,7 +294,7 @@ export const Sidebar: FC = () => {
 
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
+      closeTimeoutRef.current = undefined;
     }
   }, []);
 
@@ -292,11 +311,12 @@ export const Sidebar: FC = () => {
   const isOnConversationsPage = location.pathname.startsWith('/conversations');
 
   const handleConversationsNavHoverEnter = useCallback(() => {
+    return; // Feature disabled
     if (isOnConversationsPage) return;
 
     if (conversationsCloseTimeoutRef.current) {
       clearTimeout(conversationsCloseTimeoutRef.current);
-      conversationsCloseTimeoutRef.current = null;
+      conversationsCloseTimeoutRef.current = undefined;
     }
 
     setIsHoveringConversationsNav(true);
@@ -315,7 +335,7 @@ export const Sidebar: FC = () => {
 
     if (conversationsHoverTimeoutRef.current) {
       clearTimeout(conversationsHoverTimeoutRef.current);
-      conversationsHoverTimeoutRef.current = null;
+      conversationsHoverTimeoutRef.current = undefined;
     }
 
     conversationsCloseTimeoutRef.current = setTimeout(() => {
@@ -330,7 +350,7 @@ export const Sidebar: FC = () => {
 
     if (conversationsCloseTimeoutRef.current) {
       clearTimeout(conversationsCloseTimeoutRef.current);
-      conversationsCloseTimeoutRef.current = null;
+      conversationsCloseTimeoutRef.current = undefined;
     }
   }, []);
 
