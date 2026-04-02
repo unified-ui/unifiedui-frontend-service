@@ -41,6 +41,10 @@
   box-shadow: var(--shadow-md);
 }
 
+[data-mantine-color-scheme="dark"] .statCard:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
 .statIconWrapper {
   display: flex;
   align-items: center;
@@ -110,6 +114,10 @@
 .entityCard:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+[data-mantine-color-scheme="dark"] .entityCard:hover {
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .entityCardContent {

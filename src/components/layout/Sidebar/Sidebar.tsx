@@ -20,6 +20,7 @@ import {
   CreateChatAgentDialog,
   CreateWorkflowDialog,
   CreateChatWidgetDialog,
+  CreateExternalAppDialog,
 } from '../../dialogs';
 import { FavoriteResourceTypeEnum } from '../../../api/types';
 import classes from './Sidebar.module.css';
@@ -29,6 +30,7 @@ interface NavItem {
   iconFilled?: typeof IconHomeFilled;
   labelKey: string;
   path: string;
+  visible?: boolean;
   hasDataList?: boolean;
   entityType?: EntityType;
   matchFn?: (pathname: string, search: string) => boolean;
@@ -53,17 +55,30 @@ const mainNavItemsTop: NavItem[] = [
     icon: IconAppWindow,
     labelKey: 'apps',
     path: '/external-apps',
+    hasDataList: true,
+    entityType: 'external-apps',
     requiredResourceAccess: 'external-apps',
     envFlag: 'VITE_SHOW_EXTERNAL_APPS_PAGE',
   },
 ];
 
 const mainNavItemsBottom: NavItem[] = [
-  { icon: IconBrandWechat, labelKey: 'widgets', path: '/chat-widgets', hasDataList: true, entityType: 'chat-widgets' },
+  {
+    icon: IconBrandWechat,
+    labelKey: 'widgets',
+    path: '/chat-widgets',
+    hasDataList: true,
+    entityType: 'chat-widgets',
+    matchFn: (pathname) =>
+      pathname === '/chat-widgets' ||
+      pathname.startsWith('/chat-widgets/') ||
+      pathname.startsWith('/widget-designer/'),
+  },
   {
     icon: IconBrain,
     labelKey: 'reactAgents',
     path: '/chat-agents?type=REACT_AGENT',
+    visible: false,
     requiredResourceAccess: 'tools',
     envFlag: 'VITE_SHOW_RE_ACT_AGENT_DEVELOPMENT_PAGE',
     matchFn: (pathname, search) =>
@@ -95,6 +110,7 @@ export const Sidebar: FC = () => {
     chatAgents,
     workflows,
     chatWidgets,
+    externalApps,
     conversations,
     loadingStates,
     errorStates,
@@ -105,6 +121,7 @@ export const Sidebar: FC = () => {
     refreshChatAgents,
     refreshWorkflows,
     refreshChatWidgets,
+    refreshExternalApps,
     refreshConversations,
   } = useSidebarData();
 
@@ -119,6 +136,7 @@ export const Sidebar: FC = () => {
 
   const visibleNavItemsTop = useMemo(
     () => mainNavItemsTop.filter(item =>
+      (item.visible !== false) &&
       isEnvFlagEnabled(item.envFlag) &&
       (!item.requiredResourceAccess || canCreate(item.requiredResourceAccess))),
     [canCreate, isEnvFlagEnabled],
@@ -126,6 +144,7 @@ export const Sidebar: FC = () => {
 
   const visibleNavItemsBottom = useMemo(
     () => mainNavItemsBottom.filter(item =>
+      (item.visible !== false) &&
       isEnvFlagEnabled(item.envFlag) &&
       (!item.requiredResourceAccess || canCreate(item.requiredResourceAccess))),
     [canCreate, isEnvFlagEnabled],
@@ -184,6 +203,7 @@ export const Sidebar: FC = () => {
   const [isChatAgentDialogOpen, setIsChatAgentDialogOpen] = useState(false);
   const [isWorkflowDialogOpen, setIsWorkflowDialogOpen] = useState(false);
   const [isChatWidgetDialogOpen, setIsChatWidgetDialogOpen] = useState(false);
+  const [isExternalAppDialogOpen, setIsExternalAppDialogOpen] = useState(false);
 
   const entityConfigs = useMemo<Partial<Record<EntityType, EntityConfig>>>(() => ({
     'chat-agents': {
@@ -206,6 +226,13 @@ export const Sidebar: FC = () => {
       addButtonLabel: t('addChatWidget'),
       fetchData: () => fetchEntityData('chat-widgets'),
       getLink: (id) => `/widget-designer/${id}`,
+    },
+    'external-apps': {
+      title: t('externalApps'),
+      icon: <IconAppWindow size={24} />,
+      addButtonLabel: t('addExternalApp'),
+      fetchData: () => fetchEntityData('external-apps'),
+      getLink: (id) => `/external-apps/${id}`,
     },
   }), [fetchEntityData, t]);
 
@@ -234,24 +261,31 @@ export const Sidebar: FC = () => {
           link: entityConfigs['chat-widgets']!.getLink(widget.id),
           icon: <EntityAvatar entityType="chat-widget" size="xs" />,
         }));
+      case 'external-apps':
+        return externalApps.map(app => ({
+          id: app.id,
+          name: app.name,
+          link: entityConfigs['external-apps']!.getLink(app.id),
+          icon: <IconAppWindow size={16} />,
+        }));
       default:
         return [];
     }
-  }, [activeEntity, chatAgents, workflows, chatWidgets, entityConfigs]);
+  }, [activeEntity, chatAgents, workflows, chatWidgets, externalApps, entityConfigs]);
 
-  const isOnEntityListPage = useCallback((entityType: EntityType) => {
-    const entityPaths: Partial<Record<EntityType, string>> = {
-      'chat-agents': '/chat-agents',
-      'autonomous-agents': '/workflows',
-      'chat-widgets': '/chat-widgets',
+  const isOnEntityDetailPage = useCallback((entityType: EntityType) => {
+    const detailPatterns: Partial<Record<EntityType, RegExp>> = {
+      'autonomous-agents': /^\/workflows\/[^/]+/,
+      'chat-widgets': /^\/(widget-designer|chat-widgets)\/[^/]+/,
+      'external-apps': /^\/external-apps\/[^/]+/,
     };
-    return location.pathname === entityPaths[entityType];
+    const pattern = detailPatterns[entityType];
+    return pattern ? pattern.test(location.pathname) : false;
   }, [location.pathname]);
 
   const handleNavItemHoverEnter = useCallback((item: NavItem) => {
-    return; // Feature disabled
     if (!item.hasDataList || !item.entityType) return;
-    if (isOnEntityListPage(item.entityType as EntityType)) return;
+    if (!isOnEntityDetailPage(item.entityType as EntityType)) return;
 
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
@@ -272,7 +306,7 @@ export const Sidebar: FC = () => {
         config.fetchData();
       }
     }, 150);
-  }, [entityConfigs, isOnEntityListPage]);
+  }, [entityConfigs, isOnEntityDetailPage]);
 
   const handleNavItemHoverLeave = useCallback(() => {
     setIsHoveringNavItem(false);
@@ -430,6 +464,9 @@ export const Sidebar: FC = () => {
       case 'chat-widgets':
         setIsChatWidgetDialogOpen(true);
         break;
+      case 'external-apps':
+        setIsExternalAppDialogOpen(true);
+        break;
     }
   }, [activeEntity]);
 
@@ -444,6 +481,10 @@ export const Sidebar: FC = () => {
   const handleChatWidgetCreated = useCallback(() => {
     refreshChatWidgets();
   }, [refreshChatWidgets]);
+
+  const handleExternalAppCreated = useCallback(() => {
+    refreshExternalApps();
+  }, [refreshExternalApps]);
 
   const handleRefresh = useCallback(async () => {
     if (!activeEntity) return;
@@ -585,6 +626,11 @@ export const Sidebar: FC = () => {
         opened={isChatWidgetDialogOpen}
         onClose={() => setIsChatWidgetDialogOpen(false)}
         onSuccess={handleChatWidgetCreated}
+      />
+      <CreateExternalAppDialog
+        opened={isExternalAppDialogOpen}
+        onClose={() => setIsExternalAppDialogOpen(false)}
+        onSuccess={handleExternalAppCreated}
       />
     </>
   );

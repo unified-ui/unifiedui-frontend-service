@@ -21,6 +21,9 @@
 
 [data-mantine-color-scheme="dark"] .dialog {
   background: var(--color-gray-900);
+  border-top: 2px solid transparent;
+  border-image: var(--gradient-accent) 1;
+  border-image-slice: 1 1 0 1;
 }
 
 .input {
@@ -72,11 +75,11 @@
 }
 
 .item[data-selected="true"] {
-  background-color: var(--gray-100);
+  background-color: var(--bg-hover);
 }
 
 [data-mantine-color-scheme="dark"] .item[data-selected="true"] {
-  background-color: var(--gray-800);
+  background-color: var(--bg-selected);
 }
 
 .itemIcon {

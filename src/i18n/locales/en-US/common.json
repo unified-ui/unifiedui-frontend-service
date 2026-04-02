@@ -47,6 +47,7 @@
   "errorLoadingChatAgents": "Failed to load chat agents",
   "errorLoadingAutonomousAgents": "Failed to load workflows",
   "errorLoadingChatWidgets": "Failed to load chat widgets",
+  "errorLoadingExternalApps": "Failed to load external apps",
   "chatAgents": "Chat Agents",
   "autonomousAgents": "Workflows",
   "conversations": "Conversations",

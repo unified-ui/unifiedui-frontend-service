@@ -12,6 +12,8 @@
   "addWorkflow": "Add Workflow",
   "chatWidgets": "Chat Widgets",
   "addChatWidget": "Add Chat Widget",
+  "externalApps": "External Apps",
+  "addExternalApp": "Add External App",
   "conversations": "Conversations",
   "newConversation": "New Conversation",
   "failedToLoadConversations": "Failed to load conversations"

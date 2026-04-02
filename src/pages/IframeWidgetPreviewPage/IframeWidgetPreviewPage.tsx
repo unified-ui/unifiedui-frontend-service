@@ -1,7 +1,6 @@
 import type { FC } from 'react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import {
   Stack,
   Group,
@@ -15,9 +14,9 @@ import {
   Paper,
   CopyButton,
   Tooltip,
-  Loader,
   Code,
   Badge,
+  Skeleton,
 } from '@mantine/core';
 import {
   IconArrowLeft,
@@ -50,7 +49,6 @@ const DEFAULT_CONFIG: IframeConfig = {
 };
 
 export const IframeWidgetPreviewPage: FC = () => {
-  const { t } = useTranslation('common');
   const { widgetId } = useParams<{ widgetId: string }>();
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
@@ -128,9 +126,22 @@ export const IframeWidgetPreviewPage: FC = () => {
   if (isLoading) {
     return (
       <MainLayout>
-        <Stack align="center" justify="center" h="50vh">
-          <Loader size="lg" />
-          <Text c="dimmed">{t('loading')}</Text>
+        <Stack gap="md" className={classes.page}>
+          <Skeleton height={16} width={180} radius="sm" />
+          <Group justify="space-between" align="flex-start">
+            <Group gap="sm">
+              <Skeleton height={36} width={36} radius="md" />
+              <div>
+                <Skeleton height={24} width={200} radius="sm" />
+                <Skeleton height={14} width={300} radius="sm" mt={4} />
+              </div>
+            </Group>
+            <Group gap="sm">
+              <Skeleton height={36} width={120} radius="md" />
+              <Skeleton height={36} width={120} radius="md" />
+            </Group>
+          </Group>
+          <Skeleton height={400} radius="md" />
         </Stack>
       </MainLayout>
     );

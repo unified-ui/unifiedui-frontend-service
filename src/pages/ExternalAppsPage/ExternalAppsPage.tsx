@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   SimpleGrid, Card, Text, Group, Menu, ActionIcon,
-  Stack, Center, Loader, Badge, Popover,
+  Stack, Skeleton, Badge, Popover,
 } from '@mantine/core';
 import { IconDots, IconEdit, IconTrash, IconAppWindow, IconShieldLock } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
@@ -110,14 +110,6 @@ export const ExternalAppsPage: FC = () => {
     }
   }, [apiClient, selectedTenant, selectedId, fetchApps, closeDialog]);
 
-  if (isLoading) {
-    return (
-      <MainLayout>
-        <Center h="50vh"><Loader /></Center>
-      </MainLayout>
-    );
-  }
-
   return (
     <MainLayout>
       <PageHeader
@@ -127,7 +119,19 @@ export const ExternalAppsPage: FC = () => {
         onAction={canCreateApp ? () => openDialog('new') : undefined}
       />
 
-      {apps.length === 0 ? (
+      {isLoading ? (
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="lg">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Card key={i} shadow="sm" radius="md" withBorder>
+              <Card.Section>
+                <Skeleton height={160} radius={0} />
+              </Card.Section>
+              <Skeleton height={20} mt="md" width="70%" radius="sm" />
+              <Skeleton height={14} mt="sm" width="90%" radius="sm" />
+            </Card>
+          ))}
+        </SimpleGrid>
+      ) : apps.length === 0 ? (
         <Center h="40vh">
           <Stack align="center" gap="sm">
             <IconAppWindow size={48} stroke={1} color="var(--text-secondary)" />
