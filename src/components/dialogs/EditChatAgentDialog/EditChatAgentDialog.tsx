@@ -90,7 +90,7 @@ const REST_API_AUTH_TYPES = [
   { value: RestApiAuthTypeEnum.ENTRA_ID_APP_REGISTRATION, label: 'Entra ID App Registration' },
 ];
 
-const AUTH_TYPES_REQUIRING_CREDENTIAL = new Set([
+const AUTH_TYPES_REQUIRING_CREDENTIAL = new Set<RestApiAuthTypeEnum>([
   RestApiAuthTypeEnum.BASIC_AUTH,
   RestApiAuthTypeEnum.API_KEY,
   RestApiAuthTypeEnum.ENTRA_ID_APP_REGISTRATION,

@@ -147,7 +147,7 @@ const DataSourceItem: FC<DataSourceItemProps> = ({ source, allFields, onChange, 
           {source.type !== 'dependent' && (
             <Select
               label={t('dataSources.refreshOn')}
-              value={source.refreshOn ?? []}
+              value={source.refreshOn?.[0] ?? null}
               onChange={(v) => update({ refreshOn: v ? [v] : undefined })}
               data={fieldOptions}
               size="xs"

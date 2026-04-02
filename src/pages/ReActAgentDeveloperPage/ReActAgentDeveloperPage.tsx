@@ -1074,7 +1074,6 @@ export const ReActAgentDeveloperPage: FC = () => {
                 showTracing={false}
                 showReactions={false}
                 enableFileDrop={false}
-                emptyStateMessage="Send a message to test your agent"
                 reActState={reActChat.reActState}
                 onToggleReasoning={() => reActChat.setIsReasoningExpanded(!reActChat.reActState.isReasoningExpanded)}
                 alwaysExpandReasoning

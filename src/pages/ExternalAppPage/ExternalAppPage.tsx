@@ -17,7 +17,7 @@ export const ExternalAppPage: FC = () => {
   useEffect(() => {
     if (!selectedTenant || !id) return;
     let cancelled = false;
-    apiClient.getExternalApp(selectedTenant.id, id)
+    apiClient!.getExternalApp(selectedTenant.id, id)
       .then((data) => { if (!cancelled) setApp(data); })
       .catch(() => { if (!cancelled) navigate('/external-apps'); })
       .finally(() => { if (!cancelled) setIsLoading(false); });

@@ -14,11 +14,11 @@ import {
 } from '@mantine/core';
 import { IconX, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import type { FormFieldConfig } from './types';
+import type { FormFieldConfigV1 } from './types';
 
 interface FieldPropertiesProps {
-  field: FormFieldConfig | null;
-  onChange: (field: FormFieldConfig) => void;
+  field: FormFieldConfigV1 | null;
+  onChange: (field: FormFieldConfigV1) => void;
 }
 
 export const FieldProperties: FC<FieldPropertiesProps> = ({ field, onChange }) => {
@@ -34,7 +34,7 @@ export const FieldProperties: FC<FieldPropertiesProps> = ({ field, onChange }) =
     );
   }
 
-  const update = (partial: Partial<FormFieldConfig>) => {
+  const update = (partial: Partial<FormFieldConfigV1>) => {
     onChange({ ...field, ...partial });
   };
 

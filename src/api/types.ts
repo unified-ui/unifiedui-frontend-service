@@ -1528,14 +1528,16 @@ export interface TestModelResponse {
   response_time_ms: number;
 }
 
-export enum TestConnectionType {
-  N8N_CHAT_URL = 'N8N_CHAT_URL',
-  N8N_WORKFLOW = 'N8N_WORKFLOW',
-  N8N_WEBHOOK = 'N8N_WEBHOOK',
-  FOUNDRY_AGENT = 'FOUNDRY_AGENT',
-  REST_API_INVOKE = 'REST_API_INVOKE',
-  REST_API_CONVERSATION = 'REST_API_CONVERSATION',
-}
+export const TestConnectionType = {
+  N8N_CHAT_URL: 'N8N_CHAT_URL',
+  N8N_WORKFLOW: 'N8N_WORKFLOW',
+  N8N_WEBHOOK: 'N8N_WEBHOOK',
+  FOUNDRY_AGENT: 'FOUNDRY_AGENT',
+  REST_API_INVOKE: 'REST_API_INVOKE',
+  REST_API_CONVERSATION: 'REST_API_CONVERSATION',
+} as const;
+
+export type TestConnectionType = typeof TestConnectionType[keyof typeof TestConnectionType];
 
 export interface TestConnectionRequest {
   test_type: TestConnectionType;

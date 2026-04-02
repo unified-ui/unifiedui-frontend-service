@@ -15,8 +15,7 @@ const schema: WidgetFormSchema = {
     showProgressBar: false,
     validateOnTabChange: false,
   },
-  tabs: [{ id: 'tab_1', label: 'Tab 1', fieldIds: [] }],
-  fields: [],
+  tabs: [{ id: 'tab_1', label: 'Tab 1', fields: [] }],
   dataSources: [],
   scripts: {},
 };

@@ -14,8 +14,6 @@ import { ChatWidgetTypeEnum } from '../../api/types';
 
 const SORT_STORAGE_KEY = 'unified-ui:sort:chat-widgets';
 
-const _STANDARD_WIDGET_IDS = new Set(['__standard_yesno__', '__standard_survey__']);
-
 const STANDARD_WIDGETS: DataTableItem[] = [
   {
     id: '__standard_yesno__',

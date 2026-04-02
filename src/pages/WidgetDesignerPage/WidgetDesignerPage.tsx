@@ -9,7 +9,6 @@ import {
   ActionIcon,
   LoadingOverlay,
   SegmentedControl,
-  Kbd,
   Alert,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
@@ -358,10 +357,10 @@ export const WidgetDesignerPage: FC = () => {
               )}
             </Group>
             <Group gap="xs">
-              <ActionIcon variant="subtle" disabled={!canUndo} onClick={undo} title={`${t('undo')} (${Kbd ? '⌘Z' : 'Ctrl+Z'})`}>
+              <ActionIcon variant="subtle" disabled={!canUndo} onClick={undo} title={`${t('undo')} (${navigator.platform?.includes('Mac') ? '⌘Z' : 'Ctrl+Z'})`}>
                 <IconArrowBackUp size={18} />
               </ActionIcon>
-              <ActionIcon variant="subtle" disabled={!canRedo} onClick={redo} title={`${t('redo')} (${Kbd ? '⌘⇧Z' : 'Ctrl+Shift+Z'})`}>
+              <ActionIcon variant="subtle" disabled={!canRedo} onClick={redo} title={`${t('redo')} (${navigator.platform?.includes('Mac') ? '⌘⇧Z' : 'Ctrl+Shift+Z'})`}>
                 <IconArrowForwardUp size={18} />
               </ActionIcon>
               <SegmentedControl

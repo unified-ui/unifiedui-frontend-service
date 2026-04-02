@@ -83,10 +83,10 @@ function evaluateRule(rule: VisibilityRule, values: Record<string, FieldValue>):
     case 'not_equals':
       return String(fieldVal) !== String(ruleVal);
     case 'contains':
-      if (Array.isArray(fieldVal)) return fieldVal.includes(String(ruleVal));
+      if (Array.isArray(fieldVal)) return (fieldVal as string[]).includes(String(ruleVal));
       return String(fieldVal ?? '').includes(String(ruleVal ?? ''));
     case 'not_contains':
-      if (Array.isArray(fieldVal)) return !fieldVal.includes(String(ruleVal));
+      if (Array.isArray(fieldVal)) return !(fieldVal as string[]).includes(String(ruleVal));
       return !String(fieldVal ?? '').includes(String(ruleVal ?? ''));
     case 'gt': return Number(fieldVal) > Number(ruleVal);
     case 'lt': return Number(fieldVal) < Number(ruleVal);

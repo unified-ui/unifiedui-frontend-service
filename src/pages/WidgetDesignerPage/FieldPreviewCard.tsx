@@ -420,7 +420,7 @@ export const FieldPreviewCard: FC<FieldPreviewCardProps> = ({ field }) => {
       return (
         <Box>
           <FieldLabel label={field.label} tooltip={field.tooltip} />
-          <Text size="xs" c="dimmed">{t(`fieldTypes.${field.type}`)}</Text>
+          <Text size="xs" c="dimmed">{t(`fieldTypes.${field.type}` as never)}</Text>
         </Box>
       );
   }

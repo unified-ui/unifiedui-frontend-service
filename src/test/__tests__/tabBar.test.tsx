@@ -5,9 +5,9 @@ import { TabBar } from '../../pages/WidgetDesignerPage/TabBar';
 import type { WidgetTab } from '../../pages/WidgetDesignerPage/types';
 
 const defaultTabs: WidgetTab[] = [
-  { id: 'tab_1', label: 'First Tab', fieldIds: [] },
-  { id: 'tab_2', label: 'Second Tab', fieldIds: [] },
-  { id: 'tab_3', label: 'Third Tab', fieldIds: [] },
+  { id: 'tab_1', label: 'First Tab', fields: [] },
+  { id: 'tab_2', label: 'Second Tab', fields: [] },
+  { id: 'tab_3', label: 'Third Tab', fields: [] },
 ];
 
 const renderTabBar = (overrides = {}) => {

@@ -17,6 +17,7 @@ interface StandardWidgetPromptDialogProps {
 const WIDGET_EXAMPLES: Record<StandardWidgetType, string> = {
   yesno: '<$_WGET _id=yesno d={"yesLabel":"Yes","noLabel":"No"} />',
   survey: '<$_WGET _id=survey d={"title":"Feedback Survey","questions":[{"question":"How was it?","options":["Good","Neutral","Bad"],"recommendation":"Good"},{"question":"Would you recommend?","options":["Yes","No"]}]} />',
+  custom: '<$_WGET _id={widgetId} d={...} />',
 };
 
 const WIDGET_PROMPTS: Record<StandardWidgetType, string> = {
@@ -30,6 +31,7 @@ Replace {yesLabel} and {noLabel} with the appropriate button labels for the cont
 <$_WGET _id=survey d={"title":"{surveyTitle}","questions":[{"question":"{questionText}","options":["{option1}","{option2}",...],"recommendation":"{recommendedOption}"},...]} />
 
 Each question must have a "question" text and an "options" array of answer choices. You can optionally include "recommendation" to highlight a preferred answer. The user also has a free-text input field for additional comments — you do not need to account for this in the tag. All answers will be sent back to you as a single chat message.`,
+  custom: `Use the custom widget tag to render interactive UI elements in the chat.`,
 };
 
 const CopyableBlock: FC<{ label: string; value: string }> = ({ label, value }) => (

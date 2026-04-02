@@ -36,6 +36,7 @@ import {
 export type FieldType =
   | 'text'
   | 'textarea'
+  | 'description_textarea'
   | 'number'
   | 'email'
   | 'url'
@@ -62,6 +63,7 @@ export type FieldType =
   | 'divider'
   | 'spacer'
   | 'alert'
+  | 'label'
   | 'address'
   | 'key_value'
   | 'table_input'
@@ -217,7 +219,7 @@ export interface FieldTypeCategory {
 export const FIELD_TYPE_CATEGORIES: FieldTypeCategory[] = [
   {
     key: 'input',
-    types: ['text', 'textarea', 'number', 'email', 'url', 'phone', 'password', 'date', 'time', 'datetime', 'color'],
+    types: ['text', 'textarea', 'description_textarea', 'number', 'email', 'url', 'phone', 'password', 'date', 'time', 'datetime', 'color'],
   },
   {
     key: 'selection',
@@ -229,7 +231,7 @@ export const FIELD_TYPE_CATEGORIES: FieldTypeCategory[] = [
   },
   {
     key: 'layout',
-    types: ['heading', 'paragraph', 'divider', 'spacer', 'alert'],
+    types: ['heading', 'paragraph', 'label', 'divider', 'spacer', 'alert'],
   },
   {
     key: 'composite',
@@ -240,6 +242,7 @@ export const FIELD_TYPE_CATEGORIES: FieldTypeCategory[] = [
 export const FIELD_TYPE_ICONS: Record<FieldType, FC<{ size?: number }>> = {
   text: IconTextSize,
   textarea: IconNotes,
+  description_textarea: IconNotes,
   number: IconHash,
   email: IconAt,
   url: IconLink,
@@ -266,6 +269,7 @@ export const FIELD_TYPE_ICONS: Record<FieldType, FC<{ size?: number }>> = {
   divider: IconMinus,
   spacer: IconArrowAutofitHeight,
   alert: IconAlertTriangle,
+  label: IconAlignLeft,
   address: IconHome,
   key_value: IconColumns,
   table_input: IconTable,
@@ -281,6 +285,7 @@ export const FIELD_ID_MAX_LENGTH = 64;
 export const NON_INPUT_FIELDS: FieldType[] = [
   'heading',
   'paragraph',
+  'label',
   'divider',
   'spacer',
   'alert',
@@ -315,6 +320,7 @@ export function createDefaultField(type: FieldType, existingFields: WidgetFieldC
   const labelMap: Record<FieldType, string> = {
     text: 'Text Field',
     textarea: 'Text Area',
+    description_textarea: 'Description',
     number: 'Number',
     email: 'Email',
     url: 'URL',
@@ -341,6 +347,7 @@ export function createDefaultField(type: FieldType, existingFields: WidgetFieldC
     divider: 'Divider',
     spacer: 'Spacer',
     alert: 'Alert',
+    label: 'Label',
     address: 'Address',
     key_value: 'Key Value',
     table_input: 'Table',

@@ -153,7 +153,7 @@ export const ExternalAppsPage: FC = () => {
               <Card.Section>
                 <AuthImage
                   src={app.image_file_id || app.image_url}
-                  height={160}
+                  h={160}
                   alt={app.name}
                   fallbackSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='160'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%234158D0'/%3E%3Cstop offset='50%25' stop-color='%23C850C0'/%3E%3Cstop offset='100%25' stop-color='%23FFCC70'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='160' fill='url(%23g)' rx='0'/%3E%3Ctext x='200' y='88' text-anchor='middle' font-family='system-ui,sans-serif' font-size='18' font-weight='600' fill='white' opacity='0.9'%3EApp%3C/text%3E%3C/svg%3E"
                 />

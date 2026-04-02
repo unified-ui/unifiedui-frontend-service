@@ -29,6 +29,7 @@ export interface ChatContentProps {
   isLoading?: boolean;
   isStreaming?: boolean;
   streamingContent?: string;
+  streamingMessageId?: string;
   onViewTrace?: (extMessageId: string) => void;
   highlightedExtMessageId?: string | null;
   highlightedUserMessageId?: string | null;
@@ -1027,7 +1028,7 @@ const WidgetRenderer: FC<WidgetRendererProps> = ({ widget, isInteractive, onSend
   }
 
   if (widget.id === StandardWidgetId.SURVEY) {
-    const surveyData = widget.data as SurveyWidgetData;
+    const surveyData = widget.data as unknown as SurveyWidgetData;
     if (!surveyData.questions?.length) return null;
     const submittedAnswers = nextUserMessageContent
       ? parseSurveyAnswersFromMessage(nextUserMessageContent)

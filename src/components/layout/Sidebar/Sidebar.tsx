@@ -175,11 +175,11 @@ export const Sidebar: FC = () => {
   const [isHoveringConversationsSidebar, setIsHoveringConversationsSidebar] = useState(false);
   const [conversationsRefreshing, setConversationsRefreshing] = useState(false);
 
-  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const conversationsHoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const conversationsCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const conversationsHoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const conversationsCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const [isChatAgentDialogOpen, setIsChatAgentDialogOpen] = useState(false);
   const [isAutonomousAgentDialogOpen, setIsAutonomousAgentDialogOpen] = useState(false);
@@ -251,11 +251,11 @@ export const Sidebar: FC = () => {
   const handleNavItemHoverEnter = useCallback((item: NavItem) => {
     return; // Feature disabled
     if (!item.hasDataList || !item.entityType) return;
-    if (isOnEntityListPage(item.entityType)) return;
+    if (isOnEntityListPage(item.entityType as EntityType)) return;
 
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
+      closeTimeoutRef.current = undefined;
     }
 
     setIsHoveringNavItem(true);
@@ -279,7 +279,7 @@ export const Sidebar: FC = () => {
 
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
-      hoverTimeoutRef.current = null;
+      hoverTimeoutRef.current = undefined;
     }
 
     closeTimeoutRef.current = setTimeout(() => {
@@ -294,7 +294,7 @@ export const Sidebar: FC = () => {
 
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
+      closeTimeoutRef.current = undefined;
     }
   }, []);
 
@@ -316,7 +316,7 @@ export const Sidebar: FC = () => {
 
     if (conversationsCloseTimeoutRef.current) {
       clearTimeout(conversationsCloseTimeoutRef.current);
-      conversationsCloseTimeoutRef.current = null;
+      conversationsCloseTimeoutRef.current = undefined;
     }
 
     setIsHoveringConversationsNav(true);
@@ -335,7 +335,7 @@ export const Sidebar: FC = () => {
 
     if (conversationsHoverTimeoutRef.current) {
       clearTimeout(conversationsHoverTimeoutRef.current);
-      conversationsHoverTimeoutRef.current = null;
+      conversationsHoverTimeoutRef.current = undefined;
     }
 
     conversationsCloseTimeoutRef.current = setTimeout(() => {
@@ -350,7 +350,7 @@ export const Sidebar: FC = () => {
 
     if (conversationsCloseTimeoutRef.current) {
       clearTimeout(conversationsCloseTimeoutRef.current);
-      conversationsCloseTimeoutRef.current = null;
+      conversationsCloseTimeoutRef.current = undefined;
     }
   }, []);
 

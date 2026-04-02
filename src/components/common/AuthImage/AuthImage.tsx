@@ -5,6 +5,8 @@ import { useIdentity } from '../../../contexts';
 
 interface AuthImageProps extends Omit<ImageProps, 'src'> {
   src?: string | null;
+  alt?: string;
+  fallbackSrc?: string;
 }
 
 interface FetchedImage {
@@ -29,8 +31,8 @@ export const AuthImage: FC<AuthImageProps> = ({ src, ...props }) => {
 
     const fetchImage = async () => {
       try {
-        const downloadUrl = apiClient.getFileDownloadUrl(selectedTenant!.id, src!);
-        const token = await apiClient.getAccessTokenForDownload();
+        const downloadUrl = apiClient!.getFileDownloadUrl(selectedTenant!.id, src!);
+        const token = await apiClient!.getAccessTokenForDownload();
         const headers: Record<string, string> = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
 

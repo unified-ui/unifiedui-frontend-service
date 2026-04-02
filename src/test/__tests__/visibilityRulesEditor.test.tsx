@@ -9,10 +9,9 @@ const makeField = (id: string, label: string): WidgetFieldConfig => ({
   type: 'text',
   label,
   placeholder: '',
-  required: false,
   config: {},
   layout: { colSpan: 12 },
-  validation: {},
+  validation: [],
 });
 
 const sampleFields: WidgetFieldConfig[] = [

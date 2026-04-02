@@ -10,10 +10,9 @@ const sampleFields: WidgetFieldConfig[] = [
     type: 'select',
     label: 'Country',
     placeholder: '',
-    required: false,
     config: { options: ['US', 'DE'] },
     layout: { colSpan: 12 },
-    validation: {},
+    validation: [],
   },
 ];
 
