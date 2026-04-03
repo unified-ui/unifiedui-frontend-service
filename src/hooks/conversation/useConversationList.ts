@@ -36,7 +36,7 @@ interface UseConversationListReturn {
   handleSidebarCollapse: (collapsed: boolean) => void;
   handleNewChat: (abortController: React.RefObject<AbortController | null>, agentIdOverride?: string) => void;
   handleSelectConversation: (id: string, abortController: React.RefObject<AbortController | null>) => void;
-  handleToggleFavorite: (id: string) => Promise<void>;
+  handleToggleFavorite: (id: string, name: string) => Promise<void>;
   handleRenameConversation: (id: string, newName: string) => void;
   handleDeleteConversation: (id: string) => Promise<void>;
   handleSidebarSearch: (query: string) => void;
@@ -102,7 +102,7 @@ export function useConversationList({
             limit: 100,
             order_by: 'name',
             order_direction: 'asc',
-            fields: 'id,name,type,is_active',
+            fields: 'id,name,type,is_active,greeting_messages',
           }) as Promise<ChatAgentResponse[]>,
           apiClient.listConversationFavorites(tenantId, userId),
         ]);
@@ -188,7 +188,7 @@ export function useConversationList({
     navigate(`/conversations/${id}${qs ? `?${qs}` : ''}`);
   }, [navigate, searchParams]);
 
-  const handleToggleFavorite = useCallback(async (id: string) => {
+  const handleToggleFavorite = useCallback(async (id: string, _name: string) => {
     if (!apiClient || !tenantId || !userId) return;
 
     const isFavorite = favoriteIds.has(id);

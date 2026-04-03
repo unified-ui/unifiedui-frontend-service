@@ -24,6 +24,10 @@ import {
   IconMessageCircle,
   IconX,
   IconPlayerPlay,
+  IconSettings,
+  IconCode,
+  IconLink,
+  IconShieldLock,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { MainLayout } from '../../components/layout/MainLayout';
@@ -167,7 +171,7 @@ export const HowEmbedChatPage: FC = () => {
       <Breadcrumbs
         items={[
           { label: t('chatAgents'), path: '/chat-agents' },
-          { label: chatAgent.name },
+          { label: chatAgent.name, onClick: () => navigate(-1) },
           { label: t('howEmbedChat.title') },
         ]}
       />
@@ -182,7 +186,10 @@ export const HowEmbedChatPage: FC = () => {
       <div className={classes.scrollWrapper}>
         <Stack gap="lg">
           <div className={classes.sectionCard}>
-            <Text className={classes.sectionTitle}>{t('howEmbedChat.configuration')}</Text>
+            <Text className={classes.sectionTitle}>
+              <IconSettings size={18} />
+              {t('howEmbedChat.configuration')}
+            </Text>
             <Stack gap="md">
               <div className={classes.configRow}>
                 <TextInput
@@ -290,8 +297,11 @@ export const HowEmbedChatPage: FC = () => {
             </Stack>
           </div>
 
-          <div className={classes.sectionCard}>
-            <Text className={classes.sectionTitle}>{t('howEmbedChat.embedCode')}</Text>
+          <div className={classes.sectionCardSecondary}>
+            <Text className={classes.sectionTitle}>
+              <IconCode size={18} />
+              {t('howEmbedChat.embedCode')}
+            </Text>
             <div className={classes.codeBlock}>
               <CopyButton value={iframeSnippet} timeout={2000}>
                 {({ copied, copy }) => (
@@ -311,8 +321,11 @@ export const HowEmbedChatPage: FC = () => {
             </div>
           </div>
 
-          <div className={classes.sectionCard}>
-            <Text className={classes.sectionTitle}>{t('howEmbedChat.generatedUrl')}</Text>
+          <div className={classes.sectionCardAccent}>
+            <Text className={classes.sectionTitle}>
+              <IconLink size={18} />
+              {t('howEmbedChat.generatedUrl')}
+            </Text>
             <div className={classes.codeBlock}>
               <CopyButton value={embedUrl} timeout={2000}>
                 {({ copied, copy }) => (
@@ -332,8 +345,11 @@ export const HowEmbedChatPage: FC = () => {
             </div>
           </div>
 
-          <div className={classes.sectionCard}>
-            <Text className={classes.sectionTitle}>{t('embedAllowedOrigins')}</Text>
+          <div className={classes.sectionCardNeutral}>
+            <Text className={classes.sectionTitle}>
+              <IconShieldLock size={18} />
+              {t('embedAllowedOrigins')}
+            </Text>
             <Text size="sm" c="dimmed" mb="md">
               {t('embedAllowedOriginsDescription')}
             </Text>

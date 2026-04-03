@@ -57,7 +57,7 @@ interface DataTableRowProps {
   onRowClick?: (id: string) => void;
   icon?: ReactNode;
   isFavorite?: boolean;
-  onToggleFavorite?: (id: string) => void;
+  onToggleFavorite?: (id: string, name: string) => void;
   isSelected?: boolean;
   showCheckbox?: boolean;
   onSelect?: (id: string) => void;
@@ -130,7 +130,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
               color={isFavorite ? 'yellow' : 'gray'}
               onClick={(e) => {
                 e.stopPropagation();
-                onToggleFavorite(item.id);
+                onToggleFavorite(item.id, item.name);
               }}
               className={classes.favoriteButton}
             >
@@ -285,16 +285,21 @@ export const DataTableRow: FC<DataTableRowProps> = ({
               >
                 Integration Prompt
               </Menu.Item>
-            )}            <Menu.Divider />
-            <Menu.Item
-              leftSection={item.isPinned ? <IconPinned size={14} /> : <IconPin size={14} />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onPin?.(item.id, !item.isPinned);
-              }}
-            >
-              {item.isPinned ? 'Unpin' : 'Pin'}
-            </Menu.Item>
+            )}
+            {onPin && (
+              <>
+                <Menu.Divider />
+                <Menu.Item
+                  leftSection={item.isPinned ? <IconPinned size={14} /> : <IconPin size={14} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPin(item.id, !item.isPinned);
+                  }}
+                >
+                  {item.isPinned ? 'Unpin' : 'Pin'}
+                </Menu.Item>
+              </>
+            )}
             {(!hasPermission || canAdminItem) && (
               <>
                 <Menu.Divider />

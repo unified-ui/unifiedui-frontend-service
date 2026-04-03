@@ -103,6 +103,7 @@ export const FavoriteResourceTypeEnum = {
   AUTONOMOUS_AGENT: 'autonomous-agents',
   CHAT_WIDGET: 'chat-widgets',
   CONVERSATION: 'conversations',
+  EXTERNAL_APP: 'external-apps',
 } as const;
 
 export type FavoriteResourceTypeEnum = typeof FavoriteResourceTypeEnum[keyof typeof FavoriteResourceTypeEnum];
@@ -1593,6 +1594,16 @@ export interface UserFavoritesListResponse {
   total: number;
 }
 
+export interface UserFavoriteWithNameResponse {
+  resource_id: string;
+  resource_type: string;
+  resource_name: string;
+}
+
+export interface UserFavoritesUnifiedResponse {
+  favorites: UserFavoriteWithNameResponse[];
+}
+
 // ========== Health Check Types ==========
 
 export interface HealthCheckResponse {
@@ -1625,6 +1636,7 @@ export interface SearchResultItem {
   match_field: string;
   is_active?: boolean;
   tags: string[];
+  sub_type?: string;
 }
 
 export interface SearchResponse {
@@ -1637,6 +1649,7 @@ export interface GlobalSearchParams {
   q: string;
   types?: string;
   limit?: number;
+  offset?: number;
 }
 
 // ========== Recent Visits Types ==========

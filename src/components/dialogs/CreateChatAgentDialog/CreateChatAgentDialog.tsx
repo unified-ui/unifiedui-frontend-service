@@ -43,10 +43,10 @@ import { TestConnectionType } from '../../../api/types';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
 
 const CHAT_AGENT_TYPES = [
-  { value: ChatAgentTypeEnum.REACT_AGENT, label: 'ReACT Agent' },
-  { value: ChatAgentTypeEnum.N8N, label: 'n8n' },
   { value: ChatAgentTypeEnum.MICROSOFT_FOUNDRY, label: 'Microsoft Foundry' },
+  { value: ChatAgentTypeEnum.N8N, label: 'n8n' },
   { value: ChatAgentTypeEnum.REST_API, label: 'REST API' },
+  { value: ChatAgentTypeEnum.REACT_AGENT, label: 'ReACT Agent' },
 ];
 
 const N8N_API_VERSIONS = [
@@ -411,6 +411,7 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
         name: values.name.trim(),
         type: values.type as ChatAgentTypeEnum,
         description: values.description?.trim() || undefined,
+        is_active: true,
         config: config as Record<string, unknown> | undefined,
         embed_allowed_origins: values.embed_allowed_origins.length > 0
           ? values.embed_allowed_origins.join(';')

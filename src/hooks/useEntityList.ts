@@ -19,6 +19,7 @@ interface UseEntityListConfig<TResponse> {
   listTags: (tenantId: string, params: ResourceTagListParams) => Promise<TagSummary[]>;
   updateEntity: (tenantId: string, id: string, data: { is_active: boolean }) => Promise<unknown>;
   deleteEntity: (tenantId: string, id: string) => Promise<void>;
+  duplicateEntity?: (tenantId: string, id: string) => Promise<TResponse>;
   mapToTableItem: (entity: TResponse) => DataTableItem;
   refreshSidebar?: () => void;
 }
@@ -92,6 +93,7 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
     listTags,
     updateEntity,
     deleteEntity,
+    duplicateEntity,
     mapToTableItem,
     refreshSidebar,
   } = config;
@@ -308,9 +310,16 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
     refreshSidebar?.();
   }, [fetchEntities, debouncedSearch, debouncedFilters, refreshSidebar]);
 
-  const handleDuplicate = useCallback((_id: string) => {
-    void _id;
-  }, []);
+  const handleDuplicate = useCallback(async (id: string) => {
+    if (!apiClient || !selectedTenant || !duplicateEntity) return;
+    try {
+      await duplicateEntity(selectedTenant.id, id);
+      fetchEntities(true, debouncedSearch, debouncedFilters);
+      refreshSidebar?.();
+    } catch (err) {
+      console.error('Error duplicating entity:', err);
+    }
+  }, [apiClient, selectedTenant, duplicateEntity, fetchEntities, debouncedSearch, debouncedFilters, refreshSidebar]);
 
   const handleStatusChange = useCallback(async (id: string, isActive: boolean) => {
     if (!apiClient || !selectedTenant) return;

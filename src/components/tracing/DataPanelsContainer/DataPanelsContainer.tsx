@@ -29,6 +29,7 @@ interface PanelDef {
 
 interface DataPanelsContainerProps {
   height: number;
+  className?: string;
 }
 
 const DataContent: FC<{ data: TraceNodeDataIO | null | undefined; title: string }> = ({ data, title }) => {
@@ -83,7 +84,7 @@ const DataContent: FC<{ data: TraceNodeDataIO | null | undefined; title: string 
   );
 };
 
-export const DataPanelsContainer: FC<DataPanelsContainerProps> = ({ height }) => {
+export const DataPanelsContainer: FC<DataPanelsContainerProps> = ({ height, className }) => {
   const { selectedTrace, selectedNode } = useTracing();
   const { t } = useTranslation();
   const [expandedPanel, setExpandedPanel] = useState<PanelId | null>(null);
@@ -157,7 +158,7 @@ export const DataPanelsContainer: FC<DataPanelsContainerProps> = ({ height }) =>
   const contentHeight = height - panels.length * (PANEL_HEADER_HEIGHT + 1);
 
   return (
-    <div className={classes.container} style={{ height }}>
+    <div className={`${classes.container}${className ? ` ${className}` : ''}`} style={{ height }}>
       {panels.map(panel => {
         const isExpanded = expandedPanel === panel.id;
         return (

@@ -30,7 +30,7 @@ export const ChatAgentsPage: FC = () => {
   );
 
   const handleToggleFavorite = useCallback(
-    (id: string) => toggleFavorite(FavoriteResourceTypeEnum.CHAT_AGENT, id),
+    (id: string, name: string) => toggleFavorite(FavoriteResourceTypeEnum.CHAT_AGENT, id, name),
     [toggleFavorite]
   );
 
@@ -68,6 +68,12 @@ export const ChatAgentsPage: FC = () => {
     [apiClient]
   );
 
+  const duplicateEntity = useCallback(
+    (tenantId: string, id: string) =>
+      apiClient!.duplicateChatAgent(tenantId, id),
+    [apiClient]
+  );
+
   const config = useMemo(() => ({
     sortStorageKey: SORT_STORAGE_KEY,
     errorMessage: 'Failed to load chat agents',
@@ -75,9 +81,10 @@ export const ChatAgentsPage: FC = () => {
     listTags,
     updateEntity,
     deleteEntity,
+    duplicateEntity,
     mapToTableItem,
     refreshSidebar: refreshChatAgents,
-  }), [listEntities, listTags, updateEntity, deleteEntity, mapToTableItem, refreshChatAgents]);
+  }), [listEntities, listTags, updateEntity, deleteEntity, duplicateEntity, mapToTableItem, refreshChatAgents]);
 
   const {
     items, isLoading, isLoadingMore, hasMore, error, searchValue, sortBy, filters,

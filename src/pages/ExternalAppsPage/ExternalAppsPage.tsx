@@ -4,15 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   SimpleGrid, Card, Text, Group, Menu, ActionIcon,
-  Stack, Skeleton, Badge, Popover,
+  Stack, Skeleton, Badge, Popover, Tooltip, Center, Box,
 } from '@mantine/core';
-import { IconDots, IconEdit, IconTrash, IconAppWindow, IconShieldLock } from '@tabler/icons-react';
+import { IconDots, IconEdit, IconTrash, IconAppWindow, IconShieldLock, IconStar, IconStarFilled } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { PageHeader, ConfirmDeleteDialog, AuthImage } from '../../components/common';
 import { CreateExternalAppDialog, EditExternalAppDialog } from '../../components/dialogs';
-import { useIdentity } from '../../contexts';
+import { useIdentity, useFavorites } from '../../contexts';
 import { usePermissions, useDialogParams } from '../../hooks';
 import type { ExternalAppResponse } from '../../api/types';
+import { FavoriteResourceTypeEnum } from '../../api/types';
 import classes from './ExternalAppsPage.module.css';
 
 const MAX_VISIBLE_TAGS = 3;
@@ -75,6 +76,7 @@ export const ExternalAppsPage: FC = () => {
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
   const { canCreate, isResourceAdmin } = usePermissions();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const canCreateApp = canCreate('external-apps');
   const isAdmin = isResourceAdmin('external-apps');
   const { dialog, selectedId, dialogTab, openDialog, closeDialog, setDialogTab } = useDialogParams();
@@ -150,17 +152,36 @@ export const ExternalAppsPage: FC = () => {
               className={classes.card}
               onClick={() => navigate(`/external-apps/${app.id}`)}
             >
-              <Card.Section>
+              <Card.Section pos="relative">
                 <AuthImage
                   src={app.image_file_id || app.image_url}
                   h={160}
                   alt={app.name}
                   fallbackSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='160'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%234158D0'/%3E%3Cstop offset='50%25' stop-color='%23C850C0'/%3E%3Cstop offset='100%25' stop-color='%23FFCC70'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='160' fill='url(%23g)' rx='0'/%3E%3Ctext x='200' y='88' text-anchor='middle' font-family='system-ui,sans-serif' font-size='18' font-weight='600' fill='white' opacity='0.9'%3EApp%3C/text%3E%3C/svg%3E"
                 />
+                <Box pos="absolute" top={8} right={8}>
+                  <ActionIcon
+                    variant="subtle"
+                    color={isFavorite(FavoriteResourceTypeEnum.EXTERNAL_APP, app.id) ? 'yellow' : 'gray'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(FavoriteResourceTypeEnum.EXTERNAL_APP, app.id, app.name);
+                    }}
+                    className={classes.favoriteButton}
+                  >
+                    {isFavorite(FavoriteResourceTypeEnum.EXTERNAL_APP, app.id) ? (
+                      <IconStarFilled size={18} />
+                    ) : (
+                      <IconStar size={18} />
+                    )}
+                  </ActionIcon>
+                </Box>
               </Card.Section>
 
               <Group justify="space-between" mt="md" mb="xs" wrap="nowrap">
-                <Text fw={500} lineClamp={1}>{app.name}</Text>
+                <Tooltip label={app.name} disabled={app.name.length < 30} position="top" withArrow>
+                  <Text fw={500} lineClamp={1}>{app.name}</Text>
+                </Tooltip>
                 {(isAdmin || app.my_permission) && (
                   <Menu position="bottom-end" withinPortal>
                     <Menu.Target>
@@ -204,7 +225,9 @@ export const ExternalAppsPage: FC = () => {
               <TagBadges tags={app.tags?.map((tag) => tag.name) || []} />
 
               {app.description && (
-                <Text size="sm" c="dimmed" lineClamp={2}>{app.description}</Text>
+                <Tooltip label={app.description} disabled={app.description.length < 80} position="bottom" withArrow multiline maw={300}>
+                  <Text size="sm" c="dimmed" lineClamp={2}>{app.description}</Text>
+                </Tooltip>
               )}
             </Card>
           ))}

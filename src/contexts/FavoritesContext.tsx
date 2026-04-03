@@ -1,23 +1,28 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { ReactNode, FC } from 'react';
+import type { UserFavoriteWithNameResponse } from '../api/types';
 import { FavoriteResourceTypeEnum } from '../api/types';
 import { useIdentity } from './IdentityContext';
 
 type FavoritesMap = Map<FavoriteResourceTypeEnum, Set<string>>;
+type FavoriteNamesMap = Map<string, string>;
 
 interface FavoritesContextType {
   favorites: FavoritesMap;
+  favoriteNames: FavoriteNamesMap;
   isLoading: boolean;
   isFavorite: (type: FavoriteResourceTypeEnum, id: string) => boolean;
-  toggleFavorite: (type: FavoriteResourceTypeEnum, id: string) => Promise<void>;
+  toggleFavorite: (type: FavoriteResourceTypeEnum, id: string, name?: string) => Promise<void>;
+  getFavoriteName: (id: string) => string | undefined;
 }
 
-const RESOURCE_TYPES: FavoriteResourceTypeEnum[] = [
-  FavoriteResourceTypeEnum.CHAT_AGENT,
-  FavoriteResourceTypeEnum.AUTONOMOUS_AGENT,
-  FavoriteResourceTypeEnum.CHAT_WIDGET,
-  FavoriteResourceTypeEnum.CONVERSATION,
-];
+const resourceTypeToEnum: Record<string, FavoriteResourceTypeEnum> = {
+  'chat-agents': FavoriteResourceTypeEnum.CHAT_AGENT,
+  'autonomous-agents': FavoriteResourceTypeEnum.AUTONOMOUS_AGENT,
+  'chat-widgets': FavoriteResourceTypeEnum.CHAT_WIDGET,
+  'conversations': FavoriteResourceTypeEnum.CONVERSATION,
+  'external-apps': FavoriteResourceTypeEnum.EXTERNAL_APP,
+};
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
 
@@ -28,12 +33,14 @@ interface FavoritesProviderProps {
 export const FavoritesProvider: FC<FavoritesProviderProps> = ({ children }) => {
   const { apiClient, user, selectedTenant } = useIdentity();
   const [favorites, setFavorites] = useState<FavoritesMap>(new Map());
+  const [favoriteNames, setFavoriteNames] = useState<FavoriteNamesMap>(new Map());
   const [isLoading, setIsLoading] = useState(false);
   const loadedRef = useRef(false);
 
   useEffect(() => {
     if (!apiClient || !user || !selectedTenant) {
       setFavorites(new Map());
+      setFavoriteNames(new Map());
       loadedRef.current = false;
       return;
     }
@@ -44,18 +51,23 @@ export const FavoritesProvider: FC<FavoritesProviderProps> = ({ children }) => {
     const loadFavorites = async () => {
       setIsLoading(true);
       try {
-        const results = await Promise.all(
-          RESOURCE_TYPES.map(type =>
-            apiClient.listUserFavorites(selectedTenant.id, user.id, type)
-          )
-        );
+        const response = await apiClient.listAllUserFavorites(selectedTenant.id, user.id);
 
-        const newMap: FavoritesMap = new Map();
-        RESOURCE_TYPES.forEach((type, index) => {
-          const ids = new Set(results[index].favorites.map(f => f.resource_id));
-          newMap.set(type, ids);
+        const newFavoritesMap: FavoritesMap = new Map();
+        const newNamesMap: FavoriteNamesMap = new Map();
+
+        response.favorites.forEach((fav: UserFavoriteWithNameResponse) => {
+          const enumType = resourceTypeToEnum[fav.resource_type];
+          if (enumType) {
+            const ids = newFavoritesMap.get(enumType) ?? new Set<string>();
+            ids.add(fav.resource_id);
+            newFavoritesMap.set(enumType, ids);
+          }
+          newNamesMap.set(fav.resource_id, fav.resource_name);
         });
-        setFavorites(newMap);
+
+        setFavorites(newFavoritesMap);
+        setFavoriteNames(newNamesMap);
       } catch (error) {
         console.error('Failed to load favorites:', error);
       } finally {
@@ -73,8 +85,15 @@ export const FavoritesProvider: FC<FavoritesProviderProps> = ({ children }) => {
     [favorites]
   );
 
+  const getFavoriteName = useCallback(
+    (id: string): string | undefined => {
+      return favoriteNames.get(id);
+    },
+    [favoriteNames]
+  );
+
   const toggleFavorite = useCallback(
-    async (type: FavoriteResourceTypeEnum, id: string): Promise<void> => {
+    async (type: FavoriteResourceTypeEnum, id: string, name?: string): Promise<void> => {
       if (!apiClient || !user || !selectedTenant) return;
 
       const currentlyFavorited = isFavorite(type, id);
@@ -91,6 +110,14 @@ export const FavoritesProvider: FC<FavoritesProviderProps> = ({ children }) => {
         return next;
       });
 
+      if (!currentlyFavorited && name) {
+        setFavoriteNames(prev => {
+          const next = new Map(prev);
+          next.set(id, name);
+          return next;
+        });
+      }
+
       try {
         await apiClient.toggleFavorite(selectedTenant.id, user.id, type, id, currentlyFavorited);
       } catch (error) {
@@ -105,6 +132,14 @@ export const FavoritesProvider: FC<FavoritesProviderProps> = ({ children }) => {
           next.set(type, ids);
           return next;
         });
+
+        if (!currentlyFavorited && name) {
+          setFavoriteNames(prev => {
+            const next = new Map(prev);
+            next.delete(id);
+            return next;
+          });
+        }
         console.error('Failed to toggle favorite:', error);
       }
     },
@@ -113,9 +148,11 @@ export const FavoritesProvider: FC<FavoritesProviderProps> = ({ children }) => {
 
   const value: FavoritesContextType = {
     favorites,
+    favoriteNames,
     isLoading,
     isFavorite,
     toggleFavorite,
+    getFavoriteName,
   };
 
   return (

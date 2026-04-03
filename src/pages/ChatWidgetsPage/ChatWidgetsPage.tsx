@@ -78,6 +78,12 @@ export const ChatWidgetsPage: FC = () => {
     [apiClient]
   );
 
+  const duplicateEntity = useCallback(
+    (tenantId: string, id: string) =>
+      apiClient!.duplicateChatWidget(tenantId, id),
+    [apiClient]
+  );
+
   const config = useMemo(() => ({
     sortStorageKey: SORT_STORAGE_KEY,
     errorMessage: 'Failed to load chat widgets',
@@ -85,8 +91,9 @@ export const ChatWidgetsPage: FC = () => {
     listTags,
     updateEntity,
     deleteEntity,
+    duplicateEntity,
     mapToTableItem,
-  }), [listEntities, listTags, updateEntity, deleteEntity, mapToTableItem]);
+  }), [listEntities, listTags, updateEntity, deleteEntity, duplicateEntity, mapToTableItem]);
 
   const {
     items, isLoading, isLoadingMore, hasMore, error, searchValue, sortBy, filters,
@@ -113,9 +120,8 @@ export const ChatWidgetsPage: FC = () => {
     const widget = rawDataRef.current.get(id) as ChatWidgetResponse | undefined;
     if (widget?.type === ChatWidgetTypeEnum.FORM) {
       navigate(`/widget-designer/${id}`);
-    } else if (widget?.type === ChatWidgetTypeEnum.IFRAME) {
-      navigate(`/chat-widgets/${id}/preview`);
     } else {
+      // For IFRAME and other types, open the edit dialog which now includes preview
       handleEdit(id);
     }
   }, [navigate, handleEdit, rawDataRef]);

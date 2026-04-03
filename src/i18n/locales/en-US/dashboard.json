@@ -13,5 +13,17 @@
   "activeCount": "{{count}} active",
   "totalCount": "{{count}} total",
   "noFavorites": "No favorites yet. Star items to see them here.",
-  "noRecentVisits": "No recent visits yet. Open items to track them here."
+  "noRecentVisits": "No recent visits yet. Open items to track them here.",
+  "create": "Create",
+  "createChatAgent": "Chat Agent",
+  "createWorkflow": "Workflow",
+  "createChatWidget": "Chat Widget",
+  "createExternalApp": "External App",
+  "createCredential": "Credential",
+  "createTool": "Tool",
+  "createAIModel": "AI Model",
+  "createCustomGroup": "Custom Group",
+  "addPrincipal": "Member",
+  "showMore": "Show all ({{count}})",
+  "showLess": "Show less"
 }

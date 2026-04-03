@@ -1,5 +1,30 @@
+.pageWrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: var(--spacing-xl);
+}
+
+.stickyHeader {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-app);
+  padding-bottom: var(--spacing-md);
+}
+
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
 .greeting {
-  margin-bottom: var(--spacing-xs);
+  flex: 1;
+  min-width: 0;
 }
 
 .greetingTitle {
@@ -89,7 +114,127 @@
   font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
+  display: flex;
+  align-items: center;
 }
+
+.headerArrows {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+/* ============================== */
+/* Recently Visited Gallery       */
+/* ============================== */
+
+.galleryContainer {
+  position: relative;
+}
+
+.galleryWrapper {
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0.25rem 0;
+}
+
+.galleryWrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.galleryTrack {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.galleryArrow {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border-default);
+  background: var(--bg-paper);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast) ease,
+    border-color var(--transition-fast) ease;
+}
+
+.galleryArrow:hover {
+  background: var(--bg-hover);
+  border-color: var(--color-gray-400);
+}
+
+.galleryArrow:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.recentCard {
+  position: relative;
+  min-width: 190px;
+  width: 190px;
+  padding: var(--spacing-md) var(--spacing-md) var(--spacing-sm);
+  background: var(--bg-paper);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast) ease,
+    box-shadow var(--transition-fast) ease;
+}
+
+.recentCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+[data-mantine-color-scheme="dark"] .recentCard:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.recentCardStar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: var(--mantine-color-yellow-5);
+}
+
+.cardIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.recentCardName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.recentCardTime {
+  font-size: 11px;
+  color: var(--text-disabled);
+}
+
+/* ============================== */
+/* Favorites Grid                 */
+/* ============================== */
 
 .entityGrid {
   display: grid;

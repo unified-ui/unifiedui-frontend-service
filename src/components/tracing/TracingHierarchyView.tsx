@@ -19,7 +19,7 @@ import type { TraceNodeResponse, FullTraceResponse } from '../../api/types';
 import classes from './TracingHierarchyView.module.css';
 
 const TREE_MIN_HEIGHT = 100;
-const DEFAULT_PANELS_HEIGHT = 250;
+const DEFAULT_PANELS_HEIGHT = 500;
 
 // ============================================================================
 // HELPER: Get Type Badge Color
@@ -460,7 +460,7 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
             className={classes.panelsResizeHandle}
             onMouseDown={handlePanelsResize}
           />
-          <DataPanelsContainer height={dataPanelsHeight} />
+          <DataPanelsContainer height={dataPanelsHeight} className={classes.dataPanelsContainer} />
         </>
       )}
     </div>

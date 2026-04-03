@@ -7,6 +7,7 @@ import classes from './Breadcrumbs.module.css';
 export interface BreadcrumbItem {
   label: string;
   path?: string;
+  onClick?: () => void;
 }
 
 interface BreadcrumbsProps {
@@ -24,7 +25,7 @@ export const Breadcrumbs: FC<BreadcrumbsProps> = ({ items }) => {
       {items.map((item, index) => {
         const isLast = index === items.length - 1;
 
-        if (isLast || !item.path) {
+        if (isLast || (!item.path && !item.onClick)) {
           return (
             <Text key={item.label} size="sm" fw={isLast ? 600 : 400} className={classes.current}>
               {item.label}
@@ -39,7 +40,9 @@ export const Breadcrumbs: FC<BreadcrumbsProps> = ({ items }) => {
             className={classes.link}
             onClick={(e: React.MouseEvent) => {
               e.preventDefault();
-              if (item.path) {
+              if (item.onClick) {
+                item.onClick();
+              } else if (item.path) {
                 navigate(item.path);
               }
             }}

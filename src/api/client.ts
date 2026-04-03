@@ -90,6 +90,7 @@ import type {
   // User Favorites Types
   UserFavoriteResponse,
   UserFavoritesListResponse,
+  UserFavoritesUnifiedResponse,
   // Dashboard Types
   DashboardStatsResponse,
   // Search Types
@@ -386,6 +387,10 @@ export class UnifiedUIAPIClient {
     return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}`, undefined, 'Chat agent deleted successfully');
   }
 
+  async duplicateChatAgent(tenantId: string, chatAgentId: string): Promise<ChatAgentResponse> {
+    return this.request<ChatAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/duplicate`, undefined, 'Chat agent duplicated successfully');
+  }
+
   // ========== Chat Agent Permissions ==========
 
   async getChatAgentPrincipals(tenantId: string, chatAgentId: string): Promise<ResourcePrincipalsResponse> {
@@ -436,6 +441,10 @@ export class UnifiedUIAPIClient {
 
   async deleteAutonomousAgent(tenantId: string, agentId: string): Promise<void> {
     return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}`, undefined, 'Workflow deleted successfully');
+  }
+
+  async duplicateAutonomousAgent(tenantId: string, agentId: string): Promise<AutonomousAgentResponse> {
+    return this.request<AutonomousAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/duplicate`, undefined, 'Workflow duplicated successfully');
   }
 
   // ========== Autonomous Agent Permissions ==========
@@ -626,6 +635,10 @@ export class UnifiedUIAPIClient {
 
   async deleteChatWidget(tenantId: string, widgetId: string): Promise<void> {
     return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/chat-widgets/${widgetId}`, undefined, 'Chat widget deleted successfully');
+  }
+
+  async duplicateChatWidget(tenantId: string, widgetId: string): Promise<ChatWidgetResponse> {
+    return this.request<ChatWidgetResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/chat-widgets/${widgetId}/duplicate`, undefined, 'Chat widget duplicated successfully');
   }
 
   // ========== Chat Widget Permissions ==========
@@ -865,6 +878,10 @@ export class UnifiedUIAPIClient {
   }
 
   // ========== User Favorites Endpoints ==========
+
+  async listAllUserFavorites(tenantId: string, userId: string): Promise<UserFavoritesUnifiedResponse> {
+    return this.request<UserFavoritesUnifiedResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/favorites`);
+  }
 
   async listUserFavorites(tenantId: string, userId: string, resourceType: FavoriteResourceTypeEnum): Promise<UserFavoritesListResponse> {
     return this.request<UserFavoritesListResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/favorites/${resourceType}`);

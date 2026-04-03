@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Drawer, Loader, Center } from '@mantine/core';
+import { Box, Drawer, Loader, Center, UnstyledButton } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { IconMessageCircle } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
@@ -15,6 +15,7 @@ import { ConversationSidebar } from '../../components/conversation';
 import { ChatView, ChatHeader, ChatEmptyState, WidgetSidebar } from '../../components/chat';
 import { useConversationList, useChat, useConversationTracing, useConversationWidgets, useDelayedLoading, useWidgetCache } from '../../hooks';
 import classes from './ConversationsPage.module.css';
+import chatClasses from '../../components/chat/ChatEmptyState/ChatEmptyState.module.css';
 
 /**
  * Main conversations page — wires hooks + sub-components.
@@ -244,7 +245,7 @@ export const ConversationsPage: FC = () => {
       onShare={handleShare}
       onToggleFavorite={() => {
         if (convList.currentConversation) {
-          convList.handleToggleFavorite(convList.currentConversation.id);
+          convList.handleToggleFavorite(convList.currentConversation.id, convList.currentConversation.name);
         }
       }}
       onDelete={() => {
@@ -274,9 +275,27 @@ export const ConversationsPage: FC = () => {
             ? t('conversations:welcomeDescription')
             : t('conversations:selectAgentToStart')
         }
-        promptStarters={selectedAgent?.greeting_messages}
-        onStarterClick={hasAgent ? (msg) => chat.handleSendMessage(msg) : undefined}
       />
+    );
+  })() : undefined;
+
+  const suggestionsSlot = convList.isNewChat ? (() => {
+    const selectedAgent = convList.chatAgents.find(a => a.id === convList.selectedChatAgentId);
+    const hasAgent = !!selectedAgent;
+    const starters = selectedAgent?.greeting_messages?.filter(Boolean).slice(0, 4);
+    if (!hasAgent || !starters || starters.length === 0) return undefined;
+    return (
+      <Box className={chatClasses.startersContainer}>
+        {starters.map((starter) => (
+          <UnstyledButton
+            key={starter}
+            className={chatClasses.starterButton}
+            onClick={() => chat.handleSendMessage(starter)}
+          >
+            {starter}
+          </UnstyledButton>
+        ))}
+      </Box>
     );
   })() : undefined;
 
@@ -369,6 +388,7 @@ export const ConversationsPage: FC = () => {
             tracingSlot={tracingSlot}
             widgetSlot={widgetSlot}
             emptyStateSlot={emptyStateSlot}
+            suggestionsSlot={suggestionsSlot}
             focusTrigger={focusTrigger}
             onLoadMore={chat.loadMoreMessages}
             hasMoreMessages={chat.hasMoreMessages}

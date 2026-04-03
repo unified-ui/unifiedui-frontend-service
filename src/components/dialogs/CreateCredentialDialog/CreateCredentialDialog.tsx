@@ -1,4 +1,5 @@
 import { type FC, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Modal,
   TextInput,
@@ -10,6 +11,7 @@ import {
   Stack,
   Text,
   Box,
+  Switch,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconKey } from '@tabler/icons-react';
@@ -28,6 +30,7 @@ interface FormValues {
   name: string;
   description: string;
   credential_type: string;
+  is_active: boolean;
   // For API_KEY
   secret_value: string;
   // For BASIC_AUTH
@@ -53,6 +56,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
   onSuccess,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { t: tc } = useTranslation('common');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
@@ -60,6 +64,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
       name: '',
       description: '',
       credential_type: '',
+      is_active: true,
       secret_value: '',
       username: '',
       password: '',
@@ -170,6 +175,7 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
         description: values.description?.trim() || undefined,
         credential_type: values.credential_type,
         secret_value: secretValue,
+        is_active: values.is_active,
       });
 
       // If tags were added, save them to the credential
@@ -225,6 +231,13 @@ export const CreateCredentialDialog: FC<CreateCredentialDialogProps> = ({
             maxLength={255}
             data-autofocus
             {...form.getInputProps('name')}
+          />
+
+          <Switch
+            label={tc('active')}
+            description={tc('activeDescription')}
+            checked={form.values.is_active}
+            onChange={(event) => form.setFieldValue('is_active', event.currentTarget.checked)}
           />
 
           <Select

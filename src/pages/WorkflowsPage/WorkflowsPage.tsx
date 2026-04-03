@@ -27,7 +27,7 @@ export const WorkflowsPage: FC = () => {
   );
 
   const handleToggleFavorite = useCallback(
-    (id: string) => toggleFavorite(FavoriteResourceTypeEnum.AUTONOMOUS_AGENT, id),
+    (id: string, name: string) => toggleFavorite(FavoriteResourceTypeEnum.AUTONOMOUS_AGENT, id, name),
     [toggleFavorite]
   );
 
@@ -65,6 +65,12 @@ export const WorkflowsPage: FC = () => {
     [apiClient]
   );
 
+  const duplicateEntity = useCallback(
+    (tenantId: string, id: string) =>
+      apiClient!.duplicateAutonomousAgent(tenantId, id),
+    [apiClient]
+  );
+
   const config = useMemo(() => ({
     sortStorageKey: SORT_STORAGE_KEY,
     errorMessage: 'Failed to load workflows',
@@ -72,9 +78,10 @@ export const WorkflowsPage: FC = () => {
     listTags,
     updateEntity,
     deleteEntity,
+    duplicateEntity,
     mapToTableItem,
     refreshSidebar: refreshWorkflows,
-  }), [listEntities, listTags, updateEntity, deleteEntity, mapToTableItem, refreshWorkflows]);
+  }), [listEntities, listTags, updateEntity, deleteEntity, duplicateEntity, mapToTableItem, refreshWorkflows]);
 
   const {
     items, isLoading, isLoadingMore, hasMore, error, searchValue, sortBy, filters,
@@ -89,15 +96,6 @@ export const WorkflowsPage: FC = () => {
   const handleOpen = useCallback((id: string) => {
     navigate(`/workflows/${id}`);
   }, [navigate]);
-
-  const handleShare = useCallback((_id: string) => {
-    void _id;
-  }, []);
-
-  const handlePin = useCallback((_id: string, _isPinned: boolean) => {
-    void _id;
-    void _isPinned;
-  }, []);
 
   const renderIcon = useCallback(() => (
     <EntityAvatar entityType="workflow" size="sm" />
@@ -136,10 +134,8 @@ export const WorkflowsPage: FC = () => {
         onRowClick={handleOpen}
         onOpen={handleOpen}
         onEdit={handleEdit}
-        onShare={handleShare}
         onManageAccess={handleManageAccess}
         onDuplicate={handleDuplicate}
-        onPin={handlePin}
         onDelete={handleDeleteClick}
         renderIcon={renderIcon}
         sortBy={sortBy}

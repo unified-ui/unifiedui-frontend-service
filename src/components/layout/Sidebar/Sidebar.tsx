@@ -48,7 +48,9 @@ const mainNavItemsTop: NavItem[] = [
     hasDataList: true,
     entityType: 'chat-agents',
     matchFn: (pathname, search) =>
-      pathname === '/chat-agents' && !search.includes('type=REACT_AGENT'),
+      (pathname === '/chat-agents' || pathname.startsWith('/chat-agents/')) &&
+      !search.includes('type=REACT_AGENT') &&
+      !pathname.endsWith('/develop'),
   },
   { icon: IconRobot, labelKey: 'workflows', path: '/workflows', hasDataList: true, entityType: 'autonomous-agents' },
   {
@@ -170,7 +172,7 @@ export const Sidebar: FC = () => {
     (entityType: EntityType | 'conversations') => {
       const favType = ENTITY_TO_FAVORITE_TYPE[entityType];
       if (!favType) return undefined;
-      return (id: string) => toggleFavorite(favType, id);
+      return (id: string, name: string) => toggleFavorite(favType, id, name);
     },
     [toggleFavorite, ENTITY_TO_FAVORITE_TYPE]
   );
@@ -275,6 +277,7 @@ export const Sidebar: FC = () => {
 
   const isOnEntityDetailPage = useCallback((entityType: EntityType) => {
     const detailPatterns: Partial<Record<EntityType, RegExp>> = {
+      'chat-agents': /^\/chat-agents\/[^/]+/,
       'autonomous-agents': /^\/workflows\/[^/]+/,
       'chat-widgets': /^\/(widget-designer|chat-widgets)\/[^/]+/,
       'external-apps': /^\/external-apps\/[^/]+/,

@@ -11,24 +11,36 @@
 
 .dialog {
   width: 100%;
-  max-width: 640px;
+  max-width: 760px;
+  height: 520px;
   background: var(--bg-paper);
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--color-gray-400);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 [data-mantine-color-scheme="dark"] .dialog {
   background: var(--color-gray-900);
-  border-top: 2px solid transparent;
-  border-image: var(--gradient-accent) 1;
-  border-image-slice: 1 1 0 1;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .input {
   width: 100%;
   padding: var(--spacing-md) var(--spacing-lg);
+  padding-right: 40px;
   border: none;
   border-bottom: 1px solid var(--border-default);
   background: transparent;
@@ -38,14 +50,50 @@
   outline: none;
 }
 
+.inputClear {
+  position: absolute;
+  right: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.inputClear:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
 .input::placeholder {
   color: var(--text-disabled);
 }
 
 .list {
-  max-height: 400px;
+  flex: 1;
+  min-height: 0;
+  max-height: calc(520px - 60px);
   overflow-y: auto;
   padding: var(--spacing-xs) 0;
+  scrollbar-width: thin;
+}
+
+.list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.list::-webkit-scrollbar-thumb {
+  background: var(--color-gray-400);
+  border-radius: 3px;
 }
 
 .empty {
@@ -120,6 +168,16 @@
   font-size: 11px;
   color: var(--text-disabled);
   flex-shrink: 0;
+}
+
+.itemActions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.loadMore {
+  padding: var(--spacing-xs) var(--spacing-lg);
 }
 
 .itemShortcut {

@@ -17,7 +17,8 @@
     "imageUrlLabel": "Image URL",
     "imageLabel": "Image",
     "uploadImage": "Upload Image",
-    "changeImage": "Change Image"
+    "changeImage": "Change Image",
+    "preview": "Preview"
   },
   "editDialog": {
     "title": "Edit External App"
