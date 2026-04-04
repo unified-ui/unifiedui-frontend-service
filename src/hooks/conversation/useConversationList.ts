@@ -43,6 +43,7 @@ interface UseConversationListReturn {
   handleLoadMoreConversations: () => void;
   setSelectedChatAgentId: React.Dispatch<React.SetStateAction<string | undefined>>;
   resetStreamingState: () => void;
+  handleChatAgentSearch: (query: string) => void;
 }
 
 export function useConversationList({
@@ -56,6 +57,7 @@ export function useConversationList({
 
   const [conversations, setConversations] = useState<ConversationResponse[]>([]);
   const [chatAgents, setChatAgents] = useState<ChatAgentResponse[]>([]);
+  const [allChatAgents, setAllChatAgents] = useState<ChatAgentResponse[]>([]);
   const [selectedChatAgentId, setSelectedChatAgentId] = useState<string | undefined>();
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [currentConversation, setCurrentConversation] = useState<ConversationResponse | null>(null);
@@ -69,6 +71,7 @@ export function useConversationList({
 
   const isLoadingMoreRef = useRef(false);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const agentSearchDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const isNewChat = !conversationId;
 
@@ -99,7 +102,7 @@ export function useConversationList({
         const [convsData, appsData, favoritesData] = await Promise.all([
           fetchConversations(0),
           apiClient.listChatAgents(tenantId, {
-            limit: 100,
+            limit: 50,
             order_by: 'name',
             order_direction: 'asc',
             fields: 'id,name,type,is_active,greeting_messages',
@@ -110,6 +113,7 @@ export function useConversationList({
         setConversations(convsData);
         setHasMoreConversations(convsData.length >= PAGE_SIZE);
         setChatAgents(appsData);
+        setAllChatAgents(appsData);
         setFavoriteIds(new Set(favoritesData.favorites.map(f => f.resource_id)));
 
         const queryAppId = searchParams.get('agent');
@@ -281,6 +285,35 @@ export function useConversationList({
     }, 300);
   }, [apiClient, tenantId, fetchConversations]);
 
+  const handleChatAgentSearch = useCallback((query: string) => {
+    if (agentSearchDebounceRef.current) {
+      clearTimeout(agentSearchDebounceRef.current);
+    }
+
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setChatAgents(allChatAgents);
+      return;
+    }
+
+    agentSearchDebounceRef.current = setTimeout(async () => {
+      if (!apiClient || !tenantId) return;
+
+      try {
+        const results = await apiClient.listChatAgents(tenantId, {
+          limit: 50,
+          order_by: 'name',
+          order_direction: 'asc',
+          name: trimmed,
+          fields: 'id,name,type,is_active,greeting_messages',
+        }) as ChatAgentResponse[];
+        setChatAgents(results);
+      } catch (error) {
+        console.error('Failed to search chat agents:', error);
+      }
+    }, 300);
+  }, [apiClient, tenantId, allChatAgents]);
+
   const handleLoadMoreConversations = useCallback(async () => {
     if (!apiClient || !tenantId || !hasMoreConversations || isLoadingMoreRef.current) return;
 
@@ -324,5 +357,6 @@ export function useConversationList({
     handleLoadMoreConversations,
     setSelectedChatAgentId,
     resetStreamingState,
+    handleChatAgentSearch,
   };
 }

@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Modal,
@@ -17,7 +17,7 @@ import {
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconSearch, IconRefresh, IconApps } from '@tabler/icons-react';
 import type { QuickListItemResponse } from '../../../api/types';
-import { useSidebarData } from '../../../contexts/SidebarDataContext';
+import { useIdentity } from '../../../contexts';
 import { DelayedTooltip, EntityAvatar } from '../../common';
 import classes from './ChatAgentSelectDialog.module.css';
 
@@ -33,45 +33,64 @@ export const ChatAgentSelectDialog: FC<ChatAgentSelectDialogProps> = ({
   onSelect,
 }) => {
   const { t } = useTranslation();
-  const { chatAgents, loadingStates, fetchChatAgents, refreshChatAgents, hasFetched } = useSidebarData();
+  const { apiClient, selectedTenant } = useIdentity();
+  const [chatAgents, setChatAgents] = useState<QuickListItemResponse[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery] = useDebouncedValue(searchQuery, 300);
+  const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
+
+  const fetchChatAgents = useCallback(async (nameFilter?: string) => {
+    if (!apiClient || !selectedTenant) return;
+
+    setIsLoading(true);
+    try {
+      const result = await apiClient.listChatAgents(selectedTenant.id, {
+        limit: 50,
+        order_by: 'name',
+        order_direction: 'asc',
+        name: nameFilter || undefined,
+        fields: 'id,name,is_active',
+      });
+      setChatAgents(result as QuickListItemResponse[]);
+      setHasFetched(true);
+    } catch (error) {
+      console.error('Failed to fetch chat agents:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [apiClient, selectedTenant]);
 
   useEffect(() => {
-    if (opened && !hasFetched('chat-agents')) {
+    if (opened && !hasFetched) {
       fetchChatAgents();
     }
   }, [opened, hasFetched, fetchChatAgents]);
 
   useEffect(() => {
+    if (opened && hasFetched) {
+      fetchChatAgents(debouncedQuery || undefined);
+    }
+  }, [debouncedQuery, opened, hasFetched, fetchChatAgents]);
+
+  useEffect(() => {
     if (!opened) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchQuery('');
+      setHasFetched(false);
     }
   }, [opened]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await refreshChatAgents();
+    await fetchChatAgents(debouncedQuery || undefined);
     setIsRefreshing(false);
   };
-
-  const filteredChatAgents = useMemo(() => {
-    if (!debouncedQuery.trim()) return chatAgents;
-
-    const query = debouncedQuery.toLowerCase();
-    return chatAgents.filter(app =>
-      app.name.toLowerCase().includes(query)
-    );
-  }, [debouncedQuery, chatAgents]);
 
   const handleSelect = (app: QuickListItemResponse) => {
     onSelect(app);
     onClose();
   };
-
-  const isLoading = loadingStates['chat-agents'] && !hasFetched('chat-agents');
 
   return (
     <Modal
@@ -108,11 +127,11 @@ export const ChatAgentSelectDialog: FC<ChatAgentSelectDialogProps> = ({
 
         <Box className={classes.listContainer}>
           <div className={classes.scrollArea}>
-            {isLoading ? (
+            {isLoading && !hasFetched ? (
               <Center h={300}>
                 <Loader size="sm" />
               </Center>
-            ) : filteredChatAgents.length === 0 ? (
+            ) : chatAgents.length === 0 ? (
               <Center h={300} className={classes.emptyState}>
                 <IconApps size={40} className={classes.emptyIcon} />
                 <Text size="sm" c="dimmed" mt="sm">
@@ -121,7 +140,7 @@ export const ChatAgentSelectDialog: FC<ChatAgentSelectDialogProps> = ({
               </Center>
             ) : (
               <Stack gap="xs">
-                {filteredChatAgents.map((app) => (
+                {chatAgents.map((app) => (
                   <UnstyledButton
                     key={app.id}
                     className={classes.chatAgentItem}

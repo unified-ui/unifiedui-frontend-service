@@ -240,6 +240,7 @@ export const ConversationsPage: FC = () => {
       hasWidgets={widgets.hasWidgets}
       messages={chat.messages}
       onChatAgentChange={convList.handleChatAgentChange}
+      onChatAgentSearch={convList.handleChatAgentSearch}
       onNewChatWithAgent={handleNewChatWithAgent}
       onShare={handleShare}
       onToggleFavorite={() => {
