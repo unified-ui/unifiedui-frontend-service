@@ -28,7 +28,7 @@
   "recentSearches": "Recent Searches",
   "commands": "Commands",
   "createChatAgent": "Create Chat Agent",
-  "createAutonomousAgent": "Create Workflow",
+  "createWorkflow": "Create Workflow",
   "createChatWidget": "Create Chat Widget",
   "createExternalApp": "Create External App",
   "createCredential": "Create Credential",

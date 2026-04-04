@@ -118,7 +118,8 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
   const [sortBy, setSortBy] = useState<SortOption>(() => getStoredSort(sortStorageKey));
 
   const dialogParam = searchParams.get('dialog');
-  const selectedId = searchParams.get('selectedId');
+  const selectedIdParam = searchParams.get('selectedId');
+  const selectedId = dialogParam === 'edit' ? selectedIdParam : null;
   const editTab = (searchParams.get('tab') as EditDialogTab) || 'details';
 
   const [filters, setFilters] = useState<FilterState>({ tags: [], status: 'all' });
@@ -354,6 +355,7 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
     try {
       await deleteEntity(selectedTenant.id, deleteDialog.id);
       setDeleteDialog({ open: false, id: '', name: '' });
+      setSearchParams({});
       fetchEntities(true, debouncedSearch, debouncedFilters);
       refreshSidebar?.();
     } catch (err) {
@@ -361,7 +363,7 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
     } finally {
       setIsDeleting(false);
     }
-  }, [apiClient, selectedTenant, deleteDialog.id, deleteEntity, fetchEntities, refreshSidebar, debouncedSearch, debouncedFilters]);
+  }, [apiClient, selectedTenant, deleteDialog.id, deleteEntity, setSearchParams, fetchEntities, refreshSidebar, debouncedSearch, debouncedFilters]);
 
   const handleDeleteClose = useCallback(() => {
     setDeleteDialog({ open: false, id: '', name: '' });

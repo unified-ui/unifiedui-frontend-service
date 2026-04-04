@@ -11,7 +11,7 @@ import {
 
 export type EntityAvatarType =
   | 'chat-agent'
-  | 'autonomous-agent'
+  | 'workflow'
   | 'workflow'
   | 'chat-widget'
   | 'conversation'
@@ -24,7 +24,7 @@ interface EntityAvatarProps {
 
 const ENTITY_ICONS: Record<EntityAvatarType, typeof IconSparkles> = {
   'chat-agent': IconSparkles,
-  'autonomous-agent': IconRobot,
+  'workflow': IconRobot,
   'workflow': IconRobot,
   'chat-widget': IconBrandWechat,
   'conversation': IconMessages,

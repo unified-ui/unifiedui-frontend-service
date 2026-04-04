@@ -44,7 +44,7 @@ import { useIdentity } from '../../contexts';
 import { useSidebarData } from '../../contexts/SidebarDataContext';
 import { useRecentVisits } from '../../contexts';
 import { useDelayedLoading, useDialogParams } from '../../hooks';
-import type { AutonomousAgentResponse, FullTraceResponse, TracesListParams } from '../../api/types';
+import type { WorkflowResponse, FullTraceResponse, TracesListParams } from '../../api/types';
 import classes from './WorkflowDetailsPage.module.css';
 
 // ============================================================================
@@ -91,7 +91,7 @@ export const WorkflowDetailsPage: FC = () => {
   const { trackVisit } = useRecentVisits();
 
   // ---- Agent data ----
-  const [agent, setAgent] = useState<AutonomousAgentResponse | null>(null);
+  const [agent, setAgent] = useState<WorkflowResponse | null>(null);
   const [agentLoading, setAgentLoading] = useState(true);
   const [agentError, setAgentError] = useState<string | null>(null);
   const showAgentSkeleton = useDelayedLoading(agentLoading, 500);
@@ -146,6 +146,8 @@ export const WorkflowDetailsPage: FC = () => {
   const [secondaryKey, setSecondaryKey] = useState<string | null>(null);
   const [primaryKeyLoading, setPrimaryKeyLoading] = useState(false);
   const [secondaryKeyLoading, setSecondaryKeyLoading] = useState(false);
+  const [primaryKeyCopying, setPrimaryKeyCopying] = useState(false);
+  const [secondaryKeyCopying, setSecondaryKeyCopying] = useState(false);
   const [rotatingKey, setRotatingKey] = useState<1 | 2 | null>(null);
   const [confirmRotateKey, setConfirmRotateKey] = useState<1 | 2 | null>(null);
 
@@ -155,7 +157,7 @@ export const WorkflowDetailsPage: FC = () => {
     setAgentLoading(true);
     setAgentError(null);
     try {
-      const data = await apiClient.getAutonomousAgent(selectedTenant.id, agentId);
+      const data = await apiClient.getWorkflow(selectedTenant.id, agentId);
       setAgent(data);
     } catch {
       setAgentError('Failed to load workflow');
@@ -171,7 +173,7 @@ export const WorkflowDetailsPage: FC = () => {
   useEffect(() => {
     if (agent) {
       trackVisit({
-        resource_type: 'autonomous_agent',
+        resource_type: 'workflow',
         resource_id: agent.id,
         resource_name: agent.name,
       });
@@ -209,7 +211,7 @@ export const WorkflowDetailsPage: FC = () => {
           expand: false,
           ...dateRange,
         };
-        const response = await apiClient.getAutonomousAgentTraces(selectedTenant.id, agentId, params);
+        const response = await apiClient.getWorkflowTraces(selectedTenant.id, agentId, params);
         const newTraces = response.traces || [];
 
         if (reset) {
@@ -324,7 +326,7 @@ export const WorkflowDetailsPage: FC = () => {
       setTraceDialogLoading(true);
       setTraceDialogOpen(true);
       try {
-        const result = await apiClient.importAutonomousAgentTrace(selectedTenant.id, agentId, {
+        const result = await apiClient.importWorkflowTrace(selectedTenant.id, agentId, {
           type: agent.type,
           executionId,
         });
@@ -350,7 +352,7 @@ export const WorkflowDetailsPage: FC = () => {
     async (trace: FullTraceResponse) => {
       if (!apiClient || !selectedTenant || !agentId) return;
       try {
-        await apiClient.refreshAutonomousAgentTraceImport(selectedTenant.id, agentId, trace.id);
+        await apiClient.refreshWorkflowTraceImport(selectedTenant.id, agentId, trace.id);
         fetchTraces(true);
       } catch {
         // Error handled by API client onError
@@ -407,7 +409,7 @@ export const WorkflowDetailsPage: FC = () => {
 
       setLoading(true);
       try {
-        const response = await apiClient.getAutonomousAgentKey(selectedTenant.id, agentId, keyNumber);
+        const response = await apiClient.getWorkflowKey(selectedTenant.id, agentId, keyNumber);
         setKey(response.key);
       } catch {
         // Error handled by API client
@@ -418,11 +420,38 @@ export const WorkflowDetailsPage: FC = () => {
     [apiClient, selectedTenant, agentId]
   );
 
+  const copyKey = useCallback(
+    async (keyNumber: 1 | 2) => {
+      if (!apiClient || !selectedTenant || !agentId) return;
+      const currentKey = keyNumber === 1 ? primaryKey : secondaryKey;
+
+      if (currentKey) {
+        navigator.clipboard.writeText(currentKey);
+        return;
+      }
+
+      const setCopying = keyNumber === 1 ? setPrimaryKeyCopying : setSecondaryKeyCopying;
+      const setKey = keyNumber === 1 ? setPrimaryKey : setSecondaryKey;
+
+      setCopying(true);
+      try {
+        const response = await apiClient.getWorkflowKey(selectedTenant.id, agentId, keyNumber);
+        setKey(response.key);
+        navigator.clipboard.writeText(response.key);
+      } catch {
+        // Error handled by API client
+      } finally {
+        setCopying(false);
+      }
+    },
+    [apiClient, selectedTenant, agentId, primaryKey, secondaryKey]
+  );
+
   const handleRotateKey = useCallback(async () => {
     if (!apiClient || !selectedTenant || !agentId || !confirmRotateKey) return;
     setRotatingKey(confirmRotateKey);
     try {
-      const response = await apiClient.rotateAutonomousAgentKey(selectedTenant.id, agentId, confirmRotateKey);
+      const response = await apiClient.rotateWorkflowKey(selectedTenant.id, agentId, confirmRotateKey);
       if (confirmRotateKey === 1) {
         setPrimaryKey(response.key);
       } else {
@@ -453,7 +482,7 @@ export const WorkflowDetailsPage: FC = () => {
   const putEndpointUrl = useMemo(() => {
     if (!selectedTenant || !agentId) return '';
     const host = "{YOUR-AGENT-SERVICE-HOST}";
-    return `${host}/api/v1/agent-service/tenants/${selectedTenant.id}/autonomous-agents/${agentId}/traces/import`;
+    return `${host}/api/v1/agent-service/tenants/${selectedTenant.id}/workflows/${agentId}/traces/import`;
   }, [selectedTenant, agentId]);
 
   const n8nConfig = useMemo(() => {
@@ -724,7 +753,9 @@ export const WorkflowDetailsPage: FC = () => {
                       label="Primary Key"
                       value={primaryKey}
                       isLoading={primaryKeyLoading}
+                      isCopying={primaryKeyCopying}
                       onReveal={() => revealKey(1)}
+                      onCopy={() => copyKey(1)}
                       onRotate={() => setConfirmRotateKey(1)}
                       isRotating={rotatingKey === 1}
                       disabled={!agent?.allow_api_keys}
@@ -735,7 +766,9 @@ export const WorkflowDetailsPage: FC = () => {
                       label="Secondary Key"
                       value={secondaryKey}
                       isLoading={secondaryKeyLoading}
+                      isCopying={secondaryKeyCopying}
                       onReveal={() => revealKey(2)}
+                      onCopy={() => copyKey(2)}
                       onRotate={() => setConfirmRotateKey(2)}
                       isRotating={rotatingKey === 2}
                       disabled={!agent?.allow_api_keys}
@@ -807,7 +840,7 @@ export const WorkflowDetailsPage: FC = () => {
       {/* Edit Dialog */}
       <EditWorkflowDialog
         opened={dialog === 'edit'}
-        autonomousAgentId={agentId || null}
+        workflowId={agentId || null}
         initialData={agent}
         activeTab={(dialogTab as EditDialogTab) || 'details'}
         onClose={closeDialog}

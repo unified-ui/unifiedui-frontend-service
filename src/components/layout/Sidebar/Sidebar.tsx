@@ -52,7 +52,7 @@ const mainNavItemsTop: NavItem[] = [
       !search.includes('type=REACT_AGENT') &&
       !pathname.endsWith('/develop'),
   },
-  { icon: IconRobot, labelKey: 'workflows', path: '/workflows', hasDataList: true, entityType: 'autonomous-agents' },
+  { icon: IconRobot, labelKey: 'workflows', path: '/workflows', hasDataList: true, entityType: 'workflows' },
   {
     icon: IconAppWindow,
     labelKey: 'apps',
@@ -154,7 +154,7 @@ export const Sidebar: FC = () => {
 
   const ENTITY_TO_FAVORITE_TYPE: Record<string, FavoriteResourceTypeEnum> = useMemo(() => ({
     'chat-agents': FavoriteResourceTypeEnum.CHAT_AGENT,
-    'autonomous-agents': FavoriteResourceTypeEnum.AUTONOMOUS_AGENT,
+    'workflows': FavoriteResourceTypeEnum.AUTONOMOUS_AGENT,
     'chat-widgets': FavoriteResourceTypeEnum.CHAT_WIDGET,
     conversations: FavoriteResourceTypeEnum.CONVERSATION,
   }), []);
@@ -215,11 +215,11 @@ export const Sidebar: FC = () => {
       fetchData: () => fetchEntityData('chat-agents'),
       getLink: (id) => `/conversations?chat-agent=${id}`,
     },
-    'autonomous-agents': {
+    'workflows': {
       title: t('workflows'),
       icon: <IconRobot size={24} />,
       addButtonLabel: t('addWorkflow'),
-      fetchData: () => fetchEntityData('autonomous-agents'),
+      fetchData: () => fetchEntityData('workflows'),
       getLink: (id) => `/workflows/${id}`,
     },
     'chat-widgets': {
@@ -249,11 +249,11 @@ export const Sidebar: FC = () => {
           link: entityConfigs['chat-agents']!.getLink(app.id),
           icon: <EntityAvatar entityType="chat-agent" size="xs" />,
         }));
-      case 'autonomous-agents':
+      case 'workflows':
         return workflows.map(agent => ({
           id: agent.id,
           name: agent.name,
-          link: entityConfigs['autonomous-agents']!.getLink(agent.id),
+          link: entityConfigs['workflows']!.getLink(agent.id),
           icon: <EntityAvatar entityType="workflow" size="xs" />,
         }));
       case 'chat-widgets':
@@ -278,7 +278,7 @@ export const Sidebar: FC = () => {
   const isOnEntityDetailPage = useCallback((entityType: EntityType) => {
     const detailPatterns: Partial<Record<EntityType, RegExp>> = {
       'chat-agents': /^\/chat-agents\/[^/]+/,
-      'autonomous-agents': /^\/workflows\/[^/]+/,
+      'workflows': /^\/workflows\/[^/]+/,
       'chat-widgets': /^\/(widget-designer|chat-widgets)\/[^/]+/,
       'external-apps': /^\/external-apps\/[^/]+/,
     };
@@ -461,7 +461,7 @@ export const Sidebar: FC = () => {
       case 'chat-agents':
         setIsChatAgentDialogOpen(true);
         break;
-      case 'autonomous-agents':
+      case 'workflows':
         setIsWorkflowDialogOpen(true);
         break;
       case 'chat-widgets':

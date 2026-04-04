@@ -23,10 +23,10 @@ import { useIdentity } from '../../../contexts';
 import { useTranslation } from 'react-i18next';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import {
-  AutonomousAgentTypeEnum,
+  WorkflowTypeEnum,
   CredentialTypeEnum,
   type CredentialResponse,
-  type N8NAutonomousAgentConfig,
+  type N8NWorkflowConfig,
 } from '../../../api/types';
 import { TagInput, KeyValuePairsInput, ConnectionTestButton, FilterableSelect } from '../../common';
 import type { KeyValuePair } from '../../common';
@@ -34,7 +34,7 @@ import { TestConnectionType } from '../../../api/types';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
 
 const AUTONOMOUS_AGENT_TYPES = [
-  { value: AutonomousAgentTypeEnum.N8N, label: 'n8n' },
+  { value: WorkflowTypeEnum.N8N, label: 'n8n' },
 ];
 
 const API_VERSIONS = [
@@ -116,7 +116,7 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
         return null;
       },
       n8n_workflow_endpoint: (value, values) => {
-        if (values.type === AutonomousAgentTypeEnum.N8N) {
+        if (values.type === WorkflowTypeEnum.N8N) {
           if (!value || value.trim().length === 0) {
             return 'Workflow Endpoint is required';
           }
@@ -132,7 +132,7 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
         return null;
       },
       n8n_api_api_key_credential_id: (value, values) => {
-        if (values.type === AutonomousAgentTypeEnum.N8N) {
+        if (values.type === WorkflowTypeEnum.N8N) {
           if (!value || value.trim().length === 0) {
             return 'API Key Credential is required';
           }
@@ -140,7 +140,7 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
         return null;
       },
       n8n_default_body: (value, values) => {
-        if (values.type === AutonomousAgentTypeEnum.N8N && values.n8n_enable_start_workflow) {
+        if (values.type === WorkflowTypeEnum.N8N && values.n8n_enable_start_workflow) {
           const trimmed = value.trim();
           if (trimmed && trimmed !== '{}') {
             try {
@@ -198,9 +198,9 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
     setIsSubmitting(true);
     try {
       // Build config based on agent type
-      let config: N8NAutonomousAgentConfig | undefined;
+      let config: N8NWorkflowConfig | undefined;
 
-      if (values.type === AutonomousAgentTypeEnum.N8N) {
+      if (values.type === WorkflowTypeEnum.N8N) {
         config = {
           api_version: values.n8n_api_version,
           workflow_endpoint: values.n8n_workflow_endpoint.trim(),
@@ -223,10 +223,10 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
         }
       }
 
-      // Create the autonomous agent
-      const agent = await apiClient.createAutonomousAgent(selectedTenant.id, {
+      // Create the workflow
+      const agent = await apiClient.createWorkflow(selectedTenant.id, {
         name: values.name.trim(),
-        type: values.type as AutonomousAgentTypeEnum,
+        type: values.type as WorkflowTypeEnum,
         description: values.description?.trim() || undefined,
         config: (config ?? {}) as Record<string, unknown>,
         allow_api_keys: values.allow_api_keys,
@@ -235,7 +235,7 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
       // If tags were added, save them to the agent
       if (values.tags.length > 0) {
         try {
-          await apiClient.setAutonomousAgentTags(
+          await apiClient.setWorkflowTags(
             selectedTenant.id,
             agent.id,
             values.tags
@@ -274,7 +274,7 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
     }
   };
 
-  const isN8N = form.values.type === AutonomousAgentTypeEnum.N8N;
+  const isN8N = form.values.type === WorkflowTypeEnum.N8N;
 
   return (
     <>
@@ -456,7 +456,7 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
               />
               <Box pos="absolute" top={0} right={0}>
                 <GenerateWithAIButton
-                  entityType="autonomous_agent"
+                  entityType="workflow"
                   entityName={form.values.name}
                   existingDescription={form.values.description || undefined}
                   onGenerated={(desc: string) => form.setFieldValue('description', desc)}

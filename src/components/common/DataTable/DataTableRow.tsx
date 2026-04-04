@@ -90,7 +90,6 @@ export const DataTableRow: FC<DataTableRowProps> = ({
   const hiddenTags = item.tags?.slice(MAX_VISIBLE_TAGS) || [];
   const hasHiddenTags = hiddenTags.length > 0;
   const [popoverOpened, setPopoverOpened] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const perm = item.my_permission;
   const canWriteItem = perm === 'ADMIN' || perm === 'WRITE';
@@ -99,15 +98,12 @@ export const DataTableRow: FC<DataTableRowProps> = ({
 
   const handleDelete = () => {
     if (!onDelete) return;
-    setIsDeleting(true);
-    setTimeout(() => {
-      onDelete(item.id);
-    }, 350);
+    onDelete(item.id);
   };
 
   return (
     <Paper
-      className={`${classes.row} ${onRowClick ? classes.clickable : ''} ${isDeleting ? classes.rowDeleting : ''} ${isSelected ? classes.rowSelected : ''}`}
+      className={`${classes.row} ${onRowClick ? classes.clickable : ''} ${isSelected ? classes.rowSelected : ''}`}
       p="md"
       withBorder
       onClick={() => onRowClick?.(item.id)}

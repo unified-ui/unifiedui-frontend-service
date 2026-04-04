@@ -8,10 +8,10 @@ import type { DataTableItem } from '../../components/common';
 import { CreateWorkflowDialog, EditWorkflowDialog } from '../../components/dialogs';
 import { useIdentity, useSidebarData, useFavorites } from '../../contexts';
 import { useEntityList, usePermissions } from '../../hooks';
-import type { AutonomousAgentResponse } from '../../api/types';
+import type { WorkflowResponse } from '../../api/types';
 import { FavoriteResourceTypeEnum } from '../../api/types';
 
-const SORT_STORAGE_KEY = 'unified-ui:sort:autonomous-agents';
+const SORT_STORAGE_KEY = 'unified-ui:sort:workflows';
 
 export const WorkflowsPage: FC = () => {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ export const WorkflowsPage: FC = () => {
   const { refreshWorkflows } = useSidebarData();
   const { isFavorite: checkFavorite, toggleFavorite } = useFavorites();
   const { canCreate } = usePermissions();
-  const canCreateWorkflow = canCreate('autonomous-agents');
+  const canCreateWorkflow = canCreate('workflows');
 
   const isFavorite = useCallback(
     (id: string) => checkFavorite(FavoriteResourceTypeEnum.AUTONOMOUS_AGENT, id),
@@ -31,7 +31,7 @@ export const WorkflowsPage: FC = () => {
     [toggleFavorite]
   );
 
-  const mapToTableItem = useCallback((agent: AutonomousAgentResponse): DataTableItem => ({
+  const mapToTableItem = useCallback((agent: WorkflowResponse): DataTableItem => ({
     id: agent.id,
     name: agent.name,
     description: agent.description,
@@ -42,32 +42,32 @@ export const WorkflowsPage: FC = () => {
   }), []);
 
   const listEntities = useCallback(
-    (tenantId: string, params: Parameters<NonNullable<typeof apiClient>['listAutonomousAgents']>[1]) =>
-      apiClient!.listAutonomousAgents(tenantId, params) as Promise<AutonomousAgentResponse[]>,
+    (tenantId: string, params: Parameters<NonNullable<typeof apiClient>['listWorkflows']>[1]) =>
+      apiClient!.listWorkflows(tenantId, params) as Promise<WorkflowResponse[]>,
     [apiClient]
   );
 
   const listTags = useCallback(
-    (tenantId: string, params: Parameters<NonNullable<typeof apiClient>['listAutonomousAgentTypeTags']>[1]) =>
-      apiClient!.listAutonomousAgentTypeTags(tenantId, params),
+    (tenantId: string, params: Parameters<NonNullable<typeof apiClient>['listWorkflowTypeTags']>[1]) =>
+      apiClient!.listWorkflowTypeTags(tenantId, params),
     [apiClient]
   );
 
   const updateEntity = useCallback(
     (tenantId: string, id: string, data: { is_active: boolean }) =>
-      apiClient!.updateAutonomousAgent(tenantId, id, data),
+      apiClient!.updateWorkflow(tenantId, id, data),
     [apiClient]
   );
 
   const deleteEntity = useCallback(
     (tenantId: string, id: string) =>
-      apiClient!.deleteAutonomousAgent(tenantId, id),
+      apiClient!.deleteWorkflow(tenantId, id),
     [apiClient]
   );
 
   const duplicateEntity = useCallback(
     (tenantId: string, id: string) =>
-      apiClient!.duplicateAutonomousAgent(tenantId, id),
+      apiClient!.duplicateWorkflow(tenantId, id),
     [apiClient]
   );
 
@@ -91,7 +91,7 @@ export const WorkflowsPage: FC = () => {
     handleEditSuccess, handleManageAccess, handleDuplicate, handleStatusChange,
     handleDeleteClick, handleDeleteConfirm, handleDeleteClose, handleDeactivateConfirm,
     handleDeactivateClose, handleCreateSuccess,
-  } = useEntityList<AutonomousAgentResponse>(config);
+  } = useEntityList<WorkflowResponse>(config);
 
   const handleOpen = useCallback((id: string) => {
     navigate(`/workflows/${id}`);
@@ -153,7 +153,7 @@ export const WorkflowsPage: FC = () => {
 
       <EditWorkflowDialog
         opened={!!selectedId}
-        autonomousAgentId={selectedId}
+        workflowId={selectedId}
         initialData={editInitialData}
         activeTab={editTab}
         onClose={handleEditClose}

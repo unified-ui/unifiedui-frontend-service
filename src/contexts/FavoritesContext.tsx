@@ -18,7 +18,7 @@ interface FavoritesContextType {
 
 const resourceTypeToEnum: Record<string, FavoriteResourceTypeEnum> = {
   'chat-agents': FavoriteResourceTypeEnum.CHAT_AGENT,
-  'autonomous-agents': FavoriteResourceTypeEnum.AUTONOMOUS_AGENT,
+  'workflows': FavoriteResourceTypeEnum.AUTONOMOUS_AGENT,
   'chat-widgets': FavoriteResourceTypeEnum.CHAT_WIDGET,
   'conversations': FavoriteResourceTypeEnum.CONVERSATION,
   'external-apps': FavoriteResourceTypeEnum.EXTERNAL_APP,

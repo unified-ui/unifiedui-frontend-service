@@ -29,8 +29,8 @@ import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import { useEntityPermissions, usePermissions } from '../../../hooks';
 import { ManageAccessTable, TagInput, AddPrincipalDialog, KeyValuePairsInput, ConnectionTestButton, FilterableSelect } from '../../common';
 import type { KeyValuePair } from '../../common';
-import type { AutonomousAgentResponse, PrincipalTypeEnum, CredentialResponse } from '../../../api/types';
-import { PermissionActionEnum, AutonomousAgentTypeEnum, CredentialTypeEnum, TestConnectionType } from '../../../api/types';
+import type { WorkflowResponse, PrincipalTypeEnum, CredentialResponse } from '../../../api/types';
+import { PermissionActionEnum, WorkflowTypeEnum, CredentialTypeEnum, TestConnectionType } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
 import { useFormDirtyGuard } from '../../../hooks';
@@ -60,8 +60,8 @@ interface FormValues {
 
 export interface EditWorkflowDialogProps {
   opened: boolean;
-  autonomousAgentId: string | null;
-  initialData?: AutonomousAgentResponse | null;
+  workflowId: string | null;
+  initialData?: WorkflowResponse | null;
   activeTab?: EditDialogTab;
   onClose: () => void;
   onSuccess?: () => void;
@@ -70,7 +70,7 @@ export interface EditWorkflowDialogProps {
 
 export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
   opened,
-  autonomousAgentId,
+  workflowId,
   initialData,
   activeTab = 'details',
   onClose,
@@ -81,7 +81,7 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
   const { t } = useTranslation('common');
   const { isGlobalAdmin } = usePermissions();
   const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission === 'ADMIN';
-  const [autonomousAgent, setAutonomousAgent] = useState<AutonomousAgentResponse | null>(null);
+  const [workflow, setWorkflow] = useState<WorkflowResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,8 +104,8 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
     handleDeletePrincipal,
     resetState: resetPrincipalsState,
   } = useEntityPermissions({
-    entityType: 'autonomous-agent',
-    entityId: autonomousAgentId,
+    entityType: 'workflow',
+    entityId: workflowId,
   });
 
   const form = useForm<FormValues>({
@@ -130,7 +130,7 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
         return null;
       },
       n8n_workflow_endpoint: (value) => {
-        if (autonomousAgent?.type === AutonomousAgentTypeEnum.N8N) {
+        if (workflow?.type === WorkflowTypeEnum.N8N) {
           if (!value || value.trim().length === 0) {
             return 'Workflow Endpoint is required';
           }
@@ -146,7 +146,7 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
         return null;
       },
       n8n_api_api_key_credential_id: (value) => {
-        if (autonomousAgent?.type === AutonomousAgentTypeEnum.N8N) {
+        if (workflow?.type === WorkflowTypeEnum.N8N) {
           if (!value || value.trim().length === 0) {
             return 'API Key Credential is required';
           }
@@ -154,7 +154,7 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
         return null;
       },
       n8n_default_body: (value) => {
-        if (autonomousAgent?.type === AutonomousAgentTypeEnum.N8N) {
+        if (workflow?.type === WorkflowTypeEnum.N8N) {
           const trimmed = value.trim();
           if (trimmed && trimmed !== '{}') {
             try {
@@ -210,8 +210,8 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
 
   // Initialize form from data
   const initializeFromData = useCallback(
-    (data: AutonomousAgentResponse) => {
-      setAutonomousAgent(data);
+    (data: WorkflowResponse) => {
+      setWorkflow(data);
 
       // Extract N8N config if available
       const config = data.config || {};
@@ -238,38 +238,38 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
     []
   );
 
-  // Fetch autonomous agent details
-  const fetchAutonomousAgent = useCallback(async () => {
-    if (!apiClient || !selectedTenant || !autonomousAgentId) return;
+  // Fetch workflow details
+  const fetchWorkflow = useCallback(async () => {
+    if (!apiClient || !selectedTenant || !workflowId) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const data = await apiClient.getAutonomousAgent(selectedTenant.id, autonomousAgentId);
+      const data = await apiClient.getWorkflow(selectedTenant.id, workflowId);
       initializeFromData(data);
     } catch (err) {
-      console.error('Failed to fetch autonomous agent:', err);
+      console.error('Failed to fetch workflow:', err);
       setError('Failed to load workflow details');
     } finally {
       setIsLoading(false);
     }
-  }, [apiClient, selectedTenant, autonomousAgentId, initializeFromData]);
+  }, [apiClient, selectedTenant, workflowId, initializeFromData]);
 
   // Fetch data when dialog opens
   useEffect(() => {
-    if (opened && autonomousAgentId) {
+    if (opened && workflowId) {
       if (initialData) {
         initializeFromData(initialData);
       } else {
-        fetchAutonomousAgent();
+        fetchWorkflow();
       }
       // Always fetch principals (they're not in the list data)
       fetchPrincipals();
     } else if (!opened) {
       resetPrincipalsState();
     }
-  }, [opened, autonomousAgentId, initialData, initializeFromData, fetchAutonomousAgent, fetchPrincipals, resetPrincipalsState]);
+  }, [opened, workflowId, initialData, initializeFromData, fetchWorkflow, fetchPrincipals, resetPrincipalsState]);
 
   // Handle tab change
   const handleTabChange = (value: string) => {
@@ -279,7 +279,7 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
 
   // Handle form submit
   const handleSubmit = async (values: FormValues) => {
-    if (!apiClient || !selectedTenant || !autonomousAgentId) return;
+    if (!apiClient || !selectedTenant || !workflowId) return;
 
     setIsSaving(true);
     setError(null);
@@ -287,7 +287,7 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
     try {
       // Build config if this is an N8N agent
       let config: Record<string, unknown> | undefined;
-      if (autonomousAgent?.type === AutonomousAgentTypeEnum.N8N) {
+      if (workflow?.type === WorkflowTypeEnum.N8N) {
         config = {
           api_version: values.n8n_api_version,
           workflow_endpoint: values.n8n_workflow_endpoint.trim(),
@@ -310,8 +310,8 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
         }
       }
 
-      // Update autonomous agent
-      await apiClient.updateAutonomousAgent(selectedTenant.id, autonomousAgentId, {
+      // Update workflow
+      await apiClient.updateWorkflow(selectedTenant.id, workflowId, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
         is_active: values.is_active,
@@ -320,18 +320,18 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
       });
 
       // Update tags if changed
-      const currentTags = autonomousAgent?.tags?.map((t) => t.name) || [];
+      const currentTags = workflow?.tags?.map((t) => t.name) || [];
       const newTags = values.tags;
 
       if (JSON.stringify(currentTags.sort()) !== JSON.stringify(newTags.sort())) {
-        await apiClient.setAutonomousAgentTags(selectedTenant.id, autonomousAgentId, newTags);
+        await apiClient.setWorkflowTags(selectedTenant.id, workflowId, newTags);
       }
 
       form.resetDirty();
       onSuccess?.();
       onClose();
     } catch (err) {
-      console.error('Failed to update autonomous agent:', err);
+      console.error('Failed to update workflow:', err);
       setError('Failed to save changes');
     } finally {
       setIsSaving(false);
@@ -355,7 +355,7 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
   };
 
   // Check if this is an N8N agent
-  const isN8N = autonomousAgent?.type === AutonomousAgentTypeEnum.N8N;
+  const isN8N = workflow?.type === WorkflowTypeEnum.N8N;
 
   // Handle adding principals with callback
   const handleAddPrincipalsWithRole = useCallback(
@@ -386,7 +386,7 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
   const handleClose = () => {
     form.reset();
     setError(null);
-    setAutonomousAgent(null);
+    setWorkflow(null);
     onClose();
   };
 
@@ -402,12 +402,12 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
             </Box>
             <Stack gap={2}>
               <Text fw={600} size="lg">
-                {autonomousAgent?.name}
+                {workflow?.name}
               </Text>
-              {autonomousAgent && (
+              {workflow && (
                 <Group gap="xs">
-                  <Badge size="xs" variant="light" color={autonomousAgent.is_active ? 'green' : 'gray'}>
-                    {autonomousAgent.is_active ? 'Active' : 'Inactive'}
+                  <Badge size="xs" variant="light" color={workflow.is_active ? 'green' : 'gray'}>
+                    {workflow.is_active ? 'Active' : 'Inactive'}
                   </Badge>
                   <Text size="xs" c="dimmed">
                     Workflow
@@ -486,7 +486,7 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
 
               <Group gap="md">
                 <Badge size="lg" variant="light" color="blue">
-                  {autonomousAgent?.type || 'Unknown'}
+                  {workflow?.type || 'Unknown'}
                 </Badge>
                 <Switch
                   label="Active"
@@ -568,7 +568,7 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
                 </>
               )}
 
-              {autonomousAgent?.type === AutonomousAgentTypeEnum.N8N && (
+              {workflow?.type === WorkflowTypeEnum.N8N && (
                 <>
                   <Switch
                     label="Enable Start Workflow"
@@ -646,7 +646,7 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
                 />
                 <Box pos="absolute" top={0} right={0}>
                   <GenerateWithAIButton
-                    entityType="autonomous_agent"
+                    entityType="workflow"
                     entityName={form.values.name}
                     existingDescription={form.values.description || undefined}
                     onGenerated={(desc: string) => form.setFieldValue('description', desc)}

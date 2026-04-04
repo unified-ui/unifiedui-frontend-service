@@ -45,7 +45,7 @@ interface CommandPaletteProps {
 
 const ENTITY_ICONS: Record<string, FC<{ size?: number }>> = {
   chat_agent: IconSparkles,
-  autonomous_agent: IconRobot,
+  workflow: IconRobot,
   conversation: IconMessages,
   chat_widget: IconMessageChatbot,
   external_app: IconAppWindow,
@@ -60,7 +60,7 @@ const ENTITY_ICONS: Record<string, FC<{ size?: number }>> = {
 const ENTITY_BADGE_COLORS: Record<string, string> = {
   conversation: 'teal',
   chat_agent: 'violet',
-  autonomous_agent: 'orange',
+  workflow: 'orange',
   external_app: 'green',
   chat_widget: 'pink',
   credential: 'gray',
@@ -79,11 +79,11 @@ const SETTINGS_TAB_TYPES: Record<string, string> = {
   custom_group: 'custom-groups',
 };
 
-const DUAL_ACTION_TYPES = new Set(['chat_agent', 'autonomous_agent', 'chat_widget']);
+const DUAL_ACTION_TYPES = new Set(['chat_agent', 'workflow', 'chat_widget']);
 
 const ENTITY_LIST_ROUTES: Record<string, string> = {
   chat_agent: '/chat-agents',
-  autonomous_agent: '/workflows',
+  workflow: '/workflows',
   conversation: '/conversations',
   chat_widget: '/chat-widgets',
   external_app: '/external-apps',
@@ -97,7 +97,7 @@ interface CommandConfig {
 
 const COMMAND_CONFIGS: CommandConfig[] = [
   { labelKey: 'createChatAgent', route: '/chat-agents?dialog=new', resourceType: 'chat-agents' },
-  { labelKey: 'createAutonomousAgent', route: '/workflows?dialog=new', resourceType: 'autonomous-agents' },
+  { labelKey: 'createWorkflow', route: '/workflows?dialog=new', resourceType: 'workflows' },
   { labelKey: 'createChatWidget', route: '/chat-widgets?dialog=new', resourceType: 'chat-widgets' },
   { labelKey: 'createExternalApp', route: '/external-apps?dialog=new', resourceType: 'external-apps' },
   { labelKey: 'createCredential', route: '/tenant-settings?tab=credentials&dialog=new-credential', resourceType: 'credentials' },
@@ -152,7 +152,7 @@ const getEntityEditRoute = (item: SearchResultItem): string | null => {
 const getEntityBadgeLabel = (t: (key: string) => string, item: SearchResultItem): string => {
   const keyMap: Record<string, string> = {
     chat_agent: 'chatAgent',
-    autonomous_agent: 'autonomousAgent',
+    workflow: 'workflow',
     chat_widget: 'chatWidget',
     external_app: 'externalApp',
     tenant_ai_model: 'tenantAIModel',

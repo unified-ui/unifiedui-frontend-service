@@ -64,8 +64,8 @@ export const AppRoutes = () => {
             <Route path="/" element={<Navigate to="/home" replace />}
             />
             <Route path="/dashboard" element={<Navigate to="/home" replace />} />
-            <Route path="/autonomous-agents" element={<Navigate to="/workflows" replace />} />
-            <Route path="/autonomous-agents/:agentId" element={<Navigate to="/workflows/:agentId" replace />} />
+            <Route path="/workflows" element={<Navigate to="/workflows" replace />} />
+            <Route path="/workflows/:agentId" element={<Navigate to="/workflows/:agentId" replace />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

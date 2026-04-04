@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { useState, useCallback, useEffect } from 'react';
-import { Group, Text, ActionIcon, Tooltip, CopyButton, Loader, Box } from '@mantine/core';
+import { Group, Text, ActionIcon, Tooltip, Loader, Box } from '@mantine/core';
 import { IconEye, IconEyeOff, IconCopy, IconCheck, IconRefresh } from '@tabler/icons-react';
 import classes from './SecretField.module.css';
 
@@ -11,8 +11,12 @@ interface SecretFieldProps {
   value: string | null;
   /** Whether the secret is currently being fetched */
   isLoading?: boolean;
+  /** Whether copying is in progress (fetching for copy) */
+  isCopying?: boolean;
   /** Callback to fetch/reveal the secret */
   onReveal: () => void;
+  /** Callback to copy without revealing - should fetch and copy */
+  onCopy?: () => void;
   /** Callback when rotate button is clicked */
   onRotate?: () => void;
   /** Whether a rotate operation is in progress */
@@ -31,7 +35,9 @@ export const SecretField: FC<SecretFieldProps> = ({
   label,
   value,
   isLoading = false,
+  isCopying = false,
   onReveal,
+  onCopy,
   onRotate,
   isRotating = false,
   hiddenPlaceholder,
@@ -40,6 +46,7 @@ export const SecretField: FC<SecretFieldProps> = ({
   disabledTooltip,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [showCopySuccess, setShowCopySuccess] = useState(false);
 
   useEffect(() => {
     if (value === null) {
@@ -54,6 +61,16 @@ export const SecretField: FC<SecretFieldProps> = ({
     }
     setIsVisible((prev) => !prev);
   }, [isVisible, onReveal]);
+
+  const handleCopy = useCallback(async () => {
+    if (value) {
+      navigator.clipboard.writeText(value);
+      setShowCopySuccess(true);
+      setTimeout(() => setShowCopySuccess(false), 2000);
+    } else if (onCopy) {
+      onCopy();
+    }
+  }, [value, onCopy]);
 
   const displayValue = isVisible && value
     ? value
@@ -102,22 +119,18 @@ export const SecretField: FC<SecretFieldProps> = ({
             </ActionIcon>
           </Tooltip>
 
-          {value && isVisible && (
-            <CopyButton value={value} timeout={2000}>
-              {({ copied, copy }) => (
-                <Tooltip label={copied ? 'Copied!' : 'Copy'} position="top">
-                  <ActionIcon
-                    variant="subtle"
-                    color={copied ? 'teal' : 'gray'}
-                    size="sm"
-                    onClick={copy}
-                  >
-                    {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
-                  </ActionIcon>
-                </Tooltip>
-              )}
-            </CopyButton>
-          )}
+          <Tooltip label={showCopySuccess ? 'Copied!' : 'Copy'} position="top">
+            <ActionIcon
+              variant="subtle"
+              color={showCopySuccess ? 'teal' : 'gray'}
+              size="sm"
+              onClick={handleCopy}
+              loading={isCopying}
+              disabled={isLoading}
+            >
+              {showCopySuccess ? <IconCheck size={16} /> : <IconCopy size={16} />}
+            </ActionIcon>
+          </Tooltip>
 
           {onRotate && (
             <Tooltip label="Rotate key" position="top">

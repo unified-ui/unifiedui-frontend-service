@@ -68,8 +68,6 @@ const getTypeBadgeColor = (type: string): string => {
       return 'yellow';
     case 'conversation':
       return 'blue';
-    case 'autonomous_agent':
-      return 'grape';
     default:
       return 'gray';
   }
@@ -291,7 +289,7 @@ const TraceRootItem: FC<TraceRootItemProps> = ({
           color={getTypeBadgeColor(trace.contextType || '')}
           className={classes.typeBadge}
         >
-          {trace.contextType === 'autonomous_agent' ? 'agent' : trace.contextType}
+          {trace.contextType === 'workflow' ? 'agent' : trace.contextType}
         </Badge>
 
         {/* Name */}

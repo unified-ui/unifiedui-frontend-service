@@ -8,7 +8,7 @@
   "recentlyVisited": "Recently Visited",
   "viewAll": "View All",
   "chatAgents": "Chat Agents",
-  "autonomousAgents": "Workflows",
+  "workflows": "Workflows",
   "conversations": "Conversations",
   "activeCount": "{{count}} active",
   "totalCount": "{{count}} total",

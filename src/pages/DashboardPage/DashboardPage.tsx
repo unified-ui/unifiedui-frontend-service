@@ -33,7 +33,7 @@ import classes from './DashboardPage.module.css';
 
 const STAT_CARDS = [
   { key: 'chat_agents' as const, icon: IconSparkles, color: 'var(--color-primary-100)', iconColor: 'var(--color-primary-600)', route: '/chat-agents' },
-  { key: 'autonomous_agents' as const, icon: IconRobot, color: 'var(--color-secondary-100)', iconColor: 'var(--color-secondary-600)', route: '/workflows' },
+  { key: 'workflows' as const, icon: IconRobot, color: 'var(--color-secondary-100)', iconColor: 'var(--color-secondary-600)', route: '/workflows' },
   { key: 'conversations' as const, icon: IconMessages, color: 'var(--color-accent-100)', iconColor: 'var(--color-accent-600)', route: '/conversations' },
 ] as const;
 
@@ -49,7 +49,7 @@ const FAVORITE_ROUTE_MAP: Record<string, string> = {
 
 const FAVORITE_TYPE_LABEL_KEYS: Record<string, string> = {
   [FavoriteResourceTypeEnum.CHAT_AGENT]: 'chatAgent',
-  [FavoriteResourceTypeEnum.AUTONOMOUS_AGENT]: 'autonomousAgent',
+  [FavoriteResourceTypeEnum.AUTONOMOUS_AGENT]: 'workflow',
   [FavoriteResourceTypeEnum.CONVERSATION]: 'conversation',
   [FavoriteResourceTypeEnum.EXTERNAL_APP]: 'externalApp',
   [FavoriteResourceTypeEnum.CHAT_WIDGET]: 'chatWidget',
@@ -57,7 +57,7 @@ const FAVORITE_TYPE_LABEL_KEYS: Record<string, string> = {
 
 const FAVORITE_TYPE_TO_ENTITY: Record<string, EntityAvatarType> = {
   [FavoriteResourceTypeEnum.CHAT_AGENT]: 'chat-agent',
-  [FavoriteResourceTypeEnum.AUTONOMOUS_AGENT]: 'autonomous-agent',
+  [FavoriteResourceTypeEnum.AUTONOMOUS_AGENT]: 'workflow',
   [FavoriteResourceTypeEnum.CONVERSATION]: 'conversation',
   [FavoriteResourceTypeEnum.EXTERNAL_APP]: 'external-app',
   [FavoriteResourceTypeEnum.CHAT_WIDGET]: 'chat-widget',
@@ -65,7 +65,7 @@ const FAVORITE_TYPE_TO_ENTITY: Record<string, EntityAvatarType> = {
 
 const RESOURCE_ROUTE_MAP: Record<string, string> = {
   chat_agent: '/chat-agents',
-  autonomous_agent: '/workflows',
+  workflow: '/workflows',
   conversation: '/conversations',
   chat_widget: '/chat-widgets',
   external_app: '/external-apps',
@@ -73,7 +73,7 @@ const RESOURCE_ROUTE_MAP: Record<string, string> = {
 
 const RESOURCE_TYPE_LABEL_KEYS: Record<string, string> = {
   chat_agent: 'chatAgent',
-  autonomous_agent: 'autonomousAgent',
+  workflow: 'workflow',
   conversation: 'conversation',
   chat_widget: 'chatWidget',
   external_app: 'externalApp',
@@ -81,7 +81,7 @@ const RESOURCE_TYPE_LABEL_KEYS: Record<string, string> = {
 
 const RESOURCE_TYPE_BADGE_COLORS: Record<string, string> = {
   chat_agent: 'teal',
-  autonomous_agent: 'violet',
+  workflow: 'violet',
   conversation: 'blue',
   chat_widget: 'orange',
   external_app: 'pink',
@@ -89,7 +89,7 @@ const RESOURCE_TYPE_BADGE_COLORS: Record<string, string> = {
 
 const RESOURCE_TYPE_TO_ENTITY: Record<string, EntityAvatarType> = {
   chat_agent: 'chat-agent',
-  autonomous_agent: 'autonomous-agent',
+  workflow: 'workflow',
   conversation: 'conversation',
   chat_widget: 'chat-widget',
   external_app: 'external-app',
@@ -97,7 +97,7 @@ const RESOURCE_TYPE_TO_ENTITY: Record<string, EntityAvatarType> = {
 
 const RESOURCE_ICON_COLORS: Record<string, { bg: string; fg: string }> = {
   chat_agent: { bg: 'var(--color-primary-100)', fg: 'var(--color-primary-600)' },
-  autonomous_agent: { bg: 'var(--color-secondary-100)', fg: 'var(--color-secondary-600)' },
+  workflow: { bg: 'var(--color-secondary-100)', fg: 'var(--color-secondary-600)' },
   conversation: { bg: 'var(--color-accent-100)', fg: 'var(--color-accent-600)' },
   chat_widget: { bg: 'var(--mantine-color-orange-1)', fg: 'var(--mantine-color-orange-6)' },
   external_app: { bg: 'var(--mantine-color-pink-1)', fg: 'var(--mantine-color-pink-6)' },
@@ -105,7 +105,7 @@ const RESOURCE_ICON_COLORS: Record<string, { bg: string; fg: string }> = {
 
 const RESOURCE_ICONS: Record<string, FC<{ size?: number; style?: React.CSSProperties }>> = {
   chat_agent: IconSparkles,
-  autonomous_agent: IconRobot,
+  workflow: IconRobot,
   conversation: IconMessages,
   chat_widget: IconBrandWechat,
   external_app: IconAppWindow,
@@ -127,7 +127,7 @@ const FAVORITE_ICONS: Record<string, FC<{ size?: number; style?: React.CSSProper
   [FavoriteResourceTypeEnum.CHAT_WIDGET]: IconBrandWechat,
 };
 
-type CreateMenuResourceType = 'chat-agents' | 'autonomous-agents' | 'chat-widgets' | 'external-apps' | 'credentials' | 'tools' | 'tenant-ai-models' | 'custom-groups';
+type CreateMenuResourceType = 'chat-agents' | 'workflows' | 'chat-widgets' | 'external-apps' | 'credentials' | 'tools' | 'tenant-ai-models' | 'custom-groups';
 
 interface CreateMenuItem {
   labelKey: string;
@@ -138,7 +138,7 @@ interface CreateMenuItem {
 
 const CREATE_MENU_ITEMS: CreateMenuItem[] = [
   { labelKey: 'createChatAgent', icon: IconSparkles, resourceType: 'chat-agents', route: '/chat-agents?dialog=new' },
-  { labelKey: 'createWorkflow', icon: IconRobot, resourceType: 'autonomous-agents', route: '/workflows?dialog=new' },
+  { labelKey: 'createWorkflow', icon: IconRobot, resourceType: 'workflows', route: '/workflows?dialog=new' },
   { labelKey: 'createChatWidget', icon: IconBrandWechat, resourceType: 'chat-widgets', route: '/chat-widgets?dialog=new' },
   { labelKey: 'createExternalApp', icon: IconAppWindow, resourceType: 'external-apps', route: '/external-apps?dialog=new' },
   { labelKey: 'createCredential', icon: IconKey, resourceType: 'credentials', route: '/tenant-settings?tab=credentials&dialog=new-credential' },
@@ -267,7 +267,7 @@ export const DashboardPage: FC = () => {
 
   const statLabels: Record<string, string> = {
     chat_agents: t('chatAgents'),
-    autonomous_agents: t('autonomousAgents'),
+    workflows: t('workflows'),
     conversations: t('conversations'),
   };
 

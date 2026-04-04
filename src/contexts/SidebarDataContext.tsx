@@ -3,7 +3,7 @@ import i18next from 'i18next';
 import type { QuickListItemResponse, ConversationQuickListItemResponse } from '../api/types';
 import { useIdentity } from './IdentityContext';
 
-export type EntityType = 'chat-agents' | 'autonomous-agents' | 'chat-widgets' | 'external-apps' | 'conversations';
+export type EntityType = 'chat-agents' | 'workflows' | 'chat-widgets' | 'external-apps' | 'conversations';
 
 interface SidebarDataState {
   chatAgents: QuickListItemResponse[];
@@ -15,7 +15,7 @@ interface SidebarDataState {
 
 interface LoadingState {
   'chat-agents': boolean;
-  'autonomous-agents': boolean;
+  'workflows': boolean;
   'chat-widgets': boolean;
   'external-apps': boolean;
   conversations: boolean;
@@ -23,7 +23,7 @@ interface LoadingState {
 
 interface ErrorState {
   'chat-agents': string | null;
-  'autonomous-agents': string | null;
+  'workflows': string | null;
   'chat-widgets': string | null;
   'external-apps': string | null;
   conversations: string | null;
@@ -31,7 +31,7 @@ interface ErrorState {
 
 interface FetchedState {
   'chat-agents': boolean;
-  'autonomous-agents': boolean;
+  'workflows': boolean;
   'chat-widgets': boolean;
   'external-apps': boolean;
   conversations: boolean;
@@ -80,7 +80,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
 
   const [loadingStates, setLoadingStates] = useState<LoadingState>({
     'chat-agents': false,
-    'autonomous-agents': false,
+    'workflows': false,
     'chat-widgets': false,
     'external-apps': false,
     conversations: false,
@@ -88,7 +88,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
 
   const [errorStates, setErrorStates] = useState<ErrorState>({
     'chat-agents': null,
-    'autonomous-agents': null,
+    'workflows': null,
     'chat-widgets': null,
     'external-apps': null,
     conversations: null,
@@ -96,7 +96,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
 
   const [fetchedStates, setFetchedStates] = useState<FetchedState>({
     'chat-agents': false,
-    'autonomous-agents': false,
+    'workflows': false,
     'chat-widgets': false,
     'external-apps': false,
     conversations: false,
@@ -118,8 +118,8 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     if (selectedTenant?.id && selectedTenant.id !== previousTenantIdRef.current) {
       previousTenantIdRef.current = selectedTenant.id;
       setData({ chatAgents: [], workflows: [], chatWidgets: [], externalApps: [], conversations: [] });
-      setFetchedStates({ 'chat-agents': false, 'autonomous-agents': false, 'chat-widgets': false, 'external-apps': false, conversations: false });
-      setErrorStates({ 'chat-agents': null, 'autonomous-agents': null, 'chat-widgets': null, 'external-apps': null, conversations: null });
+      setFetchedStates({ 'chat-agents': false, 'workflows': false, 'chat-widgets': false, 'external-apps': false, conversations: false });
+      setErrorStates({ 'chat-agents': null, 'workflows': null, 'chat-widgets': null, 'external-apps': null, conversations: null });
     }
   }, [selectedTenant?.id]);
 
@@ -154,28 +154,28 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
   const fetchWorkflows = useCallback(async (noCache = false) => {
     if (!apiClient || !selectedTenant) return;
 
-    if (!noCache && fetchedStatesRef.current['autonomous-agents']) {
+    if (!noCache && fetchedStatesRef.current['workflows']) {
       return;
     }
 
-    setLoadingStates(prev => ({ ...prev, 'autonomous-agents': true }));
-    setErrorStates(prev => ({ ...prev, 'autonomous-agents': null }));
+    setLoadingStates(prev => ({ ...prev, 'workflows': true }));
+    setErrorStates(prev => ({ ...prev, 'workflows': null }));
 
     try {
-      const result = await apiClient.listAutonomousAgents(
+      const result = await apiClient.listWorkflows(
         selectedTenant.id,
         { limit: 999, view: 'quick-list', order_by: 'name', order_direction: 'asc' },
         noCache ? { noCache: true } : undefined
       );
       if (Array.isArray(result)) {
         setData(prev => ({ ...prev, workflows: result as QuickListItemResponse[] }));
-        setFetchedStates(prev => ({ ...prev, 'autonomous-agents': true }));
+        setFetchedStates(prev => ({ ...prev, 'workflows': true }));
       }
     } catch (error) {
-      setErrorStates(prev => ({ ...prev, 'autonomous-agents': i18next.t('common:errorLoadingAutonomousAgents') }));
-      console.error('Error fetching autonomous agents:', error);
+      setErrorStates(prev => ({ ...prev, 'workflows': i18next.t('common:errorLoadingWorkflows') }));
+      console.error('Error fetching workflows:', error);
     } finally {
-      setLoadingStates(prev => ({ ...prev, 'autonomous-agents': false }));
+      setLoadingStates(prev => ({ ...prev, 'workflows': false }));
     }
   }, [apiClient, selectedTenant]);
 
@@ -268,7 +268,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
       case 'chat-agents':
         await fetchChatAgents(false);
         break;
-      case 'autonomous-agents':
+      case 'workflows':
         await fetchWorkflows(false);
         break;
       case 'chat-widgets':
@@ -308,7 +308,7 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
       case 'chat-agents':
         await refreshChatAgents();
         break;
-      case 'autonomous-agents':
+      case 'workflows':
         await refreshWorkflows();
         break;
       case 'chat-widgets':
@@ -337,14 +337,14 @@ export const SidebarDataProvider: FC<SidebarDataProviderProps> = ({ children }) 
     });
     setFetchedStates({
       'chat-agents': false,
-      'autonomous-agents': false,
+      'workflows': false,
       'chat-widgets': false,
       'external-apps': false,
       conversations: false,
     });
     setErrorStates({
       'chat-agents': null,
-      'autonomous-agents': null,
+      'workflows': null,
       'chat-widgets': null,
       'external-apps': null,
       conversations: null,

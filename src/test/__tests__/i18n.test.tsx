@@ -66,7 +66,7 @@ describe('i18n Configuration', () => {
 
   it('has common error handling keys', () => {
     expect(i18n.t('common:errorLoadingChatAgents')).toBe('Failed to load chat agents');
-    expect(i18n.t('common:errorLoadingAutonomousAgents')).toBe('Failed to load workflows');
+    expect(i18n.t('common:errorLoadingWorkflows')).toBe('Failed to load workflows');
     expect(i18n.t('common:errorLoadingChatWidgets')).toBe('Failed to load chat widgets');
     expect(i18n.t('common:networkError')).toBe('Network error. Check your connection.');
     expect(i18n.t('common:deleteFailed')).toBe('Failed to delete. Please try again.');

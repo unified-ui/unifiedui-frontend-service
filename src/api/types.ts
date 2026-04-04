@@ -81,15 +81,15 @@ export interface SurveyWidgetData {
   questions: SurveyQuestion[];
 }
 
-export const AutonomousAgentTypeEnum = {
+export const WorkflowTypeEnum = {
   N8N: 'N8N',
 } as const;
 
-export type AutonomousAgentTypeEnum = typeof AutonomousAgentTypeEnum[keyof typeof AutonomousAgentTypeEnum];
+export type WorkflowTypeEnum = typeof WorkflowTypeEnum[keyof typeof WorkflowTypeEnum];
 
-// ========== Autonomous Agent Config Types ==========
+// ========== Workflow Config Types ==========
 
-export interface N8NAutonomousAgentConfig {
+export interface N8NWorkflowConfig {
   api_version: string;
   workflow_endpoint: string;
   api_api_key_credential_id: string;
@@ -100,7 +100,7 @@ export interface N8NAutonomousAgentConfig {
 
 export const FavoriteResourceTypeEnum = {
   CHAT_AGENT: 'chat-agents',
-  AUTONOMOUS_AGENT: 'autonomous-agents',
+  AUTONOMOUS_AGENT: 'workflows',
   CHAT_WIDGET: 'chat-widgets',
   CONVERSATION: 'conversations',
   EXTERNAL_APP: 'external-apps',
@@ -389,7 +389,7 @@ export interface EditMessageRequest {
 
 export const TraceContextType = {
   CONVERSATION: 'conversation',
-  AUTONOMOUS_AGENT: 'autonomous_agent',
+  AUTONOMOUS_AGENT: 'workflow',
 } as const;
 
 export type TraceContextType = typeof TraceContextType[keyof typeof TraceContextType];
@@ -475,7 +475,7 @@ export interface FullTraceResponse {
   tenantId: string;
   chatAgentId?: string;
   conversationId?: string;
-  autonomousAgentId?: string;
+  workflowId?: string;
   contextType: TraceContextType | string;
   referenceId?: string;
   referenceName?: string;
@@ -1048,7 +1048,7 @@ export interface ReActAgentVersionResponse {
 
 /**
  * Unified response for a principal with their roles on a resource.
- * Used by all resource types (chat_agent, autonomous_agent, chat_widget,
+ * Used by all resource types (chat_agent, workflow, chat_widget,
  * conversation, credential, custom_group).
  */
 export interface PrincipalWithRolesResponse {
@@ -1074,20 +1074,20 @@ export interface ResourcePrincipalsResponse {
 
 // Legacy type aliases for backward compatibility
 export type ChatAgentPrincipalsResponse = ResourcePrincipalsResponse;
-export type AutonomousAgentPrincipalsResponse = ResourcePrincipalsResponse;
+export type WorkflowPrincipalsResponse = ResourcePrincipalsResponse;
 export type ChatWidgetPrincipalsResponse = ResourcePrincipalsResponse;
 export type ConversationPrincipalsResponse = ResourcePrincipalsResponse;
 export type CredentialPrincipalsResponse = ResourcePrincipalsResponse;
 export type CustomGroupPrincipalsResponse = ResourcePrincipalsResponse;
 
-// ========== Autonomous Agent Types ==========
+// ========== Workflow Types ==========
 
-export interface AutonomousAgentResponse {
+export interface WorkflowResponse {
   id: string;
   tenant_id: string;
   name: string;
   description?: string;
-  type: AutonomousAgentTypeEnum;
+  type: WorkflowTypeEnum;
   config: Record<string, unknown>;
   is_active: boolean;
   allow_api_keys: boolean;
@@ -1100,16 +1100,16 @@ export interface AutonomousAgentResponse {
   my_permission?: string;
 }
 
-export interface CreateAutonomousAgentRequest {
+export interface CreateWorkflowRequest {
   name: string;
   description?: string;
-  type: AutonomousAgentTypeEnum;
+  type: WorkflowTypeEnum;
   config: Record<string, unknown>;
   is_active?: boolean;
   allow_api_keys?: boolean;
 }
 
-export interface UpdateAutonomousAgentRequest {
+export interface UpdateWorkflowRequest {
   name?: string;
   description?: string;
   config?: Record<string, unknown>;
@@ -1117,13 +1117,13 @@ export interface UpdateAutonomousAgentRequest {
   allow_api_keys?: boolean;
 }
 
-export interface SetAutonomousAgentPermissionRequest {
+export interface SetWorkflowPermissionRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
   role: PermissionActionEnum;
 }
 
-export interface AutonomousAgentKeyResponse {
+export interface WorkflowKeyResponse {
   key: string;
   key_number: number;
 }
@@ -1622,7 +1622,7 @@ export interface EntityStatsResponse {
 
 export interface DashboardStatsResponse {
   chat_agents: EntityStatsResponse;
-  autonomous_agents: EntityStatsResponse;
+  workflows: EntityStatsResponse;
   conversations: EntityStatsResponse;
 }
 
