@@ -98,7 +98,7 @@ export const WorkflowsPage: FC = () => {
   }, [navigate]);
 
   const renderIcon = useCallback(() => (
-    <EntityAvatar entityType="workflow" size="sm" />
+    <EntityAvatar entityType="workflow" size="sm" colored />
   ), []);
 
   // eslint-disable-next-line react-hooks/refs

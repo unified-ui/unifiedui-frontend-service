@@ -30,9 +30,11 @@ import {
   IconBraces,
   IconPlayerPlay,
   IconHistory,
+  IconKey,
+  IconSettings2,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip, Breadcrumbs, EntityAvatar, WorkflowRunsTable } from '../../components/common';
+import { SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip, Breadcrumbs, EntityAvatar, WorkflowRunsTable, ContentCard } from '../../components/common';
 import type { TracesSortState, TraceDatePreset } from '../../components/common';
 import { TracingVisualDialog } from '../../components/tracing';
 import { EditWorkflowDialog } from '../../components/dialogs/EditWorkflowDialog';
@@ -680,8 +682,7 @@ export const WorkflowDetailsPage: FC = () => {
                 <div className={classes.tabPanelScrollArea}>
                 <Stack gap="lg" className={classes.detailsSection}>
                 {/* Endpoint & Keys Section */}
-                <div className={classes.sectionCard}>
-                  <Text className={classes.sectionTitle} fw="bold" mb="md">Endpoint & Keys</Text>
+                <ContentCard title="Endpoint & Keys" icon={<IconKey size={18} />}>
                   <Stack gap="lg">
                     <TextInput
                       label="POST Endpoint"
@@ -775,12 +776,11 @@ export const WorkflowDetailsPage: FC = () => {
                       disabledTooltip="API key authentication is not allowed for this agent"
                     />
                   </Stack>
-                </div>
+                </ContentCard>
 
                 {/* N8N Config Section */}
                 {n8nConfig && (
-                  <div className={classes.sectionCard}>
-                    <Text className={classes.sectionTitle} fw="bold" mb="md">N8N Configuration</Text>
+                  <ContentCard title="N8N Configuration" icon={<IconSettings2 size={18} />}>
                     <Stack gap="lg">
                       <TextInput
                         label="Workflow Endpoint"
@@ -807,7 +807,7 @@ export const WorkflowDetailsPage: FC = () => {
                         styles={{ input: { cursor: 'default' } }}
                       />
                     </Stack>
-                  </div>
+                  </ContentCard>
                 )}
               </Stack>
               </div>

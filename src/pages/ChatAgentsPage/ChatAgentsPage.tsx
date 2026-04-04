@@ -114,7 +114,7 @@ export const ChatAgentsPage: FC = () => {
   }, [navigate]);
 
   const renderIcon = useCallback(() => (
-    <EntityAvatar entityType="chat-agent" size="sm" />
+    <EntityAvatar entityType="chat-agent" size="sm" colored />
   ), []);
 
   // eslint-disable-next-line react-hooks/refs

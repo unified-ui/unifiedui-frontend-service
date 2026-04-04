@@ -46,6 +46,7 @@ interface UseChatParams {
   setSelectedChatAgentId: React.Dispatch<React.SetStateAction<string | undefined>>;
   onRefreshTraces: () => Promise<void>;
   onNavigate?: (path: string, options?: { replace?: boolean }) => void;
+  onMessageSent?: (chatAgentId: string, chatAgentName: string) => void;
 }
 
 interface UseChatReturn {
@@ -87,6 +88,7 @@ export function useChat({
   setSelectedChatAgentId,
   onRefreshTraces,
   onNavigate,
+  onMessageSent,
 }: UseChatParams): UseChatReturn {
   const routerNavigate = useNavigate();
   const nav = onNavigate ?? routerNavigate;
@@ -548,6 +550,14 @@ export function useChat({
       }
     }
 
+    // Track chat agent visit when sending message
+    if (onMessageSent && selectedChatAgentId) {
+      const selectedAgent = chatAgents.find(a => a.id === selectedChatAgentId);
+      if (selectedAgent) {
+        onMessageSent(selectedAgent.id, selectedAgent.name);
+      }
+    }
+
     try {
       await executeStream(
         content,
@@ -576,7 +586,7 @@ export function useChat({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiClient, tenantId, selectedChatAgentId, conversationId, chatAgents, currentConversation, getFoundryToken, nav, setCurrentConversation, setConversations, executeStream, resetReActState]);
+  }, [apiClient, tenantId, selectedChatAgentId, conversationId, chatAgents, currentConversation, getFoundryToken, nav, setCurrentConversation, setConversations, executeStream, resetReActState, onMessageSent]);
 
   const handleEditMessage = useCallback(async (messageId: string, newContent: string) => {
     if (!apiClient || !tenantId || !conversationId) return;

@@ -10,6 +10,7 @@
   "chatAgents": "Chat Agents",
   "workflows": "Workflows",
   "conversations": "Conversations",
+  "externalApps": "Apps",
   "activeCount": "{{count}} active",
   "totalCount": "{{count}} total",
   "noFavorites": "No favorites yet. Star items to see them here.",
@@ -25,5 +26,9 @@
   "createCustomGroup": "Custom Group",
   "addPrincipal": "Member",
   "showMore": "Show all ({{count}})",
-  "showLess": "Show less"
+  "showLess": "Show less",
+  "filterAll": "All",
+  "filterChatAgents": "Agents",
+  "filterWorkflows": "Workflows",
+  "filterApps": "Apps"
 }

@@ -52,6 +52,14 @@ export const ConversationsPage: FC = () => {
     conversationId,
   });
 
+  const handleTrackChatAgent = useCallback((agentId: string, agentName: string) => {
+    trackVisit({
+      resource_type: 'chat_agent',
+      resource_id: agentId,
+      resource_name: agentName,
+    });
+  }, [trackVisit]);
+
   const chat = useChat({
     apiClient,
     tenantId,
@@ -64,6 +72,7 @@ export const ConversationsPage: FC = () => {
     setConversations: convList.setConversations,
     setSelectedChatAgentId: convList.setSelectedChatAgentId,
     onRefreshTraces: tracing.refreshTraces,
+    onMessageSent: handleTrackChatAgent,
   });
 
   const widgets = useConversationWidgets({
@@ -96,16 +105,6 @@ export const ConversationsPage: FC = () => {
     widgetCache.clear();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiClient, tenantId, conversationId]);
-
-  useEffect(() => {
-    if (convList.currentConversation) {
-      trackVisit({
-        resource_type: 'conversation',
-        resource_id: convList.currentConversation.id,
-        resource_name: convList.currentConversation.name || convList.currentConversation.id,
-      });
-    }
-  }, [convList.currentConversation, convList.currentConversation?.id, trackVisit]);
 
   const convPerm = convList.currentConversation?.my_permission;
   const canWriteConversation = !convPerm || convPerm === 'ADMIN' || convPerm === 'WRITE';

@@ -7,6 +7,7 @@ export { DataTable, DataTableRow, DataTableToolbar } from './DataTable';
 export type { DataTableItem, SortOption, FilterState } from './DataTable';
 export { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 export { ConfirmDialog } from './ConfirmDialog';
+export { ContentCard } from './ContentCard';
 export { TagInput } from './TagInput';
 export { DetailPageTabs } from './DetailPageTabs';
 export type { DetailTab } from './DetailPageTabs';

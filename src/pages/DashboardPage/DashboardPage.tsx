@@ -2,7 +2,8 @@ import type { FC } from 'react';
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Stack, Button, Skeleton, Menu, Badge } from '@mantine/core';
+import { Stack, Button, Skeleton, Menu, Badge, SegmentedControl } from '@mantine/core';
+import { useElementSize } from '@mantine/hooks';
 import {
   IconSparkles,
   IconRobot,
@@ -27,7 +28,7 @@ import type { EntityAvatarType } from '../../components/common';
 import { useIdentity, useFavorites, useRecentVisits, useSidebarData } from '../../contexts';
 import { usePermissions } from '../../hooks/usePermissions';
 import { FavoriteResourceTypeEnum } from '../../api/types';
-import type { DashboardStatsResponse } from '../../api/types';
+import type { DashboardStatsResponse, RecentVisitResponse } from '../../api/types';
 import { DelayedTooltip } from '../../components/common';
 import classes from './DashboardPage.module.css';
 
@@ -35,9 +36,12 @@ const STAT_CARDS = [
   { key: 'chat_agents' as const, icon: IconSparkles, color: 'var(--color-primary-100)', iconColor: 'var(--color-primary-600)', route: '/chat-agents' },
   { key: 'workflows' as const, icon: IconRobot, color: 'var(--color-secondary-100)', iconColor: 'var(--color-secondary-600)', route: '/workflows' },
   { key: 'conversations' as const, icon: IconMessages, color: 'var(--color-accent-100)', iconColor: 'var(--color-accent-600)', route: '/conversations' },
+  { key: 'external_apps' as const, icon: IconAppWindow, color: 'var(--color-success-50)', iconColor: 'var(--color-success-600)', route: '/external-apps' },
 ] as const;
 
-const INITIAL_FAVORITES_COUNT = 6;
+const FAVORITES_ITEM_MIN_WIDTH = 200;
+const FAVORITES_GAP = 16;
+const FAVORITES_ROWS = 2;
 
 const FAVORITE_ROUTE_MAP: Record<string, string> = {
   [FavoriteResourceTypeEnum.CHAT_AGENT]: '/chat-agents',
@@ -67,7 +71,7 @@ const RESOURCE_ROUTE_MAP: Record<string, string> = {
   chat_agent: '/chat-agents',
   workflow: '/workflows',
   conversation: '/conversations',
-  chat_widget: '/chat-widgets',
+  chat_widget: '/widget-designer',
   external_app: '/external-apps',
 };
 
@@ -177,8 +181,12 @@ export const DashboardPage: FC = () => {
   const [isStatsLoading, setIsStatsLoading] = useState(true);
   const [showSkeleton, setShowSkeleton] = useState(false);
   const [showAllFavorites, setShowAllFavorites] = useState(false);
+  const [recentVisitsFilter, setRecentVisitsFilter] = useState<string>('all');
+  const [filteredRecentVisits, setFilteredRecentVisits] = useState<RecentVisitResponse[]>([]);
+  const [_isFilterLoading, setIsFilterLoading] = useState(false);
 
   const galleryRef = useRef<HTMLDivElement>(null);
+  const { ref: favoritesGridRef, width: favoritesGridWidth } = useElementSize();
   const [_canScrollLeft, setCanScrollLeft] = useState(false);
   const [_canScrollRight, setCanScrollRight] = useState(false);
 
@@ -215,8 +223,42 @@ export const DashboardPage: FC = () => {
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
   }, []);
 
+  // Server-side filtering of recent visits
   useEffect(() => {
-    if (recentVisits.length === 0) return;
+    if (recentVisitsFilter === 'all') {
+      // Use context data for "all" filter
+      setFilteredRecentVisits(recentVisits);
+      return;
+    }
+
+    if (!apiClient || !selectedTenant || !user) {
+      setFilteredRecentVisits([]);
+      return;
+    }
+
+    const fetchFiltered = async () => {
+      setIsFilterLoading(true);
+      try {
+        const response = await apiClient.listRecentVisits(
+          selectedTenant.id,
+          user.id,
+          undefined,
+          [recentVisitsFilter]
+        );
+        setFilteredRecentVisits(response.visits);
+      } catch (error) {
+        console.error('Failed to fetch filtered recent visits:', error);
+        setFilteredRecentVisits([]);
+      } finally {
+        setIsFilterLoading(false);
+      }
+    };
+
+    fetchFiltered();
+  }, [apiClient, selectedTenant, user, recentVisitsFilter, recentVisits]);
+
+  useEffect(() => {
+    if (filteredRecentVisits.length === 0) return;
     const rafId = requestAnimationFrame(() => {
       const el = galleryRef.current;
       if (!el) return;
@@ -232,7 +274,7 @@ export const DashboardPage: FC = () => {
         el.removeEventListener('scroll', updateScrollButtons);
       }
     };
-  }, [updateScrollButtons, recentVisits]);
+  }, [updateScrollButtons, filteredRecentVisits]);
 
   const scrollGallery = useCallback((direction: 'left' | 'right') => {
     const el = galleryRef.current;
@@ -258,9 +300,19 @@ export const DashboardPage: FC = () => {
     return items;
   }, [favorites, chatAgents, workflows, getFavoriteName]);
 
+  const itemsPerRow = useMemo(() => {
+    if (favoritesGridWidth === 0) return 3;
+    return Math.max(1, Math.floor((favoritesGridWidth + FAVORITES_GAP) / (FAVORITES_ITEM_MIN_WIDTH + FAVORITES_GAP)));
+  }, [favoritesGridWidth]);
+
+  const visibleFavoritesCount = itemsPerRow * FAVORITES_ROWS;
+
   const visibleFavorites = useMemo(() => {
-    return showAllFavorites ? favoriteItems : favoriteItems.slice(0, INITIAL_FAVORITES_COUNT);
-  }, [favoriteItems, showAllFavorites]);
+    if (showAllFavorites) return favoriteItems;
+    return favoriteItems.slice(0, visibleFavoritesCount);
+  }, [favoriteItems, showAllFavorites, visibleFavoritesCount]);
+
+  const hiddenFavoritesCount = Math.max(0, favoriteItems.length - visibleFavoritesCount);
 
   const isDataReady = !isIdentityLoading && !isStatsLoading;
   const isLoading = showSkeleton && !isDataReady;
@@ -269,6 +321,7 @@ export const DashboardPage: FC = () => {
     chat_agents: t('chatAgents'),
     workflows: t('workflows'),
     conversations: t('conversations'),
+    external_apps: t('externalApps'),
   };
 
   const allowedCreateItems = useMemo(
@@ -372,24 +425,37 @@ export const DashboardPage: FC = () => {
           <div className={classes.section}>
             <div className={classes.sectionHeader}>
               <span className={classes.sectionTitle}>{t('recentlyVisited')}</span>
-              {recentVisits.length > 0 && (
-                <div className={classes.headerArrows}>
-                  <button
-                    className={classes.galleryArrow}
-                    onClick={() => scrollGallery('left')}
-                    type="button"
-                  >
-                    <IconChevronLeft size={16} />
-                  </button>
-                  <button
-                    className={classes.galleryArrow}
-                    onClick={() => scrollGallery('right')}
-                    type="button"
-                  >
-                    <IconChevronRight size={16} />
-                  </button>
-                </div>
-              )}
+              <div className={classes.headerControls}>
+                <SegmentedControl
+                  size="xs"
+                  value={recentVisitsFilter}
+                  onChange={setRecentVisitsFilter}
+                  data={[
+                    { label: t('filterAll'), value: 'all' },
+                    { label: t('filterChatAgents'), value: 'chat_agent' },
+                    { label: t('filterWorkflows'), value: 'workflow' },
+                    { label: t('filterApps'), value: 'external_app' },
+                  ]}
+                />
+                {filteredRecentVisits.length > 0 && (
+                  <div className={classes.headerArrows}>
+                    <button
+                      className={classes.galleryArrow}
+                      onClick={() => scrollGallery('left')}
+                      type="button"
+                    >
+                      <IconChevronLeft size={16} />
+                    </button>
+                    <button
+                      className={classes.galleryArrow}
+                      onClick={() => scrollGallery('right')}
+                      type="button"
+                    >
+                      <IconChevronRight size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             {isLoading ? (
               <div className={classes.galleryWrapper}>
@@ -404,11 +470,11 @@ export const DashboardPage: FC = () => {
                   ))}
                 </div>
               </div>
-            ) : recentVisits.length > 0 ? (
+            ) : filteredRecentVisits.length > 0 ? (
               <div className={classes.galleryContainer}>
                 <div className={classes.galleryWrapper} ref={galleryRef}>
                   <div className={classes.galleryTrack}>
-                    {recentVisits.map(item => {
+                    {filteredRecentVisits.map(item => {
                       const isFav = isFavorite(
                         item.resource_type as FavoriteResourceTypeEnum,
                         item.resource_id
@@ -416,7 +482,7 @@ export const DashboardPage: FC = () => {
                       const iconColors = RESOURCE_ICON_COLORS[item.resource_type];
                       const IconComp = RESOURCE_ICONS[item.resource_type];
                       const route = item.resource_type === 'chat_agent'
-                        ? `/conversations?chat-agent=${item.resource_id}&selected=${item.resource_id}`
+                        ? `/conversations?agent=${item.resource_id}&selected=${item.resource_id}`
                         : `${RESOURCE_ROUTE_MAP[item.resource_type] || '/'}/${item.resource_id}`;
                       return (
                         <div
@@ -472,13 +538,22 @@ export const DashboardPage: FC = () => {
                 <IconStar size={16} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />
                 {t('favorites')}
               </span>
-              {favoriteItems.length > INITIAL_FAVORITES_COUNT && (
+              {hiddenFavoritesCount > 0 && (
                 <Button
                   variant="subtle"
                   size="compact-xs"
                   onClick={() => setShowAllFavorites(prev => !prev)}
                 >
-                  {showAllFavorites ? t('showLess') : t('showMore', { count: favoriteItems.length })}
+                  {showAllFavorites ? t('showLess') : t('showMore', { count: hiddenFavoritesCount })}
+                </Button>
+              )}
+              {showAllFavorites && hiddenFavoritesCount === 0 && favoriteItems.length > visibleFavoritesCount && (
+                <Button
+                  variant="subtle"
+                  size="compact-xs"
+                  onClick={() => setShowAllFavorites(false)}
+                >
+                  {t('showLess')}
                 </Button>
               )}
             </div>
@@ -495,12 +570,12 @@ export const DashboardPage: FC = () => {
                 ))}
               </div>
             ) : visibleFavorites.length > 0 ? (
-              <div className={classes.entityGrid}>
+              <div className={classes.entityGrid} ref={favoritesGridRef}>
                 {visibleFavorites.map(item => {
                   const iconColors = FAVORITE_ICON_COLORS[item.type];
                   const IconComp = FAVORITE_ICONS[item.type];
                   const route = item.type === FavoriteResourceTypeEnum.CHAT_AGENT
-                    ? `/conversations?chat-agent=${item.id}&selected=${item.id}`
+                    ? `/conversations?agent=${item.id}&selected=${item.id}`
                     : `${FAVORITE_ROUTE_MAP[item.type]}/${item.id}`;
                   return (
                     <div

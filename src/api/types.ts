@@ -1624,6 +1624,7 @@ export interface DashboardStatsResponse {
   chat_agents: EntityStatsResponse;
   workflows: EntityStatsResponse;
   conversations: EntityStatsResponse;
+  external_apps: EntityStatsResponse;
 }
 
 // ========== Search Types ==========

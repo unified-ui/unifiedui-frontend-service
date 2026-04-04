@@ -936,8 +936,18 @@ export class UnifiedUIAPIClient {
 
   // ========== Recent Visits Endpoints ==========
 
-  async listRecentVisits(tenantId: string, userId: string, limit?: number): Promise<RecentVisitListResponse> {
-    const query = limit ? this.buildQueryString({ limit }) : '';
+  async listRecentVisits(
+    tenantId: string,
+    userId: string,
+    limit?: number,
+    resourceTypes?: string[]
+  ): Promise<RecentVisitListResponse> {
+    const params: Record<string, string | number> = {};
+    if (limit) params.limit = limit;
+    if (resourceTypes && resourceTypes.length > 0) {
+      params.resource_type = resourceTypes.join(',');
+    }
+    const query = Object.keys(params).length > 0 ? this.buildQueryString(params) : '';
     return this.request<RecentVisitListResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/recent-visits${query}`);
   }
 

@@ -138,7 +138,7 @@ export const ChatWidgetsPage: FC = () => {
   }, []);
 
   const renderIcon = useCallback(() => (
-    <EntityAvatar entityType="chat-widget" size="sm" />
+    <EntityAvatar entityType="chat-widget" size="sm" colored />
   ), []);
   // eslint-disable-next-line react-hooks/refs
   const editInitialData = selectedId ? rawDataRef.current.get(selectedId) || null : null;
