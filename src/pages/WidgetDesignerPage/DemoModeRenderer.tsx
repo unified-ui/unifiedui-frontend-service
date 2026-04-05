@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { Box, Button, Group, Modal, Text, Code } from '@mantine/core';
 import { IconClipboard } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { WidgetErrorBoundary } from '../../components/common';
 import { FormWidget } from '../../components/chat/widgets/FormWidget';
 import type { WidgetFormSchema } from './types';
 
@@ -25,16 +26,18 @@ export const DemoModeRenderer: FC<DemoModeRendererProps> = ({ schema }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <FormWidget
-        tabs={schema.tabs}
-        enableTabs={schema.settings.enableTabs}
-        onSubmit={handleSubmit}
-        submitButtonText={schema.settings.submitButtonText}
-        description={schema.settings.description}
-        successMessage={schema.settings.successMessage}
-        scripts={schema.scripts}
-        fillHeight
-      />
+      <WidgetErrorBoundary>
+        <FormWidget
+          tabs={schema.tabs}
+          enableTabs={schema.settings.enableTabs}
+          onSubmit={handleSubmit}
+          submitButtonText={schema.settings.submitButtonText}
+          description={schema.settings.description}
+          successMessage={schema.settings.successMessage}
+          scripts={schema.scripts}
+          fillHeight
+        />
+      </WidgetErrorBoundary>
 
       <Group justify="center" mt="sm" style={{ flexShrink: 0 }}>
         <Button

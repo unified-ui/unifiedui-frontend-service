@@ -1,6 +1,11 @@
 # Custom
 .env
 
+# Custom branding assets (OSS users can override these)
+public/branding/default/icon.svg
+public/branding/default/logo.svg
+public/branding/default/favicon.svg
+
 # Build & Coverage
 coverage
 htmlcov

@@ -26,7 +26,6 @@ interface EntityAvatarProps {
 const ENTITY_ICONS: Record<EntityAvatarType, typeof IconSparkles> = {
   'chat-agent': IconSparkles,
   'workflow': IconRobot,
-  'workflow': IconRobot,
   'chat-widget': IconBrandWechat,
   'conversation': IconMessages,
   'external-app': IconAppWindow,

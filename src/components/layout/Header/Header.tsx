@@ -7,6 +7,8 @@ import { IconSearch, IconBrain, IconSun, IconMoon, IconLogout, IconPlus, IconBui
 import { useAuth } from '../../../auth';
 import { useIdentity } from '../../../contexts';
 import { useKeyboardShortcuts } from '../../../hooks';
+import { APP_TITLE, SHOW_PLATFORM_SUBTITLE } from '../../../config';
+import { useBranding } from '../../../hooks/useBranding';
 import { CreateTenantDialog } from '../../dialogs';
 import { CreateOrganizationDialog } from '../../dialogs';
 import { CommandPalette, FilterableSelect } from '../../common';
@@ -18,6 +20,7 @@ export const Header: FC = () => {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const { account, logout, switchAccount } = useAuth();
   const { user, isSystemAdmin, organization, tenants, selectedTenant, selectTenant } = useIdentity();
+  const branding = useBranding();
   const isDark = colorScheme === 'dark';
   const [userDropdownOpened, setUserDropdownOpened] = useState(false);
   const [isTenantDialogOpen, setIsTenantDialogOpen] = useState(false);
@@ -84,11 +87,20 @@ export const Header: FC = () => {
     <header className={classes.header}>
       <Group gap="sm" className={classes.logo} onClick={() => navigate('/dashboard')}>
         <div className={classes.logoWrapper}>
-          <IconBrain size={22} stroke={2} />
+          {branding.iconUrl ? (
+            <img src={branding.iconUrl} alt="" className={classes.logoIcon} />
+          ) : (
+            <IconBrain size={22} stroke={2} />
+          )}
         </div>
-        <Title order={2} className={classes.logoText}>
-          unified-ui
-        </Title>
+        <div className={classes.logoTextWrapper}>
+          <Title order={2} className={classes.logoText}>
+            {APP_TITLE}
+          </Title>
+          {SHOW_PLATFORM_SUBTITLE && (
+            <span className={classes.logoSubtitle}>powered by unified-ui</span>
+          )}
+        </div>
       </Group>
 
       <TextInput

@@ -63,6 +63,29 @@ const NON_VALUE_TYPES = new Set([
   'heading', 'paragraph', 'divider', 'spacer', 'alert', 'image_display',
 ]);
 
+function safeNumberValue(value: unknown, defaultVal: number): number {
+  if (typeof value === 'number' && !Number.isNaN(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value);
+    if (!Number.isNaN(parsed)) return parsed;
+  }
+  return defaultVal;
+}
+
+function safeRangeValue(value: unknown, min: number, max: number): [number, number] {
+  if (
+    Array.isArray(value) &&
+    value.length === 2 &&
+    typeof value[0] === 'number' &&
+    typeof value[1] === 'number' &&
+    !Number.isNaN(value[0]) &&
+    !Number.isNaN(value[1])
+  ) {
+    return [value[0], value[1]];
+  }
+  return [min, max];
+}
+
 function getAllFields(tabs: WidgetTab[]): WidgetFieldConfig[] {
   return tabs.flatMap((tab) => tab.fields);
 }
@@ -501,7 +524,7 @@ const FieldRenderer: FC<{
           <Rating
             count={(config.maxRating as number) ?? 5}
             fractions={config.allowHalf ? 2 : 1}
-            value={(value as number) ?? 0}
+            value={safeNumberValue(value, 0)}
             onChange={(val) => onChange(field.id, val)}
             readOnly={fieldDisabled}
             size="md"
@@ -510,15 +533,16 @@ const FieldRenderer: FC<{
         </Box>
       );
 
-    case 'slider':
+    case 'slider': {
+      const sliderMin = (config.min as number) ?? 0;
       return (
         <Box>
           {field.label && <Text size="sm" fw={500} mb={4}>{field.label}</Text>}
           <Slider
-            min={(config.min as number) ?? 0}
+            min={sliderMin}
             max={(config.max as number) ?? 100}
             step={(config.step as number) ?? 1}
-            value={(value as number) ?? 0}
+            value={safeNumberValue(value, sliderMin)}
             onChange={(val) => onChange(field.id, val)}
             disabled={fieldDisabled}
             size="sm"
@@ -527,16 +551,19 @@ const FieldRenderer: FC<{
           {error && <Text size="xs" c="red" mt={2}>{error}</Text>}
         </Box>
       );
+    }
 
-    case 'range_slider':
+    case 'range_slider': {
+      const rangeMin = (config.min as number) ?? 0;
+      const rangeMax = (config.max as number) ?? 100;
       return (
         <Box>
           {field.label && <Text size="sm" fw={500} mb={4}>{field.label}</Text>}
           <RangeSlider
-            min={(config.min as number) ?? 0}
-            max={(config.max as number) ?? 100}
+            min={rangeMin}
+            max={rangeMax}
             step={(config.step as number) ?? 1}
-            value={(value as [number, number]) ?? [0, 100]}
+            value={safeRangeValue(value, rangeMin, rangeMax)}
             onChange={(val) => onChange(field.id, val)}
             disabled={fieldDisabled}
             size="sm"
@@ -544,6 +571,7 @@ const FieldRenderer: FC<{
           {error && <Text size="xs" c="red" mt={2}>{error}</Text>}
         </Box>
       );
+    }
 
     case 'file':
     case 'image':

@@ -1,38 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
-  <!-- Large decorative brain/AI icon for right panel (default branding) -->
-  <!-- Stylized neural network / brain symbol -->
-  <g opacity="0.5">
-    <!-- Central brain shape -->
-    <path d="M200 60 C140 60 90 100 80 160 C70 220 100 270 140 290 C150 295 155 310 155 330 L155 340 L245 340 L245 330 C245 310 250 295 260 290 C300 270 330 220 320 160 C310 100 260 60 200 60Z" stroke="white" stroke-width="4" fill="none"/>
-    <!-- Brain divider -->
-    <path d="M200 60 L200 340" stroke="white" stroke-width="2.5" opacity="0.6"/>
-    <!-- Left brain wrinkles -->
-    <path d="M120 130 Q160 115 195 140" stroke="white" stroke-width="2.5" fill="none" opacity="0.7"/>
-    <path d="M100 180 Q150 160 195 185" stroke="white" stroke-width="2.5" fill="none" opacity="0.7"/>
-    <path d="M110 230 Q155 210 195 235" stroke="white" stroke-width="2.5" fill="none" opacity="0.7"/>
-    <!-- Right brain wrinkles -->
-    <path d="M280 130 Q240 115 205 140" stroke="white" stroke-width="2.5" fill="none" opacity="0.7"/>
-    <path d="M300 180 Q250 160 205 185" stroke="white" stroke-width="2.5" fill="none" opacity="0.7"/>
-    <path d="M290 230 Q245 210 205 235" stroke="white" stroke-width="2.5" fill="none" opacity="0.7"/>
-    <!-- Neural nodes -->
-    <circle cx="130" cy="120" r="6" fill="white" opacity="0.5"/>
-    <circle cx="270" cy="120" r="6" fill="white" opacity="0.5"/>
-    <circle cx="110" cy="180" r="6" fill="white" opacity="0.5"/>
-    <circle cx="290" cy="180" r="6" fill="white" opacity="0.5"/>
-    <circle cx="120" cy="240" r="6" fill="white" opacity="0.5"/>
-    <circle cx="280" cy="240" r="6" fill="white" opacity="0.5"/>
-    <circle cx="200" cy="100" r="6" fill="white" opacity="0.5"/>
-    <circle cx="200" cy="200" r="6" fill="white" opacity="0.5"/>
-    <!-- Neural connections -->
-    <line x1="130" y1="120" x2="200" y2="100" stroke="white" stroke-width="1.5" opacity="0.3"/>
-    <line x1="270" y1="120" x2="200" y2="100" stroke="white" stroke-width="1.5" opacity="0.3"/>
-    <line x1="110" y1="180" x2="200" y2="200" stroke="white" stroke-width="1.5" opacity="0.3"/>
-    <line x1="290" y1="180" x2="200" y2="200" stroke="white" stroke-width="1.5" opacity="0.3"/>
-    <line x1="130" y1="120" x2="110" y2="180" stroke="white" stroke-width="1.5" opacity="0.3"/>
-    <line x1="270" y1="120" x2="290" y2="180" stroke="white" stroke-width="1.5" opacity="0.3"/>
-    <line x1="110" y1="180" x2="120" y2="240" stroke="white" stroke-width="1.5" opacity="0.3"/>
-    <line x1="290" y1="180" x2="280" y2="240" stroke="white" stroke-width="1.5" opacity="0.3"/>
-    <!-- Base connector -->
-    <rect x="170" y="340" width="60" height="10" rx="3" fill="white" opacity="0.4"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" fill="none">
+  <!-- unified-ui App Icon - Bold AI Brain Symbol -->
+  <!-- Works at small sizes (36x36) with good contrast -->
+
+  <!-- Gradient definitions -->
+  <defs>
+    <linearGradient id="brainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="50%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#f472b6"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#93c5fd"/>
+      <stop offset="100%" stop-color="#c4b5fd"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Brain outline - bold and visible -->
+  <path d="M18 4 C12 4 7 8 6 13 C5 18 7 23 11 25.5 C12 26 12.5 27.5 12.5 29 L12.5 31 L23.5 31 L23.5 29 C23.5 27.5 24 26 25 25.5 C29 23 31 18 30 13 C29 8 24 4 18 4Z"
+        stroke="url(#brainGrad)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Center line -->
+  <line x1="18" y1="6" x2="18" y2="29" stroke="url(#glowGrad)" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- Left brain curves -->
+  <path d="M9 11 Q13 9 17 12" stroke="url(#glowGrad)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M8 16 Q12 14 17 17" stroke="url(#glowGrad)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M9 21 Q13 19 17 22" stroke="url(#glowGrad)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Right brain curves -->
+  <path d="M27 11 Q23 9 19 12" stroke="url(#glowGrad)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M28 16 Q24 14 19 17" stroke="url(#glowGrad)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M27 21 Q23 19 19 22" stroke="url(#glowGrad)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Neural nodes - bright dots -->
+  <circle cx="10" cy="11" r="1.5" fill="#93c5fd"/>
+  <circle cx="26" cy="11" r="1.5" fill="#c4b5fd"/>
+  <circle cx="9" cy="17" r="1.5" fill="#a78bfa"/>
+  <circle cx="27" cy="17" r="1.5" fill="#f472b6"/>
+  <circle cx="10" cy="22" r="1.5" fill="#93c5fd"/>
+  <circle cx="26" cy="22" r="1.5" fill="#c4b5fd"/>
+  <circle cx="18" cy="8" r="1.8" fill="#60a5fa"/>
+  <circle cx="18" cy="17" r="2" fill="url(#brainGrad)"/>
+
+  <!-- Base -->
+  <rect x="14" y="31" width="8" height="2" rx="1" fill="url(#glowGrad)" opacity="0.7"/>
 </svg>

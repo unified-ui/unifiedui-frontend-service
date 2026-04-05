@@ -19,6 +19,7 @@ import type { ChatWidgetResponse } from '../../../api/types';
 import { ChatWidgetTypeEnum } from '../../../api/types';
 import type { WidgetTab } from '../../../pages/WidgetDesignerPage/types';
 import type { WidgetCache } from '../../../hooks/chat';
+import { WidgetErrorBoundary } from '../../common';
 import { FormWidget } from '../widgets/FormWidget';
 import classes from './WidgetSidebar.module.css';
 
@@ -210,14 +211,16 @@ const WidgetDetailView: FC<WidgetDetailViewProps> = ({ interaction, onBack, widg
           ) : viewMode === 'json' && formattedJson ? (
             <Code block>{formattedJson}</Code>
           ) : isFormType && activeConfig ? (
-            <FormWidget
-              tabs={(activeConfig.tabs as WidgetTab[]) ?? []}
-              enableTabs={(activeConfig.settings as Record<string, unknown>)?.enableTabs === true}
-              onSubmit={() => {}}
-              disabled
-              submittedData={interaction.submittedData}
-              maxHeight={500}
-            />
+            <WidgetErrorBoundary>
+              <FormWidget
+                tabs={(activeConfig.tabs as WidgetTab[]) ?? []}
+                enableTabs={(activeConfig.settings as Record<string, unknown>)?.enableTabs === true}
+                onSubmit={() => {}}
+                disabled
+                submittedData={interaction.submittedData}
+                maxHeight={500}
+              />
+            </WidgetErrorBoundary>
           ) : !interaction.submittedData ? (
             <Text size="sm" c="dimmed">{t('sidebar.notSubmitted')}</Text>
           ) : (
