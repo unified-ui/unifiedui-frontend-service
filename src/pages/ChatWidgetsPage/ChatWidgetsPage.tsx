@@ -19,14 +19,14 @@ const STANDARD_WIDGETS: DataTableItem[] = [
     id: '__standard_yesno__',
     name: 'Yes / No',
     description: 'Interactive yes/no confirmation buttons for the chat.',
-    type: 'Standard',
+    type: 'STANDARD',
     hideActions: true,
   },
   {
     id: '__standard_survey__',
     name: 'Survey',
     description: 'Multi-question survey widget with structured answer options.',
-    type: 'Standard',
+    type: 'STANDARD',
     hideActions: true,
   },
 ];

@@ -13,6 +13,7 @@ import {
   Box,
   Checkbox,
 } from '@mantine/core';
+import { getTypeColor } from './typeColors';
 import { DelayedTooltip } from '../DelayedTooltip';
 import {
   IconDots,
@@ -109,8 +110,8 @@ export const DataTableRow: FC<DataTableRowProps> = ({
       onClick={() => onRowClick?.(item.id)}
       style={onRowClick ? { cursor: 'pointer' } : undefined}
     >
-      <Group wrap="nowrap" gap="lg">
-        <Group gap="md" wrap="nowrap" style={{ flex: 1, minWidth: 0, maxWidth: 600 }}>
+      <Group wrap="nowrap" gap="md" align="center">
+        <Group gap="sm" wrap="nowrap" className={classes.nameGroup}>
           {showCheckbox && onSelect && (
             <Checkbox
               checked={isSelected}
@@ -151,9 +152,16 @@ export const DataTableRow: FC<DataTableRowProps> = ({
         </Group>
 
         {item.type && (
-          <Text size="sm" c="dimmed" className={classes.typeColumn}>
-            {item.type}
-          </Text>
+          <Box className={classes.typeColumn}>
+            <Badge
+              variant="light"
+              size="sm"
+              radius="sm"
+              color={getTypeColor(item.type)}
+            >
+              {item.type}
+            </Badge>
+          </Box>
         )}
 
         <Group gap={4} wrap="wrap" className={classes.tagsColumn}>
@@ -198,7 +206,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
           )}
         </Group>
 
-        <Group gap="lg" wrap="nowrap" style={{ marginLeft: 'auto', flexShrink: 0 }}>
+        <Group gap="md" wrap="nowrap" className={classes.actionsGroup}>
           {showStatus && item.isActive !== undefined && (
             <div onClick={(e) => e.stopPropagation()}>
               <Switch

@@ -35,7 +35,7 @@ export const WorkflowsPage: FC = () => {
     id: agent.id,
     name: agent.name,
     description: agent.description,
-    type: 'Workflow',
+    type: agent.type,
     tags: agent.tags?.map(tag => tag.name) || [],
     isActive: agent.is_active,
     my_permission: agent.my_permission,
