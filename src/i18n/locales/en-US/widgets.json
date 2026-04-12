@@ -1,0 +1,69 @@
+{
+  "yesno": {
+    "yes": "Yes",
+    "no": "No"
+  },
+  "survey": {
+    "questionOf": "Question {{current}} of {{total}}",
+    "previous": "Previous",
+    "next": "Next",
+    "submit": "Submit",
+    "otherAnswer": "Other answer...",
+    "submitted": "Survey submitted"
+  },
+  "form": {
+    "submit": "Submit",
+    "submitted": "Form submitted",
+    "selectPlaceholder": "Select an option...",
+    "chooseFile": "Choose file...",
+    "addRow": "Add Row",
+    "required": "This field is required",
+    "minLength": "Minimum {{min}} characters required",
+    "maxLength": "Maximum {{max}} characters allowed",
+    "min": "Value must be at least {{min}}",
+    "max": "Value must be at most {{max}}",
+    "pattern": "Invalid format",
+    "email": "Invalid email address",
+    "url": "Invalid URL",
+    "minSelections": "Select at least {{min}} options",
+    "maxSelections": "Select at most {{max}} options"
+  },
+  "iframe": {
+    "submitted": "Data submitted",
+    "noUrl": "No URL configured for this widget.",
+    "submitBlockedTitle": "Submission not allowed",
+    "submitBlockedMessage": "Only the latest widget can accept submissions."
+  },
+  "sidebar": {
+    "title": "Widgets",
+    "noWidgets": "No custom widgets in this conversation.",
+    "submitted": "Submitted",
+    "pending": "Pending",
+    "formView": "Form",
+    "jsonView": "JSON",
+    "notSubmitted": "Not yet submitted.",
+    "showWidgets": "Show widgets",
+    "hideWidgets": "Hide widgets"
+  },
+  "supportedWidgets": "Supported Widgets",
+  "supportedWidgetsPlaceholder": "Select widgets this agent can use...",
+  "supportedWidgetsDescription": "Standard and custom widgets that can be rendered in the chat.",
+  "standardWidgetDialog": {
+    "exampleLabel": "Example",
+    "promptLabel": "LLM Prompt"
+  },
+  "widgetInfo": {
+    "title": "Widget Prompt Guide",
+    "description": "Use the following format in your agent's prompt to trigger interactive widgets in the chat.",
+    "copy": "Copy example",
+    "copied": "Copied!",
+    "formatTitle": "Tag Format",
+    "formatDescription": "The LLM must output this tag in its response to trigger a widget:",
+    "yesnoTitle": "Yes/No Widget",
+    "yesnoDescription": "Displays two buttons (Yes/No). The user's choice is sent as a message.",
+    "surveyTitle": "Survey Widget",
+    "surveyDescription": "Multi-question survey with options and optional free-text answers.",
+    "customTitle": "Custom Widget",
+    "customDescription": "Triggers a registered custom widget (Form or iFrame) by its ID."
+  }
+}

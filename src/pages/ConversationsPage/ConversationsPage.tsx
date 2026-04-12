@@ -1,8 +1,8 @@
 import type { FC } from 'react';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Drawer, Loader, Center, Title } from '@mantine/core';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { Box, Drawer, Loader, Center, UnstyledButton } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { IconMessageCircle } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
@@ -12,9 +12,10 @@ import { ShareConversationDialog } from '../../components/dialogs/ShareConversat
 import { SearchConversationsDialog } from '../../components/dialogs/SearchConversationsDialog';
 import { TracingProvider, TracingSidebar, TracingVisualDialog } from '../../components/tracing';
 import { ConversationSidebar } from '../../components/conversation';
-import { ChatView, ChatHeader, ChatEmptyState } from '../../components/chat';
-import { useConversationList, useChat, useConversationTracing, useDelayedLoading } from '../../hooks';
+import { ChatView, ChatHeader, ChatEmptyState, WidgetSidebar } from '../../components/chat';
+import { useConversationList, useChat, useConversationTracing, useConversationWidgets, useDelayedLoading, useWidgetCache } from '../../hooks';
 import classes from './ConversationsPage.module.css';
+import chatClasses from '../../components/chat/ChatEmptyState/ChatEmptyState.module.css';
 
 /**
  * Main conversations page — wires hooks + sub-components.
@@ -22,6 +23,7 @@ import classes from './ConversationsPage.module.css';
 export const ConversationsPage: FC = () => {
   const { conversationId } = useParams<{ conversationId?: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { apiClient, selectedTenant, user, getFoundryToken } = useIdentity();
   const { trackVisit } = useRecentVisits();
   const { t } = useTranslation();
@@ -31,6 +33,8 @@ export const ConversationsPage: FC = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [searchHighlightedMessageId, setSearchHighlightedMessageId] = useState<string | null>(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const focusTriggerRef = useRef(0);
+  const [focusTrigger, setFocusTrigger] = useState(0);
 
   const tenantId = selectedTenant?.id;
   const userId = user?.id;
@@ -48,6 +52,14 @@ export const ConversationsPage: FC = () => {
     conversationId,
   });
 
+  const handleTrackChatAgent = useCallback((agentId: string, agentName: string) => {
+    trackVisit({
+      resource_type: 'chat_agent',
+      resource_id: agentId,
+      resource_name: agentName,
+    });
+  }, [trackVisit]);
+
   const chat = useChat({
     apiClient,
     tenantId,
@@ -60,44 +72,65 @@ export const ConversationsPage: FC = () => {
     setConversations: convList.setConversations,
     setSelectedChatAgentId: convList.setSelectedChatAgentId,
     onRefreshTraces: tracing.refreshTraces,
+    onMessageSent: handleTrackChatAgent,
   });
+
+  const widgets = useConversationWidgets({
+    messages: chat.messages,
+  });
+
+  const widgetCache = useWidgetCache(apiClient);
 
   useEffect(() => {
     tracing.setMessagesRef(chat.messages);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chat.messages, tracing.setMessagesRef]);
 
   useEffect(() => {
     if (!apiClient || !tenantId || !conversationId) {
       convList.setCurrentConversation(null);
-      chat.setMessages([]);
+      chat.setMessages(prev => prev.length === 0 ? prev : []);
+      chat.setIsLoadingMessages(false);
+      widgetCache.clear();
       return;
     }
 
     if (chat.justCreatedConversationRef.current === conversationId) {
-      // eslint-disable-next-line react-hooks/immutability
+
       chat.justCreatedConversationRef.current = null;
       return;
     }
 
     chat.loadConversationMessages(conversationId);
+    widgetCache.clear();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiClient, tenantId, conversationId]);
-
-  useEffect(() => {
-    if (convList.currentConversation) {
-      trackVisit({
-        resource_type: 'conversation',
-        resource_id: convList.currentConversation.id,
-        resource_name: convList.currentConversation.name || convList.currentConversation.id,
-      });
-    }
-  }, [convList.currentConversation?.id]);
 
   const convPerm = convList.currentConversation?.my_permission;
   const canWriteConversation = !convPerm || convPerm === 'ADMIN' || convPerm === 'WRITE';
 
+  const triggerFocus = useCallback(() => {
+    focusTriggerRef.current += 1;
+    setFocusTrigger(focusTriggerRef.current);
+  }, []);
+
+  useEffect(() => {
+    triggerFocus();
+  }, [conversationId, convList.selectedChatAgentId, triggerFocus]);
+
   const handleNewChat = useCallback(() => {
     chat.resetStreamingState();
     convList.handleNewChat(chat.abortControllerRef);
+    if (!conversationId) {
+      chat.setIsLoadingMessages(false);
+      triggerFocus();
+    }
+  }, [chat, convList, conversationId, triggerFocus]);
+
+  const handleNewChatWithAgent = useCallback((agentId: string) => {
+    chat.resetStreamingState();
+    convList.handleChatAgentChange(agentId);
+    convList.handleNewChat(chat.abortControllerRef, agentId);
   }, [chat, convList]);
 
   const handleSelectConversation = useCallback((id: string) => {
@@ -114,9 +147,10 @@ export const ConversationsPage: FC = () => {
       setTimeout(() => setSearchHighlightedMessageId(null), 2000);
     }
     if (targetConversationId !== conversationId) {
-      navigate(`/conversations/${targetConversationId}`);
+      const qs = searchParams.toString();
+      navigate(`/conversations/${targetConversationId}${qs ? `?${qs}` : ''}`);
     }
-  }, [conversationId, navigate]);
+  }, [conversationId, navigate, searchParams]);
 
   const handleEmbedSetup = useCallback(() => {
     if (convList.selectedChatAgentId) {
@@ -124,18 +158,46 @@ export const ConversationsPage: FC = () => {
     }
   }, [convList.selectedChatAgentId, navigate]);
 
+  const chatMessagesRef = useRef(chat.messages);
+  chatMessagesRef.current = chat.messages;
+
+  const handleRetry = useCallback(
+    (failedMessageId: string) => {
+      const failedMsg = chatMessagesRef.current.find(m => m.id === failedMessageId);
+      const userMsg = failedMsg?.userMessageId
+        ? chatMessagesRef.current.find(m => m.id === failedMsg.userMessageId)
+        : undefined;
+      if (userMsg?.content) {
+        chat.handleSendMessage(userMsg.content);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [chat.handleSendMessage],
+  );
+
+  const reActStateRef = useRef(chat.reActState);
+  reActStateRef.current = chat.reActState;
+
+  const handleToggleReasoning = useCallback(
+    () => {
+      chat.setIsReasoningExpanded(!reActStateRef.current.isReasoningExpanded);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [chat.setIsReasoningExpanded],
+  );
+
   const showInitialLoading = useDelayedLoading(
     convList.isLoadingConversations && !convList.conversations.length,
     1000,
   );
 
+  const showMessageLoading = useDelayedLoading(chat.isLoadingMessages, 500);
+
   if (convList.isLoadingConversations && !convList.conversations.length) {
     return (
       <MainLayout noPadding>
         <Box className={classes.pageContainer}>
-          <Box className={classes.pageHeader}>
-            <Title order={1} className={classes.pageTitle}>{t('conversations:yourAIChats')}</Title>
-          </Box>
+          <Box className={classes.pageHeader} />
           <Box className={classes.pageContent}>
             <Box className={classes.chatSidebarWrapper}>
               {showInitialLoading && (
@@ -144,13 +206,7 @@ export const ConversationsPage: FC = () => {
                 </Center>
               )}
             </Box>
-            <Box className={classes.mainArea}>
-              <ChatEmptyState
-                icon={<IconMessageCircle size={64} />}
-                title={t('conversations:startNewConversation')}
-                description={t('conversations:selectAgentToStart')}
-              />
-            </Box>
+            <Box className={classes.mainArea} />
           </Box>
         </Box>
       </MainLayout>
@@ -167,6 +223,10 @@ export const ConversationsPage: FC = () => {
     </TracingProvider>
   ) : undefined;
 
+    const widgetSlot = widgets.widgetSidebarVisible && widgets.hasWidgets ? (
+      <WidgetSidebar interactions={widgets.interactions} widgetCache={widgetCache} />
+    ) : undefined;
+
   const headerSlot = (
     <ChatHeader
       conversation={convList.currentConversation}
@@ -176,12 +236,16 @@ export const ConversationsPage: FC = () => {
       isFavorite={convList.currentConversation ? convList.favoriteIds.has(convList.currentConversation.id) : false}
       tracingSidebarVisible={tracing.tracingSidebarVisible}
       hasTraces={tracing.traces.length > 0}
+      widgetSidebarVisible={widgets.widgetSidebarVisible}
+      hasWidgets={widgets.hasWidgets}
       messages={chat.messages}
       onChatAgentChange={convList.handleChatAgentChange}
+      onChatAgentSearch={convList.handleChatAgentSearch}
+      onNewChatWithAgent={handleNewChatWithAgent}
       onShare={handleShare}
       onToggleFavorite={() => {
         if (convList.currentConversation) {
-          convList.handleToggleFavorite(convList.currentConversation.id);
+          convList.handleToggleFavorite(convList.currentConversation.id, convList.currentConversation.name);
         }
       }}
       onDelete={() => {
@@ -190,28 +254,55 @@ export const ConversationsPage: FC = () => {
         }
       }}
       onToggleTracingSidebar={tracing.handleToggleTracingSidebar}
+      onToggleWidgetSidebar={widgets.handleToggleWidgetSidebar}
       onEmbedSetup={handleEmbedSetup}
     />
   );
 
-  const emptyStateSlot = convList.isNewChat ? (
-    <ChatEmptyState
-      icon={<IconMessageCircle size={64} />}
-      title={t('conversations:startNewConversation')}
-      description={
-        convList.selectedChatAgentId
-          ? t('conversations:typeToStart')
-          : t('conversations:selectAgentToStart')
-      }
-    />
-  ) : undefined;
+  const emptyStateSlot = convList.isNewChat ? (() => {
+    const selectedAgent = convList.chatAgents.find(a => a.id === convList.selectedChatAgentId);
+    const hasAgent = !!selectedAgent;
+    return (
+      <ChatEmptyState
+        icon={<IconMessageCircle size={64} />}
+        title={
+          hasAgent
+            ? t('conversations:welcomeTitleWithAgent', { agentName: selectedAgent.name })
+            : t('conversations:welcomeTitle')
+        }
+        description={
+          hasAgent
+            ? t('conversations:welcomeDescription')
+            : t('conversations:selectAgentToStart')
+        }
+      />
+    );
+  })() : undefined;
+
+  const suggestionsSlot = convList.isNewChat ? (() => {
+    const selectedAgent = convList.chatAgents.find(a => a.id === convList.selectedChatAgentId);
+    const hasAgent = !!selectedAgent;
+    const starters = selectedAgent?.greeting_messages?.filter(Boolean).slice(0, 4);
+    if (!hasAgent || !starters || starters.length === 0) return undefined;
+    return (
+      <Box className={chatClasses.startersContainer}>
+        {starters.map((starter) => (
+          <UnstyledButton
+            key={starter}
+            className={chatClasses.starterButton}
+            onClick={() => chat.handleSendMessage(starter)}
+          >
+            {starter}
+          </UnstyledButton>
+        ))}
+      </Box>
+    );
+  })() : undefined;
 
   return (
     <MainLayout noPadding>
       <Box className={classes.pageContainer}>
-        <Box className={classes.pageHeader}>
-          <Title order={1} className={classes.pageTitle}>{t('conversations:yourAIChats')}</Title>
-        </Box>
+        <Box className={classes.pageHeader} />
         <Box className={classes.pageContent}>
         {isMobile ? (
           <Drawer
@@ -271,7 +362,7 @@ export const ConversationsPage: FC = () => {
         >
           <ChatView
             messages={chat.messages}
-            isLoading={chat.isLoadingMessages}
+            isLoading={showMessageLoading}
             isStreaming={chat.isStreaming}
             streamingContent={chat.streamingContent}
             streamingMessageId={chat.streamingMessageId}
@@ -280,15 +371,7 @@ export const ConversationsPage: FC = () => {
             onEditMessage={canWriteConversation ? chat.handleEditMessage : undefined}
             onDeleteMessage={canWriteConversation ? chat.handleDeleteMessage : undefined}
             onReaction={chat.handleReaction}
-            onRetry={(failedMessageId) => {
-              const failedMsg = chat.messages.find(m => m.id === failedMessageId);
-              const userMsg = failedMsg?.userMessageId
-                ? chat.messages.find(m => m.id === failedMsg.userMessageId)
-                : undefined;
-              if (userMsg?.content) {
-                chat.handleSendMessage(userMsg.content);
-              }
-            }}
+            onRetry={handleRetry}
             onViewTrace={tracing.handleViewTrace}
             reactions={chat.reactions}
             highlightedExtMessageId={tracing.highlightedMessageExtId}
@@ -299,9 +382,18 @@ export const ConversationsPage: FC = () => {
                 ? (convList.isNewChat ? t('conversations:typeToStart') : t('conversations:messageInput'))
                 : t('conversations:selectAgentToStart')
             }
+            reActState={chat.hasReasoningSteps ? chat.reActState : undefined}
+            onToggleReasoning={handleToggleReasoning}
             headerSlot={headerSlot}
             tracingSlot={tracingSlot}
+            widgetSlot={widgetSlot}
             emptyStateSlot={emptyStateSlot}
+            suggestionsSlot={suggestionsSlot}
+            focusTrigger={focusTrigger}
+            onLoadMore={chat.loadMoreMessages}
+            hasMoreMessages={chat.hasMoreMessages}
+            isLoadingMoreMessages={chat.isLoadingMoreMessages}
+            widgetCache={widgetCache}
           />
         </Box>
         </Box>

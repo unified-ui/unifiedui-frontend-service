@@ -46,11 +46,27 @@
   flex-shrink: 0;
 }
 
+.brandTextWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+  gap: 0;
+}
+
 .brandName {
   font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.brandSubtitle {
+  font-size: 10px;
+  opacity: 0.5;
+  font-weight: 400;
+  font-style: italic;
+  margin-top: 2px;
 }
 
 /* ── Login Content (centered in left panel) ───────────────────── */

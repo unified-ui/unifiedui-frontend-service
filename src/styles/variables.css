@@ -86,9 +86,9 @@
   --text-link: var(--color-primary-600);
   --text-link-hover: var(--color-primary-700);
 
-  --border-default: var(--color-gray-200);
-  --border-light: var(--color-gray-100);
-  --border-medium: var(--color-gray-300);
+  --border-default: var(--color-gray-300);
+  --border-light: var(--color-gray-200);
+  --border-medium: var(--color-gray-400);
   --border-focus: var(--color-primary-500);
   --border-error: var(--color-error-500);
 
@@ -189,9 +189,9 @@
   --text-link: var(--color-primary-400);
   --text-link-hover: var(--color-primary-300);
 
-  --border-default: var(--color-gray-700);
-  --border-light: var(--color-gray-800);
-  --border-medium: var(--color-gray-600);
+  --border-default: rgba(255, 255, 255, 0.06);
+  --border-light: rgba(255, 255, 255, 0.03);
+  --border-medium: rgba(255, 255, 255, 0.1);
   --border-focus: var(--color-primary-400);
   --border-error: var(--color-error-400);
 
@@ -200,12 +200,22 @@
   --bg-selected: rgba(33, 150, 243, 0.2);
   --bg-selected-hover: rgba(33, 150, 243, 0.3);
 
+  /* ===== ACCENT GRADIENT ===== */
+  --gradient-accent: linear-gradient(
+    135deg,
+    var(--color-primary-400),
+    var(--color-secondary-400)
+  );
+
   /* ===== DARK MODE SHADOWS ===== */
-  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
-  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.7);
+  --shadow-xs: none;
+  --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-md:
+    0 0 0 1px rgba(255, 255, 255, 0.04), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-lg:
+    0 0 0 1px rgba(255, 255, 255, 0.06), 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-xl:
+    0 0 0 1px rgba(255, 255, 255, 0.06), 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 /* ===== SKELETON SHIMMER ===== */

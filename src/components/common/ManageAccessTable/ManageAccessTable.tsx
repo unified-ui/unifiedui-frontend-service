@@ -18,7 +18,7 @@ import {
   ActionIcon,
 } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
-import { IconSearch, IconPlus, IconUser, IconUsers, IconUsersGroup, IconTrash } from '@tabler/icons-react';
+import { IconSearch, IconPlus, IconUser, IconUsers, IconUsersGroup, IconTrash, IconRefresh } from '@tabler/icons-react';
 import type { PermissionActionEnum, PrincipalTypeEnum } from '../../../api/types';
 import { useIdentity } from '../../../contexts';
 import { ConfirmDeleteDialog } from '../ConfirmDeleteDialog';
@@ -49,6 +49,8 @@ interface ManageAccessTableProps {
   onRoleChange: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum, enabled: boolean) => Promise<void>;
   /** Handler to delete a principal's access */
   onDeletePrincipal?: (principalId: string, principalType: PrincipalTypeEnum, displayName?: string | null) => Promise<void>;
+  /** Handler to refresh a principal's identity data from the IdP */
+  onRefreshPrincipal?: (principalId: string, principalType: PrincipalTypeEnum) => Promise<void>;
   /** Handler to open add principal dialog */
   onAddPrincipal: () => void;
   /** Entity name for labels (e.g., "chat-agent", "credential") */
@@ -112,6 +114,7 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
   error = null,
   onRoleChange,
   onDeletePrincipal,
+  onRefreshPrincipal,
   onAddPrincipal,
   entityName: _entityName = 'resource',
   addButtonLabel = 'Add Access',
@@ -142,6 +145,9 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
 
   // Loading states for individual role changes
   const [loadingRoles, setLoadingRoles] = useState<Set<string>>(new Set());
+
+  // Loading states for refreshing principals
+  const [refreshingPrincipals, setRefreshingPrincipals] = useState<Set<string>>(new Set());
 
   // Delete confirmation dialog state
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -184,6 +190,25 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
 
     return result;
   }, [principals, debouncedSearch, roleFilter]);
+
+  // Handle refresh principal
+  const handleRefreshPrincipal = useCallback(
+    async (e: React.MouseEvent, principal: PrincipalPermission) => {
+      e.stopPropagation();
+      if (!onRefreshPrincipal || principal.principalType === 'CUSTOM_GROUP') return;
+      setRefreshingPrincipals((prev) => new Set(prev).add(principal.principalId));
+      try {
+        await onRefreshPrincipal(principal.principalId, principal.principalType);
+      } finally {
+        setRefreshingPrincipals((prev) => {
+          const next = new Set(prev);
+          next.delete(principal.principalId);
+          return next;
+        });
+      }
+    },
+    [onRefreshPrincipal]
+  );
 
   // Handle delete click - open confirmation dialog
   const handleDeleteClick = useCallback((principal: PrincipalPermission) => {
@@ -338,11 +363,36 @@ export const ManageAccessTable: FC<ManageAccessTableProps> = ({
                 const isCurrentUser = currentUser?.id === principal.principalId;
 
                 return (
-                <Table.Tr key={principal.id}>
+                <Table.Tr key={principal.id} className={classes.principalRow}>
                   <Table.Td>
                     <Group gap="sm" wrap="nowrap">
-                      <Box className={classes.principalIcon}>
-                        {getPrincipalIcon(principal.principalType)}
+                      <Box className={classes.principalIconWrapper}>
+                        {refreshingPrincipals.has(principal.principalId) ? (
+                          <Box className={classes.principalIcon}>
+                            <Loader size={14} />
+                          </Box>
+                        ) : onRefreshPrincipal && principal.principalType !== 'CUSTOM_GROUP' ? (
+                          <>
+                            <Box className={classes.principalIcon}>
+                              {getPrincipalIcon(principal.principalType)}
+                            </Box>
+                            <Tooltip label="Refresh from Identity Provider" withArrow>
+                              <ActionIcon
+                                className={classes.refreshIcon}
+                                variant="subtle"
+                                size="sm"
+                                onClick={(e) => handleRefreshPrincipal(e, principal)}
+                                aria-label={`Refresh ${primaryText}`}
+                              >
+                                <IconRefresh size={14} />
+                              </ActionIcon>
+                            </Tooltip>
+                          </>
+                        ) : (
+                          <Box className={classes.principalIcon}>
+                            {getPrincipalIcon(principal.principalType)}
+                          </Box>
+                        )}
                       </Box>
                       <Box className={hasDisplayName && hasSecondary ? classes.principalNameContainer : classes.principalNameContainerCentered}>
                         <Text size="sm" fw={500}>

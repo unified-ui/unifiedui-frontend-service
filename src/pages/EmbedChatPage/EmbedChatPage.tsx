@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Center, Text, Loader, Button, Box, ActionIcon, useMantineColorScheme } from '@mantine/core';
+import { Center, Text, Loader, Button, Box, ActionIcon, UnstyledButton, useMantineColorScheme } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useMsal } from '@azure/msal-react';
 import { IconMessageCircle, IconPlus, IconSun, IconMoon } from '@tabler/icons-react';
@@ -10,9 +10,10 @@ import { loginRequest } from '../../auth/authConfig';
 import { useIdentity } from '../../contexts';
 import { ChatView, ChatHeader, ChatEmptyState } from '../../components/chat';
 import { TracingProvider, TracingSidebar, TracingVisualDialog } from '../../components/tracing';
-import { useChat, useConversationTracing } from '../../hooks';
+import { useChat, useConversationTracing, useWidgetCache } from '../../hooks';
 import type { ChatAgentResponse, ConversationResponse } from '../../api/types';
 import classes from './EmbedChatPage.module.css';
+import chatClasses from '../../components/chat/ChatEmptyState/ChatEmptyState.module.css';
 
 export const EmbedChatPage: FC = () => {
   const { agentId } = useParams<{ agentId: string }>();
@@ -110,11 +111,14 @@ export const EmbedChatPage: FC = () => {
     onNavigate: handleNavigate,
   });
 
+  const widgetCache = useWidgetCache(apiClient);
+
   const handleNewChat = useCallback(() => {
     chat.resetStreamingState();
     setConversationId(undefined);
     setCurrentConversation(null);
-  }, [chat]);
+    widgetCache.clear();
+  }, [chat, widgetCache]);
 
   useEffect(() => {
     tracing.setMessagesRef(chat.messages);
@@ -173,6 +177,24 @@ export const EmbedChatPage: FC = () => {
     />
   ) : undefined;
 
+  const suggestionsSlot = !conversationId && chatAgent ? (() => {
+    const starters = chatAgent.greeting_messages?.filter(Boolean).slice(0, 4);
+    if (!starters || starters.length === 0) return undefined;
+    return (
+      <Box className={chatClasses.startersContainer}>
+        {starters.map((starter) => (
+          <UnstyledButton
+            key={starter}
+            className={chatClasses.starterButton}
+            onClick={() => chat.handleSendMessage(starter)}
+          >
+            {starter}
+          </UnstyledButton>
+        ))}
+      </Box>
+    );
+  })() : undefined;
+
   const tracingSlot = tracing.tracingSidebarVisible && tracing.traces.length > 0 ? (
     <TracingProvider
       traces={tracing.traces}
@@ -224,12 +246,19 @@ export const EmbedChatPage: FC = () => {
         highlightedExtMessageId={tracing.highlightedMessageExtId}
         highlightedUserMessageId={tracing.highlightedUserMessageId}
         inputDisabled={!selectedChatAgentId}
+        reActState={chat.hasReasoningSteps ? chat.reActState : undefined}
+        onToggleReasoning={() => chat.setIsReasoningExpanded(!chat.reActState.isReasoningExpanded)}
         headerSlot={headerSlot}
         emptyStateSlot={emptyStateSlot}
+        suggestionsSlot={suggestionsSlot}
         tracingSlot={tracingSlot}
         showReactions
         showTracing
         enableFileDrop
+        onLoadMore={chat.loadMoreMessages}
+        hasMoreMessages={chat.hasMoreMessages}
+        isLoadingMoreMessages={chat.isLoadingMoreMessages}
+        widgetCache={widgetCache}
       />
 
       {tracing.tracingDialogOpen && tracing.traces.length > 0 && (

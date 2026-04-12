@@ -101,13 +101,36 @@ const StepContent: FC<{ step: ReasoningStep; isActive: boolean }> = ({ step, isA
   );
 };
 
+const deepParseJson = (value: unknown): unknown => {
+  if (typeof value === 'string') {
+    try {
+      return deepParseJson(JSON.parse(value));
+    } catch {
+      return value;
+    }
+  }
+  if (Array.isArray(value)) return value.map(deepParseJson);
+  if (typeof value === 'object' && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, deepParseJson(v)])
+    );
+  }
+  return value;
+};
+
+const formatValue = (value: unknown): string => {
+  const parsed = deepParseJson(value);
+  if (typeof parsed === 'object' && parsed !== null) return JSON.stringify(parsed, null, 2);
+  return String(parsed);
+};
+
 const ToolCallContent: FC<{ step: ReasoningStep; isActive: boolean }> = ({ step, isActive }) => {
   return (
     <Box className={classes.toolCallContent}>
       {step.toolInput && (
         <Box className={classes.toolSection}>
           <Text size="xs" c="dimmed" fw={600} className={classes.toolSectionLabel}>Input</Text>
-          <pre className={classes.toolCodeBlock}>{step.toolInput}</pre>
+          <pre className={classes.toolCodeBlock}>{formatValue(step.toolInput)}</pre>
         </Box>
       )}
       {step.content && (
@@ -129,7 +152,7 @@ const ToolCallContent: FC<{ step: ReasoningStep; isActive: boolean }> = ({ step,
       {step.toolResult && (
         <Box className={classes.toolSection}>
           <Text size="xs" c="dimmed" fw={600} className={classes.toolSectionLabel}>Result</Text>
-          <pre className={classes.toolCodeBlock}>{step.toolResult}</pre>
+          <pre className={classes.toolCodeBlock}>{formatValue(step.toolResult)}</pre>
         </Box>
       )}
       {isActive && !step.completedAt && (

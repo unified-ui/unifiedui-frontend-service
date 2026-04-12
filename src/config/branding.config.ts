@@ -1,23 +1,42 @@
+/**
+ * Branding Configuration
+ *
+ * Provides customizable branding options for the application.
+ * Branding slug is configured via VITE_BRANDING_SLUG env var.
+ * Login colors for default branding are derived from the active theme preset.
+ */
+
+import { activePreset } from '../theme/presets';
 import type { BrandingConfig } from './branding.types';
 
 type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
 };
 
-//const ACTIVE_BRANDING: string = 'default';
-//const ACTIVE_BRANDING: string = 'asklepios';
-const ACTIVE_BRANDING: string = 'emtec';
+/** Active branding slug from environment variable */
+export const ACTIVE_BRANDING: string = import.meta.env.VITE_BRANDING_SLUG || 'default';
 
-const DEFAULT_BRANDING: BrandingConfig = {
+/** App title from environment variable */
+export const APP_TITLE: string = import.meta.env.VITE_APP_TITLE || 'unified-ui';
+
+/** Whether to show the "powered by unified-ui" subtitle */
+export const SHOW_PLATFORM_SUBTITLE: boolean = APP_TITLE.toLowerCase() !== 'unified-ui';
+
+/** Resolve asset URL based on branding slug */
+function getAssetUrl(assetName: 'icon' | 'logo' | 'favicon'): string {
+  return `/branding/${ACTIVE_BRANDING}/${assetName}.svg`;
+}
+
+export const DEFAULT_BRANDING: BrandingConfig = {
   slug: 'default',
-  displayName: 'unified-ui',
-  logoUrl: null,
-  iconUrl: null,
-  faviconUrl: null,
+  displayName: APP_TITLE,
+  logoUrl: getAssetUrl('logo'),
+  iconUrl: getAssetUrl('icon'),
+  faviconUrl: getAssetUrl('favicon'),
 
   login: {
-    bgLeft: 'linear-gradient(160deg, #0a1628 0%, #0f2035 50%, #0a1628 100%)',
-    bgRight: 'linear-gradient(160deg, #0f2035 0%, #162a4a 50%, #0f2035 100%)',
+    bgLeft: activePreset.login.bgLeft,
+    bgRight: activePreset.login.bgRight,
     textColor: '#FFFFFF',
     heading: null,
     buttonBorderColor: 'rgba(255, 255, 255, 0.25)',
@@ -39,26 +58,19 @@ const DEFAULT_BRANDING: BrandingConfig = {
     baseFontSize: 16,
   },
 
-  enabledIdps: ['microsoft', 'google', 'aws_cognito', 'ldap', 'kerberos', 'saml', 'okta', 'oidc'],
+  enabledIdps: [
+    'microsoft',
+    'google',
+    'aws_cognito',
+    'ldap',
+    'oidc',
+  ],
 };
 
 // ─── Customer Brandings (Overrides) ──────────────────────────
 
-const TENANT_BRANDINGS: Record<string, DeepPartial<BrandingConfig>> = {
-  asklepios: {
-    displayName: 'Asklepios',
-    logoUrl: '/branding/asklepios/logo.svg',
-    iconUrl: '/branding/asklepios/icon.svg',
-
-    login: {
-      bgLeft: '#0c2e2e',
-      bgRight: '#091f1f',
-      textColor: '#FFFFFF',
-      buttonBorderColor: 'rgba(255, 255, 255, 0.2)',
-      buttonHoverBg: 'rgba(255, 255, 255, 0.06)',
-    },
-  },
-
+export const TENANT_BRANDINGS: Record<string, DeepPartial<BrandingConfig>> = {
+  // Example: emtec e.V. custom branding
   emtec: {
     displayName: 'emtec e.V.',
     logoUrl: '/branding/emtec/logo.svg',
@@ -72,17 +84,18 @@ const TENANT_BRANDINGS: Record<string, DeepPartial<BrandingConfig>> = {
       buttonBorderColor: 'rgba(255, 255, 255, 0.25)',
       buttonHoverBg: 'rgba(255, 255, 255, 0.08)',
     },
+
+    enabledIdps: ['microsoft', 'oidc', 'ldap'],
   },
 
-  // ─── Example: Muster-Bank AG ────────────────────────────────
-  // musterbank: {
-  //   displayName: 'Muster-Bank',
-  //   logoUrl: '/branding/musterbank/logo.png',
-  //   iconUrl: '/branding/musterbank/shield.svg',
+  // ─── Add your custom brandings below ─────────────────────────
+  // mycompany: {
+  //   displayName: 'My Company',
+  //   logoUrl: '/branding/mycompany/logo.svg',
+  //   iconUrl: '/branding/mycompany/icon.svg',
   //   login: {
   //     bgLeft: '#142E4A',
   //     bgRight: '#0C1F35',
-  //     textColor: '#E8E8E8',
   //   },
   // },
 };
@@ -128,5 +141,3 @@ function getBranding(slug: string): BrandingConfig {
 }
 
 export const activeBranding: BrandingConfig = getBranding(ACTIVE_BRANDING);
-
-export { DEFAULT_BRANDING, TENANT_BRANDINGS, ACTIVE_BRANDING };

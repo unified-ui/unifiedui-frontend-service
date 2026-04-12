@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from 'react';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Box, Text } from '@mantine/core';
 import { IconUpload } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +8,10 @@ import { ChatInput } from '../ChatInput';
 import type { ChatInputRef } from '../ChatInput';
 import type { MessageResponse, ReactionResponse } from '../../../api/types';
 import type { ReActStreamState } from '../../../hooks/chat/useReActChat';
+import type { WidgetCache } from '../../../hooks/chat';
 import classes from './ChatView.module.css';
+
+const NOOP = () => {};
 
 export interface ChatViewProps {
   messages: MessageResponse[];
@@ -16,10 +19,9 @@ export interface ChatViewProps {
   isStreaming?: boolean;
   streamingContent?: string;
   streamingMessageId?: string;
-  emptyStateMessage?: string;
   emptyStateSlot?: ReactNode;
 
-  onSendMessage?: (content: string, attachments?: File[]) => void;
+  onSendMessage?: (content: string, attachments?: File[], extra?: Record<string, unknown>) => void;
   onCancelStream?: () => void;
   onEditMessage?: (messageId: string, content: string) => Promise<void>;
   onDeleteMessage?: (messageId: string) => Promise<void>;
@@ -42,8 +44,18 @@ export interface ChatViewProps {
   onToggleReasoning?: () => void;
   alwaysExpandReasoning?: boolean;
 
+  focusTrigger?: number;
+
   headerSlot?: ReactNode;
   tracingSlot?: ReactNode;
+  widgetSlot?: ReactNode;
+  suggestionsSlot?: ReactNode;
+
+  onLoadMore?: () => Promise<void>;
+  hasMoreMessages?: boolean;
+  isLoadingMoreMessages?: boolean;
+
+  widgetCache?: WidgetCache;
 }
 
 export const ChatView: FC<ChatViewProps> = ({
@@ -52,7 +64,6 @@ export const ChatView: FC<ChatViewProps> = ({
   isStreaming = false,
   streamingContent = '',
   streamingMessageId,
-  emptyStateMessage,
   emptyStateSlot,
 
   onSendMessage,
@@ -78,13 +89,27 @@ export const ChatView: FC<ChatViewProps> = ({
   onToggleReasoning,
   alwaysExpandReasoning,
 
+  focusTrigger,
+
   headerSlot,
   tracingSlot,
+  widgetSlot,
+  suggestionsSlot,
+
+  onLoadMore,
+  hasMoreMessages,
+  isLoadingMoreMessages,
+
+  widgetCache,
 }) => {
   const { t } = useTranslation();
   const chatInputRef = useRef<ChatInputRef>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounterRef = useRef(0);
+
+  const handleContentSendMessage = useCallback((content: string, extra?: Record<string, unknown>) => {
+    onSendMessage?.(content, undefined, extra);
+  }, [onSendMessage]);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     if (!enableFileDrop) return;
@@ -125,6 +150,12 @@ export const ChatView: FC<ChatViewProps> = ({
     }
   }, [enableFileDrop]);
 
+  useEffect(() => {
+    if (focusTrigger !== undefined) {
+      requestAnimationFrame(() => chatInputRef.current?.focus());
+    }
+  }, [focusTrigger]);
+
   const showEmpty = emptyStateSlot && messages.length === 0 && !isStreaming && !isLoading;
 
   return (
@@ -147,19 +178,22 @@ export const ChatView: FC<ChatViewProps> = ({
         {headerSlot}
 
         {showEmpty ? (
-          <>
-            <Box className={classes.contentArea}>
+          <Box className={classes.welcomeLayout}>
+            <Box className={classes.welcomeContent}>
               {emptyStateSlot}
             </Box>
-            <ChatInput
-              ref={chatInputRef}
-              onSend={onSendMessage ?? (() => {})}
-              onCancel={onCancelStream}
-              isDisabled={inputDisabled}
-              isStreaming={isStreaming}
-              placeholder={inputPlaceholder}
-            />
-          </>
+            <Box className={classes.welcomeInputArea}>
+              {suggestionsSlot}
+              <ChatInput
+                ref={chatInputRef}
+                onSend={onSendMessage ?? NOOP}
+                onCancel={onCancelStream}
+                isDisabled={inputDisabled}
+                isStreaming={isStreaming}
+                placeholder={inputPlaceholder}
+              />
+            </Box>
+          </Box>
         ) : (
           <>
             <Box className={classes.contentArea}>
@@ -169,7 +203,6 @@ export const ChatView: FC<ChatViewProps> = ({
                 isStreaming={isStreaming}
                 streamingContent={streamingContent}
                 streamingMessageId={streamingMessageId}
-                emptyStateMessage={emptyStateMessage}
                 onViewTrace={showTracing ? onViewTrace : undefined}
                 highlightedExtMessageId={highlightedExtMessageId}
                 highlightedUserMessageId={highlightedUserMessageId}
@@ -181,11 +214,16 @@ export const ChatView: FC<ChatViewProps> = ({
                 reActState={reActState}
                 onToggleReasoning={onToggleReasoning}
                 alwaysExpandReasoning={alwaysExpandReasoning}
+                onSendMessage={onSendMessage ? handleContentSendMessage : undefined}
+                onLoadMore={onLoadMore}
+                hasMoreMessages={hasMoreMessages}
+                isLoadingMoreMessages={isLoadingMoreMessages}
+                widgetCache={widgetCache}
               />
             </Box>
             <ChatInput
               ref={chatInputRef}
-              onSend={onSendMessage ?? (() => {})}
+              onSend={onSendMessage ?? NOOP}
               onCancel={onCancelStream}
               isDisabled={inputDisabled}
               isStreaming={isStreaming}
@@ -194,6 +232,12 @@ export const ChatView: FC<ChatViewProps> = ({
           </>
         )}
       </Box>
+
+      {widgetSlot && (
+        <Box className={classes.widgetSidebarWrapper}>
+          {widgetSlot}
+        </Box>
+      )}
 
       {tracingSlot && (
         <Box className={classes.tracingSidebarWrapper}>

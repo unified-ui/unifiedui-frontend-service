@@ -21,13 +21,12 @@ import {
   Alert,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { DelayedTooltip } from '../../components/common';
+import { DelayedTooltip, GreetingMessagesInput } from '../../components/common';
 import {
   IconPlus,
   IconX,
   IconDeviceFloppy,
   IconPlayerPlay,
-  IconTrash,
   IconBrain,
   IconTool,
   IconArrowLeft,
@@ -271,53 +270,6 @@ const ToolsSection: FC<{
   );
 };
 
-const GreetingMessagesSection: FC<{
-  messages: string[];
-  onChange: (messages: string[]) => void;
-}> = ({ messages, onChange }) => {
-  const { t } = useTranslation('reactAgent');
-
-  const handleAdd = useCallback(() => {
-    onChange([...messages, '']);
-  }, [messages, onChange]);
-
-  const handleRemove = useCallback((index: number) => {
-    onChange(messages.filter((_: string, i: number) => i !== index));
-  }, [messages, onChange]);
-
-  const handleChange = useCallback((index: number, value: string) => {
-    const updated = [...messages];
-    updated[index] = value;
-    onChange(updated);
-  }, [messages, onChange]);
-
-  return (
-    <Stack gap="sm">
-      {messages.length === 0 && (
-        <Text size="sm" c="dimmed">{t('greetingMessages.noMessages')}</Text>
-      )}
-      {messages.map((msg: string, i: number) => (
-        <Group key={i} gap="xs" wrap="nowrap" align="flex-start">
-          <Textarea
-            value={msg}
-            onChange={(e) => handleChange(i, e.currentTarget.value)}
-            placeholder={t('greetingMessages.messagePlaceholder')}
-            size="sm"
-            minRows={2}
-            style={{ flex: 1 }}
-          />
-          <ActionIcon size="sm" variant="subtle" color="red" onClick={() => handleRemove(i)} mt={6}>
-            <IconTrash size={14} />
-          </ActionIcon>
-        </Group>
-      ))}
-      <Button variant="light" size="xs" leftSection={<IconPlus size={14} />} onClick={handleAdd}>
-        {t('greetingMessages.addMessage')}
-      </Button>
-    </Stack>
-  );
-};
-
 export const ReActAgentDeveloperPage: FC = () => {
   const { t } = useTranslation('reactAgent');
   const { agentId } = useParams<{ agentId: string }>();
@@ -390,7 +342,9 @@ export const ReActAgentDeveloperPage: FC = () => {
   const loadModels = useCallback(async () => {
     if (!tenantId || !apiClient || modelsLoaded) return;
     try {
-      const models = await apiClient.listAIModels(tenantId) as AIModelResponse[];
+      const models = await apiClient.listAIModels(tenantId, {
+        fields: 'id,name,purpose_groups,is_active,provider',
+      }) as AIModelResponse[];
       const reactAgentModels = models.filter(m =>
         m.purpose_groups?.includes(AIModelPurposeGroupEnum.REACT_AGENT) && m.is_active
       );
@@ -402,7 +356,9 @@ export const ReActAgentDeveloperPage: FC = () => {
   const loadTools = useCallback(async () => {
     if (!tenantId || !apiClient || toolsLoaded) return;
     try {
-      const tools = await apiClient.listTools(tenantId) as ToolResponse[];
+      const tools = await apiClient.listTools(tenantId, {
+        fields: 'id,name,type,is_active',
+      }) as ToolResponse[];
       setAvailableTools(tools.filter(t => t.is_active));
       setToolsLoaded(true);
     } catch { /* empty */ }
@@ -914,8 +870,8 @@ export const ReActAgentDeveloperPage: FC = () => {
                       </Group>
                     </Accordion.Control>
                     <Accordion.Panel>
-                      <GreetingMessagesSection
-                        messages={config.greeting_messages}
+                      <GreetingMessagesInput
+                        value={config.greeting_messages}
                         onChange={(msgs) => updateConfig('greeting_messages', msgs)}
                       />
                     </Accordion.Panel>
@@ -1118,7 +1074,6 @@ export const ReActAgentDeveloperPage: FC = () => {
                 showTracing={false}
                 showReactions={false}
                 enableFileDrop={false}
-                emptyStateMessage="Send a message to test your agent"
                 reActState={reActChat.reActState}
                 onToggleReasoning={() => reActChat.setIsReasoningExpanded(!reActChat.reActState.isReasoningExpanded)}
                 alwaysExpandReasoning

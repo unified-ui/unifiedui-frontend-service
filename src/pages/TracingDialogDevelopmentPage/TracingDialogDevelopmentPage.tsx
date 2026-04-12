@@ -6,11 +6,11 @@
  *
  * Query Parameters:
  * - conversationId: Load traces for a conversation
- * - autonomousAgentId: Load traces for an autonomous agent
+ * - workflowId: Load traces for an workflow
  *
  * Example URLs:
  * - /dev/tracing?conversationId=abc123
- * - /dev/tracing?autonomousAgentId=xyz789
+ * - /dev/tracing?workflowId=xyz789
  * - /dev/tracing (shows input fields to add query params)
  */
 
@@ -51,14 +51,14 @@ export const TracingDialogDevelopmentPage: FC = () => {
   const [conversationIdInput, setConversationIdInput] = useState(
     searchParams.get('conversationId') || ''
   );
-  const [autonomousAgentIdInput, setAutonomousAgentIdInput] = useState(
-    searchParams.get('autonomousAgentId') || ''
+  const [workflowIdInput, setWorkflowIdInput] = useState(
+    searchParams.get('workflowId') || ''
   );
 
   // Get current mode from query params
   const conversationId = searchParams.get('conversationId');
-  const autonomousAgentId = searchParams.get('autonomousAgentId');
-  const hasQueryParams = !!conversationId || !!autonomousAgentId;
+  const workflowId = searchParams.get('workflowId');
+  const hasQueryParams = !!conversationId || !!workflowId;
 
   /**
    * Fetch traces from API
@@ -69,7 +69,7 @@ export const TracingDialogDevelopmentPage: FC = () => {
       return;
     }
 
-    if (!conversationId && !autonomousAgentId) {
+    if (!conversationId && !workflowId) {
       return;
     }
 
@@ -84,10 +84,10 @@ export const TracingDialogDevelopmentPage: FC = () => {
           selectedTenant.id,
           conversationId
         );
-      } else if (autonomousAgentId) {
-        response = await apiClient.getAutonomousAgentTraces(
+      } else if (workflowId) {
+        response = await apiClient.getWorkflowTraces(
           selectedTenant.id,
-          autonomousAgentId
+          workflowId
         );
       } else {
         return;
@@ -100,7 +100,7 @@ export const TracingDialogDevelopmentPage: FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [apiClient, selectedTenant, conversationId, autonomousAgentId]);
+  }, [apiClient, selectedTenant, conversationId, workflowId]);
 
   /**
    * Load traces and open dialog when query params are present
@@ -133,8 +133,8 @@ export const TracingDialogDevelopmentPage: FC = () => {
   };
 
   const handleAgentSearch = () => {
-    if (autonomousAgentIdInput.trim()) {
-      setSearchParams({ autonomousAgentId: autonomousAgentIdInput.trim() });
+    if (workflowIdInput.trim()) {
+      setSearchParams({ workflowId: workflowIdInput.trim() });
     }
   };
 
@@ -157,7 +157,7 @@ export const TracingDialogDevelopmentPage: FC = () => {
             </Group>
 
             <Text size="sm" c="dimmed" mb="lg">
-              Enter a Conversation ID or Autonomous Agent ID to open the Tracing visualization as a dialog.
+              Enter a Conversation ID or Workflow ID to open the Tracing visualization as a dialog.
             </Text>
 
             {/* Conversation ID Input */}
@@ -179,19 +179,19 @@ export const TracingDialogDevelopmentPage: FC = () => {
                 </Button>
               </Group>
 
-              {/* Autonomous Agent ID Input */}
+              {/* Workflow ID Input */}
               <Group gap="sm">
                 <TextInput
-                  placeholder="Enter Autonomous Agent ID"
-                  value={autonomousAgentIdInput}
-                  onChange={(e) => setAutonomousAgentIdInput(e.target.value)}
+                  placeholder="Enter Workflow ID"
+                  value={workflowIdInput}
+                  onChange={(e) => setWorkflowIdInput(e.target.value)}
                   style={{ flex: 1 }}
                   onKeyDown={(e) => e.key === 'Enter' && handleAgentSearch()}
                 />
                 <Button
                   leftSection={<IconSearch size={14} />}
                   onClick={handleAgentSearch}
-                  disabled={!autonomousAgentIdInput.trim()}
+                  disabled={!workflowIdInput.trim()}
                 >
                   Open Agent Traces
                 </Button>
@@ -207,7 +207,7 @@ export const TracingDialogDevelopmentPage: FC = () => {
                 <Code>
                   {conversationId
                     ? `conversationId=${conversationId}`
-                    : `autonomousAgentId=${autonomousAgentId}`
+                    : `workflowId=${workflowId}`
                   }
                 </Code>
               </Group>
@@ -223,7 +223,7 @@ export const TracingDialogDevelopmentPage: FC = () => {
               </Text>
               <Code block>
 {`/dev/tracing?conversationId=abc123
-/dev/tracing?autonomousAgentId=xyz789`}
+/dev/tracing?workflowId=xyz789`}
               </Code>
             </Stack>
           </Paper>

@@ -6,18 +6,18 @@ vi.mock('../../contexts', () => ({
   useIdentity: vi.fn(),
   useSidebarData: vi.fn().mockReturnValue({
     chatAgents: [],
-    autonomousAgents: [],
+    workflows: [],
     chatWidgets: [],
     conversations: [],
-    loadingStates: { 'chat-agents': false, 'autonomous-agents': false, 'chat-widgets': false, conversations: false },
-    errorStates: { 'chat-agents': null, 'autonomous-agents': null, 'chat-widgets': null, conversations: null },
+    loadingStates: { 'chat-agents': false, 'workflows': false, 'chat-widgets': false, conversations: false },
+    errorStates: { 'chat-agents': null, 'workflows': null, 'chat-widgets': null, conversations: null },
     fetchChatAgents: vi.fn(),
-    fetchAutonomousAgents: vi.fn(),
+    fetchWorkflows: vi.fn(),
     fetchChatWidgets: vi.fn(),
     fetchConversations: vi.fn(),
     fetchEntityData: vi.fn(),
     refreshChatAgents: vi.fn(),
-    refreshAutonomousAgents: vi.fn(),
+    refreshWorkflows: vi.fn(),
     refreshChatWidgets: vi.fn(),
     refreshConversations: vi.fn(),
     refreshEntityData: vi.fn(),
@@ -46,6 +46,7 @@ vi.mock('../../auth', () => ({
     isAuthenticated: true,
     login: vi.fn(),
     logout: vi.fn(),
+    switchAccount: vi.fn(),
     account: { username: 'john@example.com' },
   }),
 }));
@@ -158,7 +159,7 @@ describe('DashboardPage', () => {
 
     renderWithProviders(<DashboardPage />);
     expect(screen.getByText('Chat Agents')).toBeInTheDocument();
-    expect(screen.getByText('Autonomous Agents')).toBeInTheDocument();
+    expect(screen.getAllByText('Workflows').length).toBeGreaterThan(0);
     expect(screen.getByText('Conversations')).toBeInTheDocument();
   });
 

@@ -1,34 +1,29 @@
-// Default Theme - Color Definitions
-// Alle Farben sind für Light und Dark Mode nutzbar (unterschiedliche Shades)
+/**
+ * Theme Color Definitions
+ *
+ * Primary and Secondary colors are derived from the active theme preset.
+ * Other semantic colors (success, warning, error, info, gray) are static.
+ */
+
+import { activePreset } from './presets';
 
 export const colors = {
-  // Primary Brand Color (Material Blue)
-  primary: [
-    '#e3f2fd',   // 0 - Sehr hell
-    '#bbdefb',   // 1 - Hell
-    '#90caf9',   // 2 - Light
-    '#64b5f6',   // 3
-    '#42a5f5',   // 4 - Dark Mode Buttons
-    '#2196f3',   // 5 - Standard
-    '#1e88e5',   // 6 - Light Mode Buttons
-    '#1976d2',   // 7 - Hover
-    '#1565c0',   // 8
-    '#0d47a1',   // 9 - Sehr dunkel
-  ] as const,
+  // Primary Brand Color (from active preset)
+  primary: activePreset.primary,
 
-  // Secondary Brand Color (Material Purple)
-  secondary: [
-    '#f3e5f5',   // 0
-    '#e1bee7',   // 1
-    '#ce93d8',   // 2
-    '#ba68c8',   // 3
-    '#ab47bc',   // 4 - Dark Mode
-    '#9c27b0',   // 5 - Standard
-    '#8e24aa',   // 6 - Light Mode
-    '#7b1fa2',   // 7 - Hover
-    '#6a1b9a',   // 8
-    '#4a148c',   // 9
-  ] as const,
+  // Secondary Brand Color (from active preset, fallback to Material Purple)
+  secondary: activePreset.secondary ?? [
+    '#f3e5f5',
+    '#e1bee7',
+    '#ce93d8',
+    '#ba68c8',
+    '#ab47bc',
+    '#9c27b0',
+    '#8e24aa',
+    '#7b1fa2',
+    '#6a1b9a',
+    '#4a148c',
+  ],
 
   // Success (Material Green)
   success: [

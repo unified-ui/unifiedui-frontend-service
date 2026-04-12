@@ -63,7 +63,7 @@ describe('useReActChat', () => {
     act(() => {
       result.current.onToolCallEnd({ toolName: 'get_weather', toolResult: '{"temp": 18}' } as Record<string, unknown>);
     });
-    expect(result.current.reActState.reasoningSteps[0].toolResult).toBe('{"temp": 18}');
+    expect(result.current.reActState.reasoningSteps[0].toolResult).toBe('{\n  "temp": 18\n}');
     expect(result.current.reActState.reasoningSteps[0].completedAt).toBeDefined();
     expect(result.current.reActState.activeStepType).toBeNull();
   });

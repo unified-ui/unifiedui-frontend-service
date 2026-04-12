@@ -13,10 +13,10 @@ import {
 } from '@mantine/core';
 import { IconUpload } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import type { FormFieldConfig } from './types';
+import type { FormFieldConfigV1 } from './types';
 
 interface FieldPreviewProps {
-  fields: FormFieldConfig[];
+  fields: FormFieldConfigV1[];
 }
 
 export const FieldPreview: FC<FieldPreviewProps> = ({ fields }) => {

@@ -1,0 +1,527 @@
+import { type FC, useState, useEffect, useMemo, useCallback } from 'react';
+import {
+  Modal,
+  TextInput,
+  Textarea,
+  Button,
+  Group,
+  Stack,
+  Text,
+  Select,
+  Divider,
+  ActionIcon,
+  Tooltip,
+  Alert,
+  Loader,
+  Switch,
+  Box,
+} from '@mantine/core';
+import { useForm } from '@mantine/form';
+import { useDebouncedValue } from '@mantine/hooks';
+import { IconRobot, IconPlus, IconAlertCircle, IconSearch } from '@tabler/icons-react';
+import { useIdentity } from '../../../contexts';
+import { useTranslation } from 'react-i18next';
+import { useConfigSuggestions } from '../../../hooks';
+import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
+import {
+  WorkflowTypeEnum,
+  CredentialTypeEnum,
+  type CredentialResponse,
+  type N8NWorkflowConfig,
+} from '../../../api/types';
+import { TagInput, KeyValuePairsInput, ConnectionTestButton, FilterableSelect, EndpointSuggestInput } from '../../common';
+import type { KeyValuePair } from '../../common';
+import { TestConnectionType } from '../../../api/types';
+import { CreateCredentialDialog } from '../CreateCredentialDialog';
+import { N8NWorkflowBrowserDialog } from '../N8NWorkflowBrowserDialog';
+
+const AUTONOMOUS_AGENT_TYPES = [
+  { value: WorkflowTypeEnum.N8N, label: 'n8n' },
+];
+
+const API_VERSIONS = [
+  { value: 'v1', label: 'v1' },
+];
+
+interface CreateWorkflowDialogProps {
+  opened: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+interface FormValues {
+  name: string;
+  type: string;
+  description: string;
+  tags: string[];
+  allow_api_keys: boolean;
+  // N8N Config
+  n8n_api_version: string;
+  n8n_workflow_endpoint: string;
+  n8n_api_api_key_credential_id: string;
+  n8n_enable_start_workflow: boolean;
+  n8n_webhook_url: string;
+  n8n_default_body: string;
+  n8n_default_query_params: KeyValuePair[];
+}
+
+export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
+  opened,
+  onClose,
+  onSuccess,
+}) => {
+  const { apiClient, selectedTenant } = useIdentity();
+  const { t } = useTranslation('common');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
+  const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
+  const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
+  const [workflowBrowserOpen, setWorkflowBrowserOpen] = useState(false);
+  const [credentialSearch, setCredentialSearch] = useState('');
+  const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
+
+  const form = useForm<FormValues>({
+    initialValues: {
+      name: '',
+      type: '',
+      description: '',
+      tags: [],
+      allow_api_keys: false,
+      // N8N Config defaults
+      n8n_api_version: 'v1',
+      n8n_workflow_endpoint: '',
+      n8n_api_api_key_credential_id: '',
+      n8n_enable_start_workflow: false,
+      n8n_webhook_url: '',
+      n8n_default_body: '{}',
+      n8n_default_query_params: [],
+    },
+    validate: {
+      name: (value) => {
+        if (!value || value.trim().length === 0) {
+          return 'Name is required';
+        }
+        if (value.length > 255) {
+          return 'Name cannot exceed 255 characters';
+        }
+        return null;
+      },
+      type: (value) => {
+        if (!value) {
+          return 'Type is required';
+        }
+        return null;
+      },
+      description: (value) => {
+        if (value && value.length > 2000) {
+          return 'Description cannot exceed 2000 characters';
+        }
+        return null;
+      },
+      n8n_workflow_endpoint: (value, values) => {
+        if (values.type === WorkflowTypeEnum.N8N) {
+          if (!value || value.trim().length === 0) {
+            return 'Workflow Endpoint is required';
+          }
+          try {
+            const url = new URL(value);
+            if (!url.pathname.includes('/workflow/')) {
+              return 'URL must contain /workflow/ in the path';
+            }
+          } catch {
+            return 'Invalid URL';
+          }
+        }
+        return null;
+      },
+      n8n_api_api_key_credential_id: (value, values) => {
+        if (values.type === WorkflowTypeEnum.N8N) {
+          if (!value || value.trim().length === 0) {
+            return 'API Key Credential is required';
+          }
+        }
+        return null;
+      },
+      n8n_default_body: (value, values) => {
+        if (values.type === WorkflowTypeEnum.N8N && values.n8n_enable_start_workflow) {
+          const trimmed = value.trim();
+          if (trimmed && trimmed !== '{}') {
+            try {
+              JSON.parse(trimmed);
+            } catch {
+              return 'Invalid JSON';
+            }
+          }
+        }
+        return null;
+      },
+    },
+  });
+
+  const { suggestions: configSuggestions } = useConfigSuggestions(form.values.type);
+
+  const n8nHostUrl = useMemo(() => {
+    const endpoint = form.values.n8n_workflow_endpoint || '';
+    try {
+      const url = new URL(endpoint);
+      return `${url.protocol}//${url.host}`;
+    } catch {
+      return '';
+    }
+  }, [form.values.n8n_workflow_endpoint]);
+
+  // Load credentials
+  const loadCredentials = useCallback(async (searchTerm?: string) => {
+    if (!apiClient || !selectedTenant) return;
+
+    setIsLoadingCredentials(true);
+    try {
+      const response = await apiClient.listCredentials(selectedTenant.id, {
+        limit: 100,
+        order_by: 'name',
+        order_direction: 'asc',
+        ...(searchTerm && { name: searchTerm }),
+        fields: 'id,name,type',
+      });
+      setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
+    } catch (error) {
+      console.error('Failed to load credentials:', error);
+    } finally {
+      setIsLoadingCredentials(false);
+    }
+  }, [apiClient, selectedTenant]);
+
+  useEffect(() => {
+    if (opened && debouncedCredentialSearch !== undefined) {
+      loadCredentials(debouncedCredentialSearch || undefined);
+    }
+    if (!opened) {
+      setCredentialSearch('');
+    }
+  }, [opened, debouncedCredentialSearch, loadCredentials]);
+
+  // Filter credentials by type for API Key dropdown (only API_KEY type)
+  const apiKeyCredentials = useMemo(() => {
+    return credentials
+      .filter((c) => c.type === CredentialTypeEnum.API_KEY)
+      .map((c) => ({ value: c.id, label: c.name }));
+  }, [credentials]);
+
+  const handleSubmit = async (values: FormValues) => {
+    if (!apiClient || !selectedTenant) return;
+
+    setIsSubmitting(true);
+    try {
+      // Build config based on agent type
+      let config: N8NWorkflowConfig | undefined;
+
+      if (values.type === WorkflowTypeEnum.N8N) {
+        config = {
+          api_version: values.n8n_api_version,
+          workflow_endpoint: values.n8n_workflow_endpoint.trim(),
+          api_api_key_credential_id: values.n8n_api_api_key_credential_id,
+        };
+        if (values.n8n_enable_start_workflow && values.n8n_webhook_url.trim()) {
+          config.webhook_url = values.n8n_webhook_url.trim();
+          const bodyTrimmed = values.n8n_default_body.trim();
+          if (bodyTrimmed && bodyTrimmed !== '{}') {
+            try {
+              config.default_body = JSON.parse(bodyTrimmed) as Record<string, unknown>;
+            } catch { /* ignore invalid JSON, will be empty */ }
+          }
+          const filledPairs = values.n8n_default_query_params.filter((p) => p.key.trim());
+          if (filledPairs.length > 0) {
+            config.default_query_params = Object.fromEntries(
+              filledPairs.map((p) => [p.key.trim(), p.value])
+            );
+          }
+        }
+      }
+
+      // Create the workflow
+      const agent = await apiClient.createWorkflow(selectedTenant.id, {
+        name: values.name.trim(),
+        type: values.type as WorkflowTypeEnum,
+        description: values.description?.trim() || undefined,
+        config: (config ?? {}) as Record<string, unknown>,
+        allow_api_keys: values.allow_api_keys,
+      });
+
+      // If tags were added, save them to the agent
+      if (values.tags.length > 0) {
+        try {
+          await apiClient.setWorkflowTags(
+            selectedTenant.id,
+            agent.id,
+            values.tags
+          );
+        } catch (tagError) {
+          console.error('Failed to save tags:', tagError);
+        }
+      }
+
+      form.reset();
+      onSuccess?.();
+      onClose();
+    } catch {
+      // Error handling is done by the API client
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    form.reset();
+    onClose();
+  };
+
+  const handleOpenCreateCredential = () => {
+    setCreateCredentialOpen(true);
+  };
+
+  const handleCredentialCreated = async (credential?: { id: string; name: string }) => {
+    // Refresh credentials list
+    await loadCredentials();
+
+    // Auto-select the newly created credential
+    if (credential) {
+      form.setFieldValue('n8n_api_api_key_credential_id', credential.id);
+    }
+  };
+
+  const isN8N = form.values.type === WorkflowTypeEnum.N8N;
+
+  return (
+    <>
+      <Modal
+        opened={opened}
+        onClose={handleClose}
+        title={
+          <Group gap="sm">
+            <IconRobot size={24} />
+            <Text fw={600} size="lg">Create Workflow</Text>
+          </Group>
+        }
+        size="lg"
+        centered
+      >
+        <form onSubmit={form.onSubmit(handleSubmit)}>
+          <Stack gap="md">
+            <TextInput
+              label="Name"
+              placeholder="Enter a name"
+              required
+              withAsterisk
+              maxLength={255}
+              data-autofocus
+              {...form.getInputProps('name')}
+            />
+
+            <Select
+              label="Type"
+              placeholder="Select a type"
+              required
+              withAsterisk
+              data={AUTONOMOUS_AGENT_TYPES}
+              {...form.getInputProps('type')}
+            />
+
+            {/* N8N Configuration Section */}
+            {isN8N && (
+              <>
+                <Divider label="n8n Configuration" labelPosition="center" />
+
+                <Select
+                  label="API Version"
+                  placeholder="Select a version"
+                  required
+                  withAsterisk
+                  data={API_VERSIONS}
+                  {...form.getInputProps('n8n_api_version')}
+                />
+
+                {/* API Key Credential with Add Button */}
+                <Group gap="xs" align="flex-end">
+                  <FilterableSelect
+                    label="API Key Credential"
+                    placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
+                    required
+                    withAsterisk
+                    data={apiKeyCredentials}
+                    rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
+                    disabled={isLoadingCredentials}
+                    nothingFoundMessage="No credentials found"
+                    onFilterChange={setCredentialSearch}
+                    style={{ flex: 1 }}
+                    {...form.getInputProps('n8n_api_api_key_credential_id')}
+                  />
+                  <Tooltip label="Create new API Key Credential">
+                    <ActionIcon
+                      variant="light"
+                      color="blue"
+                      size="lg"
+                      onClick={handleOpenCreateCredential}
+                    >
+                      <IconPlus size={18} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+
+                {apiKeyCredentials.length === 0 && !isLoadingCredentials && (
+                  <Alert icon={<IconAlertCircle size={16} />} color="yellow" variant="light">
+                    No API Key Credentials available. Please create a credential first.
+                  </Alert>
+                )}
+
+                <Group align="flex-end" gap="xs" wrap="nowrap">
+                  <Box style={{ flex: 1 }}>
+                    <EndpointSuggestInput
+                      label="Workflow Endpoint"
+                      placeholder="https://your-n8n.com/workflow/{id}"
+                      description="URL must contain /workflow/ in the path"
+                      required
+                      withAsterisk
+                      suggestions={configSuggestions['workflow_endpoint'] || []}
+                      {...form.getInputProps('n8n_workflow_endpoint')}
+                    />
+                  </Box>
+                  <Tooltip label={!form.values.n8n_api_api_key_credential_id ? 'Select an API Key credential first' : 'Browse workflows'}>
+                    <ActionIcon
+                      variant="default"
+                      size="lg"
+                      onClick={() => setWorkflowBrowserOpen(true)}
+                      disabled={!form.values.n8n_api_api_key_credential_id}
+                      mb={form.getInputProps('n8n_workflow_endpoint').error ? 22 : 0}
+                    >
+                      <IconSearch size={18} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+                <ConnectionTestButton
+                  testType={TestConnectionType.N8N_WORKFLOW}
+                  url={form.values.n8n_workflow_endpoint}
+                  credentialId={form.values.n8n_api_api_key_credential_id || undefined}
+                  disabled={!form.values.n8n_workflow_endpoint || !form.values.n8n_api_api_key_credential_id}
+                />
+
+                <Switch
+                  label="Enable Start Workflow"
+                  description="Allow triggering the workflow via webhook with optional defaults"
+                  checked={form.values.n8n_enable_start_workflow}
+                  onChange={(e) => form.setFieldValue('n8n_enable_start_workflow', e.currentTarget.checked)}
+                />
+
+                {form.values.n8n_enable_start_workflow && (
+                  <>
+                    <TextInput
+                      label="Webhook URL"
+                      placeholder="https://your-n8n.com/webhook/my-hook"
+                      description="Webhook URL to trigger the workflow"
+                      required
+                      withAsterisk
+                      {...form.getInputProps('n8n_webhook_url')}
+                    />
+                    <ConnectionTestButton
+                      testType={TestConnectionType.N8N_WEBHOOK}
+                      url={form.values.n8n_webhook_url}
+                      disabled={!form.values.n8n_webhook_url}
+                      hint={t('testConnectionHintWebhook')}
+                    />
+                    <Textarea
+                      label="Default Body (JSON)"
+                      placeholder="{}"
+                      description="Pre-filled request body when starting the workflow"
+                      minRows={3}
+                      maxRows={6}
+                      autosize
+                      styles={{ input: { fontFamily: 'monospace' } }}
+                      value={form.values.n8n_default_body}
+                      error={form.errors.n8n_default_body}
+                      onChange={(e) => form.setFieldValue('n8n_default_body', e.currentTarget.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Tab') {
+                          e.preventDefault();
+                          const ta = e.currentTarget;
+                          const s = ta.selectionStart;
+                          const end = ta.selectionEnd;
+                          const val = form.values.n8n_default_body;
+                          form.setFieldValue('n8n_default_body', val.substring(0, s) + '  ' + val.substring(end));
+                          requestAnimationFrame(() => { ta.selectionStart = ta.selectionEnd = s + 2; });
+                        }
+                      }}
+                    />
+                    <KeyValuePairsInput
+                      label="Default Query Params"
+                      description="Key-value pairs pre-filled when starting the workflow"
+                      value={form.values.n8n_default_query_params}
+                      onChange={(pairs) => form.setFieldValue('n8n_default_query_params', pairs)}
+                    />
+                  </>
+                )}
+              </>
+            )}
+
+            <TagInput
+              label="Tags"
+              placeholder="Enter tag and press Space to confirm..."
+              value={form.values.tags}
+              onChange={(tags) => form.setFieldValue('tags', tags)}
+            />
+
+            <Switch
+              label="Allow API Keys"
+              description="When enabled, this agent can be accessed using API key authentication"
+              checked={form.values.allow_api_keys}
+              onChange={(e) => form.setFieldValue('allow_api_keys', e.currentTarget.checked)}
+            />
+
+            <Box pos="relative">
+              <Textarea
+                label="Description"
+                placeholder="Optional description"
+                maxLength={2000}
+                minRows={3}
+                maxRows={6}
+                autosize
+                {...form.getInputProps('description')}
+              />
+              <Box pos="absolute" top={0} right={0}>
+                <GenerateWithAIButton
+                  entityType="workflow"
+                  entityName={form.values.name}
+                  existingDescription={form.values.description || undefined}
+                  onGenerated={(desc: string) => form.setFieldValue('description', desc)}
+                />
+              </Box>
+            </Box>
+
+            <Group justify="flex-end" mt="md">
+              <Button variant="default" onClick={handleClose} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" loading={isSubmitting}>
+                Create
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Modal>
+
+      {/* Create Credential Dialog */}
+      <CreateCredentialDialog
+        opened={createCredentialOpen}
+        onClose={() => setCreateCredentialOpen(false)}
+        onSuccess={handleCredentialCreated}
+      />
+
+      {/* N8N Workflow Browser Dialog */}
+      <N8NWorkflowBrowserDialog
+        opened={workflowBrowserOpen}
+        onClose={() => setWorkflowBrowserOpen(false)}
+        host={n8nHostUrl}
+        credentialId={form.values.n8n_api_api_key_credential_id}
+        onSelect={(wf) => form.setFieldValue('n8n_workflow_endpoint', wf.url)}
+      />
+    </>
+  );
+};

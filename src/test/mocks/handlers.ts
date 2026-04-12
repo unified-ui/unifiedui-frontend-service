@@ -40,7 +40,7 @@ export const handlers = [
     return HttpResponse.json([]);
   }),
 
-  http.get(`${API_BASE_URL}/v1/tenants/:tenantId/autonomous-agents`, () => {
+  http.get(`${API_BASE_URL}/v1/tenants/:tenantId/workflows`, () => {
     return HttpResponse.json([]);
   }),
 

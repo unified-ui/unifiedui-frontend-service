@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Fixed
+
+- Workflow runs table now uses IntersectionObserver for infinite scroll instead of a manual "Load more" button, matching the TracesTable pattern
+- Added empty response guard to prevent infinite fetch loops when no more data is available
+
 ### Added
 
 - Initial project setup with React 19, TypeScript 5.9, Vite 7, Mantine v8

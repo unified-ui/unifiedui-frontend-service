@@ -1,5 +1,6 @@
 import type { FC, KeyboardEvent, DragEvent, ChangeEvent } from 'react';
 import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   ActionIcon,
@@ -29,6 +30,7 @@ export interface ChatInputProps {
 
 export interface ChatInputRef {
   handleFileDrop: (files: File[]) => void;
+  focus: () => void;
 }
 
 export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
@@ -39,6 +41,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
   placeholder = 'Ask me something... 🚀',
   maxLength = 32000,
 }, ref) => {
+  const { t } = useTranslation('conversations');
   const [content, setContent] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -103,6 +106,9 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
   useImperativeHandle(ref, () => ({
     handleFileDrop: (files: File[]) => {
       addFiles(files);
+    },
+    focus: () => {
+      textareaRef.current?.focus();
     },
   }), [attachments]);
 
@@ -242,7 +248,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
       </Box>
 
       <Text size="xs" c="dimmed" ta="center" className={classes.hint}>
-        Press Enter to send, Shift+Enter for new line
+        {t('aiDisclaimer')}
       </Text>
     </Box>
   );

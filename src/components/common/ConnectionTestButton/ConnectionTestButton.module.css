@@ -1,0 +1,7 @@
+.testSuccess {
+  color: var(--mantine-color-green-6);
+}
+
+.testError {
+  color: var(--mantine-color-red-6);
+}

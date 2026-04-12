@@ -11,11 +11,12 @@ import type { SelectedPrincipal } from '../components/common/AddPrincipalDialog/
 
 export type EntityType =
   | 'chat-agent'
-  | 'autonomous-agent'
+  | 'workflow'
   | 'credential'
   | 'chat-widget'
   | 'conversation'
-  | 'tool';
+  | 'tool'
+  | 'external-app';
 
 interface UseEntityPermissionsOptions {
   entityType: EntityType;
@@ -89,13 +90,13 @@ export const useEntityPermissions = ({
           deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
             apiClient.deleteChatAgentPermission(tenantId, entityId, principalId, principalType, role),
         };
-      case 'autonomous-agent':
+      case 'workflow':
         return {
-          getPrincipals: () => apiClient.getAutonomousAgentPrincipals(tenantId, entityId),
+          getPrincipals: () => apiClient.getWorkflowPrincipals(tenantId, entityId),
           setPermission: (data: { principal_id: string; principal_type: PrincipalTypeEnum; role: PermissionActionEnum }) =>
-            apiClient.setAutonomousAgentPermission(tenantId, entityId, data),
+            apiClient.setWorkflowPermission(tenantId, entityId, data),
           deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
-            apiClient.deleteAutonomousAgentPermission(tenantId, entityId, principalId, principalType, role),
+            apiClient.deleteWorkflowPermission(tenantId, entityId, principalId, principalType, role),
         };
       case 'credential':
         return {
@@ -128,6 +129,14 @@ export const useEntityPermissions = ({
             apiClient.setToolPermission(tenantId, entityId, data),
           deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
             apiClient.deleteToolPermission(tenantId, entityId, principalId, principalType, role),
+        };
+      case 'external-app':
+        return {
+          getPrincipals: () => apiClient.getExternalAppPrincipals(tenantId, entityId),
+          setPermission: (data: { principal_id: string; principal_type: PrincipalTypeEnum; role: PermissionActionEnum }) =>
+            apiClient.setExternalAppPermission(tenantId, entityId, data),
+          deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
+            apiClient.deleteExternalAppPermission(tenantId, entityId, principalId, principalType, role),
         };
       default:
         return null;

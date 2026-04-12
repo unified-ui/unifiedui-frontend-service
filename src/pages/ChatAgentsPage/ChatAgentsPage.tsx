@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { MainLayout } from '../../components/layout/MainLayout';
-import { PageHeader, DataTable, ConfirmDeleteDialog, EntityAvatar } from '../../components/common';
+import { PageHeader, DataTable, ConfirmDeleteDialog, ConfirmDialog, EntityAvatar } from '../../components/common';
 import type { DataTableItem } from '../../components/common';
 import { CreateChatAgentDialog, EditChatAgentDialog } from '../../components/dialogs';
 import { useIdentity, useSidebarData, useFavorites } from '../../contexts';
@@ -30,7 +30,7 @@ export const ChatAgentsPage: FC = () => {
   );
 
   const handleToggleFavorite = useCallback(
-    (id: string) => toggleFavorite(FavoriteResourceTypeEnum.CHAT_AGENT, id),
+    (id: string, name: string) => toggleFavorite(FavoriteResourceTypeEnum.CHAT_AGENT, id, name),
     [toggleFavorite]
   );
 
@@ -68,6 +68,12 @@ export const ChatAgentsPage: FC = () => {
     [apiClient]
   );
 
+  const duplicateEntity = useCallback(
+    (tenantId: string, id: string) =>
+      apiClient!.duplicateChatAgent(tenantId, id),
+    [apiClient]
+  );
+
   const config = useMemo(() => ({
     sortStorageKey: SORT_STORAGE_KEY,
     errorMessage: 'Failed to load chat agents',
@@ -75,17 +81,19 @@ export const ChatAgentsPage: FC = () => {
     listTags,
     updateEntity,
     deleteEntity,
+    duplicateEntity,
     mapToTableItem,
     refreshSidebar: refreshChatAgents,
-  }), [listEntities, listTags, updateEntity, deleteEntity, mapToTableItem, refreshChatAgents]);
+  }), [listEntities, listTags, updateEntity, deleteEntity, duplicateEntity, mapToTableItem, refreshChatAgents]);
 
   const {
     items, isLoading, isLoadingMore, hasMore, error, searchValue, sortBy, filters,
-    availableTags, isCreateDialogOpen, deleteDialog, isDeleting, editItemId, editTab,
+    availableTags, isCreateDialogOpen, deleteDialog, deactivateDialog, isDeleting, selectedId, editTab,
     rawDataRef, setIsCreateDialogOpen, handleLoadMore, handleSearchChange, handleTagSearch,
     handleSortChange, handleFilterChange, handleEdit, handleEditClose, handleEditTabChange,
     handleEditSuccess, handleManageAccess, handleDuplicate, handleStatusChange,
-    handleDeleteClick, handleDeleteConfirm, handleDeleteClose, handleCreateSuccess,
+    handleDeleteClick, handleDeleteConfirm, handleDeleteClose, handleDeactivateConfirm,
+    handleDeactivateClose, handleCreateSuccess,
   } = useEntityList<ChatAgentResponse>(config);
 
   const handleOpen = useCallback((id: string) => {
@@ -96,7 +104,7 @@ export const ChatAgentsPage: FC = () => {
       if (agent?.type === 'REACT_AGENT') {
         navigate(`/chat-agents/${id}/develop`);
       } else {
-        navigate(`/conversations?chat-agent=${id}&selected-chatAgentId=${id}`);
+        navigate(`/conversations?agent=${id}&selected=${id}`);
       }
     }
   }, [navigate, rawDataRef, isReactView]);
@@ -106,11 +114,11 @@ export const ChatAgentsPage: FC = () => {
   }, [navigate]);
 
   const renderIcon = useCallback(() => (
-    <EntityAvatar entityType="chat-agent" size="sm" />
+    <EntityAvatar entityType="chat-agent" size="sm" colored />
   ), []);
 
   // eslint-disable-next-line react-hooks/refs
-  const editInitialData = editItemId ? rawDataRef.current.get(editItemId) : undefined;
+  const editInitialData = selectedId ? rawDataRef.current.get(selectedId) : undefined;
 
   return (
     <MainLayout>
@@ -144,7 +152,7 @@ export const ChatAgentsPage: FC = () => {
         onRowClick={handleOpen}
         onOpen={handleOpen}
         onEdit={handleEdit}
-        onShare={handleManageAccess}
+        onManageAccess={handleManageAccess}
         onDuplicate={handleDuplicate}
         onEmbedSetup={handleEmbedSetup}
         onDelete={handleDeleteClick}
@@ -164,9 +172,9 @@ export const ChatAgentsPage: FC = () => {
       />
 
       <EditChatAgentDialog
-        opened={!!editItemId}
+        opened={!!selectedId}
         onClose={handleEditClose}
-        chatAgentId={editItemId}
+        chatAgentId={selectedId}
         initialData={editInitialData}
         initialTab={editTab}
         onTabChange={handleEditTabChange}
@@ -180,6 +188,17 @@ export const ChatAgentsPage: FC = () => {
         itemName={deleteDialog.name}
         itemType={isReactView ? 'ReACT Agent' : 'Chat Agent'}
         isLoading={isDeleting}
+      />
+
+      <ConfirmDialog
+        opened={deactivateDialog.open}
+        onClose={handleDeactivateClose}
+        onConfirm={handleDeactivateConfirm}
+        type="warning"
+        title={isReactView ? 'Deactivate ReACT Agent' : 'Deactivate Chat Agent'}
+        message={<>Are you sure you want to deactivate <strong>{deactivateDialog.name}</strong>? It will no longer be available until reactivated.</>}
+        confirmLabel="Deactivate"
+        cancelLabel="Cancel"
       />
     </MainLayout>
   );

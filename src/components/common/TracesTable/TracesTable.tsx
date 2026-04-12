@@ -22,6 +22,7 @@ import {
   IconTrash,
   IconDownload,
   IconGitBranch,
+  IconFileImport,
 } from '@tabler/icons-react';
 import type { FullTraceResponse } from '../../../api/types';
 import { useDelayedLoading } from '../../../hooks';
@@ -57,6 +58,8 @@ export interface TracesTableProps {
   onReImport?: (trace: FullTraceResponse) => void;
   onDelete?: (trace: FullTraceResponse) => void;
   showReImport?: boolean;
+  onImport?: () => void;
+  showImport?: boolean;
   emptyMessage?: string;
 }
 
@@ -116,6 +119,8 @@ export const TracesTable: FC<TracesTableProps> = ({
   onReImport,
   onDelete,
   showReImport = false,
+  onImport,
+  showImport = false,
   emptyMessage = 'No traces found',
 }) => {
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -206,13 +211,22 @@ export const TracesTable: FC<TracesTableProps> = ({
           </Group>
         </Group>
 
-        {onRefresh && (
-          <Tooltip label="Refresh">
-            <ActionIcon variant="subtle" color="gray" size="sm" onClick={onRefresh}>
-              <IconRefresh size={16} />
-            </ActionIcon>
-          </Tooltip>
-        )}
+        <Group gap={4}>
+          {onImport && showImport && (
+            <Tooltip label="Import trace">
+              <ActionIcon variant="subtle" color="gray" size="sm" onClick={onImport}>
+                <IconFileImport size={16} />
+              </ActionIcon>
+            </Tooltip>
+          )}
+          {onRefresh && (
+            <Tooltip label="Refresh">
+              <ActionIcon variant="subtle" color="gray" size="sm" onClick={onRefresh}>
+                <IconRefresh size={16} />
+              </ActionIcon>
+            </Tooltip>
+          )}
+        </Group>
       </Group>
 
       {/* Table */}

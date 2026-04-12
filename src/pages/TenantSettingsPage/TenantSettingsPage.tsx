@@ -65,7 +65,7 @@ import type {
   AIModelResponse,
 } from '../../api/types';
 import { TenantPermissionEnum, ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum } from '../../api/types';
-import { useDelayedLoading, usePermissions } from '../../hooks';
+import { useDelayedLoading, usePermissions, useDialogParams } from '../../hooks';
 import classes from './TenantSettingsPage.module.css';
 
 type TabValue = 'organization' | 'org-iam' | 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'ai-models' | 'billing-and-licence';
@@ -75,6 +75,7 @@ const DEFAULT_TAB: TabValue = 'settings';
 
 const PURPOSE_GROUP_COLORS: Record<string, string> = {
   REACT_AGENT: 'violet',
+  DIRECT_CHAT: 'cyan',
   CONVERSATION_TITLE_GENERATION: 'blue',
   CONVERSATION_SUMMARIZATION: 'teal',
   DESCRIPTION_GENERATION: 'orange',
@@ -135,6 +136,8 @@ export const TenantSettingsPage: FC = () => {
     },
   });
 
+  const { dialog, selectedId, dialogTab, openDialog, closeDialog, setDialogTab } = useDialogParams();
+
   // ===== Access Management State =====
   const [principals, setPrincipals] = useState<TenantPrincipalPermission[]>([]);
   const [principalsLoading, setPrincipalsLoading] = useState(false);
@@ -145,8 +148,10 @@ export const TenantSettingsPage: FC = () => {
   const [principalsSkip, setPrincipalsSkip] = useState(0);
   const [principalsSearch, setPrincipalsSearch] = useState('');
   const [principalsRoleFilter, setPrincipalsRoleFilter] = useState<string[]>([]);
-  const [addPrincipalDialogOpen, setAddPrincipalDialogOpen] = useState(false);
-  const [editPrincipal, setEditPrincipal] = useState<TenantPrincipalPermission | null>(null);
+
+  const editPrincipal = dialog === 'edit-member' && selectedId
+    ? principals.find(p => p.principalId === selectedId) || null
+    : null;
 
   const PRINCIPALS_PAGE_SIZE = 50;
 
@@ -158,16 +163,8 @@ export const TenantSettingsPage: FC = () => {
   const [customGroupsFetched, setCustomGroupsFetched] = useState(false);
   const [customGroupsHasMore, setCustomGroupsHasMore] = useState(true);
   const [customGroupsSkip, setCustomGroupsSkip] = useState(0);
-  const [createGroupDialogOpen, setCreateGroupDialogOpen] = useState(false);
-  const [editGroupId, setEditGroupId] = useState<string | null>(null);
-  const [editGroupInitialTab, setEditGroupInitialTab] = useState<'members' | 'details'>('details');
   const [customGroupsSearch, setCustomGroupsSearch] = useState('');
   const [debouncedCustomGroupsSearch] = useDebouncedValue(customGroupsSearch, 400);
-  const [deleteGroupDialog, setDeleteGroupDialog] = useState<{
-    open: boolean;
-    id: string;
-    name: string;
-  }>({ open: false, id: '', name: '' });
   const [isDeletingGroup, setIsDeletingGroup] = useState(false);
 
   const CUSTOM_GROUPS_PAGE_SIZE = 50;
@@ -181,16 +178,8 @@ export const TenantSettingsPage: FC = () => {
   const [credentialsFetched, setCredentialsFetched] = useState(false);
   const [credentialsHasMore, setCredentialsHasMore] = useState(true);
   const [credentialsSkip, setCredentialsSkip] = useState(0);
-  const [createCredentialDialogOpen, setCreateCredentialDialogOpen] = useState(false);
-  const [editCredentialId, setEditCredentialId] = useState<string | null>(null);
-  const [editCredentialTab, setEditCredentialTab] = useState<EditDialogTab>('details');
   const [credentialsSearch, setCredentialsSearch] = useState('');
   const [debouncedCredentialsSearch] = useDebouncedValue(credentialsSearch, 400);
-  const [deleteCredentialDialog, setDeleteCredentialDialog] = useState<{
-    open: boolean;
-    id: string;
-    name: string;
-  }>({ open: false, id: '', name: '' });
   const [isDeletingCredential, setIsDeletingCredential] = useState(false);
 
   const CREDENTIALS_PAGE_SIZE = 50;
@@ -204,17 +193,9 @@ export const TenantSettingsPage: FC = () => {
   const [toolsFetched, setToolsFetched] = useState(false);
   const [toolsHasMore, setToolsHasMore] = useState(true);
   const [toolsSkip, setToolsSkip] = useState(0);
-  const [createToolDialogOpen, setCreateToolDialogOpen] = useState(false);
-  const [editToolId, setEditToolId] = useState<string | null>(null);
-  const [editToolTab, setEditToolTab] = useState<EditDialogTab>('details');
   const [toolsSearch, setToolsSearch] = useState('');
   const [debouncedToolsSearch] = useDebouncedValue(toolsSearch, 400);
   const [toolsTypeFilter, setToolsTypeFilter] = useState<string[]>([]);
-  const [deleteToolDialog, setDeleteToolDialog] = useState<{
-    open: boolean;
-    id: string;
-    name: string;
-  }>({ open: false, id: '', name: '' });
   const [isDeletingTool, setIsDeletingTool] = useState(false);
 
   const TOOLS_PAGE_SIZE = 50;
@@ -245,17 +226,10 @@ export const TenantSettingsPage: FC = () => {
   const [aiModelsFetched, setAiModelsFetched] = useState(false);
   const [aiModelsHasMore, setAiModelsHasMore] = useState(true);
   const [aiModelsSkip, setAiModelsSkip] = useState(0);
-  const [createAiModelDialogOpen, setCreateAiModelDialogOpen] = useState(false);
-  const [editAiModelId, setEditAiModelId] = useState<string | null>(null);
   const [aiModelsSearch, setAiModelsSearch] = useState('');
   const [debouncedAiModelsSearch] = useDebouncedValue(aiModelsSearch, 400);
   const [aiModelsTypeFilter, setAiModelsTypeFilter] = useState<string[]>([]);
   const [aiModelsProviderFilter, setAiModelsProviderFilter] = useState<string[]>([]);
-  const [deleteAiModelDialog, setDeleteAiModelDialog] = useState<{
-    open: boolean;
-    id: string;
-    name: string;
-  }>({ open: false, id: '', name: '' });
   const [isDeletingAiModel, setIsDeletingAiModel] = useState(false);
 
   const AI_MODELS_PAGE_SIZE = 50;
@@ -414,6 +388,7 @@ export const TenantSettingsPage: FC = () => {
         skip,
         limit: CUSTOM_GROUPS_PAGE_SIZE,
         name: debouncedCustomGroupsSearch || undefined,
+        fields: 'id,name,description',
       });
 
       if (reset) {
@@ -485,6 +460,7 @@ export const TenantSettingsPage: FC = () => {
         name: debouncedCredentialsSearch || undefined,
         order_by: 'name',
         order_direction: 'asc',
+        fields: 'id,name,type,description',
       }) as CredentialResponse[];
 
       if (reset) {
@@ -557,6 +533,7 @@ export const TenantSettingsPage: FC = () => {
         type: toolsTypeFilter.length > 0 ? toolsTypeFilter.join(',') : undefined,
         order_by: 'name',
         order_direction: 'asc',
+        fields: 'id,name,type',
       }) as ToolResponse[];
 
       if (reset) {
@@ -630,6 +607,7 @@ export const TenantSettingsPage: FC = () => {
         provider: aiModelsProviderFilter.length > 0 ? aiModelsProviderFilter.join(',') : undefined,
         order_by: 'name',
         order_direction: 'asc',
+        fields: 'id,name,type,provider,is_active,purpose_groups,description',
       });
 
       if (reset) {
@@ -772,8 +750,8 @@ export const TenantSettingsPage: FC = () => {
 
   // ===== Principal Handlers =====
   const handleManageAccess = useCallback((principal: TenantPrincipalPermission) => {
-    setEditPrincipal(principal);
-  }, []);
+    openDialog('edit-member', { selectedId: principal.principalId });
+  }, [openDialog]);
 
   const handleEditPrincipalRoles = useCallback(
     async (roles: string[]) => {
@@ -806,14 +784,14 @@ export const TenantSettingsPage: FC = () => {
           }
         }
 
-        setEditPrincipal(null);
+        closeDialog();
         // Reset and refetch from the beginning
         await fetchPrincipals(true);
       } catch {
         // Error handled by API client
       }
     },
-    [apiClient, selectedTenant, editPrincipal, fetchPrincipals]
+    [apiClient, selectedTenant, editPrincipal, fetchPrincipals, closeDialog]
   );
 
   const handleDeletePrincipal = useCallback(
@@ -856,14 +834,14 @@ export const TenantSettingsPage: FC = () => {
             });
           }
         }
-        setAddPrincipalDialogOpen(false);
+        closeDialog();
         // Reset and refetch from the beginning
         await fetchPrincipals(true);
       } catch {
         // Error handled by API client
       }
     },
-    [apiClient, selectedTenant, fetchPrincipals]
+    [apiClient, selectedTenant, fetchPrincipals, closeDialog]
   );
 
   const handleStatusChange = useCallback(
@@ -890,12 +868,12 @@ export const TenantSettingsPage: FC = () => {
 
   // ===== Custom Group Handlers =====
   const handleDeleteGroup = async () => {
-    if (!apiClient || !selectedTenant || !deleteGroupDialog.id) return;
+    if (!apiClient || !selectedTenant || !selectedId) return;
 
     setIsDeletingGroup(true);
     try {
-      await apiClient.deleteCustomGroup(selectedTenant.id, deleteGroupDialog.id);
-      setDeleteGroupDialog({ open: false, id: '', name: '' });
+      await apiClient.deleteCustomGroup(selectedTenant.id, selectedId);
+      closeDialog();
       await fetchCustomGroups();
     } catch {
       // Error handled by API client
@@ -905,23 +883,21 @@ export const TenantSettingsPage: FC = () => {
   };
 
   const handleOpenEditGroup = (groupId: string, tab: 'members' | 'details' = 'members') => {
-    setEditGroupInitialTab(tab);
-    setEditGroupId(groupId);
+    openDialog('edit-custom-group', { selectedId: groupId, dialogTab: tab });
   };
 
   const handleCloseEditGroup = () => {
-    setEditGroupId(null);
-    setEditGroupInitialTab('details');
+    closeDialog();
   };
 
   // ===== Credential Handlers =====
   const handleDeleteCredential = async () => {
-    if (!apiClient || !selectedTenant || !deleteCredentialDialog.id) return;
+    if (!apiClient || !selectedTenant || !selectedId) return;
 
     setIsDeletingCredential(true);
     try {
-      await apiClient.deleteCredential(selectedTenant.id, deleteCredentialDialog.id);
-      setDeleteCredentialDialog({ open: false, id: '', name: '' });
+      await apiClient.deleteCredential(selectedTenant.id, selectedId);
+      closeDialog();
       await fetchCredentials(true);
     } catch {
       // Error handled by API client
@@ -931,13 +907,11 @@ export const TenantSettingsPage: FC = () => {
   };
 
   const handleOpenEditCredential = (credentialId: string, tab: EditDialogTab = 'details') => {
-    setEditCredentialTab(tab);
-    setEditCredentialId(credentialId);
+    openDialog('edit-credential', { selectedId: credentialId, dialogTab: tab });
   };
 
   const handleCloseEditCredential = () => {
-    setEditCredentialId(null);
-    setEditCredentialTab('details');
+    closeDialog();
   };
 
   const handleCredentialEditSuccess = () => {
@@ -946,12 +920,12 @@ export const TenantSettingsPage: FC = () => {
 
   // ===== Tool Handlers =====
   const handleDeleteTool = async () => {
-    if (!apiClient || !selectedTenant || !deleteToolDialog.id) return;
+    if (!apiClient || !selectedTenant || !selectedId) return;
 
     setIsDeletingTool(true);
     try {
-      await apiClient.deleteTool(selectedTenant.id, deleteToolDialog.id);
-      setDeleteToolDialog({ open: false, id: '', name: '' });
+      await apiClient.deleteTool(selectedTenant.id, selectedId);
+      closeDialog();
       await fetchTools(true);
     } catch {
       // Error handled by API client
@@ -961,13 +935,11 @@ export const TenantSettingsPage: FC = () => {
   };
 
   const handleOpenEditTool = (toolId: string, tab: EditDialogTab = 'details') => {
-    setEditToolTab(tab);
-    setEditToolId(toolId);
+    openDialog('edit-tool', { selectedId: toolId, dialogTab: tab });
   };
 
   const handleCloseEditTool = () => {
-    setEditToolId(null);
-    setEditToolTab('details');
+    closeDialog();
   };
 
   const handleToolEditSuccess = () => {
@@ -976,12 +948,12 @@ export const TenantSettingsPage: FC = () => {
 
   // ===== AI Model Handlers =====
   const handleDeleteAiModel = async () => {
-    if (!apiClient || !selectedTenant || !deleteAiModelDialog.id) return;
+    if (!apiClient || !selectedTenant || !selectedId) return;
 
     setIsDeletingAiModel(true);
     try {
-      await apiClient.deleteAIModel(selectedTenant.id, deleteAiModelDialog.id);
-      setDeleteAiModelDialog({ open: false, id: '', name: '' });
+      await apiClient.deleteAIModel(selectedTenant.id, selectedId);
+      closeDialog();
       await fetchAIModels(true);
     } catch {
       // Error handled by API client
@@ -1151,13 +1123,18 @@ export const TenantSettingsPage: FC = () => {
                   error={principalsError}
                   onManageAccess={handleManageAccess}
                   onDeletePrincipal={handleDeletePrincipal}
-                  onAddPrincipal={() => setAddPrincipalDialogOpen(true)}
+                  onAddPrincipal={() => openDialog('add-member')}
                   onStatusChange={handleStatusChange}
                   onSearchChange={handlePrincipalsSearchChange}
                   onRoleFilterChange={handlePrincipalsRoleFilterChange}
                   onLoadMore={handleLoadMorePrincipals}
                   searchValue={principalsSearch}
                   roleFilterValue={principalsRoleFilter}
+                  onRefreshPrincipal={async (principalId, principalType) => {
+                    if (!apiClient || !selectedTenant) return;
+                    await apiClient.refreshPrincipal(principalId, { tenant_id: selectedTenant.id, type: principalType as 'IDENTITY_USER' | 'IDENTITY_GROUP' });
+                    await fetchPrincipals(true);
+                  }}
                 />
               </Stack>
             </Tabs.Panel>
@@ -1184,7 +1161,7 @@ export const TenantSettingsPage: FC = () => {
                   {canCreate('custom-groups') && (
                   <Button
                     leftSection={<IconUsersGroup size={16} />}
-                    onClick={() => setCreateGroupDialogOpen(true)}
+                    onClick={() => openDialog('new-custom-group')}
                   >
                     Create Group
                   </Button>
@@ -1291,11 +1268,7 @@ export const TenantSettingsPage: FC = () => {
                                         leftSection={<IconTrash size={14} />}
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setDeleteGroupDialog({
-                                            open: true,
-                                            id: group.id,
-                                            name: group.name,
-                                          });
+                                          openDialog('delete-custom-group', { selectedId: group.id });
                                         }}
                                       >
                                         Delete
@@ -1358,7 +1331,7 @@ export const TenantSettingsPage: FC = () => {
                   {canCreate('tools') && (
                   <Button
                     leftSection={<IconTool size={16} />}
-                    onClick={() => setCreateToolDialogOpen(true)}
+                    onClick={() => openDialog('new-tool')}
                   >
                     Create Tool
                   </Button>
@@ -1476,11 +1449,7 @@ export const TenantSettingsPage: FC = () => {
                                         leftSection={<IconTrash size={14} />}
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setDeleteToolDialog({
-                                            open: true,
-                                            id: tool.id,
-                                            name: tool.name,
-                                          });
+                                          openDialog('delete-tool', { selectedId: tool.id });
                                         }}
                                       >
                                         Delete
@@ -1535,7 +1504,7 @@ export const TenantSettingsPage: FC = () => {
                   {canCreate('credentials') && (
                   <Button
                     leftSection={<IconKey size={16} />}
-                    onClick={() => setCreateCredentialDialogOpen(true)}
+                    onClick={() => openDialog('new-credential')}
                   >
                     Create Credential
                   </Button>
@@ -1653,11 +1622,7 @@ export const TenantSettingsPage: FC = () => {
                                         leftSection={<IconTrash size={14} />}
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setDeleteCredentialDialog({
-                                            open: true,
-                                            id: credential.id,
-                                            name: credential.name,
-                                          });
+                                          openDialog('delete-credential', { selectedId: credential.id });
                                         }}
                                       >
                                         Delete
@@ -1728,7 +1693,7 @@ export const TenantSettingsPage: FC = () => {
                   {(isGlobalAdmin || hasRole(TenantPermissionEnum.TENANT_AI_MODELS_ADMIN)) && (
                   <Button
                     leftSection={<IconBrain size={16} />}
-                    onClick={() => setCreateAiModelDialogOpen(true)}
+                    onClick={() => openDialog('new-ai-model')}
                   >
                     Create AI Model
                   </Button>
@@ -1790,7 +1755,7 @@ export const TenantSettingsPage: FC = () => {
                             <Table.Tr
                               key={model.id}
                               className={classes.customGroupRow}
-                              onClick={() => setEditAiModelId(model.id)}
+                              onClick={() => openDialog('edit-ai-model', { selectedId: model.id })}
                             >
                               <Table.Td>
                                 <Group gap="sm">
@@ -1848,7 +1813,7 @@ export const TenantSettingsPage: FC = () => {
                                         leftSection={<IconEdit size={14} />}
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setEditAiModelId(model.id);
+                                          openDialog('edit-ai-model', { selectedId: model.id });
                                         }}
                                       >
                                         Edit
@@ -1859,11 +1824,7 @@ export const TenantSettingsPage: FC = () => {
                                         leftSection={<IconTrash size={14} />}
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setDeleteAiModelDialog({
-                                            open: true,
-                                            id: model.id,
-                                            name: model.name,
-                                          });
+                                          openDialog('delete-ai-model', { selectedId: model.id });
                                         }}
                                       >
                                         Delete
@@ -1952,8 +1913,8 @@ export const TenantSettingsPage: FC = () => {
 
       {/* Add Principal Dialog */}
       <AddPrincipalDialog
-        opened={addPrincipalDialogOpen}
-        onClose={() => setAddPrincipalDialogOpen(false)}
+        opened={dialog === 'add-member'}
+        onClose={closeDialog}
         onSubmit={handleAddPrincipals}
         existingPrincipalIds={existingPrincipalIds}
         entityName="tenant"
@@ -1962,10 +1923,9 @@ export const TenantSettingsPage: FC = () => {
         defaultRoles={['READER']}
       />
 
-      {/* Edit Principal Roles Dialog */}
       <EditRolesDialog
         opened={!!editPrincipal}
-        onClose={() => setEditPrincipal(null)}
+        onClose={closeDialog}
         onSubmit={handleEditPrincipalRoles}
         principalName={editPrincipal?.displayName || editPrincipal?.principalId || ''}
         principalType={editPrincipal?.principalType || 'IDENTITY_USER'}
@@ -1974,108 +1934,96 @@ export const TenantSettingsPage: FC = () => {
         currentRoles={editPrincipal?.roles || []}
       />
 
-      {/* Create Custom Group Dialog */}
       <CreateCustomGroupDialog
-        opened={createGroupDialogOpen}
-        onClose={() => setCreateGroupDialogOpen(false)}
+        opened={dialog === 'new-custom-group'}
+        onClose={closeDialog}
         onSuccess={() => fetchCustomGroups(true)}
       />
 
-      {/* Edit Custom Group Dialog */}
       <EditCustomGroupDialog
-        opened={!!editGroupId}
+        opened={dialog === 'edit-custom-group' && !!selectedId}
         onClose={handleCloseEditGroup}
-        customGroupId={editGroupId}
-        initialTab={editGroupInitialTab}
-        onTabChange={setEditGroupInitialTab}
+        customGroupId={selectedId}
+        initialTab={(dialogTab as 'members' | 'details') || 'details'}
+        onTabChange={(tab) => setDialogTab(tab)}
         onSuccess={() => fetchCustomGroups()}
       />
 
-      {/* Delete Custom Group Confirmation */}
       <ConfirmDeleteDialog
-        opened={deleteGroupDialog.open}
-        onClose={() => setDeleteGroupDialog({ open: false, id: '', name: '' })}
+        opened={dialog === 'delete-custom-group' && !!selectedId}
+        onClose={closeDialog}
         onConfirm={handleDeleteGroup}
-        itemName={deleteGroupDialog.name}
+        itemName={customGroups.find(g => g.id === selectedId)?.name}
         itemType="Custom Group"
         isLoading={isDeletingGroup}
       />
 
-      {/* Create Credential Dialog */}
       <CreateCredentialDialog
-        opened={createCredentialDialogOpen}
-        onClose={() => setCreateCredentialDialogOpen(false)}
+        opened={dialog === 'new-credential'}
+        onClose={closeDialog}
         onSuccess={() => fetchCredentials(true)}
       />
 
-      {/* Edit Credential Dialog */}
       <EditCredentialDialog
-        opened={!!editCredentialId}
+        opened={dialog === 'edit-credential' && !!selectedId}
         onClose={handleCloseEditCredential}
-        credentialId={editCredentialId}
-        activeTab={editCredentialTab}
-        onTabChange={setEditCredentialTab}
+        credentialId={selectedId}
+        activeTab={(dialogTab as EditDialogTab) || 'details'}
+        onTabChange={(tab) => setDialogTab(tab)}
         onSuccess={handleCredentialEditSuccess}
       />
 
-      {/* Delete Credential Confirmation */}
       <ConfirmDeleteDialog
-        opened={deleteCredentialDialog.open}
-        onClose={() => setDeleteCredentialDialog({ open: false, id: '', name: '' })}
+        opened={dialog === 'delete-credential' && !!selectedId}
+        onClose={closeDialog}
         onConfirm={handleDeleteCredential}
-        itemName={deleteCredentialDialog.name}
+        itemName={credentials.find(c => c.id === selectedId)?.name}
         itemType="Credential"
         isLoading={isDeletingCredential}
       />
 
-      {/* Create Tool Dialog */}
       <CreateToolDialog
-        opened={createToolDialogOpen}
-        onClose={() => setCreateToolDialogOpen(false)}
+        opened={dialog === 'new-tool'}
+        onClose={closeDialog}
         onSuccess={() => fetchTools(true)}
       />
 
-      {/* Edit Tool Dialog */}
       <EditToolDialog
-        opened={!!editToolId}
+        opened={dialog === 'edit-tool' && !!selectedId}
         onClose={handleCloseEditTool}
-        toolId={editToolId}
-        activeTab={editToolTab}
-        onTabChange={setEditToolTab}
+        toolId={selectedId}
+        activeTab={(dialogTab as EditDialogTab) || 'details'}
+        onTabChange={(tab) => setDialogTab(tab)}
         onSuccess={handleToolEditSuccess}
       />
 
-      {/* Delete Tool Confirmation */}
       <ConfirmDeleteDialog
-        opened={deleteToolDialog.open}
-        onClose={() => setDeleteToolDialog({ open: false, id: '', name: '' })}
+        opened={dialog === 'delete-tool' && !!selectedId}
+        onClose={closeDialog}
         onConfirm={handleDeleteTool}
-        itemName={deleteToolDialog.name}
+        itemName={tools.find(t => t.id === selectedId)?.name}
         itemType="Tool"
         isLoading={isDeletingTool}
       />
 
-      {/* Create AI Model Dialog */}
       <AIModelDialog
-        opened={createAiModelDialogOpen}
-        onClose={() => setCreateAiModelDialogOpen(false)}
+        opened={dialog === 'new-ai-model'}
+        onClose={closeDialog}
         onSuccess={() => fetchAIModels(true)}
       />
 
-      {/* Edit AI Model Dialog */}
       <AIModelDialog
-        opened={!!editAiModelId}
-        onClose={() => setEditAiModelId(null)}
+        opened={dialog === 'edit-ai-model' && !!selectedId}
+        onClose={closeDialog}
         onSuccess={() => fetchAIModels(true)}
-        modelId={editAiModelId}
+        modelId={selectedId}
       />
 
-      {/* Delete AI Model Confirmation */}
       <ConfirmDeleteDialog
-        opened={deleteAiModelDialog.open}
-        onClose={() => setDeleteAiModelDialog({ open: false, id: '', name: '' })}
+        opened={dialog === 'delete-ai-model' && !!selectedId}
+        onClose={closeDialog}
         onConfirm={handleDeleteAiModel}
-        itemName={deleteAiModelDialog.name}
+        itemName={aiModels.find(m => m.id === selectedId)?.name}
         itemType="AI Model"
         isLoading={isDeletingAiModel}
       />

@@ -34,15 +34,16 @@ interface UseConversationListReturn {
   sidebarSearchQuery: string;
   handleChatAgentChange: (chatAgentId: string) => void;
   handleSidebarCollapse: (collapsed: boolean) => void;
-  handleNewChat: (abortController: React.RefObject<AbortController | null>) => void;
+  handleNewChat: (abortController: React.RefObject<AbortController | null>, agentIdOverride?: string) => void;
   handleSelectConversation: (id: string, abortController: React.RefObject<AbortController | null>) => void;
-  handleToggleFavorite: (id: string) => Promise<void>;
+  handleToggleFavorite: (id: string, name: string) => Promise<void>;
   handleRenameConversation: (id: string, newName: string) => void;
   handleDeleteConversation: (id: string) => Promise<void>;
   handleSidebarSearch: (query: string) => void;
   handleLoadMoreConversations: () => void;
   setSelectedChatAgentId: React.Dispatch<React.SetStateAction<string | undefined>>;
   resetStreamingState: () => void;
+  handleChatAgentSearch: (query: string) => void;
 }
 
 export function useConversationList({
@@ -56,6 +57,7 @@ export function useConversationList({
 
   const [conversations, setConversations] = useState<ConversationResponse[]>([]);
   const [chatAgents, setChatAgents] = useState<ChatAgentResponse[]>([]);
+  const [allChatAgents, setAllChatAgents] = useState<ChatAgentResponse[]>([]);
   const [selectedChatAgentId, setSelectedChatAgentId] = useState<string | undefined>();
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [currentConversation, setCurrentConversation] = useState<ConversationResponse | null>(null);
@@ -69,6 +71,7 @@ export function useConversationList({
 
   const isLoadingMoreRef = useRef(false);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const agentSearchDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const isNewChat = !conversationId;
 
@@ -99,9 +102,10 @@ export function useConversationList({
         const [convsData, appsData, favoritesData] = await Promise.all([
           fetchConversations(0),
           apiClient.listChatAgents(tenantId, {
-            limit: 100,
+            limit: 50,
             order_by: 'name',
             order_direction: 'asc',
+            fields: 'id,name,type,is_active,greeting_messages',
           }) as Promise<ChatAgentResponse[]>,
           apiClient.listConversationFavorites(tenantId, userId),
         ]);
@@ -109,9 +113,10 @@ export function useConversationList({
         setConversations(convsData);
         setHasMoreConversations(convsData.length >= PAGE_SIZE);
         setChatAgents(appsData);
+        setAllChatAgents(appsData);
         setFavoriteIds(new Set(favoritesData.favorites.map(f => f.resource_id)));
 
-        const queryAppId = searchParams.get('chat-agent');
+        const queryAppId = searchParams.get('agent');
         const storedAppId = localStorage.getItem(STORAGE_KEY_LAST_APP);
 
         if (queryAppId) {
@@ -140,12 +145,13 @@ export function useConversationList({
   }, [apiClient, tenantId, userId]);
 
   useEffect(() => {
-    const queryAppId = searchParams.get('chat-agent');
+    if (conversationId) return;
+    const queryAppId = searchParams.get('agent');
     if (queryAppId && queryAppId !== selectedChatAgentId) {
       setSelectedChatAgentId(queryAppId);
       localStorage.setItem(STORAGE_KEY_LAST_APP, queryAppId);
     }
-  }, [searchParams, selectedChatAgentId]);
+  }, [searchParams, selectedChatAgentId, conversationId]);
 
   const resetStreamingState = useCallback(() => {
   }, []);
@@ -153,35 +159,40 @@ export function useConversationList({
   const handleChatAgentChange = useCallback((chatAgentId: string) => {
     setSelectedChatAgentId(chatAgentId);
     localStorage.setItem(STORAGE_KEY_LAST_APP, chatAgentId);
-    setSearchParams({ 'chat-agent': chatAgentId });
-  }, [setSearchParams]);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('agent', chatAgentId);
+    setSearchParams(newParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const handleSidebarCollapse = useCallback((collapsed: boolean) => {
     setSidebarCollapsed(collapsed);
     localStorage.setItem(STORAGE_KEY_SIDEBAR_COLLAPSED, String(collapsed));
   }, []);
 
-  const handleNewChat = useCallback((abortController: React.RefObject<AbortController | null>) => {
+  const handleNewChat = useCallback((abortController: React.RefObject<AbortController | null>, agentIdOverride?: string) => {
     if (abortController.current) {
       abortController.current.abort();
     }
     setCurrentConversation(null);
 
-    if (selectedChatAgentId) {
-      navigate(`/conversations?chat-agent=${selectedChatAgentId}`);
-    } else {
-      navigate('/conversations');
+    const agentId = agentIdOverride || selectedChatAgentId;
+    const params = new URLSearchParams(searchParams);
+    if (agentId) {
+      params.set('agent', agentId);
     }
-  }, [navigate, selectedChatAgentId]);
+    const qs = params.toString();
+    navigate(`/conversations${qs ? `?${qs}` : ''}`);
+  }, [navigate, selectedChatAgentId, searchParams]);
 
   const handleSelectConversation = useCallback((id: string, abortController: React.RefObject<AbortController | null>) => {
     if (abortController.current) {
       abortController.current.abort();
     }
-    navigate(`/conversations/${id}`);
-  }, [navigate]);
+    const qs = searchParams.toString();
+    navigate(`/conversations/${id}${qs ? `?${qs}` : ''}`);
+  }, [navigate, searchParams]);
 
-  const handleToggleFavorite = useCallback(async (id: string) => {
+  const handleToggleFavorite = useCallback(async (id: string, _name: string) => {
     if (!apiClient || !tenantId || !userId) return;
 
     const isFavorite = favoriteIds.has(id);
@@ -233,11 +244,12 @@ export function useConversationList({
 
       if (currentConversation?.id === id) {
         setCurrentConversation(null);
+        const params = new URLSearchParams(searchParams);
         if (selectedChatAgentId) {
-          navigate(`/conversations?chat-agent=${selectedChatAgentId}`);
-        } else {
-          navigate('/conversations');
+          params.set('agent', selectedChatAgentId);
         }
+        const qs = params.toString();
+        navigate(`/conversations${qs ? `?${qs}` : ''}`);
       }
     } catch (error) {
       console.error('Failed to delete conversation:', error);
@@ -247,7 +259,7 @@ export function useConversationList({
         color: 'red',
       });
     }
-  }, [apiClient, tenantId, currentConversation?.id, selectedChatAgentId, navigate]);
+  }, [apiClient, tenantId, currentConversation?.id, selectedChatAgentId, navigate, searchParams]);
 
   const handleSidebarSearch = useCallback((query: string) => {
     setSidebarSearchQuery(query);
@@ -272,6 +284,35 @@ export function useConversationList({
       }
     }, 300);
   }, [apiClient, tenantId, fetchConversations]);
+
+  const handleChatAgentSearch = useCallback((query: string) => {
+    if (agentSearchDebounceRef.current) {
+      clearTimeout(agentSearchDebounceRef.current);
+    }
+
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setChatAgents(allChatAgents);
+      return;
+    }
+
+    agentSearchDebounceRef.current = setTimeout(async () => {
+      if (!apiClient || !tenantId) return;
+
+      try {
+        const results = await apiClient.listChatAgents(tenantId, {
+          limit: 50,
+          order_by: 'name',
+          order_direction: 'asc',
+          name: trimmed,
+          fields: 'id,name,type,is_active,greeting_messages',
+        }) as ChatAgentResponse[];
+        setChatAgents(results);
+      } catch (error) {
+        console.error('Failed to search chat agents:', error);
+      }
+    }, 300);
+  }, [apiClient, tenantId, allChatAgents]);
 
   const handleLoadMoreConversations = useCallback(async () => {
     if (!apiClient || !tenantId || !hasMoreConversations || isLoadingMoreRef.current) return;
@@ -316,5 +357,6 @@ export function useConversationList({
     handleLoadMoreConversations,
     setSelectedChatAgentId,
     resetStreamingState,
+    handleChatAgentSearch,
   };
 }

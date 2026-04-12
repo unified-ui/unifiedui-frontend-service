@@ -5,3 +5,7 @@ export { GoogleAuthProvider } from './GoogleAuthProvider';
 export { useGoogleAuth } from './useGoogleAuth';
 export { CognitoAuthProvider } from './CognitoAuthProvider';
 export { useCognitoAuth } from './useCognitoAuth';
+export { LdapAuthProvider } from './LdapAuthProvider';
+export { useLdapAuth } from './useLdapAuth';
+export { OidcAuthProvider, OidcAuthProviderUnconfigured } from './OidcAuthProvider';
+export { useOidcAuth } from './useOidcAuth';

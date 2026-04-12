@@ -28,7 +28,7 @@ export interface IntegrationDialogProps {
 function buildPostSampleJson(agentId: string): string {
   return JSON.stringify(
     {
-      autonomousAgentId: agentId,
+      workflowId: agentId,
       referenceId: 'ext-execution-12345',
       referenceName: 'My Workflow Run',
       referenceMetadata: {
@@ -101,7 +101,7 @@ const CodeBlock: FC<{ code: string }> = ({ code }) => (
   </div>
 );
 
-const AUTH_HEADER_KEY = 'X-Unified-UI-Autonomous-Agent-API-Key';
+const AUTH_HEADER_KEY = 'X-Unified-UI-Workflow-API-Key';
 
 const EndpointField: FC<{ value: string }> = ({ value }) => (
   <TextInput
@@ -201,7 +201,7 @@ export const IntegrationDialog: FC<IntegrationDialogProps> = ({
 }) => {
   const baseUrl = "{YOUR-AGENT-SERVICE-HOST}";
   const postEndpoint = `${baseUrl}/api/v1/agent-service/tenants/${tenantId}/traces`;
-  const putEndpoint = `${baseUrl}/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces/import`;
+  const putEndpoint = `${baseUrl}/api/v1/agent-service/tenants/${tenantId}/workflows/${agentId}/traces/import`;
 
   const postJson = useMemo(() => buildPostSampleJson(agentId), [agentId]);
   const putJson = useMemo(() => buildPutSampleJson(agentId), [agentId]);
@@ -216,7 +216,7 @@ export const IntegrationDialog: FC<IntegrationDialogProps> = ({
             <IconPlug size={20} />
           </Box>
           <Text fw={600} size="lg">
-            Integrate Autonomous Agent
+            Integrate Workflow
           </Text>
         </Group>
       }

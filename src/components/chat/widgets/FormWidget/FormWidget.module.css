@@ -1,0 +1,45 @@
+.formWidget {
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-top: var(--spacing-sm);
+  position: relative;
+}
+
+.submittedBadge {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  z-index: 2;
+}
+
+.tabsRoot {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tabsList {
+  flex-shrink: 0;
+  z-index: 1;
+  background: transparent;
+  border-bottom: 1px solid var(--border-default);
+  padding: 0 var(--spacing-sm);
+}
+
+.tabPanel {
+  padding: var(--spacing-lg) var(--spacing-sm) var(--spacing-sm);
+}
+
+.tableHeader {
+  padding: 6px 10px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tableCell {
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--color-border);
+}

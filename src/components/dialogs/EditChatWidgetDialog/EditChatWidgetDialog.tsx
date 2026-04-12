@@ -37,6 +37,7 @@ interface FormValues {
   type: string;
   tags: string[];
   is_active: boolean;
+  url: string;
 }
 
 const CHAT_WIDGET_TYPES = [
@@ -95,6 +96,7 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
       type: 'CHAT',
       tags: [],
       is_active: true,
+      url: '',
     },
     validate: {
       name: (value) => {
@@ -117,6 +119,7 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
         type: data.type || 'CHAT',
         tags: data.tags?.map((t) => t.name) || [],
         is_active: data.is_active,
+        url: (data.config?.url as string) || '',
       });
       form.resetDirty();
     },
@@ -172,12 +175,28 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
 
     try {
       // Update chat widget
-      await apiClient.updateChatWidget(selectedTenant.id, chatWidgetId, {
+      const updateData: {
+        name: string;
+        description?: string;
+        type: ChatWidgetTypeEnum;
+        is_active: boolean;
+        config?: Record<string, unknown>;
+      } = {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
         type: values.type as ChatWidgetTypeEnum,
         is_active: values.is_active,
-      });
+      };
+
+      // For IFRAME type, save the URL in config
+      if (values.type === 'IFRAME' && values.url) {
+        updateData.config = {
+          ...chatWidget?.config,
+          url: values.url.trim(),
+        };
+      }
+
+      await apiClient.updateChatWidget(selectedTenant.id, chatWidgetId, updateData);
 
       // Update tags if changed
       const currentTags = chatWidget?.tags?.map((t) => t.name) || [];
@@ -334,6 +353,35 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
                 />
               </Group>
 
+              {form.values.type === 'IFRAME' && (
+                <>
+                  <TextInput
+                    label="URL"
+                    placeholder="https://example.com/embed"
+                    description="The URL to embed in the iframe"
+                    {...form.getInputProps('url')}
+                  />
+                  {form.values.url && (
+                    <Box
+                      style={{
+                        border: '1px solid var(--mantine-color-default-border)',
+                        borderRadius: 'var(--mantine-radius-md)',
+                        overflow: 'hidden',
+                        height: 200,
+                      }}
+                    >
+                      <iframe
+                        src={form.values.url}
+                        title="Widget Preview"
+                        width="100%"
+                        height="100%"
+                        style={{ border: 'none' }}
+                      />
+                    </Box>
+                  )}
+                </>
+              )}
+
               <Switch
                 label="Active"
                 description="Enable or disable this chat widget"
@@ -392,6 +440,11 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
               onDeletePrincipal={handleDeletePrincipalWithTypes}
               onAddPrincipal={() => setIsAddPrincipalOpen(true)}
               entityName="chat widget"
+              onRefreshPrincipal={async (principalId, principalType) => {
+                if (!apiClient || !selectedTenant) return;
+                await apiClient.refreshPrincipal(principalId, { tenant_id: selectedTenant.id, type: principalType as 'IDENTITY_USER' | 'IDENTITY_GROUP' });
+                await fetchPrincipals(false);
+              }}
             />
           </Box>
         )}

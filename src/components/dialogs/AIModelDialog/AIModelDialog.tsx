@@ -3,11 +3,13 @@ import type { FC } from 'react';
 import {
   Modal, TextInput, Textarea, Select, Button, Group, Stack,
   Text, NumberInput, Switch, MultiSelect, Alert, LoadingOverlay, Divider, Box,
-  ActionIcon, Tooltip,
+  ActionIcon, Tooltip, Autocomplete,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useDebouncedValue } from '@mantine/hooks';
 import { IconBrain, IconCheck, IconX, IconAlertCircle, IconPlus } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
+import { FilterableSelect, TagInput } from '../../common';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import {
   AIModelTypeEnum,
@@ -17,6 +19,7 @@ import {
 import type { QuickListItemResponse } from '../../../api/types';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
 import { useFormDirtyGuard } from '../../../hooks';
+import { useTranslation } from 'react-i18next';
 import classes from './AIModelDialog.module.css';
 
 interface AIModelDialogProps {
@@ -36,6 +39,7 @@ interface FormValues {
   credential_id: string;
   priority: number;
   is_active: boolean;
+  tags: string[];
 }
 
 const MODEL_TYPES = [
@@ -55,6 +59,7 @@ const PROVIDERS = [
 
 const PURPOSE_GROUPS = [
   { value: AIModelPurposeGroupEnum.REACT_AGENT, label: 'ReAct Agent' },
+  { value: AIModelPurposeGroupEnum.DIRECT_CHAT, label: 'Direct Chat' },
   { value: AIModelPurposeGroupEnum.CONVERSATION_TITLE_GENERATION, label: 'Title Generation' },
   { value: AIModelPurposeGroupEnum.CONVERSATION_SUMMARIZATION, label: 'Conversation Summarization' },
   { value: AIModelPurposeGroupEnum.DESCRIPTION_GENERATION, label: 'Description Generation' },
@@ -72,6 +77,17 @@ const PROVIDER_REQUIRES_CREDENTIAL: Record<string, boolean> = {
   [AIModelProviderEnum.GROQ]: true,
 };
 
+const AZURE_OPENAI_API_VERSIONS = [
+  { value: '2025-04-01-preview', label: '2025-04-01-preview' },
+  { value: '2025-03-01-preview', label: '2025-03-01-preview' },
+  { value: '2025-01-01-preview', label: '2025-01-01-preview' },
+  { value: '2024-12-01-preview', label: '2024-12-01-preview' },
+  { value: '2024-10-21', label: '2024-10-21 (GA)' },
+  { value: '2024-10-01-preview', label: '2024-10-01-preview' },
+  { value: '2024-08-01-preview', label: '2024-08-01-preview' },
+  { value: '2024-06-01', label: '2024-06-01 (GA)' },
+];
+
 export const AIModelDialog: FC<AIModelDialogProps> = ({
   opened,
   onClose,
@@ -79,6 +95,7 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
   modelId,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { t: tc } = useTranslation('common');
   const isEdit = !!modelId;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -86,6 +103,8 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [credentials, setCredentials] = useState<QuickListItemResponse[]>([]);
+  const [credentialSearch, setCredentialSearch] = useState('');
+  const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
   const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
 
   const form = useForm<FormValues>({
@@ -98,7 +117,8 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
       config: {},
       credential_id: '',
       priority: 0,
-      is_active: false,
+      is_active: true,
+      tags: [],
     },
     validate: {
       name: (value) => {
@@ -113,12 +133,13 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
 
   useFormDirtyGuard(form.isDirty());
 
-  const fetchCredentials = useCallback(async () => {
+  const fetchCredentials = useCallback(async (searchTerm?: string) => {
     if (!apiClient || !selectedTenant) return;
     try {
       const result = await apiClient.listCredentials(selectedTenant.id, {
         view: 'quick-list',
         limit: 200,
+        ...(searchTerm ? { name: searchTerm } : {}),
       }) as QuickListItemResponse[];
       setCredentials(result);
     } catch {
@@ -141,6 +162,7 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
         credential_id: model.credential_id || '',
         priority: model.priority,
         is_active: model.is_active,
+        tags: model.tags?.map((t) => t.name) || [],
       });
       form.resetDirty();
     } catch {
@@ -148,7 +170,7 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [apiClient, selectedTenant, modelId]);
+  }, [apiClient, selectedTenant, modelId, form]);
 
   useEffect(() => {
     if (opened) {
@@ -161,7 +183,13 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
         form.reset();
       }
     }
-  }, [opened, isEdit]);
+  }, [opened, isEdit, fetchCredentials, fetchModel, form]);
+
+  useEffect(() => {
+    if (opened) {
+      fetchCredentials(debouncedCredentialSearch || undefined);
+    }
+  }, [debouncedCredentialSearch, fetchCredentials, opened]);
 
   const handleSubmit = async (values: FormValues) => {
     if (!apiClient || !selectedTenant) return;
@@ -178,8 +206,9 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
           priority: values.priority,
           is_active: values.is_active,
         });
+        await apiClient.setAIModelTags(selectedTenant.id, modelId, values.tags);
       } else {
-        await apiClient.createAIModel(selectedTenant.id, {
+        const created = await apiClient.createAIModel(selectedTenant.id, {
           name: values.name.trim(),
           description: values.description?.trim() || undefined,
           type: values.type as AIModelTypeEnum,
@@ -190,6 +219,9 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
           priority: values.priority,
           is_active: values.is_active,
         });
+        if (values.tags.length > 0) {
+          await apiClient.setAIModelTags(selectedTenant.id, created.id, values.tags);
+        }
       }
       form.reset();
       onSuccess?.();
@@ -254,18 +286,18 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
               onChange={(e) => form.setFieldValue('config', { ...form.values.config, endpoint: e.currentTarget.value })}
             />
             <TextInput
-              label="API Version"
-              placeholder="2024-12-01-preview"
-              required
-              value={(form.values.config.api_version as string) || ''}
-              onChange={(e) => form.setFieldValue('config', { ...form.values.config, api_version: e.currentTarget.value })}
-            />
-            <TextInput
               label="Deployment Name"
               placeholder="gpt-4o"
               required
               value={(form.values.config.deployment_name as string) || ''}
               onChange={(e) => form.setFieldValue('config', { ...form.values.config, deployment_name: e.currentTarget.value })}
+            />
+            <Autocomplete
+              label="API Version"
+              placeholder="e.g. 2024-12-01-preview"
+              data={AZURE_OPENAI_API_VERSIONS.map((v) => v.value)}
+              value={(form.values.config.api_version as string) || '2024-12-01-preview'}
+              onChange={(value) => form.setFieldValue('config', { ...form.values.config, api_version: value || '2024-12-01-preview' })}
             />
           </>
         );
@@ -386,13 +418,13 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
 
               {requiresCredential && (
                 <Group gap="xs" align="flex-end">
-                  <Select
+                  <FilterableSelect
                     label="Credential"
                     placeholder="Select a credential"
                     data={credentialOptions}
                     clearable
-                    searchable
                     style={{ flex: 1 }}
+                    onFilterChange={setCredentialSearch}
                     {...form.getInputProps('credential_id')}
                   />
                   <Tooltip label="Create new Credential">
@@ -459,6 +491,13 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
               />
             </div>
           </Group>
+
+          <TagInput
+            label={tc('tags')}
+            placeholder={tc('tagsPlaceholder')}
+            value={form.values.tags}
+            onChange={(tags) => form.setFieldValue('tags', tags)}
+          />
 
           <Box pos="relative">
             <Textarea

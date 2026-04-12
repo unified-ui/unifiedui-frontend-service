@@ -17,12 +17,14 @@ import {
   Loader,
   Box,
   TagsInput,
+  Autocomplete,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
-import { IconSparkles, IconPlus, IconAlertCircle } from '@tabler/icons-react';
+import { IconSparkles, IconPlus, IconAlertCircle, IconSearch } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { useTranslation } from 'react-i18next';
+import { useConfigSuggestions, useFoundryAgents } from '../../../hooks';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import {
   ChatAgentTypeEnum,
@@ -30,19 +32,26 @@ import {
   N8NWorkflowTypeEnum,
   FoundryAgentTypeEnum,
   FoundryApiVersionEnum,
+  RestApiAuthTypeEnum,
   CredentialTypeEnum,
   type CredentialResponse,
+  type AIModelResponse,
   type N8NChatAgentConfig,
   type FoundryChatAgentConfig,
+  type RestApiChatAgentConfig,
+  type LlmChatAgentConfig,
 } from '../../../api/types';
-import { TagInput } from '../../common';
+import { TagInput, ConnectionTestButton, FilterableSelect, EndpointSuggestInput, ModelTestButton } from '../../common';
+import { GreetingMessagesInput } from '../../common';
+import { TestConnectionType } from '../../../api/types';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
+import { N8NWorkflowBrowserDialog } from '../N8NWorkflowBrowserDialog';
 
 const CHAT_AGENT_TYPES = [
-  { value: ChatAgentTypeEnum.REACT_AGENT, label: 'ReACT Agent' },
-  { value: ChatAgentTypeEnum.N8N, label: 'n8n' },
   { value: ChatAgentTypeEnum.MICROSOFT_FOUNDRY, label: 'Microsoft Foundry' },
+  { value: ChatAgentTypeEnum.N8N, label: 'n8n' },
   { value: ChatAgentTypeEnum.REST_API, label: 'REST API' },
+  { value: ChatAgentTypeEnum.LLM, label: 'LLM' },
 ];
 
 const N8N_API_VERSIONS = [
@@ -61,6 +70,20 @@ const FOUNDRY_AGENT_TYPES = [
 const FOUNDRY_API_VERSIONS = [
   { value: FoundryApiVersionEnum.V2025_11_15_PREVIEW, label: '2025-11-15-preview' },
 ];
+
+const REST_API_AUTH_TYPES = [
+  { value: RestApiAuthTypeEnum.ANONYMOUS, label: 'Anonymous (No Auth)' },
+  { value: RestApiAuthTypeEnum.BASIC_AUTH, label: 'Basic Auth' },
+  { value: RestApiAuthTypeEnum.API_KEY, label: 'API Key' },
+  { value: RestApiAuthTypeEnum.ENTRA_ID_USER_TOKEN, label: 'Entra ID User Token (Forward)' },
+  { value: RestApiAuthTypeEnum.ENTRA_ID_APP_REGISTRATION, label: 'Entra ID App Registration' },
+];
+
+const AUTH_TYPES_REQUIRING_CREDENTIAL = new Set<RestApiAuthTypeEnum>([
+  RestApiAuthTypeEnum.BASIC_AUTH,
+  RestApiAuthTypeEnum.API_KEY,
+  RestApiAuthTypeEnum.ENTRA_ID_APP_REGISTRATION,
+]);
 
 interface CreateChatAgentDialogProps {
   opened: boolean;
@@ -89,6 +112,19 @@ interface FormValues {
   foundry_api_version: string;
   foundry_project_endpoint: string;
   foundry_agent_name: string;
+  // REST API Config
+  rest_api_auth_type: string;
+  rest_api_invoke_endpoint: string;
+  rest_api_credential_id: string;
+  rest_api_api_key_header_name: string;
+  rest_api_use_unified_chat_history: boolean;
+  rest_api_chat_history_count: number;
+  rest_api_enable_conversation_endpoint: boolean;
+  rest_api_create_conversation_endpoint: string;
+  // LLM Config
+  llm_ai_model_id: string;
+  llm_system_prompt: string;
+  greeting_messages: string[];
 }
 
 export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
@@ -103,7 +139,10 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
-  const [credentialFieldTarget, setCredentialFieldTarget] = useState<'api_key' | 'chat_auth' | null>(null);
+  const [credentialFieldTarget, setCredentialFieldTarget] = useState<'api_key' | 'chat_auth' | 'rest_api' | null>(null);
+  const [workflowBrowserOpen, setWorkflowBrowserOpen] = useState(false);
+  const [aiModels, setAiModels] = useState<AIModelResponse[]>([]);
+  const [isLoadingAiModels, setIsLoadingAiModels] = useState(false);
 
   // Server-side filtering for credentials
   const [credentialSearch, setCredentialSearch] = useState('');
@@ -130,6 +169,19 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
       foundry_api_version: FoundryApiVersionEnum.V2025_11_15_PREVIEW,
       foundry_project_endpoint: '',
       foundry_agent_name: '',
+      // REST API Config defaults
+      rest_api_auth_type: RestApiAuthTypeEnum.ANONYMOUS,
+      rest_api_invoke_endpoint: '',
+      rest_api_credential_id: '',
+      rest_api_api_key_header_name: 'X-API-Key',
+      rest_api_use_unified_chat_history: true,
+      rest_api_chat_history_count: 30,
+      rest_api_enable_conversation_endpoint: false,
+      rest_api_create_conversation_endpoint: '',
+      // LLM Config defaults
+      llm_ai_model_id: '',
+      llm_system_prompt: '',
+      greeting_messages: [],
     },
     validate: {
       name: (value) => {
@@ -219,8 +271,76 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
         }
         return null;
       },
+      rest_api_invoke_endpoint: (value, values) => {
+        if (values.type === ChatAgentTypeEnum.REST_API) {
+          if (!value || value.trim().length === 0) {
+            return 'Invoke Endpoint is required';
+          }
+          try {
+            new URL(value);
+          } catch {
+            return 'Invalid URL';
+          }
+        }
+        return null;
+      },
+      rest_api_credential_id: (value, values) => {
+        if (values.type === ChatAgentTypeEnum.REST_API) {
+          if (AUTH_TYPES_REQUIRING_CREDENTIAL.has(values.rest_api_auth_type as RestApiAuthTypeEnum) && !value) {
+            return 'Credential is required for this auth type';
+          }
+        }
+        return null;
+      },
+      rest_api_chat_history_count: (value, values) => {
+        if (values.type === ChatAgentTypeEnum.REST_API && values.rest_api_use_unified_chat_history) {
+          if (value < 1 || value > 100) {
+            return 'Chat History Count must be between 1 and 100';
+          }
+        }
+        return null;
+      },
+      rest_api_create_conversation_endpoint: (value, values) => {
+        if (values.type === ChatAgentTypeEnum.REST_API && values.rest_api_enable_conversation_endpoint) {
+          if (!value || value.trim().length === 0) {
+            return 'Conversation Endpoint is required when enabled';
+          }
+          try {
+            new URL(value);
+          } catch {
+            return 'Invalid URL';
+          }
+        }
+        return null;
+      },
+      llm_ai_model_id: (value, values) => {
+        if (values.type === ChatAgentTypeEnum.LLM) {
+          if (!value || value.trim().length === 0) {
+            return 'AI Model is required';
+          }
+        }
+        return null;
+      },
     },
   });
+
+  const { suggestions: configSuggestions } = useConfigSuggestions(form.values.type);
+
+  const [debouncedProjectEndpoint] = useDebouncedValue(form.values.foundry_project_endpoint, 500);
+  const { agents: foundryAgents, isLoading: isLoadingAgents, refresh: refreshFoundryAgents } = useFoundryAgents(
+    form.values.type === ChatAgentTypeEnum.MICROSOFT_FOUNDRY ? debouncedProjectEndpoint : '',
+  );
+  const foundryAgentNames = useMemo(() => foundryAgents.map((a) => a.name), [foundryAgents]);
+
+  const n8nHostUrl = useMemo(() => {
+    const endpoint = form.values.n8n_workflow_endpoint || form.values.n8n_chat_url || '';
+    try {
+      const url = new URL(endpoint);
+      return `${url.protocol}//${url.host}`;
+    } catch {
+      return '';
+    }
+  }, [form.values.n8n_workflow_endpoint, form.values.n8n_chat_url]);
 
   // Load credentials when dialog opens or search changes
   const loadCredentials = useCallback(async (searchTerm?: string) => {
@@ -233,6 +353,7 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
         order_by: 'name',
         order_direction: 'asc',
         name: searchTerm || undefined,
+        fields: 'id,name,type',
       });
       // listCredentials returns an array directly, not an object with items property
       setCredentials(Array.isArray(response) ? response as CredentialResponse[] : []);
@@ -243,19 +364,38 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
     }
   }, [apiClient, selectedTenant]);
 
-  // Load credentials when dialog opens
-  useEffect(() => {
-    if (opened) {
-      loadCredentials();
-    }
-  }, [opened, loadCredentials]);
-
-  // Reload credentials when search changes (debounced)
   useEffect(() => {
     if (opened && debouncedCredentialSearch !== undefined) {
       loadCredentials(debouncedCredentialSearch);
     }
   }, [opened, debouncedCredentialSearch, loadCredentials]);
+
+  const loadAiModels = useCallback(async () => {
+    if (!apiClient || !selectedTenant) return;
+    setIsLoadingAiModels(true);
+    try {
+      const models = await apiClient.listAIModels(selectedTenant.id, {
+        limit: 200,
+        order_by: 'name',
+        order_direction: 'asc',
+      });
+      setAiModels(
+        (Array.isArray(models) ? models : []).filter(
+          (m) => m.type === 'LLM_MODEL' && m.is_active,
+        ),
+      );
+    } catch {
+      setAiModels([]);
+    } finally {
+      setIsLoadingAiModels(false);
+    }
+  }, [apiClient, selectedTenant]);
+
+  useEffect(() => {
+    if (opened && form.values.type === ChatAgentTypeEnum.LLM) {
+      loadAiModels();
+    }
+  }, [opened, form.values.type, loadAiModels]);
 
   // Filter credentials by type for API Key dropdown (only API_KEY type)
   const apiKeyCredentials = useMemo(() => {
@@ -271,13 +411,32 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
       .map((c) => ({ value: c.id, label: c.name }));
   }, [credentials]);
 
+  // Filter credentials for REST API based on selected auth type
+  const restApiCredentials = useMemo(() => {
+    const authType = form.values.rest_api_auth_type;
+    const typeMap: Record<string, string> = {
+      [RestApiAuthTypeEnum.BASIC_AUTH]: CredentialTypeEnum.BASIC_AUTH,
+      [RestApiAuthTypeEnum.API_KEY]: CredentialTypeEnum.API_KEY,
+      [RestApiAuthTypeEnum.ENTRA_ID_APP_REGISTRATION]: CredentialTypeEnum.ENTRA_ID_APP_REGISTRATION,
+    };
+    const credType = typeMap[authType];
+    if (!credType) return [];
+    return credentials
+      .filter((c) => c.type === credType)
+      .map((c) => ({ value: c.id, label: c.name }));
+  }, [credentials, form.values.rest_api_auth_type]);
+
+  const aiModelOptions = useMemo(() => {
+    return aiModels.map((m) => ({ value: m.id, label: `${m.name} (${m.provider})` }));
+  }, [aiModels]);
+
   const handleSubmit = async (values: FormValues) => {
     if (!apiClient || !selectedTenant) return;
 
     setIsSubmitting(true);
     try {
       // Build config based on chat agent type
-      let config: N8NChatAgentConfig | FoundryChatAgentConfig | undefined;
+      let config: N8NChatAgentConfig | FoundryChatAgentConfig | RestApiChatAgentConfig | LlmChatAgentConfig | undefined;
 
       if (values.type === ChatAgentTypeEnum.N8N) {
         config = {
@@ -297,6 +456,32 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
           project_endpoint: values.foundry_project_endpoint.trim(),
           agent_name: values.foundry_agent_name.trim(),
         };
+      } else if (values.type === ChatAgentTypeEnum.REST_API) {
+        const authType = values.rest_api_auth_type as RestApiAuthTypeEnum;
+        config = {
+          auth_type: authType,
+          invoke_endpoint: values.rest_api_invoke_endpoint.trim(),
+          credential_id: AUTH_TYPES_REQUIRING_CREDENTIAL.has(authType)
+            ? values.rest_api_credential_id || undefined
+            : undefined,
+          api_key_header_name: authType === RestApiAuthTypeEnum.API_KEY
+            ? values.rest_api_api_key_header_name.trim() || 'X-API-Key'
+            : undefined,
+          use_unified_chat_history: values.rest_api_use_unified_chat_history,
+          chat_history_count: values.rest_api_use_unified_chat_history
+            ? values.rest_api_chat_history_count
+            : undefined,
+          create_conversation_endpoint: values.rest_api_enable_conversation_endpoint
+            ? values.rest_api_create_conversation_endpoint.trim() || undefined
+            : undefined,
+        };
+      }
+
+      if (values.type === ChatAgentTypeEnum.LLM) {
+        config = {
+          ai_model_id: values.llm_ai_model_id,
+          system_prompt: values.llm_system_prompt.trim() || undefined,
+        };
       }
 
       // Create the chat agent
@@ -304,9 +489,13 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
         name: values.name.trim(),
         type: values.type as ChatAgentTypeEnum,
         description: values.description?.trim() || undefined,
+        is_active: true,
         config: config as Record<string, unknown> | undefined,
         embed_allowed_origins: values.embed_allowed_origins.length > 0
           ? values.embed_allowed_origins.join(';')
+          : undefined,
+        greeting_messages: values.greeting_messages.filter(Boolean).length > 0
+          ? values.greeting_messages.filter(Boolean)
           : undefined,
       });
 
@@ -339,7 +528,7 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
     onClose();
   };
 
-  const handleOpenCreateCredential = (target: 'api_key' | 'chat_auth') => {
+  const handleOpenCreateCredential = (target: 'api_key' | 'chat_auth' | 'rest_api') => {
     setCredentialFieldTarget(target);
     setCreateCredentialOpen(true);
   };
@@ -356,6 +545,8 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
             form.setFieldValue('n8n_api_api_key_credential_id', credential.id);
           } else if (credentialFieldTarget === 'chat_auth') {
             form.setFieldValue('n8n_chat_auth_credential_id', credential.id);
+          } else if (credentialFieldTarget === 'rest_api') {
+            form.setFieldValue('rest_api_credential_id', credential.id);
           }
         }
       } catch (error) {
@@ -424,26 +615,9 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
                   />
                 </Group>
 
-                <TextInput
-                  label="Chat URL"
-                  placeholder="https://your-n8n-instance.com/webhook/..."
-                  required
-                  withAsterisk
-                  {...form.getInputProps('n8n_chat_url')}
-                />
-
-                <TextInput
-                  label="Workflow Endpoint"
-                  placeholder="https://your-n8n-instance.com/workflow/abc123"
-                  description="The URL to the N8N workflow (e.g. https://n8n.example.com/workflow/abc123)"
-                  required
-                  withAsterisk
-                  {...form.getInputProps('n8n_workflow_endpoint')}
-                />
-
                 {/* API Key Credential with Add Button */}
                 <Group gap="xs" align="flex-end">
-                  <Select
+                  <FilterableSelect
                     label="API Key Credential"
                     placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
                     required
@@ -451,9 +625,8 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
                     data={apiKeyCredentials}
                     rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                     disabled={isLoadingCredentials}
-                    searchable
-                    onSearchChange={setCredentialSearch}
                     nothingFoundMessage="No credentials found"
+                    onFilterChange={setCredentialSearch}
                     style={{ flex: 1 }}
                     {...form.getInputProps('n8n_api_api_key_credential_id')}
                   />
@@ -477,16 +650,15 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
 
                 {/* Chat Auth Credential (Optional) with Add Button */}
                 <Group gap="xs" align="flex-end">
-                  <Select
+                  <FilterableSelect
                     label="Chat Auth Credential (Optional)"
                     placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential (optional)'}
                     data={chatAuthCredentials}
                     rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
                     disabled={isLoadingCredentials}
                     clearable
-                    searchable
-                    onSearchChange={setCredentialSearch}
                     nothingFoundMessage="No credentials found"
+                    onFilterChange={setCredentialSearch}
                     style={{ flex: 1 }}
                     {...form.getInputProps('n8n_chat_auth_credential_id')}
                   />
@@ -501,6 +673,53 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
                     </ActionIcon>
                   </Tooltip>
                 </Group>
+
+                <EndpointSuggestInput
+                  label="Chat URL"
+                  placeholder="https://your-n8n-instance.com/webhook/..."
+                  required
+                  withAsterisk
+                  suggestions={configSuggestions['chat_url'] || []}
+                  {...form.getInputProps('n8n_chat_url')}
+                />
+                <ConnectionTestButton
+                  testType={TestConnectionType.N8N_CHAT_URL}
+                  url={form.values.n8n_chat_url}
+                  credentialId={form.values.n8n_chat_auth_credential_id || undefined}
+                  disabled={!form.values.n8n_chat_url}
+                  hint={t('testConnectionHintN8nChat')}
+                />
+
+                <Group align="flex-end" gap="xs" wrap="nowrap">
+                  <Box style={{ flex: 1 }}>
+                    <EndpointSuggestInput
+                      label="Workflow Endpoint"
+                      placeholder="https://your-n8n-instance.com/workflow/abc123"
+                      description="The URL to the N8N workflow (e.g. https://n8n.example.com/workflow/abc123)"
+                      required
+                      withAsterisk
+                      suggestions={configSuggestions['workflow_endpoint'] || []}
+                      {...form.getInputProps('n8n_workflow_endpoint')}
+                    />
+                  </Box>
+                  <Tooltip label={!form.values.n8n_api_api_key_credential_id ? 'Select an API Key credential first' : 'Browse workflows'}>
+                    <ActionIcon
+                      variant="default"
+                      size="lg"
+                      onClick={() => setWorkflowBrowserOpen(true)}
+                      disabled={!form.values.n8n_api_api_key_credential_id}
+                      mb={form.getInputProps('n8n_workflow_endpoint').error ? 22 : 0}
+                    >
+                      <IconSearch size={18} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+                <ConnectionTestButton
+                  testType={TestConnectionType.N8N_WORKFLOW}
+                  url={form.values.n8n_workflow_endpoint}
+                  credentialId={form.values.n8n_api_api_key_credential_id || undefined}
+                  disabled={!form.values.n8n_workflow_endpoint || !form.values.n8n_api_api_key_credential_id}
+                />
 
                 <Divider label="Chat History" labelPosition="center" />
 
@@ -535,30 +754,206 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
                     data={FOUNDRY_AGENT_TYPES}
                     {...form.getInputProps('foundry_agent_type')}
                   />
-                  <Select
+                  <Autocomplete
                     label="API Version"
+                    placeholder="e.g. 2025-11-15-preview"
                     required
-                    withAsterisk
-                    data={FOUNDRY_API_VERSIONS}
+                    data={FOUNDRY_API_VERSIONS.map((v) => v.value)}
                     {...form.getInputProps('foundry_api_version')}
                   />
                 </Group>
 
-                <TextInput
+                <EndpointSuggestInput
                   label="Project Endpoint"
                   placeholder="https://your-project.services.ai.azure.com"
                   required
                   withAsterisk
+                  suggestions={configSuggestions['project_endpoint'] || []}
                   {...form.getInputProps('foundry_project_endpoint')}
                 />
 
-                <TextInput
+                <EndpointSuggestInput
                   label="Agent Name"
-                  placeholder="e.g. MyAssistantAgent"
+                  placeholder={isLoadingAgents ? 'Loading agents...' : 'e.g. MyAssistantAgent'}
                   required
                   withAsterisk
+                  suggestions={foundryAgentNames}
+                  onRefresh={refreshFoundryAgents}
+                  isRefreshing={isLoadingAgents}
                   {...form.getInputProps('foundry_agent_name')}
                 />
+                <ConnectionTestButton
+                  testType={TestConnectionType.FOUNDRY_AGENT}
+                  url={form.values.foundry_project_endpoint}
+                  config={{
+                    agent_name: form.values.foundry_agent_name,
+                    api_version: form.values.foundry_api_version,
+                  }}
+                  disabled={!form.values.foundry_project_endpoint || !form.values.foundry_agent_name}
+                />
+              </>
+            )}
+
+            {/* REST API Configuration Section */}
+            {form.values.type === ChatAgentTypeEnum.REST_API && (
+              <>
+                <Divider label="REST API Configuration" labelPosition="center" />
+
+                <Select
+                  label="Authentication Type"
+                  required
+                  withAsterisk
+                  data={REST_API_AUTH_TYPES}
+                  {...form.getInputProps('rest_api_auth_type')}
+                />
+
+                {AUTH_TYPES_REQUIRING_CREDENTIAL.has(form.values.rest_api_auth_type as RestApiAuthTypeEnum) && (
+                  <>
+                    <Group gap="xs" align="flex-end">
+                      <FilterableSelect
+                        label="Credential"
+                        placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
+                        required
+                        withAsterisk
+                        data={restApiCredentials}
+                        rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
+                        disabled={isLoadingCredentials}
+                        nothingFoundMessage="No matching credentials found"
+                        onFilterChange={setCredentialSearch}
+                        style={{ flex: 1 }}
+                        {...form.getInputProps('rest_api_credential_id')}
+                      />
+                      <Tooltip label="Create new Credential">
+                        <ActionIcon
+                          variant="light"
+                          color="blue"
+                          size="lg"
+                          onClick={() => handleOpenCreateCredential('rest_api')}
+                        >
+                          <IconPlus size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+
+                    {restApiCredentials.length === 0 && !isLoadingCredentials && (
+                      <Alert icon={<IconAlertCircle size={16} />} color="yellow" variant="light">
+                        No matching credentials available. Please create a credential first.
+                      </Alert>
+                    )}
+                  </>
+                )}
+
+                {form.values.rest_api_auth_type === RestApiAuthTypeEnum.API_KEY && (
+                  <TextInput
+                    label="API Key Header Name"
+                    placeholder="X-API-Key"
+                    description="HTTP header name used to send the API key (default: X-API-Key)"
+                    {...form.getInputProps('rest_api_api_key_header_name')}
+                  />
+                )}
+
+                <EndpointSuggestInput
+                  label="Invoke Endpoint"
+                  placeholder="https://api.example.com/agent/invoke"
+                  description="The POST endpoint URL for sending messages to the agent"
+                  required
+                  withAsterisk
+                  suggestions={configSuggestions['invoke_endpoint'] || []}
+                  {...form.getInputProps('rest_api_invoke_endpoint')}
+                />
+                <ConnectionTestButton
+                  testType={TestConnectionType.REST_API_INVOKE}
+                  url={form.values.rest_api_invoke_endpoint}
+                  credentialId={form.values.rest_api_credential_id || undefined}
+                  config={{
+                    auth_type: form.values.rest_api_auth_type,
+                    api_key_header_name: form.values.rest_api_api_key_header_name,
+                  }}
+                  disabled={!form.values.rest_api_invoke_endpoint}
+                />
+
+                <Divider label="Chat History" labelPosition="center" />
+
+                <Switch
+                  label="Use Unified Chat History"
+                  description="When enabled, chat history from unified-ui is sent with each request"
+                  {...form.getInputProps('rest_api_use_unified_chat_history', { type: 'checkbox' })}
+                />
+
+                {form.values.rest_api_use_unified_chat_history && (
+                  <NumberInput
+                    label="Chat History Count"
+                    description="Number of messages in chat history (1-100)"
+                    min={1}
+                    max={100}
+                    {...form.getInputProps('rest_api_chat_history_count')}
+                  />
+                )}
+
+                <Divider label="Conversation Management" labelPosition="center" />
+
+                <Switch
+                  label="Enable Conversation Endpoint"
+                  description="Call an external endpoint to create a conversation before sending the first message"
+                  {...form.getInputProps('rest_api_enable_conversation_endpoint', { type: 'checkbox' })}
+                />
+
+                {form.values.rest_api_enable_conversation_endpoint && (
+                  <>
+                    <EndpointSuggestInput
+                      label="Create Conversation Endpoint"
+                      placeholder="https://api.example.com/conversations"
+                      description="POST endpoint that returns a conversation_id"
+                      required
+                      withAsterisk
+                      suggestions={configSuggestions['create_conversation_endpoint'] || []}
+                      {...form.getInputProps('rest_api_create_conversation_endpoint')}
+                    />
+                    <ConnectionTestButton
+                      testType={TestConnectionType.REST_API_CONVERSATION}
+                      url={form.values.rest_api_create_conversation_endpoint}
+                      credentialId={form.values.rest_api_credential_id || undefined}
+                      config={{
+                        auth_type: form.values.rest_api_auth_type,
+                        api_key_header_name: form.values.rest_api_api_key_header_name,
+                    }}
+                      disabled={!form.values.rest_api_create_conversation_endpoint}
+                    />
+                  </>
+                )}
+              </>
+            )}
+
+            {form.values.type === ChatAgentTypeEnum.LLM && (
+              <>
+                <Divider label="LLM Configuration" labelPosition="center" />
+
+                <Select
+                  label="AI Model"
+                  placeholder={isLoadingAiModels ? 'Loading models...' : 'Select an AI model'}
+                  required
+                  withAsterisk
+                  data={aiModelOptions}
+                  disabled={isLoadingAiModels}
+                  searchable
+                  {...form.getInputProps('llm_ai_model_id')}
+                />
+
+                <Textarea
+                  label="System Prompt"
+                  placeholder="Optional system prompt for the LLM"
+                  minRows={3}
+                  maxRows={8}
+                  autosize
+                  {...form.getInputProps('llm_system_prompt')}
+                />
+
+                {form.values.llm_ai_model_id && (
+                  <ModelTestButton
+                    aiModels={aiModels}
+                    selectedModelId={form.values.llm_ai_model_id}
+                  />
+                )}
               </>
             )}
 
@@ -598,6 +993,16 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
               </Box>
             </Box>
 
+            {form.values.type && form.values.type !== ChatAgentTypeEnum.REACT_AGENT && (
+              <>
+                <Divider />
+                <GreetingMessagesInput
+                  value={form.values.greeting_messages}
+                  onChange={(msgs) => form.setFieldValue('greeting_messages', msgs)}
+                />
+              </>
+            )}
+
             <Group justify="flex-end" mt="md">
               <Button variant="default" onClick={handleClose} disabled={isSubmitting}>
                 Cancel
@@ -615,6 +1020,15 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
         opened={createCredentialOpen}
         onClose={() => setCreateCredentialOpen(false)}
         onSuccess={handleCredentialCreated}
+      />
+
+      {/* N8N Workflow Browser Dialog */}
+      <N8NWorkflowBrowserDialog
+        opened={workflowBrowserOpen}
+        onClose={() => setWorkflowBrowserOpen(false)}
+        host={n8nHostUrl}
+        credentialId={form.values.n8n_api_api_key_credential_id}
+        onSelect={(wf) => form.setFieldValue('n8n_workflow_endpoint', wf.url)}
       />
     </>
   );

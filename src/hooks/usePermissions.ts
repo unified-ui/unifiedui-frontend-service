@@ -4,34 +4,37 @@ import { TenantPermissionEnum, PermissionActionEnum, OrganizationRoleEnum } from
 
 export type ResourceType =
   | 'chat-agents'
-  | 'autonomous-agents'
+  | 'workflows'
   | 'chat-widgets'
   | 'conversations'
   | 'credentials'
   | 'custom-groups'
   | 'tools'
-  | 'tenant-ai-models';
+  | 'tenant-ai-models'
+  | 'external-apps';
 
 const CREATOR_ROLES: Record<ResourceType, TenantPermissionEnum> = {
   'chat-agents': TenantPermissionEnum.CHAT_AGENTS_CREATOR,
-  'autonomous-agents': TenantPermissionEnum.AUTONOMOUS_AGENTS_CREATOR,
+  'workflows': TenantPermissionEnum.AUTONOMOUS_AGENTS_CREATOR,
   'chat-widgets': TenantPermissionEnum.CHAT_WIDGETS_CREATOR,
   'conversations': TenantPermissionEnum.CONVERSATIONS_CREATOR,
   'credentials': TenantPermissionEnum.CREDENTIALS_CREATOR,
   'custom-groups': TenantPermissionEnum.CUSTOM_GROUP_CREATOR,
   'tools': TenantPermissionEnum.REACT_AGENT_CREATOR,
   'tenant-ai-models': TenantPermissionEnum.TENANT_AI_MODELS_ADMIN,
+  'external-apps': TenantPermissionEnum.EXTERNAL_APPS_CREATOR,
 };
 
 const ADMIN_ROLES: Record<ResourceType, TenantPermissionEnum> = {
   'chat-agents': TenantPermissionEnum.CHAT_AGENTS_ADMIN,
-  'autonomous-agents': TenantPermissionEnum.AUTONOMOUS_AGENTS_ADMIN,
+  'workflows': TenantPermissionEnum.AUTONOMOUS_AGENTS_ADMIN,
   'chat-widgets': TenantPermissionEnum.CHAT_WIDGETS_ADMIN,
   'conversations': TenantPermissionEnum.CONVERSATIONS_ADMIN,
   'credentials': TenantPermissionEnum.CREDENTIALS_ADMIN,
   'custom-groups': TenantPermissionEnum.CUSTOM_GROUPS_ADMIN,
   'tools': TenantPermissionEnum.REACT_AGENT_ADMIN,
   'tenant-ai-models': TenantPermissionEnum.TENANT_AI_MODELS_ADMIN,
+  'external-apps': TenantPermissionEnum.EXTERNAL_APPS_ADMIN,
 };
 
 const ORG_BYPASS_ROLES: ReadonlySet<string> = new Set([

@@ -141,10 +141,10 @@ export const darkTheme = createTheme({
 
   // Dark Mode spezifische Schatten (stärker)
   shadows: {
-    xs: '0 1px 3px rgba(0, 0, 0, 0.3)',
-    sm: '0 2px 8px rgba(0, 0, 0, 0.4)',
-    md: '0 4px 12px rgba(0, 0, 0, 0.5)',
-    lg: '0 8px 24px rgba(0, 0, 0, 0.6)',
-    xl: '0 16px 48px rgba(0, 0, 0, 0.7)',
+    xs: 'none',
+    sm: '0 0 0 1px rgba(255, 255, 255, 0.04)',
+    md: '0 0 0 1px rgba(255, 255, 255, 0.04), 0 2px 8px rgba(0, 0, 0, 0.3)',
+    lg: '0 0 0 1px rgba(255, 255, 255, 0.06), 0 4px 16px rgba(0, 0, 0, 0.4)',
+    xl: '0 0 0 1px rgba(255, 255, 255, 0.06), 0 8px 32px rgba(0, 0, 0, 0.5)',
   },
 });

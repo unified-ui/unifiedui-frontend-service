@@ -2,22 +2,25 @@ import type { FC } from 'react';
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Group, TextInput, ActionIcon, Avatar, Text, Title, useMantineColorScheme, Stack, Paper, Button, Divider, Select } from '@mantine/core';
-import { IconSearch, IconBrain, IconSun, IconMoon, IconLogout, IconPlus, IconBuilding } from '@tabler/icons-react';
+import { Group, TextInput, ActionIcon, Avatar, Text, Title, useMantineColorScheme, Stack, Paper, Button, Divider } from '@mantine/core';
+import { IconSearch, IconBrain, IconSun, IconMoon, IconLogout, IconPlus, IconBuilding, IconSwitchHorizontal } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
 import { useIdentity } from '../../../contexts';
 import { useKeyboardShortcuts } from '../../../hooks';
+import { APP_TITLE, SHOW_PLATFORM_SUBTITLE } from '../../../config';
+import { useBranding } from '../../../hooks/useBranding';
 import { CreateTenantDialog } from '../../dialogs';
 import { CreateOrganizationDialog } from '../../dialogs';
-import { CommandPalette } from '../../common';
+import { CommandPalette, FilterableSelect } from '../../common';
 import classes from './Header.module.css';
 
 export const Header: FC = () => {
   const { t } = useTranslation('header');
   const navigate = useNavigate();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
-  const { account, logout } = useAuth();
+  const { account, logout, switchAccount } = useAuth();
   const { user, isSystemAdmin, organization, tenants, selectedTenant, selectTenant } = useIdentity();
+  const branding = useBranding();
   const isDark = colorScheme === 'dark';
   const [userDropdownOpened, setUserDropdownOpened] = useState(false);
   const [isTenantDialogOpen, setIsTenantDialogOpen] = useState(false);
@@ -84,11 +87,20 @@ export const Header: FC = () => {
     <header className={classes.header}>
       <Group gap="sm" className={classes.logo} onClick={() => navigate('/dashboard')}>
         <div className={classes.logoWrapper}>
-          <IconBrain size={22} stroke={2} />
+          {branding.iconUrl ? (
+            <img src={branding.iconUrl} alt="" className={classes.logoIcon} />
+          ) : (
+            <IconBrain size={22} stroke={2} />
+          )}
         </div>
-        <Title order={2} className={classes.logoText}>
-          unified-ui
-        </Title>
+        <div className={classes.logoTextWrapper}>
+          <Title order={2} className={classes.logoText}>
+            {APP_TITLE}
+          </Title>
+          {SHOW_PLATFORM_SUBTITLE && (
+            <span className={classes.logoSubtitle}>powered by unified-ui</span>
+          )}
+        </div>
       </Group>
 
       <TextInput
@@ -145,11 +157,10 @@ export const Header: FC = () => {
 
                 <Stack gap="xs">
                   <Text size="xs" fw={700}>{t('tenantLabel')}</Text>
-                  <Select
+                  <FilterableSelect
                     data={tenantOptions}
                     value={selectedTenant?.id || null}
                     onChange={handleTenantChange}
-                    searchable
                     size="xs"
                     placeholder={t('selectTenant')}
                     disabled={tenants.length === 0}
@@ -189,6 +200,15 @@ export const Header: FC = () => {
                 )}
 
                 <Divider />
+
+                <Button
+                  leftSection={<IconSwitchHorizontal size={16} />}
+                  variant="subtle"
+                  fullWidth
+                  onClick={switchAccount}
+                >
+                  {t('switchAccount')}
+                </Button>
 
                 <Button
                   leftSection={<IconLogout size={16} />}

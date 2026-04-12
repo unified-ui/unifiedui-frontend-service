@@ -11,8 +11,10 @@ import {
 } from '../../api/types';
 import { filesToAttachments } from '../../utils/fileUtils';
 import type { UnifiedUIAPIClient } from '../../api/client';
+import { type ReActStreamState, useReActChat } from './useReActChat';
 
 const CONTEXT_DATA_PREFIX = 'ctx_';
+const MESSAGE_PAGE_SIZE = 25;
 
 function extractContextDataFromSearchParams(
   searchParams: URLSearchParams
@@ -44,6 +46,7 @@ interface UseChatParams {
   setSelectedChatAgentId: React.Dispatch<React.SetStateAction<string | undefined>>;
   onRefreshTraces: () => Promise<void>;
   onNavigate?: (path: string, options?: { replace?: boolean }) => void;
+  onMessageSent?: (chatAgentId: string, chatAgentName: string) => void;
 }
 
 interface UseChatReturn {
@@ -53,16 +56,23 @@ interface UseChatReturn {
   streamingContent: string;
   streamingMessageId: string | undefined;
   isLoadingMessages: boolean;
+  isLoadingMoreMessages: boolean;
+  hasMoreMessages: boolean;
+  setIsLoadingMessages: React.Dispatch<React.SetStateAction<boolean>>;
   abortControllerRef: React.RefObject<AbortController | null>;
   justCreatedConversationRef: React.RefObject<string | null>;
   reactions: Map<string, ReactionResponse>;
-  handleSendMessage: (content: string, attachments?: File[]) => Promise<void>;
+  reActState: ReActStreamState;
+  hasReasoningSteps: boolean;
+  setIsReasoningExpanded: (expanded: boolean) => void;
+  handleSendMessage: (content: string, attachments?: File[], extra?: Record<string, unknown>) => Promise<void>;
   handleEditMessage: (messageId: string, newContent: string) => Promise<void>;
   handleDeleteMessage: (messageId: string) => Promise<void>;
   handleReaction: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string) => Promise<void>;
   handleCancelStream: () => void;
   resetStreamingState: () => void;
   loadConversationMessages: (convId: string) => Promise<void>;
+  loadMoreMessages: () => Promise<void>;
 }
 
 export function useChat({
@@ -78,6 +88,7 @@ export function useChat({
   setSelectedChatAgentId,
   onRefreshTraces,
   onNavigate,
+  onMessageSent,
 }: UseChatParams): UseChatReturn {
   const routerNavigate = useNavigate();
   const nav = onNavigate ?? routerNavigate;
@@ -88,16 +99,42 @@ export function useChat({
   const [streamingContent, setStreamingContent] = useState('');
   const [streamingMessageId, setStreamingMessageId] = useState<string | undefined>();
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isLoadingMoreMessages, setIsLoadingMoreMessages] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [reactions, setReactions] = useState<Map<string, ReactionResponse>>(new Map());
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const justCreatedConversationRef = useRef<string | null>(null);
+
+  const {
+    reActState,
+    hasReasoningSteps,
+    setIsReasoningExpanded,
+    resetReActState,
+    onReasoningStart,
+    onReasoningStream,
+    onReasoningEnd,
+    onToolCallStart,
+    onToolCallStream,
+    onToolCallEnd,
+    onPlanStart,
+    onPlanStream,
+    onPlanComplete,
+    onSubAgentStart,
+    onSubAgentStream,
+    onSubAgentEnd,
+    onSynthesisStart,
+    onSynthesisStream,
+    onTrace,
+    onReActStreamEnd,
+  } = useReActChat();
 
   const resetStreamingState = useCallback(() => {
     setIsStreaming(false);
     setStreamingContent('');
     setStreamingMessageId(undefined);
     setMessages([]);
+    setIsLoadingMessages(true);
   }, []);
 
   const handleCancelStream = useCallback(() => {
@@ -125,32 +162,40 @@ export function useChat({
     if (!apiClient || !tenantId) return;
 
     setIsLoadingMessages(true);
+    setHasMoreMessages(false);
     try {
       const [convData, messagesData] = await Promise.all([
         apiClient.getConversation(tenantId, convId),
-        apiClient.getMessages(tenantId, convId),
+        apiClient.getMessages(tenantId, convId, { limit: MESSAGE_PAGE_SIZE }),
       ]);
 
       setCurrentConversation(convData);
       const loadedMessages = [...messagesData.messages].reverse();
       setMessages(loadedMessages);
+      setHasMoreMessages(messagesData.hasMore);
+      setIsLoadingMessages(false);
       setSelectedChatAgentId(convData.chat_agent_id);
 
-      const assistantMessages = loadedMessages.filter(m => m.type === 'assistant' && !m.id.startsWith('temp-'));
-      const reactionsMap = new Map<string, ReactionResponse>();
-      await Promise.all(
-        assistantMessages.map(async (msg) => {
-          try {
-            const res = await apiClient.getReactions(tenantId, convId, msg.id);
-            if (res.reactions.length > 0) {
-              reactionsMap.set(msg.id, res.reactions[0]);
+      const assistantMessageIds = loadedMessages
+        .filter(m => m.type === 'assistant' && !m.id.startsWith('temp-'))
+        .map(m => m.id);
+
+      if (assistantMessageIds.length > 0) {
+        try {
+          const bulkRes = await apiClient.getBulkReactions(tenantId, convId, assistantMessageIds);
+          const reactionsMap = new Map<string, ReactionResponse>();
+          for (const [msgId, msgReactions] of Object.entries(bulkRes.reactions)) {
+            if (msgReactions.length > 0) {
+              reactionsMap.set(msgId, msgReactions[0]);
             }
-          } catch {
-            // ignore
           }
-        })
-      );
-      setReactions(reactionsMap);
+          setReactions(reactionsMap);
+        } catch {
+          setReactions(new Map());
+        }
+      } else {
+        setReactions(new Map());
+      }
     } catch (error) {
       console.error('Failed to load conversation:', error);
       notifications.show({
@@ -160,9 +205,48 @@ export function useChat({
       });
       nav('/conversations');
     } finally {
-      setIsLoadingMessages(false);
+      if (isLoadingMessages) setIsLoadingMessages(false);
     }
-  }, [apiClient, tenantId, nav, setCurrentConversation, setSelectedChatAgentId]);
+  }, [apiClient, tenantId, nav, setCurrentConversation, setSelectedChatAgentId, isLoadingMessages]);
+
+  const loadMoreMessages = useCallback(async () => {
+    if (!apiClient || !tenantId || !conversationId || !hasMoreMessages || isLoadingMoreMessages) return;
+
+    setIsLoadingMoreMessages(true);
+    try {
+      const data = await apiClient.getMessages(tenantId, conversationId, {
+        limit: MESSAGE_PAGE_SIZE,
+        skip: messages.length,
+      });
+
+      const olderMessages = [...data.messages].reverse();
+      setMessages(prev => [...olderMessages, ...prev]);
+      setHasMoreMessages(data.hasMore);
+
+      const assistantIds = olderMessages
+        .filter(m => m.type === 'assistant' && !m.id.startsWith('temp-'))
+        .map(m => m.id);
+
+      if (assistantIds.length > 0) {
+        try {
+          const bulkRes = await apiClient.getBulkReactions(tenantId, conversationId, assistantIds);
+          setReactions(prev => {
+            const next = new Map(prev);
+            for (const [msgId, msgReactions] of Object.entries(bulkRes.reactions)) {
+              if (msgReactions.length > 0) {
+                next.set(msgId, msgReactions[0]);
+              }
+            }
+            return next;
+          });
+        } catch { /* ignore */ }
+      }
+    } catch (error) {
+      console.error('Failed to load more messages:', error);
+    } finally {
+      setIsLoadingMoreMessages(false);
+    }
+  }, [apiClient, tenantId, conversationId, hasMoreMessages, isLoadingMoreMessages, messages.length]);
 
   const executeStream = useCallback(async (
     content: string,
@@ -172,6 +256,7 @@ export function useChat({
     foundryToken: string | undefined,
     isFoundryApp: boolean,
     files?: FileAttachment[],
+    extra?: Record<string, unknown>,
   ) => {
     let accumulatedContent = '';
     let currentStreamingMessageId = '';
@@ -190,6 +275,7 @@ export function useChat({
         },
         invokeConfig: contextData ? { contextData } : undefined,
         extConversationId: isFoundryApp ? activeExtConversationId : undefined,
+        extra,
       },
       (messageId: string, _newConversationId: string, isNewMessage: boolean) => {
         if (isNewMessage) {
@@ -234,6 +320,9 @@ export function useChat({
         }
       },
       (chunk: string) => {
+        if (!accumulatedContent && hasReasoningSteps) {
+          onReActStreamEnd();
+        }
         accumulatedContent += chunk;
         setStreamingContent(accumulatedContent);
       },
@@ -265,6 +354,7 @@ export function useChat({
 
         setStreamingContent('');
         setStreamingMessageId(undefined);
+        onReActStreamEnd();
       },
       async (code: string, message: string, details: string) => {
         console.error('Stream error:', { code, message, details });
@@ -315,21 +405,21 @@ export function useChat({
           }
         }, 30);
       },
-      undefined, // onReasoningStart
-      undefined, // onReasoningStream
-      undefined, // onReasoningEnd
-      undefined, // onToolCallStart
-      undefined, // onToolCallStream
-      undefined, // onToolCallEnd
-      undefined, // onPlanStart
-      undefined, // onPlanStream
-      undefined, // onPlanComplete
-      undefined, // onSubAgentStart
-      undefined, // onSubAgentStream
-      undefined, // onSubAgentEnd
-      undefined, // onSynthesisStart
-      undefined, // onSynthesisStream
-      undefined, // onTrace
+      onReasoningStart,
+      onReasoningStream,
+      onReasoningEnd,
+      onToolCallStart,
+      onToolCallStream,
+      onToolCallEnd,
+      onPlanStart,
+      onPlanStream,
+      onPlanComplete,
+      onSubAgentStart,
+      onSubAgentStream,
+      onSubAgentEnd,
+      onSynthesisStart,
+      onSynthesisStream,
+      onTrace,
       foundryToken,
       abortControllerRef.current?.signal
     );
@@ -339,9 +429,9 @@ export function useChat({
         break;
       }
     }
-  }, [apiClient, tenantId, selectedChatAgentId, searchParams, setConversations, setCurrentConversation, onRefreshTraces]);
+  }, [apiClient, tenantId, selectedChatAgentId, searchParams, setConversations, setCurrentConversation, onRefreshTraces, hasReasoningSteps, onReasoningStart, onReasoningStream, onReasoningEnd, onToolCallStart, onToolCallStream, onToolCallEnd, onPlanStart, onPlanStream, onPlanComplete, onSubAgentStart, onSubAgentStream, onSubAgentEnd, onSynthesisStart, onSynthesisStream, onTrace, onReActStreamEnd]);
 
-  const handleSendMessage = useCallback(async (content: string, attachments?: File[]) => {
+  const handleSendMessage = useCallback(async (content: string, attachments?: File[], extra?: Record<string, unknown>) => {
     if (!apiClient || !tenantId || !selectedChatAgentId) {
       notifications.show({
         title: 'Error',
@@ -372,6 +462,7 @@ export function useChat({
       fileType: file.type,
       fileSize: file.size,
       fileCategory: file.type.startsWith('image/') ? 'image' : file.type.startsWith('audio/') ? 'audio' : 'file',
+      fileId: undefined as string | undefined,
     }));
 
     const optimisticUserMessage: MessageResponse = {
@@ -382,6 +473,7 @@ export function useChat({
       content,
       status: 'pending',
       attachmentsMetadata,
+      extra,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -389,6 +481,7 @@ export function useChat({
     setMessages(prev => [...prev, optimisticUserMessage]);
     setIsStreaming(true);
     setStreamingContent('');
+    resetReActState();
 
     if (!activeConversationId) {
       try {
@@ -406,7 +499,8 @@ export function useChat({
 
         justCreatedConversationRef.current = newConv.id;
 
-        nav(`/conversations/${newConv.id}`, { replace: true });
+        const qs = searchParams.toString();
+        nav(`/conversations/${newConv.id}${qs ? `?${qs}` : ''}`, { replace: true });
 
         setCurrentConversation(newConv);
         setConversations(prev => [newConv, ...prev]);
@@ -427,6 +521,41 @@ export function useChat({
     let files: FileAttachment[] | undefined;
     if (attachments && attachments.length > 0) {
       files = await filesToAttachments(attachments);
+
+      try {
+        const uploadResults = await Promise.all(
+          attachments.map(file =>
+            apiClient.uploadFile(tenantId, file, 'CHAT_ATTACHMENT', activeConversationId)
+          )
+        );
+        uploadResults.forEach((result, index) => {
+          if (attachmentsMetadata) {
+            attachmentsMetadata[index].fileId = result.id;
+          }
+          if (files) {
+            files[index].fileId = result.id;
+          }
+        });
+        if (attachmentsMetadata) {
+          setMessages(prev =>
+            prev.map(m =>
+              m.id === optimisticUserMessage.id
+                ? { ...m, attachmentsMetadata: [...attachmentsMetadata] }
+                : m
+            )
+          );
+        }
+      } catch (error) {
+        console.error('Failed to upload files to storage:', error);
+      }
+    }
+
+    // Track chat agent visit when sending message
+    if (onMessageSent && selectedChatAgentId) {
+      const selectedAgent = chatAgents.find(a => a.id === selectedChatAgentId);
+      if (selectedAgent) {
+        onMessageSent(selectedAgent.id, selectedAgent.name);
+      }
     }
 
     try {
@@ -438,6 +567,7 @@ export function useChat({
         foundryToken,
         isFoundryApp,
         files,
+        extra,
       );
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -455,7 +585,8 @@ export function useChat({
         });
       }
     }
-  }, [apiClient, tenantId, selectedChatAgentId, conversationId, chatAgents, currentConversation, getFoundryToken, nav, setCurrentConversation, setConversations, executeStream]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiClient, tenantId, selectedChatAgentId, conversationId, chatAgents, currentConversation, getFoundryToken, nav, setCurrentConversation, setConversations, executeStream, resetReActState, onMessageSent]);
 
   const handleEditMessage = useCallback(async (messageId: string, newContent: string) => {
     if (!apiClient || !tenantId || !conversationId) return;
@@ -555,6 +686,9 @@ export function useChat({
     streamingContent,
     streamingMessageId,
     isLoadingMessages,
+    isLoadingMoreMessages,
+    hasMoreMessages,
+    setIsLoadingMessages,
     abortControllerRef,
     justCreatedConversationRef,
     handleSendMessage,
@@ -563,7 +697,11 @@ export function useChat({
     handleReaction,
     handleCancelStream,
     reactions,
+    reActState,
+    hasReasoningSteps,
+    setIsReasoningExpanded,
     resetStreamingState,
     loadConversationMessages,
+    loadMoreMessages,
   };
 }
