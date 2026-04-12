@@ -27,6 +27,7 @@ describe('ImportExportActions', () => {
         schema={schema}
         widgetName="Test Widget"
         onImport={vi.fn()}
+        onEditDetails={vi.fn()}
       />,
     );
     const buttons = screen.getAllByRole('button');
@@ -39,6 +40,7 @@ describe('ImportExportActions', () => {
         schema={schema}
         widgetName="Test Widget"
         onImport={vi.fn()}
+        onEditDetails={vi.fn()}
       />,
     );
     const fileInput = container.querySelector('input[type="file"]');

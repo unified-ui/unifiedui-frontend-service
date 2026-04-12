@@ -1654,7 +1654,7 @@ export class UnifiedUIAPIClient {
 
   async listExternalApps(
     tenantId: string,
-    params?: PaginationParams & OrderParams & FieldSelectParams,
+    params?: PaginationParams & OrderParams & FieldSelectParams & { view?: 'quick-list' },
     options?: RequestOptions
   ): Promise<ExternalAppResponse[]> {
     const query = this.buildQueryString(params || {});

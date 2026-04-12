@@ -172,7 +172,7 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
   });
 
   useFormDirtyGuard(form.isDirty());
-  const { suggestions: configSuggestions } = useConfigSuggestions(form.values.type);
+  const { suggestions: configSuggestions } = useConfigSuggestions(workflow?.type || '');
 
   const n8nHostUrl = useMemo(() => {
     const endpoint = form.values.n8n_workflow_endpoint || '';

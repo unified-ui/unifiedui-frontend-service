@@ -9,7 +9,7 @@ export interface EndpointSuggestInputProps {
   required?: boolean;
   withAsterisk?: boolean;
   suggestions: string[];
-  value: string;
+  value?: string;
   onChange: (value: string) => void;
   error?: string;
   onBlur?: () => void;

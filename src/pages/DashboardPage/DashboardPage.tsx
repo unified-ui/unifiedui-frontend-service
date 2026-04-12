@@ -107,7 +107,7 @@ const RESOURCE_ICON_COLORS: Record<string, { bg: string; fg: string }> = {
   external_app: { bg: 'var(--mantine-color-pink-1)', fg: 'var(--mantine-color-pink-6)' },
 };
 
-const RESOURCE_ICONS: Record<string, FC<{ size?: number; style?: React.CSSProperties }>> = {
+const RESOURCE_ICONS: Partial<Record<string, FC<{ size?: number; style?: React.CSSProperties }>>> = {
   chat_agent: IconSparkles,
   workflow: IconRobot,
   conversation: IconMessages,
@@ -123,7 +123,7 @@ const FAVORITE_ICON_COLORS: Record<string, { bg: string; fg: string }> = {
   [FavoriteResourceTypeEnum.CHAT_WIDGET]: { bg: 'var(--mantine-color-orange-1)', fg: 'var(--mantine-color-orange-6)' },
 };
 
-const FAVORITE_ICONS: Record<string, FC<{ size?: number; style?: React.CSSProperties }>> = {
+const FAVORITE_ICONS: Partial<Record<string, FC<{ size?: number; style?: React.CSSProperties }>>> = {
   [FavoriteResourceTypeEnum.CHAT_AGENT]: IconSparkles,
   [FavoriteResourceTypeEnum.AUTONOMOUS_AGENT]: IconRobot,
   [FavoriteResourceTypeEnum.CONVERSATION]: IconMessages,
