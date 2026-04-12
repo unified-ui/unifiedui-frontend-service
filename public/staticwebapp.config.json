@@ -1,0 +1,18 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/assets/*",
+      "/branding/*",
+      "*.svg",
+      "*.png",
+      "*.ico",
+      "*.js",
+      "*.css"
+    ]
+  },
+  "globalHeaders": {
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff"
+  }
+}

@@ -1,7 +1,8 @@
 import type { FC } from 'react';
 import { useState } from 'react';
-import { Modal, TextInput, Textarea, Button, Stack, Group, Box } from '@mantine/core';
+import { Modal, TextInput, Textarea, Button, Stack, Group, Box, Text } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { IconUsers } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 
@@ -70,7 +71,12 @@ export const CreateCustomGroupDialog: FC<CreateCustomGroupDialogProps> = ({
     <Modal
       opened={opened}
       onClose={handleClose}
-      title="Create Custom Group"
+      title={
+        <Group gap="sm">
+          <IconUsers size={24} />
+          <Text fw={600} size="lg">Create Custom Group</Text>
+        </Group>
+      }
       size="lg"
       centered
     >

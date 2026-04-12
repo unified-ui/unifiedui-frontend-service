@@ -30,7 +30,9 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { useIdentity } from '../../contexts';
+import { EditChatWidgetDialog } from '../../components/dialogs';
+import { useIdentity, useRecentVisits } from '../../contexts';
+import { useDialogParams } from '../../hooks';
 import { loadWidgetSchema, schemaToConfig } from './schemaMigration';
 import { useUndoRedo } from './useUndoRedo';
 import { useAutoSaveDraft } from './useAutoSaveDraft';
@@ -56,6 +58,8 @@ export const WidgetDesignerPage: FC = () => {
   const { widgetId } = useParams<{ widgetId: string }>();
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
+  const { trackVisit } = useRecentVisits();
+  const { dialog, openDialog, closeDialog } = useDialogParams();
 
   const { state: schema, set: setSchema, undo, redo, canUndo, canRedo, reset } = useUndoRedo<WidgetFormSchema>(EMPTY_SCHEMA);
   const [savedSchema, setSavedSchema] = useState<WidgetFormSchema | undefined>(undefined);
@@ -108,6 +112,16 @@ export const WidgetDesignerPage: FC = () => {
       .catch(() => { /* handled by API client */ })
       .finally(() => setIsLoading(false));
   }, [widgetId, apiClient, selectedTenant, reset]);
+
+  useEffect(() => {
+    if (widgetId && widgetName) {
+      trackVisit({
+        resource_type: 'chat_widget',
+        resource_id: widgetId,
+        resource_name: widgetName,
+      });
+    }
+  }, [widgetId, widgetName, trackVisit]);
 
   const updateFields = useCallback((updater: (prev: WidgetFieldConfig[]) => WidgetFieldConfig[]) => {
     setSchema({
@@ -376,6 +390,7 @@ export const WidgetDesignerPage: FC = () => {
                 schema={schema}
                 widgetName={widgetName}
                 onImport={handleImportSchema}
+                onEditDetails={() => openDialog('edit-details')}
               />
               <Button
                 leftSection={<IconDeviceFloppy size={16} />}
@@ -419,7 +434,7 @@ export const WidgetDesignerPage: FC = () => {
             >
               <div
                 className={classes.canvasScrollInner}
-                style={mode === 'demo' ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' } : undefined}
+                style={mode === 'demo' ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 } : undefined}
               >
                 <div
                   className={classes.canvasCard}
@@ -473,6 +488,26 @@ export const WidgetDesignerPage: FC = () => {
           )}
         </div>
       </div>
+
+      <EditChatWidgetDialog
+        opened={dialog === 'edit-details'}
+        chatWidgetId={widgetId || null}
+        initialData={null}
+        activeTab="details"
+        onClose={closeDialog}
+        onSuccess={() => {
+          closeDialog();
+          if (widgetId && apiClient && selectedTenant) {
+            apiClient.getChatWidget(selectedTenant.id, widgetId)
+              .then((widget) => {
+                setWidgetName(widget.name);
+                savedNameRef.current = widget.name;
+              })
+              .catch(() => {});
+          }
+        }}
+        onTabChange={() => {}}
+      />
     </MainLayout>
   );
 };

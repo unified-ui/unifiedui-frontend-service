@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Center, Loader } from '@mantine/core';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { useIdentity } from '../../contexts';
+import { useIdentity, useRecentVisits } from '../../contexts';
 import type { ExternalAppResponse } from '../../api/types';
 import classes from './ExternalAppPage.module.css';
 
@@ -11,6 +11,7 @@ export const ExternalAppPage: FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
+  const { trackVisit } = useRecentVisits();
   const [app, setApp] = useState<ExternalAppResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -23,6 +24,16 @@ export const ExternalAppPage: FC = () => {
       .finally(() => { if (!cancelled) setIsLoading(false); });
     return () => { cancelled = true; };
   }, [apiClient, selectedTenant, id, navigate]);
+
+  useEffect(() => {
+    if (app) {
+      trackVisit({
+        resource_type: 'external_app',
+        resource_id: app.id,
+        resource_name: app.name,
+      });
+    }
+  }, [app, trackVisit]);
 
   if (isLoading || !app) {
     return (

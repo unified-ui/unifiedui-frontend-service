@@ -16,6 +16,7 @@ import {
   Badge,
   SegmentedControl,
   Divider,
+  Switch,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconAlertCircle, IconKey, IconInfoCircle, IconShieldLock } from '@tabler/icons-react';
@@ -67,7 +68,8 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
   onTabChange,
 }) => {
   const { apiClient, selectedTenant } = useIdentity();
-  const { t } = useTranslation();
+  const { t } = useTranslation('credentials');
+  const { t: tc } = useTranslation('common');
   const { isGlobalAdmin } = usePermissions();
   const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission === 'ADMIN';
   const [credential, setCredential] = useState<CredentialResponse | null>(null);
@@ -396,6 +398,13 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
                 withAsterisk
                 maxLength={255}
                 {...form.getInputProps('name')}
+              />
+
+              <Switch
+                label={tc('active')}
+                description={tc('activeDescription')}
+                checked={form.values.is_active}
+                onChange={(event) => form.setFieldValue('is_active', event.currentTarget.checked)}
               />
 
               {credential && (

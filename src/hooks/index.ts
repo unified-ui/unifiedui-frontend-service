@@ -1,6 +1,7 @@
 export { useEntityPermissions } from './useEntityPermissions';
 export type { EntityType } from './useEntityPermissions';
 export { useEntityList } from './useEntityList';
+export { useDialogParams } from './useDialogParams';
 export { useKeyboardShortcuts } from './useKeyboardShortcuts';
 export { useDelayedLoading } from './useDelayedLoading';
 export { useUnsavedChanges } from './useUnsavedChanges';
@@ -11,3 +12,6 @@ export { useChat, useFileUpload, useWidgetCache } from './chat';
 export type { WidgetCache } from './chat';
 export { useConversationList, useConversationTracing, useConversationWidgets } from './conversation';
 export { useBranding } from './useBranding';
+export { useConfigSuggestions } from './useConfigSuggestions';
+export { useFoundryAgents } from './useFoundryAgents';
+export { useN8NWorkflows } from './useN8NWorkflows';

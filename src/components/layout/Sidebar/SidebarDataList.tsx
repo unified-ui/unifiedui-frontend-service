@@ -69,7 +69,7 @@ export interface SidebarDataListProps {
   /** Check if an item is a favorite */
   isFavorite?: (id: string) => boolean;
   /** Callback when favorite is toggled */
-  onToggleFavorite?: (id: string) => void;
+  onToggleFavorite?: (id: string, name: string) => void;
 }
 
 const ITEMS_PER_PAGE = 20;
@@ -346,7 +346,7 @@ export const SidebarDataList: FC<SidebarDataListProps> = ({
                         size="xs"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onToggleFavorite?.(item.id);
+                          onToggleFavorite?.(item.id, item.name);
                         }}
                         className={classes.favoriteIndicator}
                       >

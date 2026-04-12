@@ -38,12 +38,12 @@ import type {
   CreateChatAgentRequest,
   UpdateChatAgentRequest,
   SetChatAgentPermissionRequest,
-  // Autonomous Agent Types
-  AutonomousAgentResponse,
-  CreateAutonomousAgentRequest,
-  UpdateAutonomousAgentRequest,
-  SetAutonomousAgentPermissionRequest,
-  AutonomousAgentKeyResponse,
+  // Workflow Types
+  WorkflowResponse,
+  CreateWorkflowRequest,
+  UpdateWorkflowRequest,
+  SetWorkflowPermissionRequest,
+  WorkflowKeyResponse,
   ListWorkflowRunsResponse,
   WorkflowRunRetryResponse,
   // Conversation Types
@@ -90,11 +90,18 @@ import type {
   // User Favorites Types
   UserFavoriteResponse,
   UserFavoritesListResponse,
+  UserFavoritesUnifiedResponse,
   // Dashboard Types
   DashboardStatsResponse,
   // Search Types
   SearchResponse,
   GlobalSearchParams,
+  // Config Suggestions Types
+  ConfigSuggestionsResponse,
+  // Foundry Discovery Types
+  FoundryAgentListResponse,
+  // N8N Browser Types
+  N8NWorkflowListResponse,
   // Recent Visits Types
   RecentVisitListResponse,
   SyncRecentVisitsRequest,
@@ -159,6 +166,11 @@ export interface APIClientConfig {
   onSuccess?: (message: string) => void;
 }
 
+export interface RequestOptions {
+  noCache?: boolean;
+  silent?: boolean;
+}
+
 // ========== API Client ==========
 
 export class UnifiedUIAPIClient {
@@ -181,7 +193,7 @@ export class UnifiedUIAPIClient {
     path: string,
     body?: unknown,
     successMessage?: string,
-    options?: { noCache?: boolean; additionalHeaders?: Record<string, string> }
+    options?: RequestOptions & { additionalHeaders?: Record<string, string> }
   ): Promise<T> {
     try {
       const token = await this.getAccessToken();
@@ -230,7 +242,7 @@ export class UnifiedUIAPIClient {
 
       return data;
     } catch (error) {
-      if (this.onError && error instanceof Error) {
+      if (this.onError && error instanceof Error && !options?.silent) {
         this.onError(error);
       }
       throw error;
@@ -256,7 +268,7 @@ export class UnifiedUIAPIClient {
 
   // ========== Identity Endpoints ==========
 
-  async getMe(options?: { noCache?: boolean }): Promise<MeResponse> {
+  async getMe(options?: RequestOptions): Promise<MeResponse> {
     return this.request<MeResponse>('GET', '/api/v1/platform-service/identity/me', undefined, undefined, options);
   }
 
@@ -359,7 +371,7 @@ export class UnifiedUIAPIClient {
   async listChatAgents(
     tenantId: string,
     params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
-    options?: { noCache?: boolean }
+    options?: RequestOptions
   ): Promise<ChatAgentResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<ChatAgentResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents${query}`, undefined, undefined, options);
@@ -379,6 +391,10 @@ export class UnifiedUIAPIClient {
 
   async deleteChatAgent(tenantId: string, chatAgentId: string): Promise<void> {
     return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}`, undefined, 'Chat agent deleted successfully');
+  }
+
+  async duplicateChatAgent(tenantId: string, chatAgentId: string): Promise<ChatAgentResponse> {
+    return this.request<ChatAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/duplicate`, undefined, 'Chat agent duplicated successfully');
   }
 
   // ========== Chat Agent Permissions ==========
@@ -406,44 +422,48 @@ export class UnifiedUIAPIClient {
     );
   }
 
-  // ========== Autonomous Agent Endpoints ==========
+  // ========== Workflow Endpoints ==========
 
-  async listAutonomousAgents(
+  async listWorkflows(
     tenantId: string,
     params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
-    options?: { noCache?: boolean }
-  ): Promise<AutonomousAgentResponse[] | QuickListItemResponse[]> {
+    options?: RequestOptions
+  ): Promise<WorkflowResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
-    return this.request<AutonomousAgentResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents${query}`, undefined, undefined, options);
+    return this.request<WorkflowResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/workflows${query}`, undefined, undefined, options);
   }
 
-  async getAutonomousAgent(tenantId: string, agentId: string): Promise<AutonomousAgentResponse> {
-    return this.request<AutonomousAgentResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}`);
+  async getWorkflow(tenantId: string, agentId: string): Promise<WorkflowResponse> {
+    return this.request<WorkflowResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/workflows/${agentId}`);
   }
 
-  async createAutonomousAgent(tenantId: string, data: CreateAutonomousAgentRequest): Promise<AutonomousAgentResponse> {
-    return this.request<AutonomousAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents`, data, 'Autonomous agent created successfully');
+  async createWorkflow(tenantId: string, data: CreateWorkflowRequest): Promise<WorkflowResponse> {
+    return this.request<WorkflowResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/workflows`, data, 'Workflow created successfully');
   }
 
-  async updateAutonomousAgent(tenantId: string, agentId: string, data: UpdateAutonomousAgentRequest): Promise<AutonomousAgentResponse> {
-    return this.request<AutonomousAgentResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}`, data, 'Autonomous agent updated successfully');
+  async updateWorkflow(tenantId: string, agentId: string, data: UpdateWorkflowRequest): Promise<WorkflowResponse> {
+    return this.request<WorkflowResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/workflows/${agentId}`, data, 'Workflow updated successfully');
   }
 
-  async deleteAutonomousAgent(tenantId: string, agentId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}`, undefined, 'Autonomous agent deleted successfully');
+  async deleteWorkflow(tenantId: string, agentId: string): Promise<void> {
+    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/workflows/${agentId}`, undefined, 'Workflow deleted successfully');
   }
 
-  // ========== Autonomous Agent Permissions ==========
-
-  async getAutonomousAgentPrincipals(tenantId: string, agentId: string): Promise<ResourcePrincipalsResponse> {
-    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/principals`);
+  async duplicateWorkflow(tenantId: string, agentId: string): Promise<WorkflowResponse> {
+    return this.request<WorkflowResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/workflows/${agentId}/duplicate`, undefined, 'Workflow duplicated successfully');
   }
 
-  async setAutonomousAgentPermission(tenantId: string, agentId: string, data: SetAutonomousAgentPermissionRequest): Promise<PrincipalWithRolesResponse> {
-    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/principals`, data, 'Permission added successfully');
+  // ========== Workflow Permissions ==========
+
+  async getWorkflowPrincipals(tenantId: string, agentId: string): Promise<ResourcePrincipalsResponse> {
+    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/workflows/${agentId}/principals`);
   }
 
-  async deleteAutonomousAgentPermission(
+  async setWorkflowPermission(tenantId: string, agentId: string, data: SetWorkflowPermissionRequest): Promise<PrincipalWithRolesResponse> {
+    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/workflows/${agentId}/principals`, data, 'Permission added successfully');
+  }
+
+  async deleteWorkflowPermission(
     tenantId: string,
     agentId: string,
     principalId: string,
@@ -452,25 +472,25 @@ export class UnifiedUIAPIClient {
   ): Promise<void> {
     return this.request<void>(
       'DELETE',
-      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/principals`,
+      `/api/v1/platform-service/tenants/${tenantId}/workflows/${agentId}/principals`,
       { principal_id: principalId, principal_type: principalType, role },
       'Permission removed successfully'
     );
   }
 
-  // ========== Autonomous Agent Keys ==========
+  // ========== Workflow Keys ==========
 
-  async getAutonomousAgentKey(tenantId: string, agentId: string, keyNumber: 1 | 2): Promise<AutonomousAgentKeyResponse> {
-    return this.request<AutonomousAgentKeyResponse>(
+  async getWorkflowKey(tenantId: string, agentId: string, keyNumber: 1 | 2): Promise<WorkflowKeyResponse> {
+    return this.request<WorkflowKeyResponse>(
       'GET',
-      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/keys/${keyNumber}`
+      `/api/v1/platform-service/tenants/${tenantId}/workflows/${agentId}/keys/${keyNumber}`
     );
   }
 
-  async rotateAutonomousAgentKey(tenantId: string, agentId: string, keyNumber: 1 | 2): Promise<AutonomousAgentKeyResponse> {
-    return this.request<AutonomousAgentKeyResponse>(
+  async rotateWorkflowKey(tenantId: string, agentId: string, keyNumber: 1 | 2): Promise<WorkflowKeyResponse> {
+    return this.request<WorkflowKeyResponse>(
       'PUT',
-      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/keys/${keyNumber}/rotate`,
+      `/api/v1/platform-service/tenants/${tenantId}/workflows/${agentId}/keys/${keyNumber}/rotate`,
       undefined,
       'API key rotated successfully'
     );
@@ -478,7 +498,7 @@ export class UnifiedUIAPIClient {
 
   // ========== Conversation Endpoints ==========
 
-  async listConversations(tenantId: string, params?: PaginationParams & OrderParams & FieldSelectParams & { name?: string; view?: 'quick-list' }, options?: { noCache?: boolean }): Promise<ConversationResponse[] | ConversationQuickListItemResponse[]> {
+  async listConversations(tenantId: string, params?: PaginationParams & OrderParams & FieldSelectParams & { name?: string; view?: 'quick-list' }, options?: RequestOptions): Promise<ConversationResponse[] | ConversationQuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<ConversationResponse[] | ConversationQuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/conversations${query}`, undefined, undefined, options);
   }
@@ -530,7 +550,7 @@ export class UnifiedUIAPIClient {
   async listCredentials(
     tenantId: string,
     params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
-    options?: { noCache?: boolean }
+    options?: RequestOptions
   ): Promise<CredentialResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<CredentialResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/credentials${query}`, undefined, undefined, options);
@@ -601,7 +621,7 @@ export class UnifiedUIAPIClient {
   async listChatWidgets(
     tenantId: string,
     params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
-    options?: { noCache?: boolean }
+    options?: RequestOptions
   ): Promise<ChatWidgetResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<ChatWidgetResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-widgets${query}`, undefined, undefined, options);
@@ -621,6 +641,10 @@ export class UnifiedUIAPIClient {
 
   async deleteChatWidget(tenantId: string, widgetId: string): Promise<void> {
     return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/chat-widgets/${widgetId}`, undefined, 'Chat widget deleted successfully');
+  }
+
+  async duplicateChatWidget(tenantId: string, widgetId: string): Promise<ChatWidgetResponse> {
+    return this.request<ChatWidgetResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/chat-widgets/${widgetId}/duplicate`, undefined, 'Chat widget duplicated successfully');
   }
 
   // ========== Chat Widget Permissions ==========
@@ -653,7 +677,7 @@ export class UnifiedUIAPIClient {
   async listTools(
     tenantId: string,
     params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
-    options?: { noCache?: boolean }
+    options?: RequestOptions
   ): Promise<ToolResponse[] | QuickListItemResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<ToolResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/tools${query}`, undefined, undefined, options);
@@ -803,8 +827,8 @@ export class UnifiedUIAPIClient {
     return this.listResourceTypeTags(tenantId, 'chat-agents', params);
   }
 
-  async listAutonomousAgentTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
-    return this.listResourceTypeTags(tenantId, 'autonomous-agents', params);
+  async listWorkflowTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
+    return this.listResourceTypeTags(tenantId, 'workflows', params);
   }
 
   async listCredentialTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
@@ -835,12 +859,12 @@ export class UnifiedUIAPIClient {
     return this.setResourceTags(tenantId, 'chat-agents', chatAgentId, { tags });
   }
 
-  async getAutonomousAgentTags(tenantId: string, agentId: string): Promise<ResourceTagsResponse> {
-    return this.getResourceTags(tenantId, 'autonomous-agents', agentId);
+  async getWorkflowTags(tenantId: string, agentId: string): Promise<ResourceTagsResponse> {
+    return this.getResourceTags(tenantId, 'workflows', agentId);
   }
 
-  async setAutonomousAgentTags(tenantId: string, agentId: string, tags: string[]): Promise<ResourceTagsResponse> {
-    return this.setResourceTags(tenantId, 'autonomous-agents', agentId, { tags });
+  async setWorkflowTags(tenantId: string, agentId: string, tags: string[]): Promise<ResourceTagsResponse> {
+    return this.setResourceTags(tenantId, 'workflows', agentId, { tags });
   }
 
   async getCredentialTags(tenantId: string, credentialId: string): Promise<ResourceTagsResponse> {
@@ -860,6 +884,10 @@ export class UnifiedUIAPIClient {
   }
 
   // ========== User Favorites Endpoints ==========
+
+  async listAllUserFavorites(tenantId: string, userId: string): Promise<UserFavoritesUnifiedResponse> {
+    return this.request<UserFavoritesUnifiedResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/favorites`);
+  }
 
   async listUserFavorites(tenantId: string, userId: string, resourceType: FavoriteResourceTypeEnum): Promise<UserFavoritesListResponse> {
     return this.request<UserFavoritesListResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/favorites/${resourceType}`);
@@ -883,7 +911,7 @@ export class UnifiedUIAPIClient {
     return this.listUserFavorites(tenantId, userId, FavoriteResourceTypeEnum.CHAT_AGENT);
   }
 
-  async listAutonomousAgentFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
+  async listWorkflowFavorites(tenantId: string, userId: string): Promise<UserFavoritesListResponse> {
     return this.listUserFavorites(tenantId, userId, FavoriteResourceTypeEnum.AUTONOMOUS_AGENT);
   }
 
@@ -905,6 +933,28 @@ export class UnifiedUIAPIClient {
     return this.request<DashboardStatsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/dashboard/stats`, undefined, undefined, noCache ? { noCache: true } : undefined);
   }
 
+  // ========== Config Suggestions Endpoints ==========
+
+  async getConfigSuggestions(tenantId: string, type: string, q?: string): Promise<ConfigSuggestionsResponse> {
+    const query = this.buildQueryString({ type, q });
+    return this.request<ConfigSuggestionsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/config-suggestions${query}`);
+  }
+
+  // ========== Foundry Discovery Endpoints ==========
+
+  async getFoundryAgents(tenantId: string, projectEndpoint: string, foundryToken?: string): Promise<FoundryAgentListResponse> {
+    const query = this.buildQueryString({ project_endpoint: projectEndpoint });
+    const options = foundryToken ? { additionalHeaders: { 'X-Microsoft-Foundry-API-Key': foundryToken } } : undefined;
+    return this.request<FoundryAgentListResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/foundry/agents${query}`, undefined, undefined, options);
+  }
+
+  // ========== N8N Browser Endpoints ==========
+
+  async getN8NWorkflows(tenantId: string, host: string, credentialId: string): Promise<N8NWorkflowListResponse> {
+    const query = this.buildQueryString({ host, credential_id: credentialId });
+    return this.request<N8NWorkflowListResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/n8n/workflows${query}`);
+  }
+
   // ========== Search Endpoints ==========
 
   async globalSearch(tenantId: string, params: GlobalSearchParams): Promise<SearchResponse> {
@@ -914,8 +964,18 @@ export class UnifiedUIAPIClient {
 
   // ========== Recent Visits Endpoints ==========
 
-  async listRecentVisits(tenantId: string, userId: string, limit?: number): Promise<RecentVisitListResponse> {
-    const query = limit ? this.buildQueryString({ limit }) : '';
+  async listRecentVisits(
+    tenantId: string,
+    userId: string,
+    limit?: number,
+    resourceTypes?: string[]
+  ): Promise<RecentVisitListResponse> {
+    const params: Record<string, string | number> = {};
+    if (limit) params.limit = limit;
+    if (resourceTypes && resourceTypes.length > 0) {
+      params.resource_type = resourceTypes.join(',');
+    }
+    const query = Object.keys(params).length > 0 ? this.buildQueryString(params) : '';
     return this.request<RecentVisitListResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/users/${userId}/recent-visits${query}`);
   }
 
@@ -1402,7 +1462,7 @@ export class UnifiedUIAPIClient {
   }
 
   /**
-   * Update traces for an autonomous agent.
+   * Update traces for an workflow.
    */
   async updateAgentTraces(
     tenantId: string,
@@ -1411,7 +1471,7 @@ export class UnifiedUIAPIClient {
   ): Promise<UpdateTracesResponse> {
     return this.agentServiceRequest<UpdateTracesResponse>(
       'PUT',
-      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces`,
+      `/api/v1/agent-service/tenants/${tenantId}/workflows/${agentId}/traces`,
       data
     );
   }
@@ -1433,9 +1493,9 @@ export class UnifiedUIAPIClient {
   }
 
   /**
-   * Get traces for an autonomous agent with pagination and filtering.
+   * Get traces for an workflow with pagination and filtering.
    */
-  async getAutonomousAgentTraces(
+  async getWorkflowTraces(
     tenantId: string,
     agentId: string,
     params?: TracesListParams
@@ -1443,7 +1503,7 @@ export class UnifiedUIAPIClient {
     const query = params ? this.buildQueryString(params) : '';
     return this.agentServiceRequest<FullTracesListResponse>(
       'GET',
-      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces${query}`
+      `/api/v1/agent-service/tenants/${tenantId}/workflows/${agentId}/traces${query}`
     );
   }
 
@@ -1461,30 +1521,30 @@ export class UnifiedUIAPIClient {
   }
 
   /**
-   * Refresh/re-import trace for an autonomous agent.
+   * Refresh/re-import trace for an workflow.
    */
-  async refreshAutonomousAgentTraceImport(
+  async refreshWorkflowTraceImport(
     tenantId: string,
     agentId: string,
     traceId: string
   ): Promise<FullTraceResponse> {
     return this.agentServiceRequest<FullTraceResponse>(
       'PUT',
-      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces/${traceId}/import/refresh`
+      `/api/v1/agent-service/tenants/${tenantId}/workflows/${agentId}/traces/${traceId}/import/refresh`
     );
   }
 
   /**
-   * Import a trace for an autonomous agent by execution ID.
+   * Import a trace for an workflow by execution ID.
    */
-  async importAutonomousAgentTrace(
+  async importWorkflowTrace(
     tenantId: string,
     agentId: string,
     data: { type: string; executionId: string; sessionId?: string }
   ): Promise<{ id: string }> {
     return this.agentServiceRequest<{ id: string }>(
       'PUT',
-      `/api/v1/agent-service/tenants/${tenantId}/autonomous-agents/${agentId}/traces/import`,
+      `/api/v1/agent-service/tenants/${tenantId}/workflows/${agentId}/traces/import`,
       data,
       'Trace imported successfully'
     );
@@ -1498,7 +1558,7 @@ export class UnifiedUIAPIClient {
     const query = this.buildQueryString(params || {});
     return this.request<ListWorkflowRunsResponse>(
       'GET',
-      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/workflow-runs${query}`
+      `/api/v1/platform-service/tenants/${tenantId}/workflows/${agentId}/workflow-runs${query}`
     );
   }
 
@@ -1509,7 +1569,7 @@ export class UnifiedUIAPIClient {
   ): Promise<WorkflowRunRetryResponse> {
     return this.request<WorkflowRunRetryResponse>(
       'POST',
-      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/workflow-runs/${executionId}/retry`
+      `/api/v1/platform-service/tenants/${tenantId}/workflows/${agentId}/workflow-runs/${executionId}/retry`
     );
   }
 
@@ -1526,7 +1586,7 @@ export class UnifiedUIAPIClient {
     if (queryParams && Object.keys(queryParams).length > 0) payload.queryParams = queryParams;
     return this.request<Record<string, unknown>>(
       'POST',
-      `/api/v1/platform-service/tenants/${tenantId}/autonomous-agents/${agentId}/workflow-start`,
+      `/api/v1/platform-service/tenants/${tenantId}/workflows/${agentId}/workflow-start`,
       Object.keys(payload).length > 0 ? payload : undefined,
       'Workflow started successfully'
     );
@@ -1544,7 +1604,7 @@ export class UnifiedUIAPIClient {
   async listAIModels(
     tenantId: string,
     params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams,
-    options?: { noCache?: boolean }
+    options?: RequestOptions
   ): Promise<AIModelResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<AIModelResponse[]>(
@@ -1594,8 +1654,8 @@ export class UnifiedUIAPIClient {
 
   async listExternalApps(
     tenantId: string,
-    params?: PaginationParams & OrderParams & FieldSelectParams,
-    options?: { noCache?: boolean }
+    params?: PaginationParams & OrderParams & FieldSelectParams & { view?: 'quick-list' },
+    options?: RequestOptions
   ): Promise<ExternalAppResponse[]> {
     const query = this.buildQueryString(params || {});
     return this.request<ExternalAppResponse[]>(

@@ -1,0 +1,32 @@
+.header {
+  border-bottom: 1px solid var(--border-default);
+  padding-bottom: var(--spacing-sm);
+}
+
+.body {
+  padding-top: var(--spacing-lg);
+}
+
+.bannerDanger {
+  padding: var(--spacing-sm);
+  background-color: var(--color-error-50);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-error-500);
+  color: var(--color-error-600);
+}
+
+.bannerWarning {
+  padding: var(--spacing-sm);
+  background-color: var(--color-warning-50);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-warning-500);
+  color: var(--color-warning-600);
+}
+
+.bannerInfo {
+  padding: var(--spacing-sm);
+  background-color: var(--color-info-50);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-info-500);
+  color: var(--color-info-600);
+}

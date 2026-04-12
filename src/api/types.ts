@@ -45,6 +45,7 @@ export const ChatAgentTypeEnum = {
   MICROSOFT_FOUNDRY: 'MICROSOFT_FOUNDRY',
   REST_API: 'REST_API',
   REACT_AGENT: 'REACT_AGENT',
+  LLM: 'LLM',
 } as const;
 
 export type ChatAgentTypeEnum = typeof ChatAgentTypeEnum[keyof typeof ChatAgentTypeEnum];
@@ -81,15 +82,15 @@ export interface SurveyWidgetData {
   questions: SurveyQuestion[];
 }
 
-export const AutonomousAgentTypeEnum = {
+export const WorkflowTypeEnum = {
   N8N: 'N8N',
 } as const;
 
-export type AutonomousAgentTypeEnum = typeof AutonomousAgentTypeEnum[keyof typeof AutonomousAgentTypeEnum];
+export type WorkflowTypeEnum = typeof WorkflowTypeEnum[keyof typeof WorkflowTypeEnum];
 
-// ========== Autonomous Agent Config Types ==========
+// ========== Workflow Config Types ==========
 
-export interface N8NAutonomousAgentConfig {
+export interface N8NWorkflowConfig {
   api_version: string;
   workflow_endpoint: string;
   api_api_key_credential_id: string;
@@ -100,9 +101,10 @@ export interface N8NAutonomousAgentConfig {
 
 export const FavoriteResourceTypeEnum = {
   CHAT_AGENT: 'chat-agents',
-  AUTONOMOUS_AGENT: 'autonomous-agents',
+  AUTONOMOUS_AGENT: 'workflows',
   CHAT_WIDGET: 'chat-widgets',
   CONVERSATION: 'conversations',
+  EXTERNAL_APP: 'external-apps',
 } as const;
 
 export type FavoriteResourceTypeEnum = typeof FavoriteResourceTypeEnum[keyof typeof FavoriteResourceTypeEnum];
@@ -214,6 +216,13 @@ export interface RestApiChatAgentConfig {
   use_unified_chat_history: boolean;
   chat_history_count?: number;
   create_conversation_endpoint?: string | null;
+}
+
+// ========== LLM Chat Agent Config Types ==========
+
+export interface LlmChatAgentConfig {
+  ai_model_id: string;
+  system_prompt?: string;
 }
 
 // ========== Agent Service Types ==========
@@ -388,7 +397,7 @@ export interface EditMessageRequest {
 
 export const TraceContextType = {
   CONVERSATION: 'conversation',
-  AUTONOMOUS_AGENT: 'autonomous_agent',
+  AUTONOMOUS_AGENT: 'workflow',
 } as const;
 
 export type TraceContextType = typeof TraceContextType[keyof typeof TraceContextType];
@@ -474,7 +483,7 @@ export interface FullTraceResponse {
   tenantId: string;
   chatAgentId?: string;
   conversationId?: string;
-  autonomousAgentId?: string;
+  workflowId?: string;
   contextType: TraceContextType | string;
   referenceId?: string;
   referenceName?: string;
@@ -1047,7 +1056,7 @@ export interface ReActAgentVersionResponse {
 
 /**
  * Unified response for a principal with their roles on a resource.
- * Used by all resource types (chat_agent, autonomous_agent, chat_widget,
+ * Used by all resource types (chat_agent, workflow, chat_widget,
  * conversation, credential, custom_group).
  */
 export interface PrincipalWithRolesResponse {
@@ -1073,20 +1082,20 @@ export interface ResourcePrincipalsResponse {
 
 // Legacy type aliases for backward compatibility
 export type ChatAgentPrincipalsResponse = ResourcePrincipalsResponse;
-export type AutonomousAgentPrincipalsResponse = ResourcePrincipalsResponse;
+export type WorkflowPrincipalsResponse = ResourcePrincipalsResponse;
 export type ChatWidgetPrincipalsResponse = ResourcePrincipalsResponse;
 export type ConversationPrincipalsResponse = ResourcePrincipalsResponse;
 export type CredentialPrincipalsResponse = ResourcePrincipalsResponse;
 export type CustomGroupPrincipalsResponse = ResourcePrincipalsResponse;
 
-// ========== Autonomous Agent Types ==========
+// ========== Workflow Types ==========
 
-export interface AutonomousAgentResponse {
+export interface WorkflowResponse {
   id: string;
   tenant_id: string;
   name: string;
   description?: string;
-  type: AutonomousAgentTypeEnum;
+  type: WorkflowTypeEnum;
   config: Record<string, unknown>;
   is_active: boolean;
   allow_api_keys: boolean;
@@ -1099,16 +1108,16 @@ export interface AutonomousAgentResponse {
   my_permission?: string;
 }
 
-export interface CreateAutonomousAgentRequest {
+export interface CreateWorkflowRequest {
   name: string;
   description?: string;
-  type: AutonomousAgentTypeEnum;
+  type: WorkflowTypeEnum;
   config: Record<string, unknown>;
   is_active?: boolean;
   allow_api_keys?: boolean;
 }
 
-export interface UpdateAutonomousAgentRequest {
+export interface UpdateWorkflowRequest {
   name?: string;
   description?: string;
   config?: Record<string, unknown>;
@@ -1116,13 +1125,13 @@ export interface UpdateAutonomousAgentRequest {
   allow_api_keys?: boolean;
 }
 
-export interface SetAutonomousAgentPermissionRequest {
+export interface SetWorkflowPermissionRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
   role: PermissionActionEnum;
 }
 
-export interface AutonomousAgentKeyResponse {
+export interface WorkflowKeyResponse {
   key: string;
   key_number: number;
 }
@@ -1400,6 +1409,7 @@ export const AIModelPurposeGroupEnum = {
   DESCRIPTION_GENERATION: 'DESCRIPTION_GENERATION',
   TRACE_ANALYSIS: 'TRACE_ANALYSIS',
   GENERAL: 'GENERAL',
+  DIRECT_CHAT: 'DIRECT_CHAT',
 } as const;
 
 export type AIModelPurposeGroupEnum = typeof AIModelPurposeGroupEnum[keyof typeof AIModelPurposeGroupEnum];
@@ -1593,6 +1603,16 @@ export interface UserFavoritesListResponse {
   total: number;
 }
 
+export interface UserFavoriteWithNameResponse {
+  resource_id: string;
+  resource_type: string;
+  resource_name: string;
+}
+
+export interface UserFavoritesUnifiedResponse {
+  favorites: UserFavoriteWithNameResponse[];
+}
+
 // ========== Health Check Types ==========
 
 export interface HealthCheckResponse {
@@ -1611,8 +1631,9 @@ export interface EntityStatsResponse {
 
 export interface DashboardStatsResponse {
   chat_agents: EntityStatsResponse;
-  autonomous_agents: EntityStatsResponse;
+  workflows: EntityStatsResponse;
   conversations: EntityStatsResponse;
+  external_apps: EntityStatsResponse;
 }
 
 // ========== Search Types ==========
@@ -1625,6 +1646,7 @@ export interface SearchResultItem {
   match_field: string;
   is_active?: boolean;
   tags: string[];
+  sub_type?: string;
 }
 
 export interface SearchResponse {
@@ -1637,6 +1659,7 @@ export interface GlobalSearchParams {
   q: string;
   types?: string;
   limit?: number;
+  offset?: number;
 }
 
 // ========== Recent Visits Types ==========
@@ -1695,6 +1718,31 @@ export interface OrderParams {
 export interface FieldSelectParams {
   fields?: string;
   ids?: string;
+}
+
+export interface ConfigSuggestionsResponse {
+  suggestions: Record<string, string[]>;
+}
+
+export interface FoundryAgentInfo {
+  id: string;
+  name: string;
+}
+
+export interface FoundryAgentListResponse {
+  agents: FoundryAgentInfo[];
+}
+
+export interface N8NWorkflowInfo {
+  id: string;
+  name: string;
+  active: boolean;
+  url: string;
+}
+
+export interface N8NWorkflowListResponse {
+  workflows: N8NWorkflowInfo[];
+  total: number;
 }
 
 /** Query parameters for tenant principals endpoint */

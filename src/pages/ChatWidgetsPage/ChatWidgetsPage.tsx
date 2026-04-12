@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { MainLayout } from '../../components/layout/MainLayout';
-import { PageHeader, DataTable, ConfirmDeleteDialog, EntityAvatar } from '../../components/common';
+import { PageHeader, DataTable, ConfirmDeleteDialog, ConfirmDialog, EntityAvatar } from '../../components/common';
 import type { DataTableItem } from '../../components/common';
 import { CreateChatWidgetDialog, EditChatWidgetDialog, StandardWidgetPromptDialog } from '../../components/dialogs';
 import type { StandardWidgetType } from '../../components/dialogs';
@@ -19,14 +19,14 @@ const STANDARD_WIDGETS: DataTableItem[] = [
     id: '__standard_yesno__',
     name: 'Yes / No',
     description: 'Interactive yes/no confirmation buttons for the chat.',
-    type: 'Standard',
+    type: 'STANDARD',
     hideActions: true,
   },
   {
     id: '__standard_survey__',
     name: 'Survey',
     description: 'Multi-question survey widget with structured answer options.',
-    type: 'Standard',
+    type: 'STANDARD',
     hideActions: true,
   },
 ];
@@ -78,6 +78,12 @@ export const ChatWidgetsPage: FC = () => {
     [apiClient]
   );
 
+  const duplicateEntity = useCallback(
+    (tenantId: string, id: string) =>
+      apiClient!.duplicateChatWidget(tenantId, id),
+    [apiClient]
+  );
+
   const config = useMemo(() => ({
     sortStorageKey: SORT_STORAGE_KEY,
     errorMessage: 'Failed to load chat widgets',
@@ -85,16 +91,18 @@ export const ChatWidgetsPage: FC = () => {
     listTags,
     updateEntity,
     deleteEntity,
+    duplicateEntity,
     mapToTableItem,
-  }), [listEntities, listTags, updateEntity, deleteEntity, mapToTableItem]);
+  }), [listEntities, listTags, updateEntity, deleteEntity, duplicateEntity, mapToTableItem]);
 
   const {
     items, isLoading, isLoadingMore, hasMore, error, searchValue, sortBy, filters,
-    availableTags, isCreateDialogOpen, deleteDialog, isDeleting, editItemId, editTab,
+    availableTags, isCreateDialogOpen, deleteDialog, deactivateDialog, isDeleting, selectedId, editTab,
     rawDataRef, setIsCreateDialogOpen, handleLoadMore, handleSearchChange, handleTagSearch,
     handleSortChange, handleFilterChange, handleEdit, handleEditClose, handleEditTabChange,
     handleEditSuccess, handleManageAccess, handleDuplicate, handleStatusChange,
-    handleDeleteClick, handleDeleteConfirm, handleDeleteClose, handleCreateSuccess,
+    handleDeleteClick, handleDeleteConfirm, handleDeleteClose, handleDeactivateConfirm,
+    handleDeactivateClose, handleCreateSuccess,
   } = useEntityList<ChatWidgetResponse>(config);
 
   const [standardWidgetType, setStandardWidgetType] = useState<StandardWidgetType | null>(null);
@@ -112,9 +120,8 @@ export const ChatWidgetsPage: FC = () => {
     const widget = rawDataRef.current.get(id) as ChatWidgetResponse | undefined;
     if (widget?.type === ChatWidgetTypeEnum.FORM) {
       navigate(`/widget-designer/${id}`);
-    } else if (widget?.type === ChatWidgetTypeEnum.IFRAME) {
-      navigate(`/chat-widgets/${id}/preview`);
     } else {
+      // For IFRAME and other types, open the edit dialog which now includes preview
       handleEdit(id);
     }
   }, [navigate, handleEdit, rawDataRef]);
@@ -131,10 +138,10 @@ export const ChatWidgetsPage: FC = () => {
   }, []);
 
   const renderIcon = useCallback(() => (
-    <EntityAvatar entityType="chat-widget" size="sm" />
+    <EntityAvatar entityType="chat-widget" size="sm" colored />
   ), []);
   // eslint-disable-next-line react-hooks/refs
-  const editInitialData = editItemId ? rawDataRef.current.get(editItemId) || null : null;
+  const editInitialData = selectedId ? rawDataRef.current.get(selectedId) || null : null;
   const handleWidgetCreated = useCallback((widget?: ChatWidgetResponse) => {
     handleCreateSuccess();
     if (widget?.type === ChatWidgetTypeEnum.FORM) {
@@ -191,8 +198,8 @@ export const ChatWidgetsPage: FC = () => {
       />
 
       <EditChatWidgetDialog
-        opened={!!editItemId}
-        chatWidgetId={editItemId}
+        opened={!!selectedId}
+        chatWidgetId={selectedId}
         initialData={editInitialData}
         activeTab={editTab}
         onClose={handleEditClose}
@@ -215,6 +222,17 @@ export const ChatWidgetsPage: FC = () => {
         itemName={deleteDialog.name}
         itemType="Chat Widget"
         isLoading={isDeleting}
+      />
+
+      <ConfirmDialog
+        opened={deactivateDialog.open}
+        onClose={handleDeactivateClose}
+        onConfirm={handleDeactivateConfirm}
+        type="warning"
+        title="Deactivate Chat Widget"
+        message={<>Are you sure you want to deactivate <strong>{deactivateDialog.name}</strong>? It will no longer be available until reactivated.</>}
+        confirmLabel="Deactivate"
+        cancelLabel="Cancel"
       />
     </MainLayout>
   );

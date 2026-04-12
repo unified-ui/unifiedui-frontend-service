@@ -28,6 +28,7 @@ interface FormValues {
   description: string;
   type: string;
   tags: string[];
+  url: string;
 }
 
 const CHAT_WIDGET_TYPES = [
@@ -49,6 +50,7 @@ export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
       description: '',
       type: 'IFRAME',
       tags: [],
+      url: '',
     },
     validate: {
       name: (value) => {
@@ -74,11 +76,17 @@ export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
 
     setIsSubmitting(true);
     try {
+      // Build config based on type
+      const config: Record<string, unknown> = {};
+      if (values.type === 'IFRAME' && values.url) {
+        config.url = values.url.trim();
+      }
+
       const widget = await apiClient.createChatWidget(selectedTenant.id, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
         type: values.type as ChatWidgetTypeEnum,
-        config: {},
+        config,
       });
 
       // If tags were added, save them to the widget
@@ -140,6 +148,35 @@ export const CreateChatWidgetDialog: FC<CreateChatWidgetDialogProps> = ({
             data={CHAT_WIDGET_TYPES}
             {...form.getInputProps('type')}
           />
+
+          {form.values.type === 'IFRAME' && (
+            <>
+              <TextInput
+                label="URL"
+                placeholder="https://example.com/embed"
+                description="The URL to embed in the iframe"
+                {...form.getInputProps('url')}
+              />
+              {form.values.url && (
+                <Box
+                  style={{
+                    border: '1px solid var(--mantine-color-default-border)',
+                    borderRadius: 'var(--mantine-radius-md)',
+                    overflow: 'hidden',
+                    height: 200,
+                  }}
+                >
+                  <iframe
+                    src={form.values.url}
+                    title="Widget Preview"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 'none' }}
+                  />
+                </Box>
+              )}
+            </>
+          )}
 
           <TagInput
             label="Tags"

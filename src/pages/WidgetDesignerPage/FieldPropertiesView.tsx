@@ -251,6 +251,56 @@ export const FieldPropertiesView: FC<FieldPropertiesViewProps> = ({ field, allFi
                 />
               </>
             )}
+            {(field.type === 'email' || field.type === 'text') && (
+              <Switch
+                label={t('properties.emailValidation')}
+                checked={field.validation.some((v) => v.type === 'email')}
+                onChange={(e) => {
+                  const filtered = field.validation.filter((v) => v.type !== 'email');
+                  if (e.currentTarget.checked) filtered.push({ type: 'email' });
+                  update({ validation: filtered });
+                }}
+                size="sm"
+              />
+            )}
+            {(field.type === 'url' || field.type === 'text') && (
+              <Switch
+                label={t('properties.urlValidation')}
+                checked={field.validation.some((v) => v.type === 'url')}
+                onChange={(e) => {
+                  const filtered = field.validation.filter((v) => v.type !== 'url');
+                  if (e.currentTarget.checked) filtered.push({ type: 'url' });
+                  update({ validation: filtered });
+                }}
+                size="sm"
+              />
+            )}
+            {(field.type === 'multi_select' || field.type === 'checkbox') && (
+              <>
+                <NumberInput
+                  label={t('properties.minSelections')}
+                  value={(field.validation.find((v) => v.type === 'minSelections')?.params?.value as number) ?? ''}
+                  onChange={(val) => {
+                    const filtered = field.validation.filter((v) => v.type !== 'minSelections');
+                    if (val && Number(val) > 0) filtered.push({ type: 'minSelections', params: { value: Number(val) } });
+                    update({ validation: filtered });
+                  }}
+                  size="sm"
+                  min={0}
+                />
+                <NumberInput
+                  label={t('properties.maxSelections')}
+                  value={(field.validation.find((v) => v.type === 'maxSelections')?.params?.value as number) ?? ''}
+                  onChange={(val) => {
+                    const filtered = field.validation.filter((v) => v.type !== 'maxSelections');
+                    if (val && Number(val) > 0) filtered.push({ type: 'maxSelections', params: { value: Number(val) } });
+                    update({ validation: filtered });
+                  }}
+                  size="sm"
+                  min={1}
+                />
+              </>
+            )}
           </Stack>
         </Section>
       )}

@@ -2,10 +2,24 @@
   cursor: pointer;
   transition:
     transform 150ms ease,
-    box-shadow 150ms ease;
+    box-shadow 150ms ease,
+    border-color 150ms ease;
 }
 
 .card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+[data-mantine-color-scheme="dark"] .card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.favoriteButton {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+}
+
+.favoriteButton:hover {
+  background: rgba(0, 0, 0, 0.6);
 }

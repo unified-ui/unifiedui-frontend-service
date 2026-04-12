@@ -290,6 +290,28 @@ export const EditExternalAppDialog: FC<EditExternalAppDialogProps> = ({
                 maxLength={2000}
                 {...form.getInputProps('url')}
               />
+
+              {form.values.url && (
+                <Box>
+                  <Text size="sm" fw={500} mb={4}>{t('createDialog.preview')}</Text>
+                  <Box
+                    style={{
+                      border: '1px solid var(--mantine-color-default-border)',
+                      borderRadius: 'var(--mantine-radius-sm)',
+                      overflow: 'hidden',
+                      height: 300,
+                    }}
+                  >
+                    <iframe
+                      src={form.values.url}
+                      title="Preview"
+                      style={{ width: '100%', height: '100%', border: 'none' }}
+                      sandbox="allow-scripts allow-same-origin"
+                    />
+                  </Box>
+                </Box>
+              )}
+
               <Box>
                 <Text size="sm" fw={500} mb={4}>{t('createDialog.imageLabel')}</Text>
                 <Group gap="sm" align="flex-start">

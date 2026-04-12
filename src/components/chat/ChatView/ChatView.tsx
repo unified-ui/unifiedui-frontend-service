@@ -49,6 +49,7 @@ export interface ChatViewProps {
   headerSlot?: ReactNode;
   tracingSlot?: ReactNode;
   widgetSlot?: ReactNode;
+  suggestionsSlot?: ReactNode;
 
   onLoadMore?: () => Promise<void>;
   hasMoreMessages?: boolean;
@@ -93,6 +94,7 @@ export const ChatView: FC<ChatViewProps> = ({
   headerSlot,
   tracingSlot,
   widgetSlot,
+  suggestionsSlot,
 
   onLoadMore,
   hasMoreMessages,
@@ -177,15 +179,20 @@ export const ChatView: FC<ChatViewProps> = ({
 
         {showEmpty ? (
           <Box className={classes.welcomeLayout}>
-            {emptyStateSlot}
-            <ChatInput
-              ref={chatInputRef}
-              onSend={onSendMessage ?? NOOP}
-              onCancel={onCancelStream}
-              isDisabled={inputDisabled}
-              isStreaming={isStreaming}
-              placeholder={inputPlaceholder}
-            />
+            <Box className={classes.welcomeContent}>
+              {emptyStateSlot}
+            </Box>
+            <Box className={classes.welcomeInputArea}>
+              {suggestionsSlot}
+              <ChatInput
+                ref={chatInputRef}
+                onSend={onSendMessage ?? NOOP}
+                onCancel={onCancelStream}
+                isDisabled={inputDisabled}
+                isStreaming={isStreaming}
+                placeholder={inputPlaceholder}
+              />
+            </Box>
           </Box>
         ) : (
           <>

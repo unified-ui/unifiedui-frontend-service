@@ -16,6 +16,7 @@
   display: block;
   width: 100%;
   text-align: left;
+  padding-right: var(--spacing-xs);
 }
 
 .resultPaper {

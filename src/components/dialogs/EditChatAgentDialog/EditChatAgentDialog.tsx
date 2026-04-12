@@ -30,6 +30,7 @@ import {
   IconShieldLock,
   IconAlertCircle,
   IconPlus,
+  IconSearch,
 } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { useTranslation } from 'react-i18next';
@@ -47,22 +48,27 @@ import {
   type PrincipalTypeEnum,
   type PrincipalWithRolesResponse,
   type CredentialResponse,
+  type AIModelResponse,
   type N8NChatAgentConfig,
   type FoundryChatAgentConfig,
   type RestApiChatAgentConfig,
+  type LlmChatAgentConfig,
 } from '../../../api/types';
-import { TagInput, ManageAccessTable, AddPrincipalDialog, GreetingMessagesInput, ConnectionTestButton, FilterableSelect } from '../../common';
+import { TagInput, ManageAccessTable, AddPrincipalDialog, GreetingMessagesInput, ConnectionTestButton, FilterableSelect, EndpointSuggestInput, ModelTestButton } from '../../common';
 import { TestConnectionType } from '../../../api/types';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
+import { N8NWorkflowBrowserDialog } from '../N8NWorkflowBrowserDialog';
 import type { PrincipalPermission } from '../../common/ManageAccessTable/ManageAccessTable';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
-import { useFormDirtyGuard, usePermissions } from '../../../hooks';
+import { useFormDirtyGuard, usePermissions, useConfigSuggestions, useFoundryAgents } from '../../../hooks';
 import classes from './EditChatAgentDialog.module.css';
 
 const CHAT_AGENT_TYPES = [
   { value: ChatAgentTypeEnum.N8N, label: 'n8n' },
   { value: ChatAgentTypeEnum.MICROSOFT_FOUNDRY, label: 'Microsoft Foundry' },
   { value: ChatAgentTypeEnum.REST_API, label: 'REST API' },
+  { value: ChatAgentTypeEnum.REACT_AGENT, label: 'ReACT Agent' },
+  { value: ChatAgentTypeEnum.LLM, label: 'LLM' },
 ];
 
 const N8N_API_VERSIONS = [
@@ -140,6 +146,9 @@ interface FormValues {
   rest_api_chat_history_count: number;
   rest_api_enable_conversation_endpoint: boolean;
   rest_api_create_conversation_endpoint: string;
+  // LLM Config
+  llm_ai_model_id: string;
+  llm_system_prompt: string;
 }
 
 export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
@@ -165,6 +174,9 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
   const [credentialFieldTarget, setCredentialFieldTarget] = useState<'api_key' | 'chat_auth' | 'rest_api' | null>(null);
+  const [workflowBrowserOpen, setWorkflowBrowserOpen] = useState(false);
+  const [aiModels, setAiModels] = useState<AIModelResponse[]>([]);
+  const [isLoadingAiModels, setIsLoadingAiModels] = useState(false);
 
   const [credentialSearch, setCredentialSearch] = useState('');
   const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
@@ -208,6 +220,9 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
       rest_api_chat_history_count: 30,
       rest_api_enable_conversation_endpoint: false,
       rest_api_create_conversation_endpoint: '',
+      // LLM Config defaults
+      llm_ai_model_id: '',
+      llm_system_prompt: '',
     },
     validate: {
       name: (value) => {
@@ -340,10 +355,35 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
         }
         return null;
       },
+      llm_ai_model_id: (value, values) => {
+        if (values.type === ChatAgentTypeEnum.LLM) {
+          if (!value || value.trim().length === 0) {
+            return 'AI Model is required';
+          }
+        }
+        return null;
+      },
     },
   });
 
   useFormDirtyGuard(form.isDirty());
+  const { suggestions: configSuggestions } = useConfigSuggestions(form.values.type);
+
+  const [debouncedProjectEndpoint] = useDebouncedValue(form.values.foundry_project_endpoint, 500);
+  const { agents: foundryAgents, isLoading: isLoadingAgents, refresh: refreshFoundryAgents } = useFoundryAgents(
+    form.values.type === ChatAgentTypeEnum.MICROSOFT_FOUNDRY ? debouncedProjectEndpoint : '',
+  );
+  const foundryAgentNames = useMemo(() => foundryAgents.map((a) => a.name), [foundryAgents]);
+
+  const n8nHostUrl = useMemo(() => {
+    const endpoint = form.values.n8n_workflow_endpoint || form.values.n8n_chat_url || '';
+    try {
+      const url = new URL(endpoint);
+      return `${url.protocol}//${url.host}`;
+    } catch {
+      return '';
+    }
+  }, [form.values.n8n_workflow_endpoint, form.values.n8n_chat_url]);
 
   // Update activeTab when initialTab changes
   useEffect(() => {
@@ -400,6 +440,10 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
       .map((c) => ({ value: c.id, label: c.name }));
   }, [credentials, form.values.rest_api_auth_type]);
 
+  const aiModelOptions = useMemo(() => {
+    return aiModels.map((m) => ({ value: m.id, label: `${m.name} (${m.provider})` }));
+  }, [aiModels]);
+
   // Initialize from initialData when provided
   const initializeFromData = useCallback((data: ChatAgentResponse) => {
     setChatAgent(data);
@@ -413,6 +457,9 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
       : undefined;
     const restApiConfig = data.type === ChatAgentTypeEnum.REST_API
       ? (data.config as unknown as RestApiChatAgentConfig | undefined)
+      : undefined;
+    const llmConfig = data.type === ChatAgentTypeEnum.LLM
+      ? (data.config as unknown as LlmChatAgentConfig | undefined)
       : undefined;
 
     form.setValues({
@@ -448,6 +495,9 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
       rest_api_chat_history_count: restApiConfig?.chat_history_count ?? 30,
       rest_api_enable_conversation_endpoint: !!restApiConfig?.create_conversation_endpoint,
       rest_api_create_conversation_endpoint: restApiConfig?.create_conversation_endpoint || '',
+      // LLM Config from data
+      llm_ai_model_id: llmConfig?.ai_model_id || '',
+      llm_system_prompt: llmConfig?.system_prompt || '',
     });
     form.resetDirty();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -528,6 +578,33 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
     }
   }, [opened, debouncedCredentialSearch, loadCredentials]);
 
+  const loadAiModels = useCallback(async () => {
+    if (!apiClient || !selectedTenant) return;
+    setIsLoadingAiModels(true);
+    try {
+      const models = await apiClient.listAIModels(selectedTenant.id, {
+        limit: 200,
+        order_by: 'name',
+        order_direction: 'asc',
+      });
+      setAiModels(
+        (Array.isArray(models) ? models : []).filter(
+          (m) => m.type === 'LLM_MODEL' && m.is_active,
+        ),
+      );
+    } catch {
+      setAiModels([]);
+    } finally {
+      setIsLoadingAiModels(false);
+    }
+  }, [apiClient, selectedTenant]);
+
+  useEffect(() => {
+    if (opened && form.values.type === ChatAgentTypeEnum.LLM) {
+      loadAiModels();
+    }
+  }, [opened, form.values.type, loadAiModels]);
+
   // Handle tab change
   const handleTabChange = (value: string) => {
     const tab = value as EditDialogTab;
@@ -544,7 +621,7 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
 
     try {
       // Build config based on chat agent type
-      let config: N8NChatAgentConfig | FoundryChatAgentConfig | RestApiChatAgentConfig | undefined;
+      let config: N8NChatAgentConfig | FoundryChatAgentConfig | RestApiChatAgentConfig | LlmChatAgentConfig | undefined;
 
       if (values.type === ChatAgentTypeEnum.N8N) {
         config = {
@@ -582,6 +659,13 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
           create_conversation_endpoint: values.rest_api_enable_conversation_endpoint
             ? values.rest_api_create_conversation_endpoint.trim()
             : undefined,
+        };
+      }
+
+      if (values.type === ChatAgentTypeEnum.LLM) {
+        config = {
+          ai_model_id: values.llm_ai_model_id,
+          system_prompt: values.llm_system_prompt.trim() || undefined,
         };
       }
 
@@ -925,11 +1009,12 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
                     </Tooltip>
                   </Group>
 
-                  <TextInput
+                  <EndpointSuggestInput
                     label="Chat URL"
                     placeholder="https://your-n8n-instance.com/webhook/..."
                     required
                     withAsterisk
+                    suggestions={configSuggestions['chat_url'] || []}
                     {...form.getInputProps('n8n_chat_url')}
                   />
                   <ConnectionTestButton
@@ -940,14 +1025,30 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
                     hint={t('testConnectionHintN8nChat')}
                   />
 
-                  <TextInput
-                    label="Workflow Endpoint"
-                    placeholder="https://your-n8n-instance.com/workflow/abc123"
-                    description="The URL to the N8N workflow (e.g. https://n8n.example.com/workflow/abc123)"
-                    required
-                    withAsterisk
-                    {...form.getInputProps('n8n_workflow_endpoint')}
-                  />
+                  <Group align="flex-end" gap="xs" wrap="nowrap">
+                    <Box style={{ flex: 1 }}>
+                      <EndpointSuggestInput
+                        label="Workflow Endpoint"
+                        placeholder="https://your-n8n-instance.com/workflow/abc123"
+                        description="The URL to the N8N workflow (e.g. https://n8n.example.com/workflow/abc123)"
+                        required
+                        withAsterisk
+                        suggestions={configSuggestions['workflow_endpoint'] || []}
+                        {...form.getInputProps('n8n_workflow_endpoint')}
+                      />
+                    </Box>
+                    <Tooltip label={!form.values.n8n_api_api_key_credential_id ? 'Select an API Key credential first' : 'Browse workflows'}>
+                      <ActionIcon
+                        variant="default"
+                        size="lg"
+                        onClick={() => setWorkflowBrowserOpen(true)}
+                        disabled={!form.values.n8n_api_api_key_credential_id}
+                        mb={form.getInputProps('n8n_workflow_endpoint').error ? 22 : 0}
+                      >
+                        <IconSearch size={18} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
                   <ConnectionTestButton
                     testType={TestConnectionType.N8N_WORKFLOW}
                     url={form.values.n8n_workflow_endpoint}
@@ -997,19 +1098,23 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
                     />
                   </Group>
 
-                  <TextInput
+                  <EndpointSuggestInput
                     label="Project Endpoint"
                     placeholder="https://your-project.services.ai.azure.com/api/..."
                     required
                     withAsterisk
+                    suggestions={configSuggestions['project_endpoint'] || []}
                     {...form.getInputProps('foundry_project_endpoint')}
                   />
 
-                  <TextInput
+                  <EndpointSuggestInput
                     label="Agent Name"
-                    placeholder="Name of the Foundry agent"
+                    placeholder={isLoadingAgents ? 'Loading agents...' : 'Name of the Foundry agent'}
                     required
                     withAsterisk
+                    suggestions={foundryAgentNames}
+                    onRefresh={refreshFoundryAgents}
+                    isRefreshing={isLoadingAgents}
                     {...form.getInputProps('foundry_agent_name')}
                   />
                   <ConnectionTestButton
@@ -1082,12 +1187,13 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
                     />
                   )}
 
-                  <TextInput
+                  <EndpointSuggestInput
                     label="Invoke Endpoint"
                     placeholder="https://your-agent-api.com/invoke"
                     description="The URL to send chat messages to"
                     required
                     withAsterisk
+                    suggestions={configSuggestions['invoke_endpoint'] || []}
                     {...form.getInputProps('rest_api_invoke_endpoint')}
                   />
                   <ConnectionTestButton
@@ -1129,12 +1235,13 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
 
                   {form.values.rest_api_enable_conversation_endpoint && (
                     <>
-                      <TextInput
+                      <EndpointSuggestInput
                         label="Create Conversation Endpoint"
                         placeholder="https://your-agent-api.com/conversations"
                         description="POST endpoint to create a new conversation/session"
                         required
                         withAsterisk
+                        suggestions={configSuggestions['create_conversation_endpoint'] || []}
                         {...form.getInputProps('rest_api_create_conversation_endpoint')}
                       />
                       <ConnectionTestButton
@@ -1148,6 +1255,39 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
                         disabled={!form.values.rest_api_create_conversation_endpoint}
                       />
                     </>
+                  )}
+                </>
+              )}
+
+              {form.values.type === ChatAgentTypeEnum.LLM && (
+                <>
+                  <Divider label="LLM Configuration" labelPosition="center" />
+
+                  <Select
+                    label="AI Model"
+                    placeholder={isLoadingAiModels ? 'Loading models...' : 'Select an AI model'}
+                    required
+                    withAsterisk
+                    data={aiModelOptions}
+                    disabled={isLoadingAiModels}
+                    searchable
+                    {...form.getInputProps('llm_ai_model_id')}
+                  />
+
+                  <Textarea
+                    label="System Prompt"
+                    placeholder="Optional system prompt for the LLM"
+                    minRows={3}
+                    maxRows={8}
+                    autosize
+                    {...form.getInputProps('llm_system_prompt')}
+                  />
+
+                  {form.values.llm_ai_model_id && (
+                    <ModelTestButton
+                      aiModels={aiModels}
+                      selectedModelId={form.values.llm_ai_model_id}
+                    />
                   )}
                 </>
               )}
@@ -1240,6 +1380,15 @@ export const EditChatAgentDialog: FC<EditChatAgentDialogProps> = ({
         opened={createCredentialOpen}
         onClose={() => setCreateCredentialOpen(false)}
         onSuccess={handleCredentialCreated}
+      />
+
+      {/* N8N Workflow Browser Dialog */}
+      <N8NWorkflowBrowserDialog
+        opened={workflowBrowserOpen}
+        onClose={() => setWorkflowBrowserOpen(false)}
+        host={n8nHostUrl}
+        credentialId={form.values.n8n_api_api_key_credential_id}
+        onSelect={(wf) => form.setFieldValue('n8n_workflow_endpoint', wf.url)}
       />
 
     </>

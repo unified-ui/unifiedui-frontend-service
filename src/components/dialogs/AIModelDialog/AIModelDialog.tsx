@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import {
   Modal, TextInput, Textarea, Select, Button, Group, Stack,
   Text, NumberInput, Switch, MultiSelect, Alert, LoadingOverlay, Divider, Box,
-  ActionIcon, Tooltip,
+  ActionIcon, Tooltip, Autocomplete,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -59,6 +59,7 @@ const PROVIDERS = [
 
 const PURPOSE_GROUPS = [
   { value: AIModelPurposeGroupEnum.REACT_AGENT, label: 'ReAct Agent' },
+  { value: AIModelPurposeGroupEnum.DIRECT_CHAT, label: 'Direct Chat' },
   { value: AIModelPurposeGroupEnum.CONVERSATION_TITLE_GENERATION, label: 'Title Generation' },
   { value: AIModelPurposeGroupEnum.CONVERSATION_SUMMARIZATION, label: 'Conversation Summarization' },
   { value: AIModelPurposeGroupEnum.DESCRIPTION_GENERATION, label: 'Description Generation' },
@@ -75,6 +76,17 @@ const PROVIDER_REQUIRES_CREDENTIAL: Record<string, boolean> = {
   [AIModelProviderEnum.MISTRAL]: true,
   [AIModelProviderEnum.GROQ]: true,
 };
+
+const AZURE_OPENAI_API_VERSIONS = [
+  { value: '2025-04-01-preview', label: '2025-04-01-preview' },
+  { value: '2025-03-01-preview', label: '2025-03-01-preview' },
+  { value: '2025-01-01-preview', label: '2025-01-01-preview' },
+  { value: '2024-12-01-preview', label: '2024-12-01-preview' },
+  { value: '2024-10-21', label: '2024-10-21 (GA)' },
+  { value: '2024-10-01-preview', label: '2024-10-01-preview' },
+  { value: '2024-08-01-preview', label: '2024-08-01-preview' },
+  { value: '2024-06-01', label: '2024-06-01 (GA)' },
+];
 
 export const AIModelDialog: FC<AIModelDialogProps> = ({
   opened,
@@ -105,7 +117,7 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
       config: {},
       credential_id: '',
       priority: 0,
-      is_active: false,
+      is_active: true,
       tags: [],
     },
     validate: {
@@ -158,7 +170,7 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [apiClient, selectedTenant, modelId]);
+  }, [apiClient, selectedTenant, modelId, form]);
 
   useEffect(() => {
     if (opened) {
@@ -171,13 +183,13 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
         form.reset();
       }
     }
-  }, [opened, isEdit]);
+  }, [opened, isEdit, fetchCredentials, fetchModel, form]);
 
   useEffect(() => {
     if (opened) {
       fetchCredentials(debouncedCredentialSearch || undefined);
     }
-  }, [debouncedCredentialSearch]);
+  }, [debouncedCredentialSearch, fetchCredentials, opened]);
 
   const handleSubmit = async (values: FormValues) => {
     if (!apiClient || !selectedTenant) return;
@@ -274,18 +286,18 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
               onChange={(e) => form.setFieldValue('config', { ...form.values.config, endpoint: e.currentTarget.value })}
             />
             <TextInput
-              label="API Version"
-              placeholder="2024-12-01-preview"
-              required
-              value={(form.values.config.api_version as string) || ''}
-              onChange={(e) => form.setFieldValue('config', { ...form.values.config, api_version: e.currentTarget.value })}
-            />
-            <TextInput
               label="Deployment Name"
               placeholder="gpt-4o"
               required
               value={(form.values.config.deployment_name as string) || ''}
               onChange={(e) => form.setFieldValue('config', { ...form.values.config, deployment_name: e.currentTarget.value })}
+            />
+            <Autocomplete
+              label="API Version"
+              placeholder="e.g. 2024-12-01-preview"
+              data={AZURE_OPENAI_API_VERSIONS.map((v) => v.value)}
+              value={(form.values.config.api_version as string) || '2024-12-01-preview'}
+              onChange={(value) => form.setFieldValue('config', { ...form.values.config, api_version: value || '2024-12-01-preview' })}
             />
           </>
         );

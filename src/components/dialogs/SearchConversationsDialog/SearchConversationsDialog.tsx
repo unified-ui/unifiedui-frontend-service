@@ -197,7 +197,7 @@ export const SearchConversationsDialog: FC<SearchConversationsDialogProps> = ({
           data-autofocus
         />
 
-        <ScrollArea h={400} type="auto">
+        <ScrollArea h={400} type="auto" scrollbarSize={8}>
           {isSearching ? (
             <Center h={200}>
               <Loader size="md" color="gray" />
@@ -214,7 +214,7 @@ export const SearchConversationsDialog: FC<SearchConversationsDialogProps> = ({
                 </Text>
               </Box>
             ) : (
-              <Stack gap="xs">
+              <Stack gap="xs" pr="md">
                 {messageResults.map((msg) => (
                   <UnstyledButton
                     key={msg.id}
@@ -268,7 +268,7 @@ export const SearchConversationsDialog: FC<SearchConversationsDialogProps> = ({
                 </Text>
               </Box>
             ) : (
-              <Stack gap="xs">
+              <Stack gap="xs" pr="md">
                 {recentConversations.map((result) => (
                   <UnstyledButton
                     key={result.conversation.id}

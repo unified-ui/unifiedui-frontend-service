@@ -6,6 +6,7 @@ import { useIdentity } from './IdentityContext';
 const STORAGE_KEY_PREFIX = 'unified-ui-recent-visits';
 const MAX_VISITS = 50;
 const SYNC_INTERVAL_MS = 5 * 60 * 1000;
+const ALLOWED_RESOURCE_TYPES = new Set(['chat_agent', 'workflow', 'external_app', 'chat_widget']);
 
 interface RecentVisitsContextType {
   recentVisits: RecentVisitResponse[];
@@ -25,7 +26,10 @@ const getStorageKey = (tenantId: string): string => `${STORAGE_KEY_PREFIX}-${ten
 const loadFromStorage = (tenantId: string): RecentVisitItem[] => {
   try {
     const stored = localStorage.getItem(getStorageKey(tenantId));
-    return stored ? JSON.parse(stored) : [];
+    if (!stored) return [];
+    const parsed = JSON.parse(stored) as RecentVisitItem[];
+    // Filter out invalid resource types (e.g., old "conversation" entries)
+    return parsed.filter(v => ALLOWED_RESOURCE_TYPES.has(v.resource_type));
   } catch {
     return [];
   }
@@ -123,6 +127,8 @@ export const RecentVisitsProvider: FC<RecentVisitsProviderProps> = ({ children }
 
   const trackVisit = useCallback((item: RecentVisitItem) => {
     if (!selectedTenant) return;
+    // Only track allowed resource types
+    if (!ALLOWED_RESOURCE_TYPES.has(item.resource_type)) return;
 
     pendingVisitsRef.current = [
       item,

@@ -12,7 +12,7 @@ const makeSchema = (overrides?: Partial<WidgetFormSchema>): WidgetFormSchema => 
     submitButtonText: 'Submit',
     successMessage: 'Done',
     enableTabs: false,
-    showProgressBar: false,
+
     validateOnTabChange: false,
   },
   tabs: [{

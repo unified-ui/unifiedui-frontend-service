@@ -7,6 +7,7 @@ import {
   Switch,
   Badge,
   Button,
+  Box,
 } from '@mantine/core';
 import { IconCode } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
@@ -75,12 +76,6 @@ export const PageSettingsView: FC<PageSettingsViewProps> = ({ schema, allFields,
           {settings.enableTabs && (
             <>
               <Switch
-                label={t('pageSettings.showProgressBar')}
-                checked={settings.showProgressBar ?? false}
-                onChange={(e) => update({ showProgressBar: e.currentTarget.checked })}
-                size="sm"
-              />
-              <Switch
                 label={t('pageSettings.validateOnTabChange')}
                 checked={settings.validateOnTabChange ?? false}
                 onChange={(e) => update({ validateOnTabChange: e.currentTarget.checked })}
@@ -92,11 +87,13 @@ export const PageSettingsView: FC<PageSettingsViewProps> = ({ schema, allFields,
       </Section>
 
       <Section label={t('sections.dataSources')} count={schema.dataSources.length} defaultOpen={false}>
-        <DataSourceEditor
-          dataSources={schema.dataSources}
-          allFields={allFields}
-          onChange={onDataSourcesChange}
-        />
+        <Box style={{ opacity: 0.5, pointerEvents: 'none' }}>
+          <DataSourceEditor
+            dataSources={schema.dataSources}
+            allFields={allFields}
+            onChange={onDataSourcesChange}
+          />
+        </Box>
       </Section>
 
       <Section label={t('sections.scripts')} defaultOpen={false}>

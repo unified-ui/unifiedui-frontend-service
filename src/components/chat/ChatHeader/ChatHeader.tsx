@@ -43,6 +43,7 @@ export interface ChatHeaderProps {
   hasWidgets?: boolean;
   messages?: MessageResponse[];
   onChatAgentChange: (chatAgentId: string) => void;
+  onChatAgentSearch?: (query: string) => void;
   onNewChatWithAgent?: (chatAgentId: string) => void;
   onShare?: () => void;
   onToggleFavorite?: () => void;
@@ -64,6 +65,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
   hasWidgets = false,
   messages = [],
   onChatAgentChange,
+  onChatAgentSearch,
   onNewChatWithAgent,
   onShare,
   onToggleFavorite,
@@ -173,6 +175,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
             data={chatAgentOptions}
             value={selectedChatAgentId}
             onChange={(value) => value && handleAgentChange(value)}
+            onFilterChange={onChatAgentSearch}
             leftSection={<IconSparkles size={18} />}
             rightSection={<IconChevronDown size={16} />}
             className={classes.chatAgentSelect}

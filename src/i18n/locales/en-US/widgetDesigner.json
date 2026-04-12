@@ -1,5 +1,6 @@
 {
   "title": "Widget Designer",
+  "editDetails": "Edit Details",
   "fieldPalette": "Field Palette",
   "canvas": "Canvas",
   "fieldProperties": "Field Properties",
@@ -21,6 +22,7 @@
   "fieldTypes": {
     "text": "Text Field",
     "textarea": "Text Area",
+    "description_textarea": "Description",
     "number": "Number",
     "email": "Email",
     "url": "URL",
@@ -44,6 +46,7 @@
     "rich_text": "Rich Text",
     "heading": "Heading",
     "paragraph": "Paragraph",
+    "label": "Label",
     "divider": "Divider",
     "spacer": "Spacer",
     "alert": "Alert",
@@ -122,6 +125,9 @@
     "unit": "Unit Suffix",
     "searchable": "Searchable",
     "maxSelections": "Max Selections",
+    "minSelections": "Min Selections",
+    "emailValidation": "Validate Email",
+    "urlValidation": "Validate URL",
     "radioLayout": "Layout",
     "layoutVertical": "Vertical",
     "layoutHorizontal": "Horizontal",

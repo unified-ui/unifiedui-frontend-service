@@ -43,37 +43,16 @@
 }
 
 .tabPanelScrollArea {
-  max-height: calc(100vh - 400px);
-  min-height: 200px;
+  max-height: calc(100vh - 340px);
+  min-height: 300px;
   overflow-y: auto;
   padding-right: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
 }
 
 /* Details Tab */
 .detailsSection {
   padding-bottom: var(--spacing-xl);
-}
-
-.sectionCard {
-  padding: var(--spacing-lg);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
-}
-
-.sectionTitle {
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-  margin-bottom: var(--spacing-lg);
-}
-
-.sectionCard :global(.mantine-TextInput-root),
-.sectionCard :global(.mantine-InputWrapper-root) {
-  gap: var(--spacing-sm);
-}
-
-.sectionCard :global(.mantine-InputWrapper-label) {
-  margin-bottom: var(--spacing-xs);
 }
 
 /* Trace loading overlay */

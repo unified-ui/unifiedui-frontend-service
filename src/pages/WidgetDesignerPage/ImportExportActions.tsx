@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useRef } from 'react';
 import { Menu, ActionIcon } from '@mantine/core';
-import { IconDotsVertical, IconDownload, IconUpload } from '@tabler/icons-react';
+import { IconDotsVertical, IconDownload, IconUpload, IconEdit } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { validateSchema } from './schemaValidation';
 import { loadWidgetSchema } from './schemaMigration';
@@ -11,12 +11,14 @@ interface ImportExportActionsProps {
   schema: WidgetFormSchema;
   widgetName: string;
   onImport: (schema: WidgetFormSchema) => void;
+  onEditDetails: () => void;
 }
 
 export const ImportExportActions: FC<ImportExportActionsProps> = ({
   schema,
   widgetName,
   onImport,
+  onEditDetails,
 }) => {
   const { t } = useTranslation('widgetDesigner');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,6 +76,10 @@ export const ImportExportActions: FC<ImportExportActionsProps> = ({
           </ActionIcon>
         </Menu.Target>
         <Menu.Dropdown>
+          <Menu.Item leftSection={<IconEdit size={14} />} onClick={onEditDetails}>
+            {t('editDetails')}
+          </Menu.Item>
+          <Menu.Divider />
           <Menu.Item leftSection={<IconDownload size={14} />} onClick={handleExport}>
             {t('importExport.export')}
           </Menu.Item>

@@ -22,19 +22,20 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
-import { IconAlertCircle, IconRobot, IconInfoCircle, IconShieldLock, IconPlus } from '@tabler/icons-react';
+import { IconAlertCircle, IconRobot, IconInfoCircle, IconShieldLock, IconPlus, IconSearch } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { useTranslation } from 'react-i18next';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
-import { useEntityPermissions, usePermissions } from '../../../hooks';
-import { ManageAccessTable, TagInput, AddPrincipalDialog, KeyValuePairsInput, ConnectionTestButton, FilterableSelect } from '../../common';
+import { useEntityPermissions, usePermissions, useConfigSuggestions } from '../../../hooks';
+import { ManageAccessTable, TagInput, AddPrincipalDialog, KeyValuePairsInput, ConnectionTestButton, FilterableSelect, EndpointSuggestInput } from '../../common';
 import type { KeyValuePair } from '../../common';
-import type { AutonomousAgentResponse, PrincipalTypeEnum, CredentialResponse } from '../../../api/types';
-import { PermissionActionEnum, AutonomousAgentTypeEnum, CredentialTypeEnum, TestConnectionType } from '../../../api/types';
+import type { WorkflowResponse, PrincipalTypeEnum, CredentialResponse } from '../../../api/types';
+import { PermissionActionEnum, WorkflowTypeEnum, CredentialTypeEnum, TestConnectionType } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
+import { N8NWorkflowBrowserDialog } from '../N8NWorkflowBrowserDialog';
 import { useFormDirtyGuard } from '../../../hooks';
-import classes from './EditAutonomousAgentDialog.module.css';
+import classes from './EditWorkflowDialog.module.css';
 
 export type EditDialogTab = 'details' | 'iam';
 
@@ -58,19 +59,19 @@ interface FormValues {
   n8n_default_query_params: KeyValuePair[];
 }
 
-export interface EditAutonomousAgentDialogProps {
+export interface EditWorkflowDialogProps {
   opened: boolean;
-  autonomousAgentId: string | null;
-  initialData?: AutonomousAgentResponse | null;
+  workflowId: string | null;
+  initialData?: WorkflowResponse | null;
   activeTab?: EditDialogTab;
   onClose: () => void;
   onSuccess?: () => void;
   onTabChange?: (tab: EditDialogTab) => void;
 }
 
-export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
+export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
   opened,
-  autonomousAgentId,
+  workflowId,
   initialData,
   activeTab = 'details',
   onClose,
@@ -81,7 +82,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
   const { t } = useTranslation('common');
   const { isGlobalAdmin } = usePermissions();
   const showIamTab = isGlobalAdmin || !initialData || initialData.my_permission === 'ADMIN';
-  const [autonomousAgent, setAutonomousAgent] = useState<AutonomousAgentResponse | null>(null);
+  const [workflow, setWorkflow] = useState<WorkflowResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,6 +90,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
+  const [workflowBrowserOpen, setWorkflowBrowserOpen] = useState(false);
   const [credentialSearch, setCredentialSearch] = useState('');
   const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
 
@@ -104,8 +106,8 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
     handleDeletePrincipal,
     resetState: resetPrincipalsState,
   } = useEntityPermissions({
-    entityType: 'autonomous-agent',
-    entityId: autonomousAgentId,
+    entityType: 'workflow',
+    entityId: workflowId,
   });
 
   const form = useForm<FormValues>({
@@ -130,7 +132,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         return null;
       },
       n8n_workflow_endpoint: (value) => {
-        if (autonomousAgent?.type === AutonomousAgentTypeEnum.N8N) {
+        if (workflow?.type === WorkflowTypeEnum.N8N) {
           if (!value || value.trim().length === 0) {
             return 'Workflow Endpoint is required';
           }
@@ -146,7 +148,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         return null;
       },
       n8n_api_api_key_credential_id: (value) => {
-        if (autonomousAgent?.type === AutonomousAgentTypeEnum.N8N) {
+        if (workflow?.type === WorkflowTypeEnum.N8N) {
           if (!value || value.trim().length === 0) {
             return 'API Key Credential is required';
           }
@@ -154,7 +156,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         return null;
       },
       n8n_default_body: (value) => {
-        if (autonomousAgent?.type === AutonomousAgentTypeEnum.N8N) {
+        if (workflow?.type === WorkflowTypeEnum.N8N) {
           const trimmed = value.trim();
           if (trimmed && trimmed !== '{}') {
             try {
@@ -170,6 +172,17 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
   });
 
   useFormDirtyGuard(form.isDirty());
+  const { suggestions: configSuggestions } = useConfigSuggestions(workflow?.type || '');
+
+  const n8nHostUrl = useMemo(() => {
+    const endpoint = form.values.n8n_workflow_endpoint || '';
+    try {
+      const url = new URL(endpoint);
+      return `${url.protocol}//${url.host}`;
+    } catch {
+      return '';
+    }
+  }, [form.values.n8n_workflow_endpoint]);
 
   // Load credentials
   const loadCredentials = useCallback(async (searchTerm?: string) => {
@@ -210,8 +223,8 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
 
   // Initialize form from data
   const initializeFromData = useCallback(
-    (data: AutonomousAgentResponse) => {
-      setAutonomousAgent(data);
+    (data: WorkflowResponse) => {
+      setWorkflow(data);
 
       // Extract N8N config if available
       const config = data.config || {};
@@ -238,38 +251,38 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
     []
   );
 
-  // Fetch autonomous agent details
-  const fetchAutonomousAgent = useCallback(async () => {
-    if (!apiClient || !selectedTenant || !autonomousAgentId) return;
+  // Fetch workflow details
+  const fetchWorkflow = useCallback(async () => {
+    if (!apiClient || !selectedTenant || !workflowId) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const data = await apiClient.getAutonomousAgent(selectedTenant.id, autonomousAgentId);
+      const data = await apiClient.getWorkflow(selectedTenant.id, workflowId);
       initializeFromData(data);
     } catch (err) {
-      console.error('Failed to fetch autonomous agent:', err);
-      setError('Failed to load autonomous agent details');
+      console.error('Failed to fetch workflow:', err);
+      setError('Failed to load workflow details');
     } finally {
       setIsLoading(false);
     }
-  }, [apiClient, selectedTenant, autonomousAgentId, initializeFromData]);
+  }, [apiClient, selectedTenant, workflowId, initializeFromData]);
 
   // Fetch data when dialog opens
   useEffect(() => {
-    if (opened && autonomousAgentId) {
+    if (opened && workflowId) {
       if (initialData) {
         initializeFromData(initialData);
       } else {
-        fetchAutonomousAgent();
+        fetchWorkflow();
       }
       // Always fetch principals (they're not in the list data)
       fetchPrincipals();
     } else if (!opened) {
       resetPrincipalsState();
     }
-  }, [opened, autonomousAgentId, initialData, initializeFromData, fetchAutonomousAgent, fetchPrincipals, resetPrincipalsState]);
+  }, [opened, workflowId, initialData, initializeFromData, fetchWorkflow, fetchPrincipals, resetPrincipalsState]);
 
   // Handle tab change
   const handleTabChange = (value: string) => {
@@ -279,7 +292,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
 
   // Handle form submit
   const handleSubmit = async (values: FormValues) => {
-    if (!apiClient || !selectedTenant || !autonomousAgentId) return;
+    if (!apiClient || !selectedTenant || !workflowId) return;
 
     setIsSaving(true);
     setError(null);
@@ -287,7 +300,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
     try {
       // Build config if this is an N8N agent
       let config: Record<string, unknown> | undefined;
-      if (autonomousAgent?.type === AutonomousAgentTypeEnum.N8N) {
+      if (workflow?.type === WorkflowTypeEnum.N8N) {
         config = {
           api_version: values.n8n_api_version,
           workflow_endpoint: values.n8n_workflow_endpoint.trim(),
@@ -310,8 +323,8 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         }
       }
 
-      // Update autonomous agent
-      await apiClient.updateAutonomousAgent(selectedTenant.id, autonomousAgentId, {
+      // Update workflow
+      await apiClient.updateWorkflow(selectedTenant.id, workflowId, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
         is_active: values.is_active,
@@ -320,18 +333,18 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
       });
 
       // Update tags if changed
-      const currentTags = autonomousAgent?.tags?.map((t) => t.name) || [];
+      const currentTags = workflow?.tags?.map((t) => t.name) || [];
       const newTags = values.tags;
 
       if (JSON.stringify(currentTags.sort()) !== JSON.stringify(newTags.sort())) {
-        await apiClient.setAutonomousAgentTags(selectedTenant.id, autonomousAgentId, newTags);
+        await apiClient.setWorkflowTags(selectedTenant.id, workflowId, newTags);
       }
 
       form.resetDirty();
       onSuccess?.();
       onClose();
     } catch (err) {
-      console.error('Failed to update autonomous agent:', err);
+      console.error('Failed to update workflow:', err);
       setError('Failed to save changes');
     } finally {
       setIsSaving(false);
@@ -355,7 +368,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
   };
 
   // Check if this is an N8N agent
-  const isN8N = autonomousAgent?.type === AutonomousAgentTypeEnum.N8N;
+  const isN8N = workflow?.type === WorkflowTypeEnum.N8N;
 
   // Handle adding principals with callback
   const handleAddPrincipalsWithRole = useCallback(
@@ -386,7 +399,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
   const handleClose = () => {
     form.reset();
     setError(null);
-    setAutonomousAgent(null);
+    setWorkflow(null);
     onClose();
   };
 
@@ -402,15 +415,15 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
             </Box>
             <Stack gap={2}>
               <Text fw={600} size="lg">
-                {autonomousAgent?.name}
+                {workflow?.name}
               </Text>
-              {autonomousAgent && (
+              {workflow && (
                 <Group gap="xs">
-                  <Badge size="xs" variant="light" color={autonomousAgent.is_active ? 'green' : 'gray'}>
-                    {autonomousAgent.is_active ? 'Active' : 'Inactive'}
+                  <Badge size="xs" variant="light" color={workflow.is_active ? 'green' : 'gray'}>
+                    {workflow.is_active ? 'Active' : 'Inactive'}
                   </Badge>
                   <Text size="xs" c="dimmed">
-                    Autonomous Agent
+                    Workflow
                   </Text>
                 </Group>
               )}
@@ -486,11 +499,11 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
 
               <Group gap="md">
                 <Badge size="lg" variant="light" color="blue">
-                  {autonomousAgent?.type || 'Unknown'}
+                  {workflow?.type || 'Unknown'}
                 </Badge>
                 <Switch
                   label="Active"
-                  description="Enable or disable this autonomous agent"
+                  description="Enable or disable this workflow"
                   checked={form.values.is_active}
                   onChange={(e) => form.setFieldValue('is_active', e.currentTarget.checked)}
                   classNames={{ track: classes.switchTrack }}
@@ -516,21 +529,6 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
                     withAsterisk
                     data={API_VERSIONS}
                     {...form.getInputProps('n8n_api_version')}
-                  />
-
-                  <TextInput
-                    label="Workflow Endpoint"
-                    placeholder="https://your-n8n.com/workflow/{id}"
-                    description="URL must contain /workflow/ in path"
-                    required
-                    withAsterisk
-                    {...form.getInputProps('n8n_workflow_endpoint')}
-                  />
-                  <ConnectionTestButton
-                    testType={TestConnectionType.N8N_WORKFLOW}
-                    url={form.values.n8n_workflow_endpoint}
-                    credentialId={form.values.n8n_api_api_key_credential_id || undefined}
-                    disabled={!form.values.n8n_workflow_endpoint || !form.values.n8n_api_api_key_credential_id}
                   />
 
                   {/* API Key Credential with Add Button */}
@@ -565,10 +563,41 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
                       No API Key Credentials available. Create one first.
                     </Alert>
                   )}
+
+                  <Group align="flex-end" gap="xs" wrap="nowrap">
+                    <Box style={{ flex: 1 }}>
+                      <EndpointSuggestInput
+                        label="Workflow Endpoint"
+                        placeholder="https://your-n8n.com/workflow/{id}"
+                        description="URL must contain /workflow/ in path"
+                        required
+                        withAsterisk
+                        suggestions={configSuggestions['workflow_endpoint'] || []}
+                        {...form.getInputProps('n8n_workflow_endpoint')}
+                      />
+                    </Box>
+                    <Tooltip label={!form.values.n8n_api_api_key_credential_id ? 'Select an API Key credential first' : 'Browse workflows'}>
+                      <ActionIcon
+                        variant="default"
+                        size="lg"
+                        onClick={() => setWorkflowBrowserOpen(true)}
+                        disabled={!form.values.n8n_api_api_key_credential_id}
+                        mb={form.getInputProps('n8n_workflow_endpoint').error ? 22 : 0}
+                      >
+                        <IconSearch size={18} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
+                  <ConnectionTestButton
+                    testType={TestConnectionType.N8N_WORKFLOW}
+                    url={form.values.n8n_workflow_endpoint}
+                    credentialId={form.values.n8n_api_api_key_credential_id || undefined}
+                    disabled={!form.values.n8n_workflow_endpoint || !form.values.n8n_api_api_key_credential_id}
+                  />
                 </>
               )}
 
-              {autonomousAgent?.type === AutonomousAgentTypeEnum.N8N && (
+              {workflow?.type === WorkflowTypeEnum.N8N && (
                 <>
                   <Switch
                     label="Enable Start Workflow"
@@ -646,7 +675,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
                 />
                 <Box pos="absolute" top={0} right={0}>
                   <GenerateWithAIButton
-                    entityType="autonomous_agent"
+                    entityType="workflow"
                     entityName={form.values.name}
                     existingDescription={form.values.description || undefined}
                     onGenerated={(desc: string) => form.setFieldValue('description', desc)}
@@ -676,7 +705,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
               onRoleChange={handleRoleChangeWithTypes}
               onDeletePrincipal={handleDeletePrincipalWithTypes}
               onAddPrincipal={() => setIsAddPrincipalOpen(true)}
-              entityName="autonomous agent"
+              entityName="workflow"
               onRefreshPrincipal={async (principalId, principalType) => {
                 if (!apiClient || !selectedTenant) return;
                 await apiClient.refreshPrincipal(principalId, { tenant_id: selectedTenant.id, type: principalType as 'IDENTITY_USER' | 'IDENTITY_GROUP' });
@@ -691,7 +720,7 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         opened={isAddPrincipalOpen}
         onClose={() => setIsAddPrincipalOpen(false)}
         onSubmit={handleAddPrincipalsWithRole}
-        entityName="autonomous agent"
+        entityName="workflow"
         existingPrincipalIds={principals.map((p) => p.principalId)}
       />
 
@@ -700,6 +729,15 @@ export const EditAutonomousAgentDialog: FC<EditAutonomousAgentDialogProps> = ({
         opened={createCredentialOpen}
         onClose={() => setCreateCredentialOpen(false)}
         onSuccess={handleCredentialCreated}
+      />
+
+      {/* N8N Workflow Browser Dialog */}
+      <N8NWorkflowBrowserDialog
+        opened={workflowBrowserOpen}
+        onClose={() => setWorkflowBrowserOpen(false)}
+        host={n8nHostUrl}
+        credentialId={form.values.n8n_api_api_key_credential_id}
+        onSelect={(wf) => form.setFieldValue('n8n_workflow_endpoint', wf.url)}
       />
     </>
   );

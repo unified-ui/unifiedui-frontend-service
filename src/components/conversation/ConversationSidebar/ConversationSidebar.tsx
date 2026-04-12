@@ -51,7 +51,7 @@ export interface ConversationSidebarProps {
   onCollapsedChange: (collapsed: boolean) => void;
   onNewChat: () => void;
   onSelectConversation: (conversationId: string) => void;
-  onToggleFavorite?: (conversationId: string) => void;
+  onToggleFavorite?: (conversationId: string, conversationName: string) => void;
   onRenameConversation?: (conversationId: string, newName: string) => void;
   onDeleteConversation?: (conversationId: string) => void;
   onSearchOpen?: () => void;
@@ -318,6 +318,15 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
           <IconLayoutSidebarLeftCollapse size={20} />
         </ActionIcon>
         <Group gap={4}>
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            onClick={onSearchOpen}
+            aria-label="Search"
+            className={classes.headerButton}
+          >
+            <IconSearch size={18} />
+          </ActionIcon>
           <Tooltip label={t('conversations:newChat')} position="bottom">
             <ActionIcon
               variant="subtle"
@@ -329,15 +338,6 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
               <IconEdit size={18} />
             </ActionIcon>
           </Tooltip>
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            onClick={onSearchOpen}
-            aria-label="Search"
-            className={classes.headerButton}
-          >
-            <IconSearch size={18} />
-          </ActionIcon>
         </Group>
       </div>
 
@@ -426,7 +426,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
                     isFavorite={favoriteIds.has(conversation.id)}
                     chatAgentName={getChatAgentName(conversation.chat_agent_id)}
                     onClick={() => onSelectConversation(conversation.id)}
-                    onToggleFavorite={() => onToggleFavorite?.(conversation.id)}
+                    onToggleFavorite={() => onToggleFavorite?.(conversation.id, conversation.name)}
                     onRename={(id) => handleRenameStart(id, conversation.name)}
                     onDelete={(id) => handleDeleteClick(id, conversation.name)}
                     isEditing={editingId === conversation.id}

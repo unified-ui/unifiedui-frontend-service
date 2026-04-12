@@ -31,7 +31,7 @@ interface DataTableProps {
   onRowClick?: (id: string) => void;
   renderIcon?: (item: DataTableItem) => ReactNode;
   isFavorite?: (id: string) => boolean;
-  onToggleFavorite?: (id: string) => void;
+  onToggleFavorite?: (id: string, name: string) => void;
   sortBy?: SortOption;
   onSortChange?: (sort: SortOption) => void;
   onLoadMore?: () => void;

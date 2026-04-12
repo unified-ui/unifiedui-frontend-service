@@ -14,7 +14,7 @@ import { statusTracesToReActState } from '../../../hooks/chat/useReActChat';
 import { useStreamSmoother } from '../../../hooks/chat';
 import { parseWidgetTag, isStandardWidgetId } from '../../../utils/widgetParser';
 import { useIdentity } from '../../../contexts';
-import { ConfirmDeleteDialog } from '../../common';
+import { ConfirmDeleteDialog, WidgetErrorBoundary } from '../../common';
 import { FeedbackDialog } from '../FeedbackDialog';
 import { ReasoningSection } from '../ReasoningSection';
 import { YesNoWidget } from '../widgets/YesNoWidget';
@@ -1134,32 +1134,36 @@ const CustomWidgetRenderer: FC<CustomWidgetRendererProps> = ({
     const successMessage = settings.successMessage as string | undefined;
     const chatScripts = (activeConfig as Record<string, unknown>)?.scripts as Record<string, string> | undefined;
     return (
-      <FormWidget
-        tabs={tabs}
-        enableTabs={enableTabs}
-        onSubmit={handleSubmit}
-        disabled={!isInteractive}
-        submittedData={nextUserMessageContent}
-        widgetData={widgetData}
-        submitButtonText={submitButtonText}
-        description={description}
-        successMessage={successMessage}
-        scripts={chatScripts}
-        maxHeight={500}
-      />
+      <WidgetErrorBoundary>
+        <FormWidget
+          tabs={tabs}
+          enableTabs={enableTabs}
+          onSubmit={handleSubmit}
+          disabled={!isInteractive}
+          submittedData={nextUserMessageContent}
+          widgetData={widgetData}
+          submitButtonText={submitButtonText}
+          description={description}
+          successMessage={successMessage}
+          scripts={chatScripts}
+          maxHeight={500}
+        />
+      </WidgetErrorBoundary>
     );
   }
 
   if (activeType === ChatWidgetTypeEnum.IFRAME) {
     const config = activeConfig as { url: string; width?: string | number; height?: string | number; allowFullscreen?: boolean };
     return (
-      <IframeWidget
-        config={config}
-        onSubmit={handleSubmit}
-        disabled={!isInteractive}
-        submittedData={nextUserMessageContent}
-        widgetData={widgetData}
-      />
+      <WidgetErrorBoundary>
+        <IframeWidget
+          config={config}
+          onSubmit={handleSubmit}
+          disabled={!isInteractive}
+          submittedData={nextUserMessageContent}
+          widgetData={widgetData}
+        />
+      </WidgetErrorBoundary>
     );
   }
 

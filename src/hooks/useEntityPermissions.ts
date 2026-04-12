@@ -11,7 +11,7 @@ import type { SelectedPrincipal } from '../components/common/AddPrincipalDialog/
 
 export type EntityType =
   | 'chat-agent'
-  | 'autonomous-agent'
+  | 'workflow'
   | 'credential'
   | 'chat-widget'
   | 'conversation'
@@ -90,13 +90,13 @@ export const useEntityPermissions = ({
           deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
             apiClient.deleteChatAgentPermission(tenantId, entityId, principalId, principalType, role),
         };
-      case 'autonomous-agent':
+      case 'workflow':
         return {
-          getPrincipals: () => apiClient.getAutonomousAgentPrincipals(tenantId, entityId),
+          getPrincipals: () => apiClient.getWorkflowPrincipals(tenantId, entityId),
           setPermission: (data: { principal_id: string; principal_type: PrincipalTypeEnum; role: PermissionActionEnum }) =>
-            apiClient.setAutonomousAgentPermission(tenantId, entityId, data),
+            apiClient.setWorkflowPermission(tenantId, entityId, data),
           deletePermission: (principalId: string, principalType: PrincipalTypeEnum, role: PermissionActionEnum) =>
-            apiClient.deleteAutonomousAgentPermission(tenantId, entityId, principalId, principalType, role),
+            apiClient.deleteWorkflowPermission(tenantId, entityId, principalId, principalType, role),
         };
       case 'credential':
         return {

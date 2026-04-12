@@ -13,8 +13,8 @@ export const NotFoundPage: FC = () => {
           <Title order={1} size={72} c="primary">404</Title>
           <Title order={2}>Page Not Found</Title>
           <Text c="dimmed">Die angeforderte Seite konnte nicht gefunden werden.</Text>
-          <Button onClick={() => navigate('/dashboard')} size="lg">
-            Zurück zum Dashboard
+          <Button onClick={() => navigate('/home')} size="lg">
+            Zurück zur Startseite
           </Button>
         </Stack>
       </Center>

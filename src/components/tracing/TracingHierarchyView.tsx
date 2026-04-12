@@ -19,7 +19,7 @@ import type { TraceNodeResponse, FullTraceResponse } from '../../api/types';
 import classes from './TracingHierarchyView.module.css';
 
 const TREE_MIN_HEIGHT = 100;
-const DEFAULT_PANELS_HEIGHT = 250;
+const DEFAULT_PANELS_HEIGHT = 500;
 
 // ============================================================================
 // HELPER: Get Type Badge Color
@@ -68,8 +68,6 @@ const getTypeBadgeColor = (type: string): string => {
       return 'yellow';
     case 'conversation':
       return 'blue';
-    case 'autonomous_agent':
-      return 'grape';
     default:
       return 'gray';
   }
@@ -291,7 +289,7 @@ const TraceRootItem: FC<TraceRootItemProps> = ({
           color={getTypeBadgeColor(trace.contextType || '')}
           className={classes.typeBadge}
         >
-          {trace.contextType === 'autonomous_agent' ? 'agent' : trace.contextType}
+          {trace.contextType === 'workflow' ? 'agent' : trace.contextType}
         </Badge>
 
         {/* Name */}
@@ -460,7 +458,7 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
             className={classes.panelsResizeHandle}
             onMouseDown={handlePanelsResize}
           />
-          <DataPanelsContainer height={dataPanelsHeight} />
+          <DataPanelsContainer height={dataPanelsHeight} className={classes.dataPanelsContainer} />
         </>
       )}
     </div>

@@ -18,30 +18,32 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
-import { IconRobot, IconPlus, IconAlertCircle } from '@tabler/icons-react';
+import { IconRobot, IconPlus, IconAlertCircle, IconSearch } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { useTranslation } from 'react-i18next';
+import { useConfigSuggestions } from '../../../hooks';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import {
-  AutonomousAgentTypeEnum,
+  WorkflowTypeEnum,
   CredentialTypeEnum,
   type CredentialResponse,
-  type N8NAutonomousAgentConfig,
+  type N8NWorkflowConfig,
 } from '../../../api/types';
-import { TagInput, KeyValuePairsInput, ConnectionTestButton, FilterableSelect } from '../../common';
+import { TagInput, KeyValuePairsInput, ConnectionTestButton, FilterableSelect, EndpointSuggestInput } from '../../common';
 import type { KeyValuePair } from '../../common';
 import { TestConnectionType } from '../../../api/types';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
+import { N8NWorkflowBrowserDialog } from '../N8NWorkflowBrowserDialog';
 
 const AUTONOMOUS_AGENT_TYPES = [
-  { value: AutonomousAgentTypeEnum.N8N, label: 'n8n' },
+  { value: WorkflowTypeEnum.N8N, label: 'n8n' },
 ];
 
 const API_VERSIONS = [
   { value: 'v1', label: 'v1' },
 ];
 
-interface CreateAutonomousAgentDialogProps {
+interface CreateWorkflowDialogProps {
   opened: boolean;
   onClose: () => void;
   onSuccess?: () => void;
@@ -63,7 +65,7 @@ interface FormValues {
   n8n_default_query_params: KeyValuePair[];
 }
 
-export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> = ({
+export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
   opened,
   onClose,
   onSuccess,
@@ -74,6 +76,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
+  const [workflowBrowserOpen, setWorkflowBrowserOpen] = useState(false);
   const [credentialSearch, setCredentialSearch] = useState('');
   const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
 
@@ -116,7 +119,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
         return null;
       },
       n8n_workflow_endpoint: (value, values) => {
-        if (values.type === AutonomousAgentTypeEnum.N8N) {
+        if (values.type === WorkflowTypeEnum.N8N) {
           if (!value || value.trim().length === 0) {
             return 'Workflow Endpoint is required';
           }
@@ -132,7 +135,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
         return null;
       },
       n8n_api_api_key_credential_id: (value, values) => {
-        if (values.type === AutonomousAgentTypeEnum.N8N) {
+        if (values.type === WorkflowTypeEnum.N8N) {
           if (!value || value.trim().length === 0) {
             return 'API Key Credential is required';
           }
@@ -140,7 +143,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
         return null;
       },
       n8n_default_body: (value, values) => {
-        if (values.type === AutonomousAgentTypeEnum.N8N && values.n8n_enable_start_workflow) {
+        if (values.type === WorkflowTypeEnum.N8N && values.n8n_enable_start_workflow) {
           const trimmed = value.trim();
           if (trimmed && trimmed !== '{}') {
             try {
@@ -154,6 +157,18 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
       },
     },
   });
+
+  const { suggestions: configSuggestions } = useConfigSuggestions(form.values.type);
+
+  const n8nHostUrl = useMemo(() => {
+    const endpoint = form.values.n8n_workflow_endpoint || '';
+    try {
+      const url = new URL(endpoint);
+      return `${url.protocol}//${url.host}`;
+    } catch {
+      return '';
+    }
+  }, [form.values.n8n_workflow_endpoint]);
 
   // Load credentials
   const loadCredentials = useCallback(async (searchTerm?: string) => {
@@ -198,9 +213,9 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
     setIsSubmitting(true);
     try {
       // Build config based on agent type
-      let config: N8NAutonomousAgentConfig | undefined;
+      let config: N8NWorkflowConfig | undefined;
 
-      if (values.type === AutonomousAgentTypeEnum.N8N) {
+      if (values.type === WorkflowTypeEnum.N8N) {
         config = {
           api_version: values.n8n_api_version,
           workflow_endpoint: values.n8n_workflow_endpoint.trim(),
@@ -223,10 +238,10 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
         }
       }
 
-      // Create the autonomous agent
-      const agent = await apiClient.createAutonomousAgent(selectedTenant.id, {
+      // Create the workflow
+      const agent = await apiClient.createWorkflow(selectedTenant.id, {
         name: values.name.trim(),
-        type: values.type as AutonomousAgentTypeEnum,
+        type: values.type as WorkflowTypeEnum,
         description: values.description?.trim() || undefined,
         config: (config ?? {}) as Record<string, unknown>,
         allow_api_keys: values.allow_api_keys,
@@ -235,7 +250,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
       // If tags were added, save them to the agent
       if (values.tags.length > 0) {
         try {
-          await apiClient.setAutonomousAgentTags(
+          await apiClient.setWorkflowTags(
             selectedTenant.id,
             agent.id,
             values.tags
@@ -274,7 +289,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
     }
   };
 
-  const isN8N = form.values.type === AutonomousAgentTypeEnum.N8N;
+  const isN8N = form.values.type === WorkflowTypeEnum.N8N;
 
   return (
     <>
@@ -284,7 +299,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
         title={
           <Group gap="sm">
             <IconRobot size={24} />
-            <Text fw={600} size="lg">Create Autonomous Agent</Text>
+            <Text fw={600} size="lg">Create Workflow</Text>
           </Group>
         }
         size="lg"
@@ -325,14 +340,63 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
                   {...form.getInputProps('n8n_api_version')}
                 />
 
-                <TextInput
-                  label="Workflow Endpoint"
-                  placeholder="https://your-n8n.com/workflow/{id}"
-                  description="URL must contain /workflow/ in the path"
-                  required
-                  withAsterisk
-                  {...form.getInputProps('n8n_workflow_endpoint')}
-                />
+                {/* API Key Credential with Add Button */}
+                <Group gap="xs" align="flex-end">
+                  <FilterableSelect
+                    label="API Key Credential"
+                    placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
+                    required
+                    withAsterisk
+                    data={apiKeyCredentials}
+                    rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
+                    disabled={isLoadingCredentials}
+                    nothingFoundMessage="No credentials found"
+                    onFilterChange={setCredentialSearch}
+                    style={{ flex: 1 }}
+                    {...form.getInputProps('n8n_api_api_key_credential_id')}
+                  />
+                  <Tooltip label="Create new API Key Credential">
+                    <ActionIcon
+                      variant="light"
+                      color="blue"
+                      size="lg"
+                      onClick={handleOpenCreateCredential}
+                    >
+                      <IconPlus size={18} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+
+                {apiKeyCredentials.length === 0 && !isLoadingCredentials && (
+                  <Alert icon={<IconAlertCircle size={16} />} color="yellow" variant="light">
+                    No API Key Credentials available. Please create a credential first.
+                  </Alert>
+                )}
+
+                <Group align="flex-end" gap="xs" wrap="nowrap">
+                  <Box style={{ flex: 1 }}>
+                    <EndpointSuggestInput
+                      label="Workflow Endpoint"
+                      placeholder="https://your-n8n.com/workflow/{id}"
+                      description="URL must contain /workflow/ in the path"
+                      required
+                      withAsterisk
+                      suggestions={configSuggestions['workflow_endpoint'] || []}
+                      {...form.getInputProps('n8n_workflow_endpoint')}
+                    />
+                  </Box>
+                  <Tooltip label={!form.values.n8n_api_api_key_credential_id ? 'Select an API Key credential first' : 'Browse workflows'}>
+                    <ActionIcon
+                      variant="default"
+                      size="lg"
+                      onClick={() => setWorkflowBrowserOpen(true)}
+                      disabled={!form.values.n8n_api_api_key_credential_id}
+                      mb={form.getInputProps('n8n_workflow_endpoint').error ? 22 : 0}
+                    >
+                      <IconSearch size={18} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
                 <ConnectionTestButton
                   testType={TestConnectionType.N8N_WORKFLOW}
                   url={form.values.n8n_workflow_endpoint}
@@ -394,39 +458,6 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
                     />
                   </>
                 )}
-
-                {/* API Key Credential with Add Button */}
-                <Group gap="xs" align="flex-end">
-                  <FilterableSelect
-                    label="API Key Credential"
-                    placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
-                    required
-                    withAsterisk
-                    data={apiKeyCredentials}
-                    rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
-                    disabled={isLoadingCredentials}
-                    nothingFoundMessage="No credentials found"
-                    onFilterChange={setCredentialSearch}
-                    style={{ flex: 1 }}
-                    {...form.getInputProps('n8n_api_api_key_credential_id')}
-                  />
-                  <Tooltip label="Create new API Key Credential">
-                    <ActionIcon
-                      variant="light"
-                      color="blue"
-                      size="lg"
-                      onClick={handleOpenCreateCredential}
-                    >
-                      <IconPlus size={18} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
-
-                {apiKeyCredentials.length === 0 && !isLoadingCredentials && (
-                  <Alert icon={<IconAlertCircle size={16} />} color="yellow" variant="light">
-                    No API Key Credentials available. Please create a credential first.
-                  </Alert>
-                )}
               </>
             )}
 
@@ -456,7 +487,7 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
               />
               <Box pos="absolute" top={0} right={0}>
                 <GenerateWithAIButton
-                  entityType="autonomous_agent"
+                  entityType="workflow"
                   entityName={form.values.name}
                   existingDescription={form.values.description || undefined}
                   onGenerated={(desc: string) => form.setFieldValue('description', desc)}
@@ -481,6 +512,15 @@ export const CreateAutonomousAgentDialog: FC<CreateAutonomousAgentDialogProps> =
         opened={createCredentialOpen}
         onClose={() => setCreateCredentialOpen(false)}
         onSuccess={handleCredentialCreated}
+      />
+
+      {/* N8N Workflow Browser Dialog */}
+      <N8NWorkflowBrowserDialog
+        opened={workflowBrowserOpen}
+        onClose={() => setWorkflowBrowserOpen(false)}
+        host={n8nHostUrl}
+        credentialId={form.values.n8n_api_api_key_credential_id}
+        onSelect={(wf) => form.setFieldValue('n8n_workflow_endpoint', wf.url)}
       />
     </>
   );

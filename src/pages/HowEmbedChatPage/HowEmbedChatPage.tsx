@@ -24,10 +24,14 @@ import {
   IconMessageCircle,
   IconX,
   IconPlayerPlay,
+  IconSettings,
+  IconCode,
+  IconLink,
+  IconShieldLock,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { Breadcrumbs } from '../../components/common';
+import { Breadcrumbs, ContentCard } from '../../components/common';
 import { useIdentity } from '../../contexts';
 import type { ChatAgentResponse } from '../../api/types';
 import classes from './HowEmbedChatPage.module.css';
@@ -167,7 +171,7 @@ export const HowEmbedChatPage: FC = () => {
       <Breadcrumbs
         items={[
           { label: t('chatAgents'), path: '/chat-agents' },
-          { label: chatAgent.name },
+          { label: chatAgent.name, onClick: () => navigate(-1) },
           { label: t('howEmbedChat.title') },
         ]}
       />
@@ -181,8 +185,7 @@ export const HowEmbedChatPage: FC = () => {
 
       <div className={classes.scrollWrapper}>
         <Stack gap="lg">
-          <div className={classes.sectionCard}>
-            <Text className={classes.sectionTitle}>{t('howEmbedChat.configuration')}</Text>
+          <ContentCard title={t('howEmbedChat.configuration')} icon={<IconSettings size={18} />}>
             <Stack gap="md">
               <div className={classes.configRow}>
                 <TextInput
@@ -288,10 +291,9 @@ export const HowEmbedChatPage: FC = () => {
                 ))}
               </Stack>
             </Stack>
-          </div>
+          </ContentCard>
 
-          <div className={classes.sectionCard}>
-            <Text className={classes.sectionTitle}>{t('howEmbedChat.embedCode')}</Text>
+          <ContentCard title={t('howEmbedChat.embedCode')} icon={<IconCode size={18} />}>
             <div className={classes.codeBlock}>
               <CopyButton value={iframeSnippet} timeout={2000}>
                 {({ copied, copy }) => (
@@ -309,10 +311,9 @@ export const HowEmbedChatPage: FC = () => {
               </CopyButton>
               <pre>{iframeSnippet}</pre>
             </div>
-          </div>
+          </ContentCard>
 
-          <div className={classes.sectionCard}>
-            <Text className={classes.sectionTitle}>{t('howEmbedChat.generatedUrl')}</Text>
+          <ContentCard title={t('howEmbedChat.generatedUrl')} icon={<IconLink size={18} />}>
             <div className={classes.codeBlock}>
               <CopyButton value={embedUrl} timeout={2000}>
                 {({ copied, copy }) => (
@@ -330,10 +331,9 @@ export const HowEmbedChatPage: FC = () => {
               </CopyButton>
               <pre>{embedUrl}</pre>
             </div>
-          </div>
+          </ContentCard>
 
-          <div className={classes.sectionCard}>
-            <Text className={classes.sectionTitle}>{t('embedAllowedOrigins')}</Text>
+          <ContentCard title={t('embedAllowedOrigins')} icon={<IconShieldLock size={18} />}>
             <Text size="sm" c="dimmed" mb="md">
               {t('embedAllowedOriginsDescription')}
             </Text>
@@ -352,7 +352,7 @@ export const HowEmbedChatPage: FC = () => {
                 {t('save')}
               </Button>
             </Group>
-          </div>
+          </ContentCard>
         </Stack>
       </div>
 

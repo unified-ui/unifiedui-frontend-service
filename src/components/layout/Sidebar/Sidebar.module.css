@@ -76,9 +76,11 @@
 }
 
 [data-mantine-color-scheme="dark"] .navItemActive {
-  background-color: transparent !important;
+  background-color: rgba(33, 150, 243, 0.06) !important;
   color: var(--color-primary-300) !important;
-  border-left: 4px solid var(--color-primary-400) !important;
+  border-image: var(--gradient-accent) 1 !important;
+  border-left-width: 4px !important;
+  border-left-style: solid !important;
 }
 
 .navItemHovered {

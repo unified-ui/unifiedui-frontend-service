@@ -9,6 +9,7 @@ import { enabledProviders } from '../../auth/authConfig';
 import type { IdentityProviderType } from '../../auth/authConfig';
 import { useIdentity } from '../../contexts';
 import { useBranding } from '../../hooks/useBranding';
+import { SHOW_PLATFORM_SUBTITLE } from '../../config';
 import classes from './LoginPage.module.css';
 
 const MicrosoftIcon = () => (
@@ -173,9 +174,16 @@ export const LoginPage = () => {
                 <IconBrain size={24} color="#fff" />
               </div>
             )}
-            <span className={classes.brandName} style={{ color: branding.login.textColor }}>
-              {branding.displayName}
-            </span>
+            <div className={classes.brandTextWrapper}>
+              <span className={classes.brandName} style={{ color: branding.login.textColor }}>
+                {branding.displayName}
+              </span>
+              {SHOW_PLATFORM_SUBTITLE && (
+                <span className={classes.brandSubtitle} style={{ color: branding.login.textColor }}>
+                  powered by unified-ui
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Authenticated content */}
@@ -286,9 +294,16 @@ export const LoginPage = () => {
               <IconBrain size={24} color="#fff" />
             </div>
           )}
-          <span className={classes.brandName} style={{ color: branding.login.textColor }}>
-            {branding.displayName}
-          </span>
+          <div className={classes.brandTextWrapper}>
+            <span className={classes.brandName} style={{ color: branding.login.textColor }}>
+              {branding.displayName}
+            </span>
+            {SHOW_PLATFORM_SUBTITLE && (
+              <span className={classes.brandSubtitle} style={{ color: branding.login.textColor }}>
+                powered by unified-ui
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Login content — centered */}

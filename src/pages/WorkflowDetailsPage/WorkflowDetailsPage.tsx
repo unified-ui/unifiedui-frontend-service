@@ -30,22 +30,24 @@ import {
   IconBraces,
   IconPlayerPlay,
   IconHistory,
+  IconKey,
+  IconSettings2,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip, Breadcrumbs, EntityAvatar, WorkflowRunsTable } from '../../components/common';
+import { SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip, Breadcrumbs, EntityAvatar, WorkflowRunsTable, ContentCard } from '../../components/common';
 import type { TracesSortState, TraceDatePreset } from '../../components/common';
 import { TracingVisualDialog } from '../../components/tracing';
-import { EditAutonomousAgentDialog } from '../../components/dialogs/EditAutonomousAgentDialog';
-import type { EditDialogTab } from '../../components/dialogs/EditAutonomousAgentDialog';
+import { EditWorkflowDialog } from '../../components/dialogs/EditWorkflowDialog';
+import type { EditDialogTab } from '../../components/dialogs/EditWorkflowDialog';
 import { IntegrationDialog } from '../../components/dialogs/IntegrationDialog';
 import { ImportTraceDialog } from '../../components/dialogs/ImportTraceDialog';
 import { StartWorkflowDialog } from '../../components/dialogs/StartWorkflowDialog';
 import { useIdentity } from '../../contexts';
 import { useSidebarData } from '../../contexts/SidebarDataContext';
 import { useRecentVisits } from '../../contexts';
-import { useDelayedLoading } from '../../hooks';
-import type { AutonomousAgentResponse, FullTraceResponse, TracesListParams } from '../../api/types';
-import classes from './AutonomousAgentDetailsPage.module.css';
+import { useDelayedLoading, useDialogParams } from '../../hooks';
+import type { WorkflowResponse, FullTraceResponse, TracesListParams } from '../../api/types';
+import classes from './WorkflowDetailsPage.module.css';
 
 // ============================================================================
 // Constants
@@ -82,16 +84,16 @@ function datePresetToRange(preset: TraceDatePreset): { created_after?: string; c
 // Component
 // ============================================================================
 
-export const AutonomousAgentDetailsPage: FC = () => {
+export const WorkflowDetailsPage: FC = () => {
   const { agentId } = useParams<{ agentId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { apiClient, selectedTenant } = useIdentity();
-  const { refreshAutonomousAgents } = useSidebarData();
+  const { refreshWorkflows } = useSidebarData();
   const { trackVisit } = useRecentVisits();
 
   // ---- Agent data ----
-  const [agent, setAgent] = useState<AutonomousAgentResponse | null>(null);
+  const [agent, setAgent] = useState<WorkflowResponse | null>(null);
   const [agentLoading, setAgentLoading] = useState(true);
   const [agentError, setAgentError] = useState<string | null>(null);
   const showAgentSkeleton = useDelayedLoading(agentLoading, 500);
@@ -110,13 +112,8 @@ export const AutonomousAgentDetailsPage: FC = () => {
     [setSearchParams]
   );
 
-  // ---- Edit Dialog ----
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editDialogTab, setEditDialogTab] = useState<EditDialogTab>('details');
-
-  // ---- Integration Dialog ----
-  const [integrationDialogOpen, setIntegrationDialogOpen] = useState(false);
-  const [integrationDialogTab, setIntegrationDialogTab] = useState<'post' | 'put'>('post');
+  // ---- Dialog params ----
+  const { dialog, dialogTab, openDialog, closeDialog, setDialogTab } = useDialogParams();
 
   // ---- Traces ----
   const [traces, setTraces] = useState<FullTraceResponse[]>([]);
@@ -132,11 +129,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
   const [traceToDelete, setTraceToDelete] = useState<FullTraceResponse | null>(null);
   const [deleteTraceLoading, setDeleteTraceLoading] = useState(false);
 
-  // ---- Import trace dialog ----
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
-
-  // ---- Start workflow dialog ----
-  const [startWorkflowDialogOpen, setStartWorkflowDialogOpen] = useState(false);
+  // ---- Start workflow ----
   const [runsAutoRefreshTrigger, setRunsAutoRefreshTrigger] = useState(0);
 
   // ---- Auto-refresh timer ----
@@ -155,6 +148,8 @@ export const AutonomousAgentDetailsPage: FC = () => {
   const [secondaryKey, setSecondaryKey] = useState<string | null>(null);
   const [primaryKeyLoading, setPrimaryKeyLoading] = useState(false);
   const [secondaryKeyLoading, setSecondaryKeyLoading] = useState(false);
+  const [primaryKeyCopying, setPrimaryKeyCopying] = useState(false);
+  const [secondaryKeyCopying, setSecondaryKeyCopying] = useState(false);
   const [rotatingKey, setRotatingKey] = useState<1 | 2 | null>(null);
   const [confirmRotateKey, setConfirmRotateKey] = useState<1 | 2 | null>(null);
 
@@ -164,10 +159,10 @@ export const AutonomousAgentDetailsPage: FC = () => {
     setAgentLoading(true);
     setAgentError(null);
     try {
-      const data = await apiClient.getAutonomousAgent(selectedTenant.id, agentId);
+      const data = await apiClient.getWorkflow(selectedTenant.id, agentId);
       setAgent(data);
     } catch {
-      setAgentError('Failed to load autonomous agent');
+      setAgentError('Failed to load workflow');
     } finally {
       setAgentLoading(false);
     }
@@ -180,7 +175,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
   useEffect(() => {
     if (agent) {
       trackVisit({
-        resource_type: 'autonomous_agent',
+        resource_type: 'workflow',
         resource_id: agent.id,
         resource_name: agent.name,
       });
@@ -218,7 +213,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
           expand: false,
           ...dateRange,
         };
-        const response = await apiClient.getAutonomousAgentTraces(selectedTenant.id, agentId, params);
+        const response = await apiClient.getWorkflowTraces(selectedTenant.id, agentId, params);
         const newTraces = response.traces || [];
 
         if (reset) {
@@ -333,7 +328,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
       setTraceDialogLoading(true);
       setTraceDialogOpen(true);
       try {
-        const result = await apiClient.importAutonomousAgentTrace(selectedTenant.id, agentId, {
+        const result = await apiClient.importWorkflowTrace(selectedTenant.id, agentId, {
           type: agent.type,
           executionId,
         });
@@ -359,7 +354,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
     async (trace: FullTraceResponse) => {
       if (!apiClient || !selectedTenant || !agentId) return;
       try {
-        await apiClient.refreshAutonomousAgentTraceImport(selectedTenant.id, agentId, trace.id);
+        await apiClient.refreshWorkflowTraceImport(selectedTenant.id, agentId, trace.id);
         fetchTraces(true);
       } catch {
         // Error handled by API client onError
@@ -416,7 +411,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
 
       setLoading(true);
       try {
-        const response = await apiClient.getAutonomousAgentKey(selectedTenant.id, agentId, keyNumber);
+        const response = await apiClient.getWorkflowKey(selectedTenant.id, agentId, keyNumber);
         setKey(response.key);
       } catch {
         // Error handled by API client
@@ -427,11 +422,38 @@ export const AutonomousAgentDetailsPage: FC = () => {
     [apiClient, selectedTenant, agentId]
   );
 
+  const copyKey = useCallback(
+    async (keyNumber: 1 | 2) => {
+      if (!apiClient || !selectedTenant || !agentId) return;
+      const currentKey = keyNumber === 1 ? primaryKey : secondaryKey;
+
+      if (currentKey) {
+        navigator.clipboard.writeText(currentKey);
+        return;
+      }
+
+      const setCopying = keyNumber === 1 ? setPrimaryKeyCopying : setSecondaryKeyCopying;
+      const setKey = keyNumber === 1 ? setPrimaryKey : setSecondaryKey;
+
+      setCopying(true);
+      try {
+        const response = await apiClient.getWorkflowKey(selectedTenant.id, agentId, keyNumber);
+        setKey(response.key);
+        navigator.clipboard.writeText(response.key);
+      } catch {
+        // Error handled by API client
+      } finally {
+        setCopying(false);
+      }
+    },
+    [apiClient, selectedTenant, agentId, primaryKey, secondaryKey]
+  );
+
   const handleRotateKey = useCallback(async () => {
     if (!apiClient || !selectedTenant || !agentId || !confirmRotateKey) return;
     setRotatingKey(confirmRotateKey);
     try {
-      const response = await apiClient.rotateAutonomousAgentKey(selectedTenant.id, agentId, confirmRotateKey);
+      const response = await apiClient.rotateWorkflowKey(selectedTenant.id, agentId, confirmRotateKey);
       if (confirmRotateKey === 1) {
         setPrimaryKey(response.key);
       } else {
@@ -447,10 +469,10 @@ export const AutonomousAgentDetailsPage: FC = () => {
 
   // ---- Edit ----
   const handleEditSuccess = useCallback(() => {
-    setEditDialogOpen(false);
+    closeDialog();
     fetchAgent();
-    refreshAutonomousAgents();
-  }, [fetchAgent, refreshAutonomousAgents]);
+    refreshWorkflows();
+  }, [fetchAgent, refreshWorkflows, closeDialog]);
 
   // ---- Computed ----
   const postEndpointUrl = useMemo(() => {
@@ -462,7 +484,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
   const putEndpointUrl = useMemo(() => {
     if (!selectedTenant || !agentId) return '';
     const host = "{YOUR-AGENT-SERVICE-HOST}";
-    return `${host}/api/v1/agent-service/tenants/${selectedTenant.id}/autonomous-agents/${agentId}/traces/import`;
+    return `${host}/api/v1/agent-service/tenants/${selectedTenant.id}/workflows/${agentId}/traces/import`;
   }, [selectedTenant, agentId]);
 
   const n8nConfig = useMemo(() => {
@@ -482,7 +504,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
   return (
     <MainLayout>
           <Breadcrumbs items={[
-            { label: 'Autonomous Agents', path: '/autonomous-agents' },
+            { label: 'Workflows', path: '/workflows' },
             { label: agent?.name || '' },
           ]} />
 
@@ -492,10 +514,10 @@ export const AutonomousAgentDetailsPage: FC = () => {
                 {agentError}
               </Alert>
               <Group>
-                <ActionIcon variant="subtle" onClick={() => navigate('/autonomous-agents')}>
+                <ActionIcon variant="subtle" onClick={() => navigate('/workflows')}>
                   <IconArrowLeft size={20} />
                 </ActionIcon>
-                <Text c="dimmed">Back to Autonomous Agents</Text>
+                <Text c="dimmed">Back to Workflows</Text>
               </Group>
             </Stack>
           )}
@@ -504,7 +526,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
             <>
           <div className={classes.header}>
             <Group gap="sm" mb="xs">
-              <EntityAvatar entityType="autonomous-agent" size="md" />
+              <EntityAvatar entityType="workflow" size="md" />
               {showAgentSkeleton ? (
                 <Skeleton height={28} width={200} radius="sm" />
               ) : (
@@ -517,7 +539,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                   <ActionIcon
                     variant="subtle"
                     color="gray"
-                    onClick={() => setEditDialogOpen(true)}
+                    onClick={() => openDialog('edit', { dialogTab: 'details' })}
                   >
                     <IconEdit size={18} />
                   </ActionIcon>
@@ -614,7 +636,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                       size="xs"
                       variant="light"
                       leftSection={<IconPlayerPlay size={14} />}
-                      onClick={() => setStartWorkflowDialogOpen(true)}
+                      onClick={() => openDialog('start-workflow')}
                     >
                       Start Workflow
                     </Button>
@@ -635,7 +657,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                   onReImport={handleReImportTrace}
                   onDelete={setTraceToDelete}
                   showReImport={agent?.type === 'N8N'}
-                  onImport={() => setImportDialogOpen(true)}
+                  onImport={() => openDialog('import-trace')}
                   showImport={agent?.type === 'N8N'}
                 />
             </Tabs.Panel>
@@ -648,7 +670,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                   agentId={agentId!}
                   agentType={agent.type}
                   onRunClick={handleRunClick}
-                  onStartWorkflow={() => setStartWorkflowDialogOpen(true)}
+                  onStartWorkflow={() => openDialog('start-workflow')}
                   showStartWorkflow={!!n8nConfig?.webhook_url}
                   autoRefreshTrigger={runsAutoRefreshTrigger}
                 />
@@ -660,8 +682,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                 <div className={classes.tabPanelScrollArea}>
                 <Stack gap="lg" className={classes.detailsSection}>
                 {/* Endpoint & Keys Section */}
-                <div className={classes.sectionCard}>
-                  <Text className={classes.sectionTitle} fw="bold" mb="md">Endpoint & Keys</Text>
+                <ContentCard title="Endpoint & Keys" icon={<IconKey size={18} />}>
                   <Stack gap="lg">
                     <TextInput
                       label="POST Endpoint"
@@ -686,8 +707,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                               color="gray"
                               size="sm"
                               onClick={() => {
-                                setIntegrationDialogTab('post');
-                                setIntegrationDialogOpen(true);
+                                openDialog('integrate-workflow', { dialogTab: 'post' });
                               }}
                             >
                               <IconBraces size={14} />
@@ -720,8 +740,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                               color="gray"
                               size="sm"
                               onClick={() => {
-                                setIntegrationDialogTab('put');
-                                setIntegrationDialogOpen(true);
+                                openDialog('integrate-workflow', { dialogTab: 'put' });
                               }}
                             >
                               <IconBraces size={14} />
@@ -735,7 +754,9 @@ export const AutonomousAgentDetailsPage: FC = () => {
                       label="Primary Key"
                       value={primaryKey}
                       isLoading={primaryKeyLoading}
+                      isCopying={primaryKeyCopying}
                       onReveal={() => revealKey(1)}
+                      onCopy={() => copyKey(1)}
                       onRotate={() => setConfirmRotateKey(1)}
                       isRotating={rotatingKey === 1}
                       disabled={!agent?.allow_api_keys}
@@ -746,19 +767,20 @@ export const AutonomousAgentDetailsPage: FC = () => {
                       label="Secondary Key"
                       value={secondaryKey}
                       isLoading={secondaryKeyLoading}
+                      isCopying={secondaryKeyCopying}
                       onReveal={() => revealKey(2)}
+                      onCopy={() => copyKey(2)}
                       onRotate={() => setConfirmRotateKey(2)}
                       isRotating={rotatingKey === 2}
                       disabled={!agent?.allow_api_keys}
                       disabledTooltip="API key authentication is not allowed for this agent"
                     />
                   </Stack>
-                </div>
+                </ContentCard>
 
                 {/* N8N Config Section */}
                 {n8nConfig && (
-                  <div className={classes.sectionCard}>
-                    <Text className={classes.sectionTitle} fw="bold" mb="md">N8N Configuration</Text>
+                  <ContentCard title="N8N Configuration" icon={<IconSettings2 size={18} />}>
                     <Stack gap="lg">
                       <TextInput
                         label="Workflow Endpoint"
@@ -785,7 +807,7 @@ export const AutonomousAgentDetailsPage: FC = () => {
                         styles={{ input: { cursor: 'default' } }}
                       />
                     </Stack>
-                  </div>
+                  </ContentCard>
                 )}
               </Stack>
               </div>
@@ -816,17 +838,16 @@ export const AutonomousAgentDetailsPage: FC = () => {
       )}
 
       {/* Edit Dialog */}
-      <EditAutonomousAgentDialog
-        opened={editDialogOpen}
-        autonomousAgentId={agentId || null}
+      <EditWorkflowDialog
+        opened={dialog === 'edit'}
+        workflowId={agentId || null}
         initialData={agent}
-        activeTab={editDialogTab}
-        onClose={() => { setEditDialogOpen(false); setEditDialogTab('details'); }}
+        activeTab={(dialogTab as EditDialogTab) || 'details'}
+        onClose={closeDialog}
         onSuccess={handleEditSuccess}
-        onTabChange={setEditDialogTab}
+        onTabChange={(tab) => setDialogTab(tab)}
       />
 
-      {/* Confirm Rotate Key Dialog */}
       <ConfirmDeleteDialog
         opened={confirmRotateKey !== null}
         onClose={() => setConfirmRotateKey(null)}
@@ -837,19 +858,17 @@ export const AutonomousAgentDetailsPage: FC = () => {
         isLoading={rotatingKey !== null}
       />
 
-      {/* Integration Dialog */}
       {selectedTenant && agentId && (
         <IntegrationDialog
-          opened={integrationDialogOpen}
-          onClose={() => setIntegrationDialogOpen(false)}
+          opened={dialog === 'integrate-workflow'}
+          onClose={closeDialog}
           tenantId={selectedTenant.id}
           agentId={agentId}
-          defaultTab={integrationDialogTab}
+          defaultTab={(dialogTab as 'post' | 'put') || 'post'}
           allowApiKeys={agent?.allow_api_keys}
         />
       )}
 
-      {/* Confirm Delete Trace Dialog */}
       <ConfirmDeleteDialog
         opened={traceToDelete !== null}
         onClose={() => setTraceToDelete(null)}
@@ -860,22 +879,20 @@ export const AutonomousAgentDetailsPage: FC = () => {
         isLoading={deleteTraceLoading}
       />
 
-      {/* Import Trace Dialog */}
       {agentId && agent && (
         <ImportTraceDialog
-          opened={importDialogOpen}
-          onClose={() => setImportDialogOpen(false)}
+          opened={dialog === 'import-trace'}
+          onClose={closeDialog}
           onSuccess={() => fetchTraces(true)}
           agentId={agentId}
           agentType={agent.type}
         />
       )}
 
-      {/* Start Workflow Dialog */}
       {agentId && (
         <StartWorkflowDialog
-          opened={startWorkflowDialogOpen}
-          onClose={() => setStartWorkflowDialogOpen(false)}
+          opened={dialog === 'start-workflow'}
+          onClose={closeDialog}
           onSuccess={handleStartWorkflowSuccess}
           agentId={agentId}
           defaultBody={n8nConfig?.default_body}

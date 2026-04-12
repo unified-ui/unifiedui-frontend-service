@@ -16,7 +16,8 @@
   flex: 1;
   min-height: 0;
   background: var(--bg-app);
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
+  padding: 0 var(--spacing-md);
 }
 
 .canvasArea {
@@ -24,30 +25,29 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  margin: var(--spacing-lg) 0 var(--spacing-lg) 0;
-  overflow: hidden;
+  padding: var(--spacing-md) 0;
 }
 
 .canvasScrollOuter {
   flex: 1;
   min-height: 0;
-  margin-right: calc(-1 * var(--spacing-md));
-  overflow: hidden;
-  border-radius: var(--radius-lg);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .canvasScrollInner {
-  max-height: 100%;
-  min-height: 200px;
-  overflow-y: auto;
-  padding-right: var(--spacing-md);
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-sm);
 }
 
 .canvasCard {
   background: var(--bg-paper);
   box-shadow: var(--shadow-md);
   padding: var(--spacing-lg);
-  min-height: 400px;
+  flex: 1;
+  border-radius: var(--radius-lg);
 }
 
 .fieldGrid {
@@ -102,7 +102,7 @@
   overflow: hidden;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  margin: var(--spacing-lg) 0 var(--spacing-lg) 0;
+  margin: var(--spacing-md) 0;
 }
 
 .sidebarScrollOuter {
@@ -311,4 +311,12 @@
   align-items: center;
   gap: var(--spacing-xs);
   margin-bottom: var(--spacing-xs);
+}
+
+[data-mantine-color-scheme="dark"] .canvasCard {
+  background: #292929;
+}
+
+[data-mantine-color-scheme="dark"] .sidebar {
+  background: #292929;
 }

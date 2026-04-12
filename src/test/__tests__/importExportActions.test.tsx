@@ -12,7 +12,7 @@ const schema: WidgetFormSchema = {
     submitButtonText: 'Submit',
     successMessage: '',
     enableTabs: false,
-    showProgressBar: false,
+
     validateOnTabChange: false,
   },
   tabs: [{ id: 'tab_1', label: 'Tab 1', fields: [] }],
@@ -27,6 +27,7 @@ describe('ImportExportActions', () => {
         schema={schema}
         widgetName="Test Widget"
         onImport={vi.fn()}
+        onEditDetails={vi.fn()}
       />,
     );
     const buttons = screen.getAllByRole('button');
@@ -39,6 +40,7 @@ describe('ImportExportActions', () => {
         schema={schema}
         widgetName="Test Widget"
         onImport={vi.fn()}
+        onEditDetails={vi.fn()}
       />,
     );
     const fileInput = container.querySelector('input[type="file"]');

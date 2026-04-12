@@ -31,7 +31,7 @@ export const ImportTraceDialog: FC<ImportTraceDialogProps> = ({
     if (!apiClient || !selectedTenant || !executionId.trim()) return;
     setIsLoading(true);
     try {
-      await apiClient.importAutonomousAgentTrace(selectedTenant.id, agentId, {
+      await apiClient.importWorkflowTrace(selectedTenant.id, agentId, {
         type: agentType,
         executionId: executionId.trim(),
       });

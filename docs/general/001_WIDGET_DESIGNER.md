@@ -1183,6 +1183,8 @@ A lightweight undo/redo stack for the form schema:
 
 ## 21. Implementation Phases
 
+> **Excluded from current implementation**: `repeater` and `image_display` field types are deferred to a future iteration. Data sources (Section 6) are spec'd but disabled in the designer UI pending backend proxy support.
+
 ### Phase 1 — Foundation (MVP Redesign)
 
 - [ ] New layout (canvas + sidebar, edit/demo toggle)

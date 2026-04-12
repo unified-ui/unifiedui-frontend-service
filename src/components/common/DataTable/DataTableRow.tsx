@@ -13,6 +13,7 @@ import {
   Box,
   Checkbox,
 } from '@mantine/core';
+import { getTypeColor } from './typeColors';
 import { DelayedTooltip } from '../DelayedTooltip';
 import {
   IconDots,
@@ -57,7 +58,7 @@ interface DataTableRowProps {
   onRowClick?: (id: string) => void;
   icon?: ReactNode;
   isFavorite?: boolean;
-  onToggleFavorite?: (id: string) => void;
+  onToggleFavorite?: (id: string, name: string) => void;
   isSelected?: boolean;
   showCheckbox?: boolean;
   onSelect?: (id: string) => void;
@@ -90,7 +91,6 @@ export const DataTableRow: FC<DataTableRowProps> = ({
   const hiddenTags = item.tags?.slice(MAX_VISIBLE_TAGS) || [];
   const hasHiddenTags = hiddenTags.length > 0;
   const [popoverOpened, setPopoverOpened] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const perm = item.my_permission;
   const canWriteItem = perm === 'ADMIN' || perm === 'WRITE';
@@ -99,22 +99,19 @@ export const DataTableRow: FC<DataTableRowProps> = ({
 
   const handleDelete = () => {
     if (!onDelete) return;
-    setIsDeleting(true);
-    setTimeout(() => {
-      onDelete(item.id);
-    }, 350);
+    onDelete(item.id);
   };
 
   return (
     <Paper
-      className={`${classes.row} ${onRowClick ? classes.clickable : ''} ${isDeleting ? classes.rowDeleting : ''} ${isSelected ? classes.rowSelected : ''}`}
+      className={`${classes.row} ${onRowClick ? classes.clickable : ''} ${isSelected ? classes.rowSelected : ''}`}
       p="md"
       withBorder
       onClick={() => onRowClick?.(item.id)}
       style={onRowClick ? { cursor: 'pointer' } : undefined}
     >
-      <Group wrap="nowrap" gap="lg">
-        <Group gap="md" wrap="nowrap" style={{ flex: 1, minWidth: 0, maxWidth: 600 }}>
+      <Group wrap="nowrap" gap="md" align="center">
+        <Group gap="sm" wrap="nowrap" className={classes.nameGroup}>
           {showCheckbox && onSelect && (
             <Checkbox
               checked={isSelected}
@@ -130,7 +127,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
               color={isFavorite ? 'yellow' : 'gray'}
               onClick={(e) => {
                 e.stopPropagation();
-                onToggleFavorite(item.id);
+                onToggleFavorite(item.id, item.name);
               }}
               className={classes.favoriteButton}
             >
@@ -155,9 +152,16 @@ export const DataTableRow: FC<DataTableRowProps> = ({
         </Group>
 
         {item.type && (
-          <Text size="sm" c="dimmed" className={classes.typeColumn}>
-            {item.type}
-          </Text>
+          <Box className={classes.typeColumn}>
+            <Badge
+              variant="light"
+              size="sm"
+              radius="sm"
+              color={getTypeColor(item.type)}
+            >
+              {item.type}
+            </Badge>
+          </Box>
         )}
 
         <Group gap={4} wrap="wrap" className={classes.tagsColumn}>
@@ -202,7 +206,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
           )}
         </Group>
 
-        <Group gap="lg" wrap="nowrap" style={{ marginLeft: 'auto', flexShrink: 0 }}>
+        <Group gap="md" wrap="nowrap" className={classes.actionsGroup}>
           {showStatus && item.isActive !== undefined && (
             <div onClick={(e) => e.stopPropagation()}>
               <Switch
@@ -285,16 +289,21 @@ export const DataTableRow: FC<DataTableRowProps> = ({
               >
                 Integration Prompt
               </Menu.Item>
-            )}            <Menu.Divider />
-            <Menu.Item
-              leftSection={item.isPinned ? <IconPinned size={14} /> : <IconPin size={14} />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onPin?.(item.id, !item.isPinned);
-              }}
-            >
-              {item.isPinned ? 'Unpin' : 'Pin'}
-            </Menu.Item>
+            )}
+            {onPin && (
+              <>
+                <Menu.Divider />
+                <Menu.Item
+                  leftSection={item.isPinned ? <IconPinned size={14} /> : <IconPin size={14} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPin(item.id, !item.isPinned);
+                  }}
+                >
+                  {item.isPinned ? 'Unpin' : 'Pin'}
+                </Menu.Item>
+              </>
+            )}
             {(!hasPermission || canAdminItem) && (
               <>
                 <Menu.Divider />
