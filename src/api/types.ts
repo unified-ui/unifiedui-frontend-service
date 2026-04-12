@@ -45,6 +45,7 @@ export const ChatAgentTypeEnum = {
   MICROSOFT_FOUNDRY: 'MICROSOFT_FOUNDRY',
   REST_API: 'REST_API',
   REACT_AGENT: 'REACT_AGENT',
+  LLM: 'LLM',
 } as const;
 
 export type ChatAgentTypeEnum = typeof ChatAgentTypeEnum[keyof typeof ChatAgentTypeEnum];
@@ -215,6 +216,13 @@ export interface RestApiChatAgentConfig {
   use_unified_chat_history: boolean;
   chat_history_count?: number;
   create_conversation_endpoint?: string | null;
+}
+
+// ========== LLM Chat Agent Config Types ==========
+
+export interface LlmChatAgentConfig {
+  ai_model_id: string;
+  system_prompt?: string;
 }
 
 // ========== Agent Service Types ==========
@@ -1401,6 +1409,7 @@ export const AIModelPurposeGroupEnum = {
   DESCRIPTION_GENERATION: 'DESCRIPTION_GENERATION',
   TRACE_ANALYSIS: 'TRACE_ANALYSIS',
   GENERAL: 'GENERAL',
+  DIRECT_CHAT: 'DIRECT_CHAT',
 } as const;
 
 export type AIModelPurposeGroupEnum = typeof AIModelPurposeGroupEnum[keyof typeof AIModelPurposeGroupEnum];
@@ -1709,6 +1718,31 @@ export interface OrderParams {
 export interface FieldSelectParams {
   fields?: string;
   ids?: string;
+}
+
+export interface ConfigSuggestionsResponse {
+  suggestions: Record<string, string[]>;
+}
+
+export interface FoundryAgentInfo {
+  id: string;
+  name: string;
+}
+
+export interface FoundryAgentListResponse {
+  agents: FoundryAgentInfo[];
+}
+
+export interface N8NWorkflowInfo {
+  id: string;
+  name: string;
+  active: boolean;
+  url: string;
+}
+
+export interface N8NWorkflowListResponse {
+  workflows: N8NWorkflowInfo[];
+  total: number;
 }
 
 /** Query parameters for tenant principals endpoint */

@@ -22,11 +22,13 @@
 .tabsList {
   flex-shrink: 0;
   z-index: 1;
-  background: var(--bg-paper);
+  background: transparent;
+  border-bottom: 1px solid var(--border-default);
+  padding: 0 var(--spacing-sm);
 }
 
 .tabPanel {
-  padding-bottom: var(--spacing-sm);
+  padding: var(--spacing-lg) var(--spacing-sm) var(--spacing-sm);
 }
 
 .tableHeader {

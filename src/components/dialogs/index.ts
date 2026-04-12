@@ -18,6 +18,7 @@ export { ShareConversationDialog } from './ShareConversationDialog';
 export { SearchConversationsDialog } from './SearchConversationsDialog';
 export { IntegrationDialog } from './IntegrationDialog';
 export { ImportTraceDialog } from './ImportTraceDialog';
+export { N8NWorkflowBrowserDialog } from './N8NWorkflowBrowserDialog';
 export { StartWorkflowDialog } from './StartWorkflowDialog';
 export { AIModelDialog } from './AIModelDialog';
 export { AnalyzeErrorDialog } from './AnalyzeErrorDialog';

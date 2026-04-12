@@ -180,7 +180,6 @@ export interface WidgetFormSchema {
     submitButtonText?: string;
     successMessage?: string;
     enableTabs?: boolean;
-    showProgressBar?: boolean;
     validateOnTabChange?: boolean;
   };
   tabs: WidgetTab[];

@@ -96,6 +96,12 @@ import type {
   // Search Types
   SearchResponse,
   GlobalSearchParams,
+  // Config Suggestions Types
+  ConfigSuggestionsResponse,
+  // Foundry Discovery Types
+  FoundryAgentListResponse,
+  // N8N Browser Types
+  N8NWorkflowListResponse,
   // Recent Visits Types
   RecentVisitListResponse,
   SyncRecentVisitsRequest,
@@ -925,6 +931,28 @@ export class UnifiedUIAPIClient {
 
   async getDashboardStats(tenantId: string, noCache?: boolean): Promise<DashboardStatsResponse> {
     return this.request<DashboardStatsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/dashboard/stats`, undefined, undefined, noCache ? { noCache: true } : undefined);
+  }
+
+  // ========== Config Suggestions Endpoints ==========
+
+  async getConfigSuggestions(tenantId: string, type: string, q?: string): Promise<ConfigSuggestionsResponse> {
+    const query = this.buildQueryString({ type, q });
+    return this.request<ConfigSuggestionsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/config-suggestions${query}`);
+  }
+
+  // ========== Foundry Discovery Endpoints ==========
+
+  async getFoundryAgents(tenantId: string, projectEndpoint: string, foundryToken?: string): Promise<FoundryAgentListResponse> {
+    const query = this.buildQueryString({ project_endpoint: projectEndpoint });
+    const options = foundryToken ? { additionalHeaders: { 'X-Microsoft-Foundry-API-Key': foundryToken } } : undefined;
+    return this.request<FoundryAgentListResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/foundry/agents${query}`, undefined, undefined, options);
+  }
+
+  // ========== N8N Browser Endpoints ==========
+
+  async getN8NWorkflows(tenantId: string, host: string, credentialId: string): Promise<N8NWorkflowListResponse> {
+    const query = this.buildQueryString({ host, credential_id: credentialId });
+    return this.request<N8NWorkflowListResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/n8n/workflows${query}`);
   }
 
   // ========== Search Endpoints ==========

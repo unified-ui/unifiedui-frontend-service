@@ -75,6 +75,7 @@ const DEFAULT_TAB: TabValue = 'settings';
 
 const PURPOSE_GROUP_COLORS: Record<string, string> = {
   REACT_AGENT: 'violet',
+  DIRECT_CHAT: 'cyan',
   CONVERSATION_TITLE_GENERATION: 'blue',
   CONVERSATION_SUMMARIZATION: 'teal',
   DESCRIPTION_GENERATION: 'orange',

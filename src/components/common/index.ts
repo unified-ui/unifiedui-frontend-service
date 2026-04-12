@@ -42,5 +42,8 @@ export { ConnectionTestButton } from './ConnectionTestButton';
 export { CredentialTestButton } from './CredentialTestButton';
 export { FilterableSelect } from './FilterableSelect';
 export type { FilterableSelectProps } from './FilterableSelect';
+export { EndpointSuggestInput } from './EndpointSuggestInput';
+export type { EndpointSuggestInputProps } from './EndpointSuggestInput';
 export { UnifiedDialog } from './UnifiedDialog';
+export { ModelTestButton } from './ModelTestButton';
 export { WidgetErrorBoundary } from './WidgetErrorBoundary';

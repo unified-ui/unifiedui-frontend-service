@@ -434,7 +434,7 @@ export const WidgetDesignerPage: FC = () => {
             >
               <div
                 className={classes.canvasScrollInner}
-                style={mode === 'demo' ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' } : undefined}
+                style={mode === 'demo' ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 } : undefined}
               >
                 <div
                   className={classes.canvasCard}

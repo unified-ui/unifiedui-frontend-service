@@ -22,17 +22,18 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
-import { IconAlertCircle, IconRobot, IconInfoCircle, IconShieldLock, IconPlus } from '@tabler/icons-react';
+import { IconAlertCircle, IconRobot, IconInfoCircle, IconShieldLock, IconPlus, IconSearch } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { useTranslation } from 'react-i18next';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
-import { useEntityPermissions, usePermissions } from '../../../hooks';
-import { ManageAccessTable, TagInput, AddPrincipalDialog, KeyValuePairsInput, ConnectionTestButton, FilterableSelect } from '../../common';
+import { useEntityPermissions, usePermissions, useConfigSuggestions } from '../../../hooks';
+import { ManageAccessTable, TagInput, AddPrincipalDialog, KeyValuePairsInput, ConnectionTestButton, FilterableSelect, EndpointSuggestInput } from '../../common';
 import type { KeyValuePair } from '../../common';
 import type { WorkflowResponse, PrincipalTypeEnum, CredentialResponse } from '../../../api/types';
 import { PermissionActionEnum, WorkflowTypeEnum, CredentialTypeEnum, TestConnectionType } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
+import { N8NWorkflowBrowserDialog } from '../N8NWorkflowBrowserDialog';
 import { useFormDirtyGuard } from '../../../hooks';
 import classes from './EditWorkflowDialog.module.css';
 
@@ -89,6 +90,7 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
+  const [workflowBrowserOpen, setWorkflowBrowserOpen] = useState(false);
   const [credentialSearch, setCredentialSearch] = useState('');
   const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
 
@@ -170,6 +172,17 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
   });
 
   useFormDirtyGuard(form.isDirty());
+  const { suggestions: configSuggestions } = useConfigSuggestions(form.values.type);
+
+  const n8nHostUrl = useMemo(() => {
+    const endpoint = form.values.n8n_workflow_endpoint || '';
+    try {
+      const url = new URL(endpoint);
+      return `${url.protocol}//${url.host}`;
+    } catch {
+      return '';
+    }
+  }, [form.values.n8n_workflow_endpoint]);
 
   // Load credentials
   const loadCredentials = useCallback(async (searchTerm?: string) => {
@@ -518,21 +531,6 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
                     {...form.getInputProps('n8n_api_version')}
                   />
 
-                  <TextInput
-                    label="Workflow Endpoint"
-                    placeholder="https://your-n8n.com/workflow/{id}"
-                    description="URL must contain /workflow/ in path"
-                    required
-                    withAsterisk
-                    {...form.getInputProps('n8n_workflow_endpoint')}
-                  />
-                  <ConnectionTestButton
-                    testType={TestConnectionType.N8N_WORKFLOW}
-                    url={form.values.n8n_workflow_endpoint}
-                    credentialId={form.values.n8n_api_api_key_credential_id || undefined}
-                    disabled={!form.values.n8n_workflow_endpoint || !form.values.n8n_api_api_key_credential_id}
-                  />
-
                   {/* API Key Credential with Add Button */}
                   <Group gap="xs" align="flex-end">
                     <FilterableSelect
@@ -565,6 +563,37 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
                       No API Key Credentials available. Create one first.
                     </Alert>
                   )}
+
+                  <Group align="flex-end" gap="xs" wrap="nowrap">
+                    <Box style={{ flex: 1 }}>
+                      <EndpointSuggestInput
+                        label="Workflow Endpoint"
+                        placeholder="https://your-n8n.com/workflow/{id}"
+                        description="URL must contain /workflow/ in path"
+                        required
+                        withAsterisk
+                        suggestions={configSuggestions['workflow_endpoint'] || []}
+                        {...form.getInputProps('n8n_workflow_endpoint')}
+                      />
+                    </Box>
+                    <Tooltip label={!form.values.n8n_api_api_key_credential_id ? 'Select an API Key credential first' : 'Browse workflows'}>
+                      <ActionIcon
+                        variant="default"
+                        size="lg"
+                        onClick={() => setWorkflowBrowserOpen(true)}
+                        disabled={!form.values.n8n_api_api_key_credential_id}
+                        mb={form.getInputProps('n8n_workflow_endpoint').error ? 22 : 0}
+                      >
+                        <IconSearch size={18} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
+                  <ConnectionTestButton
+                    testType={TestConnectionType.N8N_WORKFLOW}
+                    url={form.values.n8n_workflow_endpoint}
+                    credentialId={form.values.n8n_api_api_key_credential_id || undefined}
+                    disabled={!form.values.n8n_workflow_endpoint || !form.values.n8n_api_api_key_credential_id}
+                  />
                 </>
               )}
 
@@ -700,6 +729,15 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
         opened={createCredentialOpen}
         onClose={() => setCreateCredentialOpen(false)}
         onSuccess={handleCredentialCreated}
+      />
+
+      {/* N8N Workflow Browser Dialog */}
+      <N8NWorkflowBrowserDialog
+        opened={workflowBrowserOpen}
+        onClose={() => setWorkflowBrowserOpen(false)}
+        host={n8nHostUrl}
+        credentialId={form.values.n8n_api_api_key_credential_id}
+        onSelect={(wf) => form.setFieldValue('n8n_workflow_endpoint', wf.url)}
       />
     </>
   );

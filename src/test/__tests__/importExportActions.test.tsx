@@ -12,7 +12,7 @@ const schema: WidgetFormSchema = {
     submitButtonText: 'Submit',
     successMessage: '',
     enableTabs: false,
-    showProgressBar: false,
+
     validateOnTabChange: false,
   },
   tabs: [{ id: 'tab_1', label: 'Tab 1', fields: [] }],

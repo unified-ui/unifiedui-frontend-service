@@ -18,9 +18,10 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDebouncedValue } from '@mantine/hooks';
-import { IconRobot, IconPlus, IconAlertCircle } from '@tabler/icons-react';
+import { IconRobot, IconPlus, IconAlertCircle, IconSearch } from '@tabler/icons-react';
 import { useIdentity } from '../../../contexts';
 import { useTranslation } from 'react-i18next';
+import { useConfigSuggestions } from '../../../hooks';
 import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import {
   WorkflowTypeEnum,
@@ -28,10 +29,11 @@ import {
   type CredentialResponse,
   type N8NWorkflowConfig,
 } from '../../../api/types';
-import { TagInput, KeyValuePairsInput, ConnectionTestButton, FilterableSelect } from '../../common';
+import { TagInput, KeyValuePairsInput, ConnectionTestButton, FilterableSelect, EndpointSuggestInput } from '../../common';
 import type { KeyValuePair } from '../../common';
 import { TestConnectionType } from '../../../api/types';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
+import { N8NWorkflowBrowserDialog } from '../N8NWorkflowBrowserDialog';
 
 const AUTONOMOUS_AGENT_TYPES = [
   { value: WorkflowTypeEnum.N8N, label: 'n8n' },
@@ -74,6 +76,7 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
+  const [workflowBrowserOpen, setWorkflowBrowserOpen] = useState(false);
   const [credentialSearch, setCredentialSearch] = useState('');
   const [debouncedCredentialSearch] = useDebouncedValue(credentialSearch, 300);
 
@@ -154,6 +157,18 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
       },
     },
   });
+
+  const { suggestions: configSuggestions } = useConfigSuggestions(form.values.type);
+
+  const n8nHostUrl = useMemo(() => {
+    const endpoint = form.values.n8n_workflow_endpoint || '';
+    try {
+      const url = new URL(endpoint);
+      return `${url.protocol}//${url.host}`;
+    } catch {
+      return '';
+    }
+  }, [form.values.n8n_workflow_endpoint]);
 
   // Load credentials
   const loadCredentials = useCallback(async (searchTerm?: string) => {
@@ -325,14 +340,63 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
                   {...form.getInputProps('n8n_api_version')}
                 />
 
-                <TextInput
-                  label="Workflow Endpoint"
-                  placeholder="https://your-n8n.com/workflow/{id}"
-                  description="URL must contain /workflow/ in the path"
-                  required
-                  withAsterisk
-                  {...form.getInputProps('n8n_workflow_endpoint')}
-                />
+                {/* API Key Credential with Add Button */}
+                <Group gap="xs" align="flex-end">
+                  <FilterableSelect
+                    label="API Key Credential"
+                    placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
+                    required
+                    withAsterisk
+                    data={apiKeyCredentials}
+                    rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
+                    disabled={isLoadingCredentials}
+                    nothingFoundMessage="No credentials found"
+                    onFilterChange={setCredentialSearch}
+                    style={{ flex: 1 }}
+                    {...form.getInputProps('n8n_api_api_key_credential_id')}
+                  />
+                  <Tooltip label="Create new API Key Credential">
+                    <ActionIcon
+                      variant="light"
+                      color="blue"
+                      size="lg"
+                      onClick={handleOpenCreateCredential}
+                    >
+                      <IconPlus size={18} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+
+                {apiKeyCredentials.length === 0 && !isLoadingCredentials && (
+                  <Alert icon={<IconAlertCircle size={16} />} color="yellow" variant="light">
+                    No API Key Credentials available. Please create a credential first.
+                  </Alert>
+                )}
+
+                <Group align="flex-end" gap="xs" wrap="nowrap">
+                  <Box style={{ flex: 1 }}>
+                    <EndpointSuggestInput
+                      label="Workflow Endpoint"
+                      placeholder="https://your-n8n.com/workflow/{id}"
+                      description="URL must contain /workflow/ in the path"
+                      required
+                      withAsterisk
+                      suggestions={configSuggestions['workflow_endpoint'] || []}
+                      {...form.getInputProps('n8n_workflow_endpoint')}
+                    />
+                  </Box>
+                  <Tooltip label={!form.values.n8n_api_api_key_credential_id ? 'Select an API Key credential first' : 'Browse workflows'}>
+                    <ActionIcon
+                      variant="default"
+                      size="lg"
+                      onClick={() => setWorkflowBrowserOpen(true)}
+                      disabled={!form.values.n8n_api_api_key_credential_id}
+                      mb={form.getInputProps('n8n_workflow_endpoint').error ? 22 : 0}
+                    >
+                      <IconSearch size={18} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
                 <ConnectionTestButton
                   testType={TestConnectionType.N8N_WORKFLOW}
                   url={form.values.n8n_workflow_endpoint}
@@ -394,39 +458,6 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
                     />
                   </>
                 )}
-
-                {/* API Key Credential with Add Button */}
-                <Group gap="xs" align="flex-end">
-                  <FilterableSelect
-                    label="API Key Credential"
-                    placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
-                    required
-                    withAsterisk
-                    data={apiKeyCredentials}
-                    rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
-                    disabled={isLoadingCredentials}
-                    nothingFoundMessage="No credentials found"
-                    onFilterChange={setCredentialSearch}
-                    style={{ flex: 1 }}
-                    {...form.getInputProps('n8n_api_api_key_credential_id')}
-                  />
-                  <Tooltip label="Create new API Key Credential">
-                    <ActionIcon
-                      variant="light"
-                      color="blue"
-                      size="lg"
-                      onClick={handleOpenCreateCredential}
-                    >
-                      <IconPlus size={18} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
-
-                {apiKeyCredentials.length === 0 && !isLoadingCredentials && (
-                  <Alert icon={<IconAlertCircle size={16} />} color="yellow" variant="light">
-                    No API Key Credentials available. Please create a credential first.
-                  </Alert>
-                )}
               </>
             )}
 
@@ -481,6 +512,15 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
         opened={createCredentialOpen}
         onClose={() => setCreateCredentialOpen(false)}
         onSuccess={handleCredentialCreated}
+      />
+
+      {/* N8N Workflow Browser Dialog */}
+      <N8NWorkflowBrowserDialog
+        opened={workflowBrowserOpen}
+        onClose={() => setWorkflowBrowserOpen(false)}
+        host={n8nHostUrl}
+        credentialId={form.values.n8n_api_api_key_credential_id}
+        onSelect={(wf) => form.setFieldValue('n8n_workflow_endpoint', wf.url)}
       />
     </>
   );
