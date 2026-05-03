@@ -15,3 +15,5 @@ export { useBranding } from './useBranding';
 export { useConfigSuggestions } from './useConfigSuggestions';
 export { useFoundryAgents } from './useFoundryAgents';
 export { useN8NWorkflows } from './useN8NWorkflows';
+export { useAnalytics } from './useAnalytics';
+export type { UseAnalyticsState } from './useAnalytics';

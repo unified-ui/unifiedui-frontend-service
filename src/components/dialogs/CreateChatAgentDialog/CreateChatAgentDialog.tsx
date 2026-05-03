@@ -32,6 +32,7 @@ import {
   N8NWorkflowTypeEnum,
   FoundryAgentTypeEnum,
   FoundryApiVersionEnum,
+  FoundryAuthTypeEnum,
   RestApiAuthTypeEnum,
   CredentialTypeEnum,
   type CredentialResponse,
@@ -70,6 +71,17 @@ const FOUNDRY_AGENT_TYPES = [
 const FOUNDRY_API_VERSIONS = [
   { value: FoundryApiVersionEnum.V2025_11_15_PREVIEW, label: '2025-11-15-preview' },
 ];
+
+const FOUNDRY_AUTH_TYPES = [
+  { value: FoundryAuthTypeEnum.ENTRA_ID_USER_TOKEN, label: 'User Token (Forward)' },
+  { value: FoundryAuthTypeEnum.ENTRA_ID_APP_REGISTRATION, label: 'Entra ID App Registration' },
+  { value: FoundryAuthTypeEnum.API_KEY, label: 'API Key' },
+];
+
+const FOUNDRY_AUTH_TYPES_REQUIRING_CREDENTIAL = new Set<FoundryAuthTypeEnum>([
+  FoundryAuthTypeEnum.ENTRA_ID_APP_REGISTRATION,
+  FoundryAuthTypeEnum.API_KEY,
+]);
 
 const REST_API_AUTH_TYPES = [
   { value: RestApiAuthTypeEnum.ANONYMOUS, label: 'Anonymous (No Auth)' },
@@ -112,6 +124,8 @@ interface FormValues {
   foundry_api_version: string;
   foundry_project_endpoint: string;
   foundry_agent_name: string;
+  foundry_auth_type: string;
+  foundry_credential_id: string;
   // REST API Config
   rest_api_auth_type: string;
   rest_api_invoke_endpoint: string;
@@ -139,7 +153,7 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [createCredentialOpen, setCreateCredentialOpen] = useState(false);
-  const [credentialFieldTarget, setCredentialFieldTarget] = useState<'api_key' | 'chat_auth' | 'rest_api' | null>(null);
+  const [credentialFieldTarget, setCredentialFieldTarget] = useState<'api_key' | 'chat_auth' | 'rest_api' | 'foundry' | null>(null);
   const [workflowBrowserOpen, setWorkflowBrowserOpen] = useState(false);
   const [aiModels, setAiModels] = useState<AIModelResponse[]>([]);
   const [isLoadingAiModels, setIsLoadingAiModels] = useState(false);
@@ -169,6 +183,8 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
       foundry_api_version: FoundryApiVersionEnum.V2025_11_15_PREVIEW,
       foundry_project_endpoint: '',
       foundry_agent_name: '',
+      foundry_auth_type: FoundryAuthTypeEnum.ENTRA_ID_USER_TOKEN,
+      foundry_credential_id: '',
       // REST API Config defaults
       rest_api_auth_type: RestApiAuthTypeEnum.ANONYMOUS,
       rest_api_invoke_endpoint: '',
@@ -426,6 +442,20 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
       .map((c) => ({ value: c.id, label: c.name }));
   }, [credentials, form.values.rest_api_auth_type]);
 
+  // Filter credentials for Foundry based on selected auth type
+  const foundryCredentials = useMemo(() => {
+    const authType = form.values.foundry_auth_type as FoundryAuthTypeEnum;
+    const typeMap: Record<string, string> = {
+      [FoundryAuthTypeEnum.ENTRA_ID_APP_REGISTRATION]: CredentialTypeEnum.ENTRA_ID_APP_REGISTRATION,
+      [FoundryAuthTypeEnum.API_KEY]: CredentialTypeEnum.API_KEY,
+    };
+    const credType = typeMap[authType];
+    if (!credType) return [];
+    return credentials
+      .filter((c) => c.type === credType)
+      .map((c) => ({ value: c.id, label: c.name }));
+  }, [credentials, form.values.foundry_auth_type]);
+
   const aiModelOptions = useMemo(() => {
     return aiModels.map((m) => ({ value: m.id, label: `${m.name} (${m.provider})` }));
   }, [aiModels]);
@@ -450,11 +480,16 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
           chat_auth_credential_id: values.n8n_chat_auth_credential_id || undefined,
         };
       } else if (values.type === ChatAgentTypeEnum.MICROSOFT_FOUNDRY) {
+        const foundryAuthType = (values.foundry_auth_type || FoundryAuthTypeEnum.ENTRA_ID_USER_TOKEN) as FoundryAuthTypeEnum;
         config = {
           agent_type: values.foundry_agent_type as FoundryAgentTypeEnum,
           api_version: values.foundry_api_version as FoundryApiVersionEnum,
           project_endpoint: values.foundry_project_endpoint.trim(),
           agent_name: values.foundry_agent_name.trim(),
+          auth_type: foundryAuthType,
+          credential_id: FOUNDRY_AUTH_TYPES_REQUIRING_CREDENTIAL.has(foundryAuthType)
+            ? values.foundry_credential_id || undefined
+            : undefined,
         };
       } else if (values.type === ChatAgentTypeEnum.REST_API) {
         const authType = values.rest_api_auth_type as RestApiAuthTypeEnum;
@@ -528,7 +563,7 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
     onClose();
   };
 
-  const handleOpenCreateCredential = (target: 'api_key' | 'chat_auth' | 'rest_api') => {
+  const handleOpenCreateCredential = (target: 'api_key' | 'chat_auth' | 'rest_api' | 'foundry') => {
     setCredentialFieldTarget(target);
     setCreateCredentialOpen(true);
   };
@@ -547,6 +582,8 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
             form.setFieldValue('n8n_chat_auth_credential_id', credential.id);
           } else if (credentialFieldTarget === 'rest_api') {
             form.setFieldValue('rest_api_credential_id', credential.id);
+          } else if (credentialFieldTarget === 'foundry') {
+            form.setFieldValue('foundry_credential_id', credential.id);
           }
         }
       } catch (error) {
@@ -746,6 +783,57 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
               <>
                 <Divider label="Microsoft Foundry Configuration" labelPosition="center" />
 
+                <Select
+                  label="Authentication"
+                  description="How to authenticate against the Foundry endpoint"
+                  required
+                  withAsterisk
+                  data={FOUNDRY_AUTH_TYPES}
+                  {...form.getInputProps('foundry_auth_type')}
+                />
+
+                {form.values.foundry_auth_type === FoundryAuthTypeEnum.ENTRA_ID_USER_TOKEN && (
+                  <Alert icon={<IconAlertCircle size={16} />} color="blue" variant="light">
+                    The signed-in user's Entra ID token is forwarded to Foundry. No credential needed.
+                  </Alert>
+                )}
+
+                {FOUNDRY_AUTH_TYPES_REQUIRING_CREDENTIAL.has(form.values.foundry_auth_type as FoundryAuthTypeEnum) && (
+                  <>
+                    <Group gap="xs" align="flex-end">
+                      <FilterableSelect
+                        label="Credential"
+                        placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
+                        required
+                        withAsterisk
+                        data={foundryCredentials}
+                        rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
+                        disabled={isLoadingCredentials}
+                        nothingFoundMessage="No matching credentials found"
+                        onFilterChange={setCredentialSearch}
+                        style={{ flex: 1 }}
+                        {...form.getInputProps('foundry_credential_id')}
+                      />
+                      <Tooltip label="Create new Credential">
+                        <ActionIcon
+                          variant="light"
+                          color="blue"
+                          size="lg"
+                          onClick={() => handleOpenCreateCredential('foundry')}
+                        >
+                          <IconPlus size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+
+                    {foundryCredentials.length === 0 && !isLoadingCredentials && (
+                      <Alert icon={<IconAlertCircle size={16} />} color="yellow" variant="light">
+                        No matching credentials available. Please create a credential first.
+                      </Alert>
+                    )}
+                  </>
+                )}
+
                 <Group grow>
                   <Select
                     label="Agent Type"
@@ -782,14 +870,26 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
                   isRefreshing={isLoadingAgents}
                   {...form.getInputProps('foundry_agent_name')}
                 />
+
                 <ConnectionTestButton
                   testType={TestConnectionType.FOUNDRY_AGENT}
                   url={form.values.foundry_project_endpoint}
+                  credentialId={
+                    FOUNDRY_AUTH_TYPES_REQUIRING_CREDENTIAL.has(form.values.foundry_auth_type as FoundryAuthTypeEnum)
+                      ? form.values.foundry_credential_id || undefined
+                      : undefined
+                  }
                   config={{
                     agent_name: form.values.foundry_agent_name,
                     api_version: form.values.foundry_api_version,
+                    auth_type: form.values.foundry_auth_type,
                   }}
-                  disabled={!form.values.foundry_project_endpoint || !form.values.foundry_agent_name}
+                  disabled={
+                    !form.values.foundry_project_endpoint ||
+                    !form.values.foundry_agent_name ||
+                    (FOUNDRY_AUTH_TYPES_REQUIRING_CREDENTIAL.has(form.values.foundry_auth_type as FoundryAuthTypeEnum) &&
+                      !form.values.foundry_credential_id)
+                  }
                 />
               </>
             )}

@@ -32,9 +32,10 @@ import {
   IconHistory,
   IconKey,
   IconSettings2,
+  IconChartBar,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip, Breadcrumbs, EntityAvatar, WorkflowRunsTable, ContentCard } from '../../components/common';
+import { SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip, Breadcrumbs, EntityAvatar, WorkflowRunsTable, ContentCard, WorkflowAnalyticsPanel } from '../../components/common';
 import type { TracesSortState, TraceDatePreset } from '../../components/common';
 import { TracingVisualDialog } from '../../components/tracing';
 import { EditWorkflowDialog } from '../../components/dialogs/EditWorkflowDialog';
@@ -55,7 +56,7 @@ import classes from './WorkflowDetailsPage.module.css';
 
 const PAGE_SIZE = 20;
 
-type DetailsTab = 'traces' | 'runs' | 'details';
+type DetailsTab = 'traces' | 'runs' | 'analytics' | 'details';
 
 function datePresetToRange(preset: TraceDatePreset): { created_after?: string; created_before?: string } {
   if (preset === 'all') return {};
@@ -180,6 +181,7 @@ export const WorkflowDetailsPage: FC = () => {
         resource_name: agent.name,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agent?.id]);
 
   useEffect(() => {
@@ -608,15 +610,20 @@ export const WorkflowDetailsPage: FC = () => {
                 </Tabs.Tab>
               )}
               <Tabs.Tab
+                value="analytics"
+                leftSection={<IconChartBar size={16} />}
+                className={classes.tab}
+              >
+                Analytics
+              </Tabs.Tab>
+              <Tabs.Tab
                 value="details"
                 leftSection={<IconInfoCircle size={16} />}
                 className={classes.tab}
               >
                 Details
               </Tabs.Tab>
-            </Tabs.List>
-
-            <Tabs.Panel value="traces" className={classes.tabPanel}>
+            </Tabs.List>            <Tabs.Panel value="traces" className={classes.tabPanel}>
                 {n8nConfig?.webhook_url && (
                   <Group gap="sm" mb="sm" justify="flex-end">
                     {autoRefresh && (
@@ -676,6 +683,14 @@ export const WorkflowDetailsPage: FC = () => {
                 />
               </Tabs.Panel>
             )}
+
+            <Tabs.Panel value="analytics" className={classes.tabPanel}>
+              <div className={classes.tabPanelScrollWrapper}>
+                <div className={classes.tabPanelScrollArea}>
+                  {agent && <WorkflowAnalyticsPanel workflowId={agent.id} />}
+                </div>
+              </div>
+            </Tabs.Panel>
 
             <Tabs.Panel value="details" className={classes.tabPanel}>
               <div className={classes.tabPanelScrollWrapper}>

@@ -47,3 +47,8 @@ export type { EndpointSuggestInputProps } from './EndpointSuggestInput';
 export { UnifiedDialog } from './UnifiedDialog';
 export { ModelTestButton } from './ModelTestButton';
 export { WidgetErrorBoundary } from './WidgetErrorBoundary';
+export { AnalyticsRangePicker, buildPresetRange } from './AnalyticsRangePicker';
+export type { AnalyticsPreset, AnalyticsRange } from './AnalyticsRangePicker';
+export { AnalyticsAgentPicker } from './AnalyticsAgentPicker';
+export { WorkflowAnalyticsPanel } from './WorkflowAnalyticsPanel';
+export { ChatAgentAnalyticsPanel } from './ChatAgentAnalyticsPanel';

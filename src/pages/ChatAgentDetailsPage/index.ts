@@ -1,0 +1,1 @@
+export { ChatAgentDetailsPage } from './ChatAgentDetailsPage';

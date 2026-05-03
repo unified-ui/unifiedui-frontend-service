@@ -152,6 +152,10 @@ import type {
   HealthCheckResponse,
   PrincipalTypeEnum,
   PermissionActionEnum,
+  ChatAgentAnalyticsResponse,
+  WorkflowAnalyticsResponse,
+  UpsertMessageFeedbackRequest,
+  MessageFeedbackResponse,
 } from './types';
 
 // Import enums as values (not type-only)
@@ -1834,6 +1838,71 @@ export class UnifiedUIAPIClient {
       'POST',
       `/api/v1/agent-service/tenants/${tenantId}/ai/trace-chat`,
       data
+    );
+  }
+
+  async getChatAgentAnalytics(
+    tenantId: string,
+    params?: { from?: string; to?: string; agent_ids?: string[] }
+  ): Promise<ChatAgentAnalyticsResponse> {
+    const sp = new URLSearchParams();
+    if (params?.from) sp.set('from', params.from);
+    if (params?.to) sp.set('to', params.to);
+    params?.agent_ids?.forEach(id => sp.append('agent_ids', id));
+    const q = sp.toString();
+    return this.request<ChatAgentAnalyticsResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/admin/analytics/chat-agents${q ? `?${q}` : ''}`
+    );
+  }
+
+  async getWorkflowAnalytics(
+    tenantId: string,
+    params?: { from?: string; to?: string; workflow_ids?: string[] }
+  ): Promise<WorkflowAnalyticsResponse> {
+    const sp = new URLSearchParams();
+    if (params?.from) sp.set('from', params.from);
+    if (params?.to) sp.set('to', params.to);
+    params?.workflow_ids?.forEach(id => sp.append('workflow_ids', id));
+    const q = sp.toString();
+    return this.request<WorkflowAnalyticsResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/admin/analytics/workflows${q ? `?${q}` : ''}`
+    );
+  }
+
+  async upsertMessageFeedback(
+    tenantId: string,
+    conversationId: string,
+    messageId: string,
+    data: UpsertMessageFeedbackRequest
+  ): Promise<MessageFeedbackResponse> {
+    return this.request<MessageFeedbackResponse>(
+      'POST',
+      `/api/v1/platform-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}/feedback`,
+      data
+    );
+  }
+
+  async getMessageFeedback(
+    tenantId: string,
+    conversationId: string,
+    messageId: string
+  ): Promise<MessageFeedbackResponse> {
+    return this.request<MessageFeedbackResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}/feedback`
+    );
+  }
+
+  async deleteMessageFeedback(
+    tenantId: string,
+    conversationId: string,
+    messageId: string
+  ): Promise<void> {
+    return this.request<void>(
+      'DELETE',
+      `/api/v1/platform-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}/feedback`
     );
   }
 }

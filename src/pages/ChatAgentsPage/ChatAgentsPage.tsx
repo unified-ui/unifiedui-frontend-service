@@ -99,14 +99,14 @@ export const ChatAgentsPage: FC = () => {
   const handleOpen = useCallback((id: string) => {
     if (isReactView) {
       navigate(`/chat-agents/${id}/develop`);
-    } else {
-      const agent = rawDataRef.current.get(id);
-      if (agent?.type === 'REACT_AGENT') {
-        navigate(`/chat-agents/${id}/develop`);
-      } else {
-        navigate(`/conversations?agent=${id}&selected=${id}`);
-      }
+      return;
     }
+    const agent = rawDataRef.current.get(id);
+    if (agent?.type === 'REACT_AGENT') {
+      navigate(`/chat-agents/${id}/develop`);
+      return;
+    }
+    navigate(`/chat-agents/${id}`);
   }, [navigate, rawDataRef, isReactView]);
 
   const handleEmbedSetup = useCallback((id: string) => {

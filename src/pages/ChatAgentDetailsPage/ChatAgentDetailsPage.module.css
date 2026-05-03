@@ -1,0 +1,30 @@
+.root {
+  padding-bottom: var(--mantine-spacing-xl);
+}
+
+.header {
+  border-bottom: 1px solid var(--mantine-color-gray-3);
+  padding-bottom: var(--mantine-spacing-md);
+  margin-bottom: var(--mantine-spacing-lg);
+}
+
+[data-mantine-color-scheme="dark"] .header {
+  border-bottom-color: var(--mantine-color-dark-4);
+}
+
+.scrollWrapper {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.embedSection pre {
+  padding: var(--mantine-spacing-sm);
+  background: var(--mantine-color-gray-1);
+  border-radius: var(--mantine-radius-sm);
+  overflow-x: auto;
+}
+
+[data-mantine-color-scheme="dark"] .embedSection pre {
+  background: var(--mantine-color-dark-6);
+}

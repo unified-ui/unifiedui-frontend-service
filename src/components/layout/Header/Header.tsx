@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Group, TextInput, ActionIcon, Avatar, Text, Title, useMantineColorScheme, Stack, Paper, Button, Divider } from '@mantine/core';
-import { IconSearch, IconBrain, IconSun, IconMoon, IconLogout, IconPlus, IconBuilding, IconSwitchHorizontal } from '@tabler/icons-react';
+import { IconSearch, IconBrain, IconSun, IconMoon, IconLogout, IconPlus, IconBuilding, IconSwitchHorizontal, IconUser } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
 import { useIdentity } from '../../../contexts';
 import { useKeyboardShortcuts } from '../../../hooks';
@@ -200,6 +200,18 @@ export const Header: FC = () => {
                 )}
 
                 <Divider />
+
+                <Button
+                  leftSection={<IconUser size={16} />}
+                  variant="subtle"
+                  fullWidth
+                  onClick={() => {
+                    setUserDropdownOpened(false);
+                    navigate('/user/settings');
+                  }}
+                >
+                  {t('mySettings')}
+                </Button>
 
                 <Button
                   leftSection={<IconSwitchHorizontal size={16} />}

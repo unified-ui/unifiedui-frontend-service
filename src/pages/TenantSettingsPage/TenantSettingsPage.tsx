@@ -41,6 +41,7 @@ import {
   IconBuilding,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
+import { AdminLayout } from '../../components/layout/AdminLayout';
 import { ConfirmDeleteDialog, EditRolesDialog, OrganizationSettingsPanel, OrganizationAccessPanel } from '../../components/common';
 import { ManageTenantAccessTable, TENANT_ROLE_OPTIONS } from '../../components/common/ManageTenantAccessTable';
 import type { TenantPrincipalPermission } from '../../components/common/ManageTenantAccessTable';
@@ -95,7 +96,12 @@ interface TenantSettingsFormValues {
   description: string;
 }
 
-export const TenantSettingsPage: FC = () => {
+interface TenantSettingsPageProps {
+  layout?: 'main' | 'admin';
+}
+
+export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main' }) => {
+  const Shell = layout === 'admin' ? AdminLayout : MainLayout;
   const { apiClient, selectedTenant, refreshIdentity } = useIdentity();
   const { isGlobalAdmin, canCreate, hasRole, hasOrgBypass } = usePermissions();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -104,6 +110,12 @@ export const TenantSettingsPage: FC = () => {
   const tabFromUrl = searchParams.get('tab');
   const initialTab = isValidTab(tabFromUrl) ? tabFromUrl : DEFAULT_TAB;
   const [activeTab, setActiveTab] = useState<TabValue>(initialTab);
+
+  useEffect(() => {
+    if (isValidTab(tabFromUrl) && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl, activeTab]);
 
   // Update URL when tab changes
   const handleTabChange = useCallback((value: string | null) => {
@@ -980,16 +992,16 @@ export const TenantSettingsPage: FC = () => {
 
   if (!selectedTenant) {
     return (
-      <MainLayout>
+      <Shell>
         <Center py="xl">
           <Text>No tenant selected</Text>
         </Center>
-      </MainLayout>
+      </Shell>
     );
   }
 
   return (
-    <MainLayout>
+    <Shell>
         <Tabs
           value={activeTab}
           onChange={handleTabChange}
@@ -1000,6 +1012,7 @@ export const TenantSettingsPage: FC = () => {
             panel: classes.settingsContent,
           }}
         >
+          {layout !== 'admin' && (
           <Tabs.List>
             <Tabs.Tab value="organization" leftSection={<IconBuilding size={18} />}>
               Organization
@@ -1033,6 +1046,7 @@ export const TenantSettingsPage: FC = () => {
               Billing
             </Tabs.Tab>
           </Tabs.List>
+          )}
 
             {/* Organization Settings Tab */}
             <Tabs.Panel value="organization">
@@ -2027,6 +2041,6 @@ export const TenantSettingsPage: FC = () => {
         itemType="AI Model"
         isLoading={isDeletingAiModel}
       />
-    </MainLayout>
+    </Shell>
   );
 };

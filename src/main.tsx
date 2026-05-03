@@ -6,7 +6,7 @@ import { MsalProvider } from '@azure/msal-react';
 import { PublicClientApplication } from '@azure/msal-browser';
 import { I18nextProvider } from 'react-i18next';
 import { msalConfig, authConfig } from './auth/authConfig';
-import { AuthProvider, LdapAuthProvider } from './auth';
+import { AuthProvider, LdapAuthProvider, DebugAuthProvider } from './auth';
 import { OidcAuthProvider, OidcAuthProviderUnconfigured } from './auth/OidcAuthProvider';
 import { theme } from './theme';
 import { IdentityProvider, SidebarDataProvider, AICapabilitiesProvider, FavoritesProvider, RecentVisitsProvider } from './contexts';
@@ -38,7 +38,8 @@ createRoot(document.getElementById('root')!).render(
         <MsalProvider instance={msalInstance}>
           <OidcWrapper>
             <LdapAuthProvider>
-              <AuthProvider>
+              <DebugAuthProvider>
+                <AuthProvider>
                 <IdentityProvider>
                   <AICapabilitiesProvider>
                     <FavoritesProvider>
@@ -51,6 +52,7 @@ createRoot(document.getElementById('root')!).render(
                   </AICapabilitiesProvider>
                 </IdentityProvider>
               </AuthProvider>
+              </DebugAuthProvider>
             </LdapAuthProvider>
           </OidcWrapper>
         </MsalProvider>

@@ -9,3 +9,6 @@ export { LdapAuthProvider } from './LdapAuthProvider';
 export { useLdapAuth } from './useLdapAuth';
 export { OidcAuthProvider, OidcAuthProviderUnconfigured } from './OidcAuthProvider';
 export { useOidcAuth } from './useOidcAuth';
+export { DebugAuthProvider } from './DebugAuthProvider';
+export { useDebugAuth } from './useDebugAuth';
+export type { DebugLoginParams } from './useDebugAuth';

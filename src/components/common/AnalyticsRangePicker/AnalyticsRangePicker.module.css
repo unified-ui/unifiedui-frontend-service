@@ -1,0 +1,11 @@
+.root {
+  flex-wrap: wrap;
+}
+
+.label {
+  white-space: nowrap;
+}
+
+.datePicker {
+  min-width: 240px;
+}

@@ -131,6 +131,26 @@ export const MyComponent: FC<Props> = ({ ... }) => {
 
 ---
 
+## Debug Backdoor Login (REQ 007)
+
+When `VITE_ENABLE_DEBUG_BACK_DOOR=true` (set in `.env`), the frontend exposes a "Debug Backdoor Login" path that issues a synthetic JWT against `POST /api/v1/platform-service/auth/debug-backdoor`. Production builds should never set this flag.
+
+| File                                              | Role                                                                                                                                      |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/auth/useDebugAuth.ts`                        | `DebugAuthContext` + `useDebugAuth` hook (mirror of `useLdapAuth`)                                                                        |
+| `src/auth/DebugAuthProvider.tsx`                  | sessionStorage-backed provider; calls the platform-service login endpoint and stores the synthetic access token                           |
+| `src/auth/AuthProvider.tsx`                       | `'debug'` is a first-class `IdentityProviderType`; wins precedence in `effectiveProvider` so `getAccessToken()` returns the synthetic JWT |
+| `src/auth/authConfig.ts`                          | Reads `VITE_ENABLE_DEBUG_BACK_DOOR`, `VITE_DEBUG_BACK_DOOR_SECRET`; pushes `'debug'` into `enabledProviders` when active                  |
+| `src/pages/LoginPage/DebugBackdoorDialog.tsx`     | Mantine modal — collects `userId / upn / name / groups`, calls `loginWithDebugBackdoor`                                                   |
+| `src/components/layout/MainLayout/MainLayout.tsx` | Persistent yellow `.debugBanner` whenever `activeProvider === 'debug'`                                                                    |
+| `src/main.tsx`                                    | `<DebugAuthProvider>` mounted between `LdapAuthProvider` and `AuthProvider`                                                               |
+
+**Storage**: synthetic token lives in `sessionStorage['debug_access_token']` (cleared on tab close, same as LDAP).
+
+**i18n debt**: `DebugBackdoorDialog` strings are hardcoded English (debug-only feature). Acceptable.
+
+---
+
 ## Instruction Management (Summary)
 
 After completing work, evaluate whether documentation needs updating. Full rules in [instruction-management.instructions.md](./instructions/instruction-management.instructions.md).

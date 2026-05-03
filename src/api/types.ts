@@ -189,11 +189,21 @@ export const FoundryApiVersionEnum = {
 
 export type FoundryApiVersionEnum = typeof FoundryApiVersionEnum[keyof typeof FoundryApiVersionEnum];
 
+export const FoundryAuthTypeEnum = {
+  ENTRA_ID_USER_TOKEN: 'ENTRA_ID_USER_TOKEN',
+  ENTRA_ID_APP_REGISTRATION: 'ENTRA_ID_APP_REGISTRATION',
+  API_KEY: 'API_KEY',
+} as const;
+
+export type FoundryAuthTypeEnum = typeof FoundryAuthTypeEnum[keyof typeof FoundryAuthTypeEnum];
+
 export interface FoundryChatAgentConfig {
   agent_type: FoundryAgentTypeEnum;
   api_version: FoundryApiVersionEnum;
   project_endpoint: string;
   agent_name: string;
+  auth_type?: FoundryAuthTypeEnum;
+  credential_id?: string;
 }
 
 // ========== REST API Chat Agent Config Types ==========
@@ -1754,4 +1764,87 @@ export interface TenantPrincipalsQueryParams {
   is_active?: boolean;
   order_by?: 'display_name';
   order_direction?: 'asc' | 'desc';
+}
+
+export interface AnalyticsKPIs {
+  total_messages: number;
+  total_tokens_input: number;
+  total_tokens_output: number;
+  avg_latency_ms: number;
+  feedback_score: number | null;
+  error_rate: number;
+}
+
+export interface TokenSeriesPoint {
+  date: string;
+  tokens_in: number;
+  tokens_out: number;
+}
+
+export interface TopAgent {
+  agent_id: string;
+  name: string | null;
+  total_tokens: number;
+}
+
+export interface FeedbackBreakdownEntry {
+  rating: string;
+  reasons: string[];
+  count: number;
+}
+
+export interface AgentPerformanceEntry {
+  agent_id: string;
+  avg_latency: number;
+  error_rate: number;
+}
+
+export interface ChatAgentAnalyticsResponse {
+  kpis: AnalyticsKPIs;
+  token_series: TokenSeriesPoint[];
+  top_agents_by_tokens: TopAgent[];
+  feedback_breakdown: FeedbackBreakdownEntry[];
+  performance: AgentPerformanceEntry[];
+}
+
+export interface WorkflowExecutionEntry {
+  workflow_id: string;
+  message_id: string;
+  status: string;
+  latency_ms: number;
+  timestamp: string;
+}
+
+export interface ExecutionSeriesPoint {
+  date: string;
+  executions: number;
+}
+
+export interface WorkflowAnalyticsResponse {
+  kpis: AnalyticsKPIs;
+  total_executions: number;
+  success_rate: number;
+  avg_duration_s: number;
+  token_series: TokenSeriesPoint[];
+  executions_series: ExecutionSeriesPoint[];
+  recent_executions: WorkflowExecutionEntry[];
+}
+
+export interface UpsertMessageFeedbackRequest {
+  rating: 'THUMBS_UP' | 'THUMBS_DOWN';
+  reasons?: string[];
+  comment?: string | null;
+}
+
+export interface MessageFeedbackResponse {
+  id: string;
+  tenant_id: string;
+  conversation_id: string;
+  message_id: string;
+  user_id: string;
+  rating: 'THUMBS_UP' | 'THUMBS_DOWN';
+  reasons: string[];
+  comment: string | null;
+  created_at: string;
+  updated_at: string;
 }

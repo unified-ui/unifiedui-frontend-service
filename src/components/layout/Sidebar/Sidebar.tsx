@@ -10,6 +10,7 @@ import {
   IconRobot,
   IconBrain,
   IconAppWindow,
+  IconShieldLock,
 } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSidebarData, useFavorites, type EntityType } from '../../../contexts';
@@ -90,7 +91,8 @@ const mainNavItemsBottom: NavItem[] = [
 ];
 
 const bottomNavItems: NavItem[] = [
-  { icon: IconSettings, iconFilled: IconSettingsFilled, labelKey: 'settings', path: '/tenant-settings?tab=iam' },
+  { icon: IconShieldLock, labelKey: 'admin', path: '/admin' },
+  { icon: IconSettings, iconFilled: IconSettingsFilled, labelKey: 'settings', path: '/user/settings' },
 ];
 
 interface EntityConfig {
@@ -128,7 +130,7 @@ export const Sidebar: FC = () => {
   } = useSidebarData();
 
   const { isFavorite: checkFavorite, toggleFavorite } = useFavorites();
-  const { canCreate } = usePermissions();
+  const { canCreate, isGlobalAdmin } = usePermissions();
 
   const isEnvFlagEnabled = useCallback((flag?: string): boolean => {
     if (!flag) return true;
@@ -569,7 +571,9 @@ export const Sidebar: FC = () => {
         </Stack>
 
         <Stack gap="xs" className={classes.navBottom}>
-          {bottomNavItems.map(renderNavItem)}
+          {bottomNavItems
+            .filter(item => item.path !== '/admin' || isGlobalAdmin)
+            .map(renderNavItem)}
         </Stack>
       </aside>
 
