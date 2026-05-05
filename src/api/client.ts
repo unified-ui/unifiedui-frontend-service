@@ -107,6 +107,7 @@ import type {
   SyncRecentVisitsRequest,
   // Agent Service Types
   GetMessagesResponse,
+  MessageWithContextResponse,
   SearchMessagesResponse,
   MessageResponse,
   SendMessageRequest,
@@ -152,10 +153,10 @@ import type {
   HealthCheckResponse,
   PrincipalTypeEnum,
   PermissionActionEnum,
-  ChatAgentAnalyticsResponse,
-  WorkflowAnalyticsResponse,
   UpsertMessageFeedbackRequest,
   MessageFeedbackResponse,
+  FeedbackStatsBatchResponse,
+  MessageStatsResponse,
 } from './types';
 
 // Import enums as values (not type-only)
@@ -1127,6 +1128,20 @@ export class UnifiedUIAPIClient {
   }
 
   /**
+   * Get a single message together with its preceding user message.
+   */
+  async getMessageWithContext(
+    tenantId: string,
+    conversationId: string,
+    messageId: string
+  ): Promise<MessageWithContextResponse> {
+    return this.agentServiceRequest<MessageWithContextResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}/with-context`
+    );
+  }
+
+  /**
    * Search messages by content text across all conversations.
    */
   async searchMessages(
@@ -1841,36 +1856,6 @@ export class UnifiedUIAPIClient {
     );
   }
 
-  async getChatAgentAnalytics(
-    tenantId: string,
-    params?: { from?: string; to?: string; agent_ids?: string[] }
-  ): Promise<ChatAgentAnalyticsResponse> {
-    const sp = new URLSearchParams();
-    if (params?.from) sp.set('from', params.from);
-    if (params?.to) sp.set('to', params.to);
-    params?.agent_ids?.forEach(id => sp.append('agent_ids', id));
-    const q = sp.toString();
-    return this.request<ChatAgentAnalyticsResponse>(
-      'GET',
-      `/api/v1/platform-service/tenants/${tenantId}/admin/analytics/chat-agents${q ? `?${q}` : ''}`
-    );
-  }
-
-  async getWorkflowAnalytics(
-    tenantId: string,
-    params?: { from?: string; to?: string; workflow_ids?: string[] }
-  ): Promise<WorkflowAnalyticsResponse> {
-    const sp = new URLSearchParams();
-    if (params?.from) sp.set('from', params.from);
-    if (params?.to) sp.set('to', params.to);
-    params?.workflow_ids?.forEach(id => sp.append('workflow_ids', id));
-    const q = sp.toString();
-    return this.request<WorkflowAnalyticsResponse>(
-      'GET',
-      `/api/v1/platform-service/tenants/${tenantId}/admin/analytics/workflows${q ? `?${q}` : ''}`
-    );
-  }
-
   async upsertMessageFeedback(
     tenantId: string,
     conversationId: string,
@@ -1903,6 +1888,40 @@ export class UnifiedUIAPIClient {
     return this.request<void>(
       'DELETE',
       `/api/v1/platform-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}/feedback`
+    );
+  }
+
+  async getFeedbackStats(
+    tenantId: string,
+    params?: { chatAgentIds?: string[]; from?: string; to?: string }
+  ): Promise<FeedbackStatsBatchResponse> {
+    const sp = new URLSearchParams();
+    if (params?.chatAgentIds && params.chatAgentIds.length > 0) {
+      sp.set('chat_agent_id', params.chatAgentIds.join(','));
+    }
+    if (params?.from) sp.set('from', params.from);
+    if (params?.to) sp.set('to', params.to);
+    const q = sp.toString();
+    return this.request<FeedbackStatsBatchResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/feedback/stats${q ? `?${q}` : ''}`
+    );
+  }
+
+  async getMessageStats(
+    tenantId: string,
+    params?: { chatAgentIds?: string[]; from?: string; to?: string }
+  ): Promise<MessageStatsResponse> {
+    const sp = new URLSearchParams();
+    if (params?.chatAgentIds && params.chatAgentIds.length > 0) {
+      sp.set('chat_agent_id', params.chatAgentIds.join(','));
+    }
+    if (params?.from) sp.set('from', params.from);
+    if (params?.to) sp.set('to', params.to);
+    const q = sp.toString();
+    return this.agentServiceRequest<MessageStatsResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/messages/stats${q ? `?${q}` : ''}`
     );
   }
 }

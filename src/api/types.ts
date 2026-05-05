@@ -325,6 +325,11 @@ export interface GetMessagesResponse {
   hasMore: boolean;
 }
 
+export interface MessageWithContextResponse {
+  message: MessageResponse;
+  userMessage?: MessageResponse;
+}
+
 export interface SearchMessagesResponse {
   messages: MessageResponse[];
 }
@@ -397,6 +402,7 @@ export interface BulkReactionsResponse {
 export interface UpsertReactionRequest {
   reaction: ReactionType;
   feedbackText?: string;
+  reasons?: string[];
 }
 
 export interface EditMessageRequest {
@@ -1766,70 +1772,6 @@ export interface TenantPrincipalsQueryParams {
   order_direction?: 'asc' | 'desc';
 }
 
-export interface AnalyticsKPIs {
-  total_messages: number;
-  total_tokens_input: number;
-  total_tokens_output: number;
-  avg_latency_ms: number;
-  feedback_score: number | null;
-  error_rate: number;
-}
-
-export interface TokenSeriesPoint {
-  date: string;
-  tokens_in: number;
-  tokens_out: number;
-}
-
-export interface TopAgent {
-  agent_id: string;
-  name: string | null;
-  total_tokens: number;
-}
-
-export interface FeedbackBreakdownEntry {
-  rating: string;
-  reasons: string[];
-  count: number;
-}
-
-export interface AgentPerformanceEntry {
-  agent_id: string;
-  avg_latency: number;
-  error_rate: number;
-}
-
-export interface ChatAgentAnalyticsResponse {
-  kpis: AnalyticsKPIs;
-  token_series: TokenSeriesPoint[];
-  top_agents_by_tokens: TopAgent[];
-  feedback_breakdown: FeedbackBreakdownEntry[];
-  performance: AgentPerformanceEntry[];
-}
-
-export interface WorkflowExecutionEntry {
-  workflow_id: string;
-  message_id: string;
-  status: string;
-  latency_ms: number;
-  timestamp: string;
-}
-
-export interface ExecutionSeriesPoint {
-  date: string;
-  executions: number;
-}
-
-export interface WorkflowAnalyticsResponse {
-  kpis: AnalyticsKPIs;
-  total_executions: number;
-  success_rate: number;
-  avg_duration_s: number;
-  token_series: TokenSeriesPoint[];
-  executions_series: ExecutionSeriesPoint[];
-  recent_executions: WorkflowExecutionEntry[];
-}
-
 export interface UpsertMessageFeedbackRequest {
   rating: 'THUMBS_UP' | 'THUMBS_DOWN';
   reasons?: string[];
@@ -1847,4 +1789,68 @@ export interface MessageFeedbackResponse {
   comment: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface ReasonBreakdownEntry {
+  reason: string;
+  count: number;
+}
+
+export interface RecentFeedbackEntry {
+  message_id: string;
+  conversation_id: string;
+  rating: string;
+  reasons: string[];
+  comment: string | null;
+  created_at: string;
+  chat_agent_id?: string | null;
+  chat_agent_name?: string | null;
+}
+
+export interface FeedbackTimelineEntry {
+  created_at: string;
+  delta: number;
+  cumulative: number;
+}
+
+export interface FeedbackStatsResponse {
+  total_feedbacks: number;
+  thumbs_up: number;
+  thumbs_down: number;
+  score: number | null;
+  reason_breakdown: ReasonBreakdownEntry[];
+  recent_negative: RecentFeedbackEntry[];
+  timeline: FeedbackTimelineEntry[];
+}
+
+export interface FeedbackStatsPerAgent {
+  chat_agent_id: string;
+  chat_agent_name: string | null;
+  total_feedbacks: number;
+  thumbs_up: number;
+  thumbs_down: number;
+  score: number | null;
+}
+
+export interface FeedbackStatsBatchResponse {
+  aggregate: FeedbackStatsResponse;
+  per_agent: FeedbackStatsPerAgent[];
+}
+
+export interface MessageStatsAggregate {
+  total_messages: number;
+  success_count: number;
+  failed_count: number;
+}
+
+export interface MessageStatsPerAgent {
+  chat_agent_id: string;
+  total_messages: number;
+  success_count: number;
+  failed_count: number;
+}
+
+export interface MessageStatsResponse {
+  aggregate: MessageStatsAggregate;
+  per_agent: MessageStatsPerAgent[];
 }

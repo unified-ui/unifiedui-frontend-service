@@ -25,9 +25,7 @@ const HowEmbedChatPage = lazy(() => import('../pages/HowEmbedChatPage').then(m =
 const TracingDialogDevelopmentPage = lazy(() => import('../pages/TracingDialogDevelopmentPage').then(m => ({ default: m.TracingDialogDevelopmentPage })));
 const ExternalAppsPage = lazy(() => import('../pages/ExternalAppsPage').then(m => ({ default: m.ExternalAppsPage })));
 const ExternalAppPage = lazy(() => import('../pages/ExternalAppPage').then(m => ({ default: m.ExternalAppPage })));
-const AdminDashboardPage = lazy(() => import('../pages/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })));
-const ChatAgentAnalyticsPage = lazy(() => import('../pages/ChatAgentAnalyticsPage').then(m => ({ default: m.ChatAgentAnalyticsPage })));
-const WorkflowAnalyticsPage = lazy(() => import('../pages/WorkflowAnalyticsPage').then(m => ({ default: m.WorkflowAnalyticsPage })));
+const AdminAnalyticsPage = lazy(() => import('../pages/AdminAnalyticsPage').then(m => ({ default: m.AdminAnalyticsPage })));
 
 const IS_DEV = import.meta.env.DEV;
 
@@ -65,9 +63,7 @@ export const AppRoutes = () => {
             <Route path="/chat-agents/:agentId/develop" element={<ProtectedRoute><ReActAgentDeveloperPage /></ProtectedRoute>} />
             <Route path="/external-apps" element={<ProtectedRoute><ExternalAppsPage /></ProtectedRoute>} />
             <Route path="/external-apps/:id" element={<ProtectedRoute><ExternalAppPage /></ProtectedRoute>} />
-            <Route path="/admin" element={<AdminProtectedRoute><AdminDashboardPage /></AdminProtectedRoute>} />
-            <Route path="/admin/analytics/chat-agents" element={<AdminProtectedRoute><ChatAgentAnalyticsPage /></AdminProtectedRoute>} />
-            <Route path="/admin/analytics/workflows" element={<AdminProtectedRoute><WorkflowAnalyticsPage /></AdminProtectedRoute>} />
+            <Route path="/admin" element={<AdminProtectedRoute><AdminAnalyticsPage /></AdminProtectedRoute>} />
 
             {IS_DEV && (
               <Route path="/dev/tracing" element={<ProtectedRoute><TracingDialogDevelopmentPage /></ProtectedRoute>} />

@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from 'react';
-import { Paper, Stack, Text, Group, ThemeIcon } from '@mantine/core';
+import classes from './KPICard.module.css';
 
 interface KPICardProps {
   label: string;
@@ -9,21 +9,31 @@ interface KPICardProps {
   hint?: string;
 }
 
+const COLOR_MAP: Record<string, { bg: string; fg: string }> = {
+  blue: { bg: 'var(--color-primary-100)', fg: 'var(--color-primary-600)' },
+  red: { bg: 'var(--mantine-color-red-1)', fg: 'var(--mantine-color-red-6)' },
+  green: { bg: 'var(--color-success-50)', fg: 'var(--color-success-600)' },
+  teal: { bg: 'var(--mantine-color-teal-1)', fg: 'var(--mantine-color-teal-6)' },
+  violet: { bg: 'var(--color-secondary-100)', fg: 'var(--color-secondary-600)' },
+  orange: { bg: 'var(--mantine-color-orange-1)', fg: 'var(--mantine-color-orange-6)' },
+};
+
 export const KPICard: FC<KPICardProps> = ({ label, value, icon, color = 'blue', hint }) => {
+  const colors = COLOR_MAP[color] ?? COLOR_MAP.blue;
   return (
-    <Paper withBorder p="md" radius="md" style={{ flex: 1, minWidth: 180 }}>
-      <Group justify="space-between" mb={4}>
-        <Text size="xs" c="dimmed" fw={500} tt="uppercase">{label}</Text>
-        {icon && (
-          <ThemeIcon variant="light" color={color} size="md">
-            {icon}
-          </ThemeIcon>
-        )}
-      </Group>
-      <Stack gap={2}>
-        <Text fz={28} fw={700} lh={1.1}>{value}</Text>
-        {hint && <Text size="xs" c="dimmed">{hint}</Text>}
-      </Stack>
-    </Paper>
+    <div className={classes.card}>
+      {icon && (
+        <div className={classes.iconWrapper} style={{ backgroundColor: colors.bg, color: colors.fg }}>
+          {icon}
+        </div>
+      )}
+      <div className={classes.body}>
+        <div className={classes.valueRow}>
+          <span className={classes.value}>{value}</span>
+          {hint && <span className={classes.hint}>({hint})</span>}
+        </div>
+        <span className={classes.label}>{label}</span>
+      </div>
+    </div>
   );
 };

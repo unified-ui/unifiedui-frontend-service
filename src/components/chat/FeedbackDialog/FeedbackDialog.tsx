@@ -4,14 +4,14 @@ import { Modal, Textarea, Group, Button, Stack, Text, ThemeIcon, Chip } from '@m
 import { IconThumbDown } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
-const FEEDBACK_REASONS = [
-  'inaccurate',
-  'irrelevant',
-  'unhelpful',
-  'too_verbose',
-  'too_brief',
-  'unsafe',
-  'other',
+const FEEDBACK_REASONS: { value: string; label: string }[] = [
+  { value: 'INACCURATE', label: 'inaccurate' },
+  { value: 'HALLUCINATION', label: 'hallucination' },
+  { value: 'INCOMPLETE', label: 'incomplete' },
+  { value: 'FORMATTING', label: 'formatting' },
+  { value: 'TOO_SLOW', label: 'too slow' },
+  { value: 'INAPPROPRIATE', label: 'inappropriate' },
+  { value: 'OTHER', label: 'other' },
 ];
 
 export interface FeedbackDialogProps {
@@ -66,8 +66,8 @@ export const FeedbackDialog: FC<FeedbackDialogProps> = ({
           <Chip.Group multiple value={reasons} onChange={setReasons}>
             <Group gap="xs">
               {FEEDBACK_REASONS.map((reason) => (
-                <Chip key={reason} value={reason} size="sm" variant="light">
-                  {reason.replace(/_/g, ' ')}
+                <Chip key={reason.value} value={reason.value} size="sm" variant="light">
+                  {reason.label}
                 </Chip>
               ))}
             </Group>

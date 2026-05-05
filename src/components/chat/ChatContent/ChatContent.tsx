@@ -35,7 +35,7 @@ export interface ChatContentProps {
   highlightedUserMessageId?: string | null;
   onEditMessage?: (messageId: string, newContent: string) => Promise<void>;
   onDeleteMessage?: (messageId: string) => Promise<void>;
-  onReaction?: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string) => Promise<void>;
+  onReaction?: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string, reasons?: string[]) => Promise<void>;
   reactions?: Map<string, ReactionResponse>;
   onRetry?: (failedMessageId: string) => void;
   reActState?: ReActStreamState;
@@ -511,7 +511,7 @@ interface MessageBubbleProps {
   isLastUserMessage?: boolean;
   onEditMessage?: (messageId: string, newContent: string) => Promise<void>;
   onDeleteMessage?: (messageId: string) => Promise<void>;
-  onReaction?: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string) => Promise<void>;
+  onReaction?: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string, reasons?: string[]) => Promise<void>;
   activeReaction?: ReactionResponse;
   reActState?: ReActStreamState;
   onToggleReasoning?: () => void;
@@ -781,8 +781,8 @@ const MessageBubble: FC<MessageBubbleProps> = ({
           <FeedbackDialog
             opened={feedbackDialogOpen}
             onClose={() => setFeedbackDialogOpen(false)}
-            onSubmit={(feedbackText: string | undefined) => {
-              onReaction?.(message.id, 'thumbs_down', feedbackText);
+            onSubmit={(feedbackText: string | undefined, reasons: string[] | undefined) => {
+              onReaction?.(message.id, 'thumbs_down', feedbackText, reasons);
               setFeedbackDialogOpen(false);
             }}
           />

@@ -68,7 +68,7 @@ interface UseChatReturn {
   handleSendMessage: (content: string, attachments?: File[], extra?: Record<string, unknown>) => Promise<void>;
   handleEditMessage: (messageId: string, newContent: string) => Promise<void>;
   handleDeleteMessage: (messageId: string) => Promise<void>;
-  handleReaction: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string) => Promise<void>;
+  handleReaction: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string, reasons?: string[]) => Promise<void>;
   handleCancelStream: () => void;
   resetStreamingState: () => void;
   loadConversationMessages: (convId: string) => Promise<void>;
@@ -644,7 +644,7 @@ export function useChat({
     }
   }, [apiClient, tenantId, conversationId]);
 
-  const handleReaction = useCallback(async (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string) => {
+  const handleReaction = useCallback(async (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string, reasons?: string[]) => {
     if (!apiClient || !tenantId || !conversationId) return;
 
     const existingReaction = reactions.get(messageId);
@@ -662,6 +662,7 @@ export function useChat({
         const result = await apiClient.upsertReaction(tenantId, conversationId, messageId, {
           reaction,
           feedbackText,
+          reasons,
         });
         setReactions(prev => {
           const next = new Map(prev);

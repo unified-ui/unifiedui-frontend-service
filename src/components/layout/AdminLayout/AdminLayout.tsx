@@ -3,8 +3,6 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { Divider, Group, Stack, Text, ThemeIcon } from '@mantine/core';
 import {
   IconChartBar,
-  IconRobot,
-  IconRouter,
   IconLayoutDashboard,
   IconUsers,
   IconUsersGroup,
@@ -31,9 +29,7 @@ interface NavEntry {
 }
 
 const NAV_ITEMS: NavEntry[] = [
-  { to: '/admin', label: 'Overview', icon: IconLayoutDashboard, end: true },
-  { to: '/admin/analytics/chat-agents', label: 'Chat Agent Analytics', icon: IconRobot },
-  { to: '/admin/analytics/workflows', label: 'Workflow Analytics', icon: IconRouter },
+  { to: '/admin', label: 'Analytics', icon: IconChartBar, end: true },
 ];
 
 const settingsTabMatch = (tab: string) => (pathname: string, search: string): boolean => {
