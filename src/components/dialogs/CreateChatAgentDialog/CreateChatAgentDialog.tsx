@@ -33,6 +33,7 @@ import {
   FoundryAgentTypeEnum,
   FoundryApiVersionEnum,
   FoundryAuthTypeEnum,
+  FoundryCustomRestApiAuthTypeEnum,
   RestApiAuthTypeEnum,
   CredentialTypeEnum,
   type CredentialResponse,
@@ -48,8 +49,11 @@ import { TestConnectionType } from '../../../api/types';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
 import { N8NWorkflowBrowserDialog } from '../N8NWorkflowBrowserDialog';
 
+const MICROSOFT_FOUNDRY_PROXY = 'MICROSOFT_FOUNDRY_PROXY';
+
 const CHAT_AGENT_TYPES = [
   { value: ChatAgentTypeEnum.MICROSOFT_FOUNDRY, label: 'Microsoft Foundry' },
+  { value: MICROSOFT_FOUNDRY_PROXY, label: 'Microsoft Foundry API Proxy' },
   { value: ChatAgentTypeEnum.N8N, label: 'n8n' },
   { value: ChatAgentTypeEnum.REST_API, label: 'REST API' },
   { value: ChatAgentTypeEnum.LLM, label: 'LLM' },
@@ -82,6 +86,12 @@ const FOUNDRY_AUTH_TYPES_REQUIRING_CREDENTIAL = new Set<FoundryAuthTypeEnum>([
   FoundryAuthTypeEnum.ENTRA_ID_APP_REGISTRATION,
   FoundryAuthTypeEnum.API_KEY,
 ]);
+
+const FOUNDRY_CUSTOM_REST_API_AUTH_TYPES = [
+  { value: FoundryCustomRestApiAuthTypeEnum.USER_TOKEN, label: 'User Token (Forward)' },
+  { value: FoundryCustomRestApiAuthTypeEnum.API_KEY, label: 'API Key' },
+  { value: FoundryCustomRestApiAuthTypeEnum.ENTRA_ID_APP_REGISTRATION, label: 'Entra ID App Registration' },
+];
 
 const REST_API_AUTH_TYPES = [
   { value: RestApiAuthTypeEnum.ANONYMOUS, label: 'Anonymous (No Auth)' },
@@ -126,6 +136,9 @@ interface FormValues {
   foundry_agent_name: string;
   foundry_auth_type: string;
   foundry_credential_id: string;
+  foundry_custom_rest_api_endpoint: string;
+  foundry_custom_rest_api_auth_type: string;
+  foundry_custom_rest_api_api_key_header: string;
   // REST API Config
   rest_api_auth_type: string;
   rest_api_invoke_endpoint: string;
@@ -185,6 +198,9 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
       foundry_agent_name: '',
       foundry_auth_type: FoundryAuthTypeEnum.ENTRA_ID_USER_TOKEN,
       foundry_credential_id: '',
+      foundry_custom_rest_api_endpoint: '',
+      foundry_custom_rest_api_auth_type: FoundryCustomRestApiAuthTypeEnum.USER_TOKEN,
+      foundry_custom_rest_api_api_key_header: 'X-API-Key',
       // REST API Config defaults
       rest_api_auth_type: RestApiAuthTypeEnum.ANONYMOUS,
       rest_api_invoke_endpoint: '',
@@ -287,6 +303,34 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
         }
         return null;
       },
+      foundry_custom_rest_api_endpoint: (value, values) => {
+        if (values.type === MICROSOFT_FOUNDRY_PROXY) {
+          if (!value || value.trim().length === 0) {
+            return 'Proxy Endpoint URL is required';
+          }
+          try {
+            new URL(value);
+          } catch {
+            return 'Invalid URL';
+          }
+        }
+        return null;
+      },
+      foundry_credential_id: (value, values) => {
+        if (values.type === MICROSOFT_FOUNDRY_PROXY) {
+          const proxyRequiresCredential = values.foundry_custom_rest_api_auth_type === FoundryCustomRestApiAuthTypeEnum.API_KEY
+            || values.foundry_custom_rest_api_auth_type === FoundryCustomRestApiAuthTypeEnum.ENTRA_ID_APP_REGISTRATION;
+          if (proxyRequiresCredential && !value) {
+            return 'Credential is required for this auth type';
+          }
+        }
+        if (values.type === ChatAgentTypeEnum.MICROSOFT_FOUNDRY) {
+          if (FOUNDRY_AUTH_TYPES_REQUIRING_CREDENTIAL.has(values.foundry_auth_type as FoundryAuthTypeEnum) && !value) {
+            return 'Credential is required for this auth type';
+          }
+        }
+        return null;
+      },
       rest_api_invoke_endpoint: (value, values) => {
         if (values.type === ChatAgentTypeEnum.REST_API) {
           if (!value || value.trim().length === 0) {
@@ -340,7 +384,9 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
     },
   });
 
-  const { suggestions: configSuggestions } = useConfigSuggestions(form.values.type);
+  const { suggestions: configSuggestions } = useConfigSuggestions(
+    form.values.type === MICROSOFT_FOUNDRY_PROXY ? ChatAgentTypeEnum.MICROSOFT_FOUNDRY : form.values.type,
+  );
 
   const [debouncedProjectEndpoint] = useDebouncedValue(form.values.foundry_project_endpoint, 500);
   const { agents: foundryAgents, isLoading: isLoadingAgents, refresh: refreshFoundryAgents } = useFoundryAgents(
@@ -445,16 +491,25 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
   // Filter credentials for Foundry based on selected auth type
   const foundryCredentials = useMemo(() => {
     const authType = form.values.foundry_auth_type as FoundryAuthTypeEnum;
-    const typeMap: Record<string, string> = {
-      [FoundryAuthTypeEnum.ENTRA_ID_APP_REGISTRATION]: CredentialTypeEnum.ENTRA_ID_APP_REGISTRATION,
-      [FoundryAuthTypeEnum.API_KEY]: CredentialTypeEnum.API_KEY,
-    };
-    const credType = typeMap[authType];
+    let credType: string | undefined;
+    if (form.values.type === MICROSOFT_FOUNDRY_PROXY) {
+      const proxyTypeMap: Record<string, string> = {
+        [FoundryCustomRestApiAuthTypeEnum.API_KEY]: CredentialTypeEnum.API_KEY,
+        [FoundryCustomRestApiAuthTypeEnum.ENTRA_ID_APP_REGISTRATION]: CredentialTypeEnum.ENTRA_ID_APP_REGISTRATION,
+      };
+      credType = proxyTypeMap[form.values.foundry_custom_rest_api_auth_type];
+    } else {
+      const typeMap: Record<string, string> = {
+        [FoundryAuthTypeEnum.ENTRA_ID_APP_REGISTRATION]: CredentialTypeEnum.ENTRA_ID_APP_REGISTRATION,
+        [FoundryAuthTypeEnum.API_KEY]: CredentialTypeEnum.API_KEY,
+      };
+      credType = typeMap[authType];
+    }
     if (!credType) return [];
     return credentials
       .filter((c) => c.type === credType)
       .map((c) => ({ value: c.id, label: c.name }));
-  }, [credentials, form.values.foundry_auth_type]);
+  }, [credentials, form.values.type, form.values.foundry_auth_type, form.values.foundry_custom_rest_api_auth_type]);
 
   const aiModelOptions = useMemo(() => {
     return aiModels.map((m) => ({ value: m.id, label: `${m.name} (${m.provider})` }));
@@ -481,14 +536,34 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
         };
       } else if (values.type === ChatAgentTypeEnum.MICROSOFT_FOUNDRY) {
         const foundryAuthType = (values.foundry_auth_type || FoundryAuthTypeEnum.ENTRA_ID_USER_TOKEN) as FoundryAuthTypeEnum;
+        const needsCredential = FOUNDRY_AUTH_TYPES_REQUIRING_CREDENTIAL.has(foundryAuthType);
         config = {
           agent_type: values.foundry_agent_type as FoundryAgentTypeEnum,
           api_version: values.foundry_api_version as FoundryApiVersionEnum,
           project_endpoint: values.foundry_project_endpoint.trim(),
           agent_name: values.foundry_agent_name.trim(),
           auth_type: foundryAuthType,
-          credential_id: FOUNDRY_AUTH_TYPES_REQUIRING_CREDENTIAL.has(foundryAuthType)
+          credential_id: needsCredential
             ? values.foundry_credential_id || undefined
+            : undefined,
+        };
+      } else if (values.type === MICROSOFT_FOUNDRY_PROXY) {
+        const customRestApiAuthType = values.foundry_custom_rest_api_auth_type as FoundryCustomRestApiAuthTypeEnum;
+        const needsCredential = customRestApiAuthType === FoundryCustomRestApiAuthTypeEnum.API_KEY
+          || customRestApiAuthType === FoundryCustomRestApiAuthTypeEnum.ENTRA_ID_APP_REGISTRATION;
+        config = {
+          agent_type: FoundryAgentTypeEnum.AGENT,
+          api_version: FoundryApiVersionEnum.V2025_11_15_PREVIEW,
+          project_endpoint: '',
+          agent_name: '',
+          auth_type: FoundryAuthTypeEnum.CUSTOM_REST_API,
+          credential_id: needsCredential
+            ? values.foundry_credential_id || undefined
+            : undefined,
+          custom_rest_api_endpoint: values.foundry_custom_rest_api_endpoint.trim(),
+          custom_rest_api_auth_type: customRestApiAuthType,
+          custom_rest_api_api_key_header: customRestApiAuthType === FoundryCustomRestApiAuthTypeEnum.API_KEY
+            ? values.foundry_custom_rest_api_api_key_header.trim() || 'X-API-Key'
             : undefined,
         };
       } else if (values.type === ChatAgentTypeEnum.REST_API) {
@@ -522,7 +597,9 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
       // Create the chat agent
       const chatAgent = await apiClient.createChatAgent(selectedTenant.id, {
         name: values.name.trim(),
-        type: values.type as ChatAgentTypeEnum,
+        type: (values.type === MICROSOFT_FOUNDRY_PROXY
+          ? ChatAgentTypeEnum.MICROSOFT_FOUNDRY
+          : values.type) as ChatAgentTypeEnum,
         description: values.description?.trim() || undefined,
         is_active: true,
         config: config as Record<string, unknown> | undefined,
@@ -890,6 +967,100 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
                     (FOUNDRY_AUTH_TYPES_REQUIRING_CREDENTIAL.has(form.values.foundry_auth_type as FoundryAuthTypeEnum) &&
                       !form.values.foundry_credential_id)
                   }
+                />
+              </>
+            )}
+
+            {/* Microsoft Foundry API Proxy Configuration Section */}
+            {form.values.type === MICROSOFT_FOUNDRY_PROXY && (
+              <>
+                <Divider label="Foundry API Proxy Configuration" labelPosition="center" />
+
+                <TextInput
+                  label="Proxy Endpoint URL"
+                  description="The REST API proxy endpoint that speaks the unified-ui SSE protocol"
+                  placeholder="http://host.docker.internal:8099/api/v1/agent/invoke"
+                  required
+                  withAsterisk
+                  {...form.getInputProps('foundry_custom_rest_api_endpoint')}
+                />
+
+                <Select
+                  label="Proxy Authentication"
+                  description="How to authenticate against the proxy endpoint"
+                  required
+                  withAsterisk
+                  data={FOUNDRY_CUSTOM_REST_API_AUTH_TYPES}
+                  {...form.getInputProps('foundry_custom_rest_api_auth_type')}
+                />
+
+                {form.values.foundry_custom_rest_api_auth_type === FoundryCustomRestApiAuthTypeEnum.USER_TOKEN && (
+                  <Alert icon={<IconAlertCircle size={16} />} color="blue" variant="light">
+                    The signed-in user's token is forwarded to the proxy. No credential needed.
+                  </Alert>
+                )}
+
+                {(form.values.foundry_custom_rest_api_auth_type === FoundryCustomRestApiAuthTypeEnum.API_KEY
+                  || form.values.foundry_custom_rest_api_auth_type === FoundryCustomRestApiAuthTypeEnum.ENTRA_ID_APP_REGISTRATION) && (
+                  <>
+                    {form.values.foundry_custom_rest_api_auth_type === FoundryCustomRestApiAuthTypeEnum.API_KEY && (
+                      <TextInput
+                        label="API Key Header Name"
+                        description="Custom header name for the API key (default: X-API-Key)"
+                        placeholder="X-API-Key"
+                        {...form.getInputProps('foundry_custom_rest_api_api_key_header')}
+                      />
+                    )}
+                    <Group gap="xs" align="flex-end">
+                      <FilterableSelect
+                        label="Credential"
+                        placeholder={isLoadingCredentials ? 'Loading...' : 'Select a credential'}
+                        required
+                        withAsterisk
+                        data={foundryCredentials}
+                        rightSection={isLoadingCredentials ? <Loader size="xs" /> : undefined}
+                        disabled={isLoadingCredentials}
+                        nothingFoundMessage="No matching credentials found"
+                        onFilterChange={setCredentialSearch}
+                        style={{ flex: 1 }}
+                        {...form.getInputProps('foundry_credential_id')}
+                      />
+                      <Tooltip label="Create new Credential">
+                        <ActionIcon
+                          variant="light"
+                          color="blue"
+                          size="lg"
+                          onClick={() => handleOpenCreateCredential('foundry')}
+                        >
+                          <IconPlus size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+
+                    {foundryCredentials.length === 0 && !isLoadingCredentials && (
+                      <Alert icon={<IconAlertCircle size={16} />} color="yellow" variant="light">
+                        No matching credentials available. Please create a credential first.
+                      </Alert>
+                    )}
+                  </>
+                )}
+
+                <ConnectionTestButton
+                  testType={TestConnectionType.REST_API_INVOKE}
+                  url={form.values.foundry_custom_rest_api_endpoint}
+                  credentialId={
+                    (form.values.foundry_custom_rest_api_auth_type === FoundryCustomRestApiAuthTypeEnum.API_KEY
+                      || form.values.foundry_custom_rest_api_auth_type === FoundryCustomRestApiAuthTypeEnum.ENTRA_ID_APP_REGISTRATION)
+                      ? form.values.foundry_credential_id || undefined
+                      : undefined
+                  }
+                  config={{
+                    auth_type: form.values.foundry_custom_rest_api_auth_type === FoundryCustomRestApiAuthTypeEnum.USER_TOKEN
+                      ? 'ENTRA_ID_USER_TOKEN'
+                      : form.values.foundry_custom_rest_api_auth_type,
+                    api_key_header_name: form.values.foundry_custom_rest_api_api_key_header || 'X-API-Key',
+                  }}
+                  disabled={!form.values.foundry_custom_rest_api_endpoint}
                 />
               </>
             )}

@@ -193,9 +193,18 @@ export const FoundryAuthTypeEnum = {
   ENTRA_ID_USER_TOKEN: 'ENTRA_ID_USER_TOKEN',
   ENTRA_ID_APP_REGISTRATION: 'ENTRA_ID_APP_REGISTRATION',
   API_KEY: 'API_KEY',
+  CUSTOM_REST_API: 'CUSTOM_REST_API',
 } as const;
 
 export type FoundryAuthTypeEnum = typeof FoundryAuthTypeEnum[keyof typeof FoundryAuthTypeEnum];
+
+export const FoundryCustomRestApiAuthTypeEnum = {
+  API_KEY: 'API_KEY',
+  USER_TOKEN: 'USER_TOKEN',
+  ENTRA_ID_APP_REGISTRATION: 'ENTRA_ID_APP_REGISTRATION',
+} as const;
+
+export type FoundryCustomRestApiAuthTypeEnum = typeof FoundryCustomRestApiAuthTypeEnum[keyof typeof FoundryCustomRestApiAuthTypeEnum];
 
 export interface FoundryChatAgentConfig {
   agent_type: FoundryAgentTypeEnum;
@@ -204,6 +213,9 @@ export interface FoundryChatAgentConfig {
   agent_name: string;
   auth_type?: FoundryAuthTypeEnum;
   credential_id?: string;
+  custom_rest_api_endpoint?: string;
+  custom_rest_api_auth_type?: FoundryCustomRestApiAuthTypeEnum;
+  custom_rest_api_api_key_header?: string;
 }
 
 // ========== REST API Chat Agent Config Types ==========
