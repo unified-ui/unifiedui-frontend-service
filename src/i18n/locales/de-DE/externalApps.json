@@ -1,0 +1,28 @@
+{
+  "title": "Externe Apps",
+  "description": "Verwalten Sie externe Anwendungen, die in Ihren Mandanten integriert sind.",
+  "addApp": "App hinzufügen",
+  "editApp": "App bearbeiten",
+  "deleteApp": "App löschen",
+  "noApps": "Noch keine externen Apps konfiguriert.",
+  "noAppsDescription": "Fügen Sie Ihre erste externe App hinzu.",
+  "openApp": "App öffnen",
+  "entityName": "Externe App",
+  "createDialog": {
+    "title": "Externe App hinzufügen",
+    "namePlaceholder": "z.B. Mein Dashboard",
+    "urlPlaceholder": "z.B. https://app.example.com",
+    "imageUrlPlaceholder": "z.B. https://example.com/logo.png",
+    "urlLabel": "URL",
+    "imageUrlLabel": "Bild-URL",
+    "imageLabel": "Bild",
+    "uploadImage": "Bild hochladen",
+    "changeImage": "Bild ändern",
+    "preview": "Vorschau"
+  },
+  "editDialog": {
+    "title": "Externe App bearbeiten"
+  },
+  "deleteConfirmMessage": "Möchten Sie \"{{name}}\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+  "loadFailed": "Externe Apps konnten nicht geladen werden"
+}

@@ -5,9 +5,7 @@ import {
   Stack,
   Title,
   Text,
-  Paper,
   Group,
-  Divider,
   Select,
   Badge,
   CopyButton,
@@ -16,9 +14,16 @@ import {
   SegmentedControl,
   useMantineColorScheme,
 } from '@mantine/core';
-import { IconUser, IconCopy, IconCheck, IconSettings } from '@tabler/icons-react';
+import {
+  IconUser,
+  IconCopy,
+  IconCheck,
+  IconSettings,
+  IconBuildingCommunity,
+} from '@tabler/icons-react';
 import i18n from '../../i18n';
 import { MainLayout } from '../../components/layout/MainLayout';
+import { ContentCard } from '../../components/common/ContentCard';
 import { useIdentity } from '../../contexts';
 import classes from './UserSettingsPage.module.css';
 
@@ -59,6 +64,14 @@ const LANGUAGE_OPTIONS = [
   { value: 'de-DE', label: 'Deutsch' },
 ];
 
+const SUPPORTED_LANGUAGES = LANGUAGE_OPTIONS.map((o) => o.value);
+
+const resolveLanguage = (detected: string): string => {
+  if (SUPPORTED_LANGUAGES.includes(detected)) return detected;
+  const prefix = detected.split('-')[0];
+  return SUPPORTED_LANGUAGES.find((l) => l.startsWith(prefix)) ?? 'en-US';
+};
+
 export const UserSettingsPage: FC = () => {
   const { t } = useTranslation('common');
   const { user, isSystemAdmin, selectedTenant, selectedTenantRoles, organization } = useIdentity();
@@ -66,14 +79,15 @@ export const UserSettingsPage: FC = () => {
 
   const [currentLanguage, setCurrentLanguage] = useState<string>(() => {
     try {
-      return localStorage.getItem('i18nextLng') || i18n.language || 'en-US';
+      const stored = localStorage.getItem('i18nextLng');
+      return resolveLanguage(stored || i18n.language || 'en-US');
     } catch {
-      return i18n.language || 'en-US';
+      return resolveLanguage(i18n.language || 'en-US');
     }
   });
 
   useEffect(() => {
-    const handler = (lng: string): void => setCurrentLanguage(lng);
+    const handler = (lng: string): void => setCurrentLanguage(resolveLanguage(lng));
     i18n.on('languageChanged', handler);
     return () => {
       i18n.off('languageChanged', handler);
@@ -105,15 +119,15 @@ export const UserSettingsPage: FC = () => {
             <Title order={2}>{t('userSettings.title', 'User Settings')}</Title>
           </Group>
 
-          <Paper withBorder radius="md" p="lg">
-            <Stack gap="md">
-              <Group justify="space-between" align="center">
-                <Title order={4}>{t('userSettings.profile', 'Profile')}</Title>
-                <Badge variant="light" color="gray">
-                  {t('userSettings.readOnly', 'Read-only')}
-                </Badge>
-              </Group>
-              <Divider />
+          <ContentCard
+            title={t('userSettings.profile', 'Profile')}
+            icon={<IconUser size={16} />}
+            headerAction={
+              <Badge variant="light" color="gray">
+                {t('userSettings.readOnly', 'Read-only')}
+              </Badge>
+            }
+          >
               <Stack gap={0}>
                 <InfoRow
                   label={t('userSettings.internalId', 'Internal ID')}
@@ -159,13 +173,12 @@ export const UserSettingsPage: FC = () => {
                   </Badge>
                 </div>
               </Stack>
-            </Stack>
-          </Paper>
+          </ContentCard>
 
-          <Paper withBorder radius="md" p="lg">
-            <Stack gap="md">
-              <Title order={4}>{t('userSettings.tenantContext', 'Tenant Context')}</Title>
-              <Divider />
+          <ContentCard
+            title={t('userSettings.tenantContext', 'Tenant Context')}
+            icon={<IconBuildingCommunity size={16} />}
+          >
               <Stack gap={0}>
                 <InfoRow
                   label={t('userSettings.organization', 'Organization')}
@@ -201,16 +214,12 @@ export const UserSettingsPage: FC = () => {
                   </Group>
                 </div>
               </Stack>
-            </Stack>
-          </Paper>
+          </ContentCard>
 
-          <Paper withBorder radius="md" p="lg">
-            <Stack gap="md">
-              <Group gap="sm">
-                <IconSettings size={20} />
-                <Title order={4}>{t('userSettings.preferences', 'Preferences')}</Title>
-              </Group>
-              <Divider />
+          <ContentCard
+            title={t('userSettings.preferences', 'Preferences')}
+            icon={<IconSettings size={16} />}
+          >
               <Stack gap="md">
                 <Stack gap="xs">
                   <Text size="sm" fw={500}>
@@ -251,8 +260,7 @@ export const UserSettingsPage: FC = () => {
                   />
                 </Stack>
               </Stack>
-            </Stack>
-          </Paper>
+          </ContentCard>
         </Stack>
         </div>
       </div>

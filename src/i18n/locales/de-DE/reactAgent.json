@@ -1,0 +1,100 @@
+{
+  "title": "ReACT-Agent-Entwickler",
+  "saveConfig": "Konfiguration speichern",
+  "testAgent": "Agent testen",
+  "agentName": "Agentenname",
+  "agentNamePlaceholder": "Agentennamen eingeben...",
+  "agentDescription": "Beschreibung",
+  "agentDescriptionPlaceholder": "Agentenbeschreibung eingeben...",
+  "configuration": "Konfiguration",
+  "playground": "Playground-Chat",
+  "clearChat": "Chat leeren",
+  "sections": {
+    "aiModels": "KI-Modelle",
+    "instructions": "Anweisungen",
+    "tools": "Tools",
+    "toolUseInstructions": "Tool-Nutzungsanweisungen",
+    "securityInstructions": "Sicherheitsanweisungen",
+    "responseFormat": "Antwortformat",
+    "greetingMessages": "Begrüßungsnachrichten",
+    "agentEngine": "Agent-Engine",
+    "versionHistory": "Versionshistorie"
+  },
+  "useDefault": "Standard verwenden",
+  "aiModels": {
+    "addModel": "Modell hinzufügen",
+    "createNewModel": "Neues Modell erstellen",
+    "noModels": "Keine KI-Modelle zugewiesen. Fügen Sie Modelle mit der Zweckgruppe REACT_AGENT hinzu.",
+    "onlyReactAgent": "Nur Modelle mit der Zweckgruppe REACT_AGENT werden angezeigt.",
+    "selectModel": "KI-Modell auswählen..."
+  },
+  "instructions": {
+    "systemPrompt": "Systemanweisungen",
+    "systemPromptPlaceholder": "Systemanweisungen für den Agenten eingeben...",
+    "maxChars": "{{count}} / {{max}} Zeichen"
+  },
+  "tools": {
+    "addTool": "Tool hinzufügen",
+    "createNewTool": "Neues Tool erstellen",
+    "noTools": "Keine Tools zugewiesen. Fügen Sie Tools für Agentenfähigkeiten hinzu.",
+    "selectTool": "Tool auswählen..."
+  },
+  "promptTemplates": {
+    "securityPrompt": "Sicherheitsanweisungen",
+    "securityPromptPlaceholder": "Sicherheitsanweisungen eingeben...",
+    "toolUsePrompt": "Tool-Nutzungsanweisungen",
+    "toolUsePromptPlaceholder": "Tool-Nutzungsanweisungen eingeben...",
+    "responsePrompt": "Antwortformat-Anweisungen",
+    "responsePromptPlaceholder": "Antwortformatierungsanweisungen eingeben..."
+  },
+  "greetingMessages": {
+    "addMessage": "Begrüßung hinzufügen",
+    "noMessages": "Keine Begrüßungsnachrichten. Der Agent startet mit einer Standardbegrüßung.",
+    "messagePlaceholder": "Begrüßungsnachricht eingeben..."
+  },
+  "versions": {
+    "currentVersion": "v{{version}}",
+    "versionLabel": "Version {{version}}",
+    "noVersions": "Keine Versionshistorie verfügbar.",
+    "restore": "Wiederherstellen",
+    "view": "Version ansehen",
+    "viewing": "Ansicht v{{version}}",
+    "backToLatest": "Zurück zur neuesten",
+    "restoreThis": "Diese Version wiederherstellen",
+    "restoreConfirm": "Version {{version}} wiederherstellen? Dies erstellt eine neue Version mit dieser Konfiguration.",
+    "unsavedChangesConfirm": "Sie haben ungespeicherte Änderungen. Fortfahren verwirft diese. Fortfahren?",
+    "restored": "Version erfolgreich wiederhergestellt.",
+    "createdAt": "Erstellt {{date}}"
+  },
+  "agentSaved": "Agentenkonfiguration erfolgreich gespeichert.",
+  "agentSaveFailed": "Agentenkonfiguration konnte nicht gespeichert werden.",
+  "engine": {
+    "maxIterations": "Max. Iterationen",
+    "maxExecutionTime": "Max. Ausführungszeit",
+    "temperature": "Temperatur",
+    "parallelToolCalls": "Parallele Tool-Aufrufe aktivieren",
+    "multiAgent": "Multi-Agent",
+    "enableMultiAgent": "Multi-Agent-Modus aktivieren",
+    "multiAgentInfo": "Multi-Agent-Modus",
+    "multiAgentDescription": "Aktiviert dynamische Sub-Agent-Orchestrierung. Der Planer zerlegt komplexe Aufgaben in Sub-Agent-Schritte, die parallel ausgeführt werden.",
+    "maxSubAgents": "Max. Sub-Agenten",
+    "maxParallelPerStep": "Max. parallel pro Schritt",
+    "maxPlanningIterations": "Max. Planungsiterationen",
+    "subAgentMaxIterations": "Sub-Agent Max. Iterationen",
+    "subAgentMaxExecTime": "Sub-Agent Max. Ausführungszeit",
+    "planningModel": "Planungsmodell",
+    "planningModelDefault": "Wie Hauptmodell"
+  },
+  "reasoning": {
+    "title": "Reasoning",
+    "streaming": "Streaming",
+    "thinking": "Denkt nach",
+    "plan": "Plan",
+    "synthesizing": "Synthese",
+    "steps": "{{count}} Schritt",
+    "steps_plural": "{{count}} Schritte",
+    "tools": "{{count}} Tool",
+    "tools_plural": "{{count}} Tools"
+  },
+  "playgroundPublishRequired": "Veröffentlichen Sie Ihren Agenten zuerst, um den Playground zu nutzen"
+}

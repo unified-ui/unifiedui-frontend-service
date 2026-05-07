@@ -46,7 +46,7 @@ Read the relevant instruction file **before** working in that area.
 8. **Mantine first** — Use Mantine components before building custom ones.
 9. **Dark mode aware** — Use semantic CSS variables. Test both modes.
 10. **Keep files under 400 lines** — Split into sub-components if exceeding.
-11. **i18n for all UI strings** — Never hardcode user-visible strings. Use `useTranslation()` from `react-i18next`. Keys in `src/i18n/locales/en-US/{namespace}.json`. Outside React components (callbacks, contexts), use `i18next.t('namespace:key')`.
+11. **i18n for all UI strings** — Never hardcode user-visible strings. Use `useTranslation()` from `react-i18next`. Keys in `src/i18n/locales/{en-US,de-DE}/{namespace}.json`. When adding new strings, **always add translations to both `en-US` and `de-DE`**. Default language is `en-US`. Outside React components (callbacks, contexts), use `i18next.t('namespace:key')`.
 12. **Run tests after changes** — After significant changes: `npx vitest run`. Write tests for new components/features using Vitest + RTL. Run `npm run lint` to verify ESLint passes.
 13. **Run pre-commit after EVERY task** — After completing any task (including intermediate sub-tasks), ALWAYS run `pre-commit run --all-files` and fix any failures before reporting completion. This is mandatory — never skip this step, even for small changes. Pre-commit must pass before any task is considered done.
 
@@ -118,7 +118,7 @@ export const MyComponent: FC<Props> = ({ ... }) => {
 - **Branding config**: `src/config/branding.config.ts` (tenant login page + app-wide branding)
 - **Contexts**: `src/contexts/` — IdentityContext (wraps AuthContext, TenantContext, ApiClientContext), SidebarDataContext, ChatSidebarContext, AICapabilitiesContext, FavoritesContext, RecentVisitsContext
 - **i18n config**: `src/i18n/index.ts` (production), `src/i18n/i18nForTests.ts` (test)
-- **Locales**: `src/i18n/locales/en-US/` (12 namespaces: common, dashboard, login, header, conversations, settings, tracing, credentials, token, widgetDesigner, reactAgent, +1)
+- **Locales**: `src/i18n/locales/{en-US,de-DE}/` (14 namespaces: common, dashboard, login, header, conversations, settings, tracing, credentials, token, widgetDesigner, reactAgent, sidebar, widgets, externalApps)
 - **Command Palette**: `src/components/common/CommandPalette/` (cmdk library, `⌘K` shortcut)
 - **Chat Components**: `src/components/chat/` (ChatView, ChatContent, ChatInput, ChatHeader, ChatEmptyState, FeedbackDialog)
 - **Conversation Components**: `src/components/conversation/` (ConversationSidebar)

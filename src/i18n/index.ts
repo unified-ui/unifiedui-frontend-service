@@ -17,6 +17,21 @@ import sidebarEN from './locales/en-US/sidebar.json';
 import widgetsEN from './locales/en-US/widgets.json';
 import externalAppsEN from './locales/en-US/externalApps.json';
 
+import commonDE from './locales/de-DE/common.json';
+import dashboardDE from './locales/de-DE/dashboard.json';
+import loginDE from './locales/de-DE/login.json';
+import headerDE from './locales/de-DE/header.json';
+import conversationsDE from './locales/de-DE/conversations.json';
+import settingsDE from './locales/de-DE/settings.json';
+import tracingDE from './locales/de-DE/tracing.json';
+import credentialsDE from './locales/de-DE/credentials.json';
+import tokenDE from './locales/de-DE/token.json';
+import widgetDesignerDE from './locales/de-DE/widgetDesigner.json';
+import reactAgentDE from './locales/de-DE/reactAgent.json';
+import sidebarDE from './locales/de-DE/sidebar.json';
+import widgetsDE from './locales/de-DE/widgets.json';
+import externalAppsDE from './locales/de-DE/externalApps.json';
+
 const resources = {
   'en-US': {
     common: commonEN,
@@ -33,6 +48,22 @@ const resources = {
     sidebar: sidebarEN,
     widgets: widgetsEN,
     externalApps: externalAppsEN,
+  },
+  'de-DE': {
+    common: commonDE,
+    dashboard: dashboardDE,
+    login: loginDE,
+    header: headerDE,
+    conversations: conversationsDE,
+    settings: settingsDE,
+    tracing: tracingDE,
+    credentials: credentialsDE,
+    token: tokenDE,
+    widgetDesigner: widgetDesignerDE,
+    reactAgent: reactAgentDE,
+    sidebar: sidebarDE,
+    widgets: widgetsDE,
+    externalApps: externalAppsDE,
   },
 };
 

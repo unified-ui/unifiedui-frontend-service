@@ -1,0 +1,11 @@
+{
+  "noData": "Keine {{title}}-Daten",
+  "noLogs": "Keine Logs",
+  "noMetadata": "Keine Metadaten",
+  "noTracesAvailable": "Keine Traces verfügbar",
+  "noApiClientOrTenant": "Kein API-Client oder Mandant verfügbar",
+  "hideTracing": "Tracing ausblenden",
+  "showTracing": "Tracing anzeigen",
+  "noTraceSelected": "Kein Trace ausgewählt",
+  "noDataAvailable": "Keine Daten verfügbar"
+}
