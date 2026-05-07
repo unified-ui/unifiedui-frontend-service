@@ -2,6 +2,7 @@ import type { FC } from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import { Image, type ImageProps } from '@mantine/core';
 import { useIdentity } from '../../../contexts';
+import { getCachedBlobUrl, setCachedBlobUrl } from './imageCache';
 
 interface AuthImageProps extends Omit<ImageProps, 'src'> {
   src?: string | null;
@@ -19,19 +20,25 @@ const isDirectUrl = (src: string) =>
 
 export const AuthImage: FC<AuthImageProps> = ({ src, ...props }) => {
   const { apiClient, selectedTenant } = useIdentity();
-  const [fetched, setFetched] = useState<FetchedImage | null>(null);
 
   const needsFetch = !!src && !!selectedTenant && !isDirectUrl(src);
 
+  const [fetched, setFetched] = useState<FetchedImage | null>(() => {
+    if (!needsFetch || !src) return null;
+    const cached = getCachedBlobUrl(src);
+    return cached ? { forSrc: src, blobUrl: cached } : null;
+  });
+
   useEffect(() => {
-    if (!needsFetch) return;
+    if (!needsFetch || !src) return;
+
+    if (getCachedBlobUrl(src)) return;
 
     let cancelled = false;
-    let objectUrl: string | undefined;
 
     const fetchImage = async () => {
       try {
-        const downloadUrl = apiClient!.getFileDownloadUrl(selectedTenant!.id, src!);
+        const downloadUrl = apiClient!.getFileDownloadUrl(selectedTenant!.id, src);
         const token = await apiClient!.getAccessTokenForDownload();
         const headers: Record<string, string> = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -40,8 +47,9 @@ export const AuthImage: FC<AuthImageProps> = ({ src, ...props }) => {
         if (!response.ok || cancelled) return;
 
         const blob = await response.blob();
-        objectUrl = URL.createObjectURL(blob);
-        if (!cancelled) setFetched({ forSrc: src!, blobUrl: objectUrl });
+        const objectUrl = URL.createObjectURL(blob);
+        setCachedBlobUrl(src, objectUrl);
+        if (!cancelled) setFetched({ forSrc: src, blobUrl: objectUrl });
       } catch {
         if (!cancelled) setFetched(null);
       }
@@ -50,7 +58,6 @@ export const AuthImage: FC<AuthImageProps> = ({ src, ...props }) => {
     fetchImage();
     return () => {
       cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [needsFetch, src, apiClient, selectedTenant]);
 
