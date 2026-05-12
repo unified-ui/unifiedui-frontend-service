@@ -1,6 +1,6 @@
 import type { FC, ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Divider, Group, Stack, Text, ThemeIcon } from '@mantine/core';
+import { Divider, Group, Text, ThemeIcon } from '@mantine/core';
 import {
   IconChartBar,
   IconLayoutDashboard,
@@ -12,9 +12,17 @@ import {
   IconSettings,
   IconBuilding,
   IconReceipt,
+  IconApi,
+  IconExternalLink,
 } from '@tabler/icons-react';
 import { MainLayout } from '../MainLayout';
 import classes from './AdminLayout.module.css';
+
+interface ExternalLinkEntry {
+  href: string;
+  label: string;
+  icon: typeof IconApi;
+}
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -27,6 +35,14 @@ interface NavEntry {
   end?: boolean;
   match?: (pathname: string, search: string) => boolean;
 }
+
+const PLATFORM_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const AGENT_BASE_URL = import.meta.env.VITE_AGENT_SERVICE_URL || 'http://localhost:8085';
+
+const DEVELOPER_ITEMS: ExternalLinkEntry[] = [
+  { href: `${PLATFORM_BASE_URL}/docs`, label: 'Platform API Docs', icon: IconApi },
+  { href: `${AGENT_BASE_URL}/docs/index.html`, label: 'Agent API Docs', icon: IconApi },
+];
 
 const NAV_ITEMS: NavEntry[] = [
   { to: '/admin', label: 'Analytics', icon: IconChartBar, end: true },
@@ -77,17 +93,33 @@ export const AdminLayout: FC<AdminLayoutProps> = ({ children }) => {
   return (
     <MainLayout>
       <Group align="flex-start" gap={0} className={classes.root}>
-        <Stack gap="xs" className={classes.sidebar}>
-          <Group gap="xs" mb="md" px="sm">
+        <div className={classes.sidebar}>
+          <Group gap="xs" mb="md" px="sm" className={classes.sidebarHeader}>
             <ThemeIcon variant="light" color="blue" size="lg">
               <IconChartBar size={18} />
             </ThemeIcon>
             <Text fw={600}>Admin</Text>
           </Group>
-          {NAV_ITEMS.map((item) => renderNavLink(item, pathname, search))}
-          <Divider my="xs" label="Settings" labelPosition="left" />
-          {SETTINGS_ITEMS.map((item) => renderNavLink(item, pathname, search))}
-        </Stack>
+          <ul className={classes.sidebarNav}>
+            {NAV_ITEMS.map((item) => renderNavLink(item, pathname, search))}
+            <Divider my="xs" label="Settings" labelPosition="left" />
+            {SETTINGS_ITEMS.map((item) => renderNavLink(item, pathname, search))}
+            <Divider my="xs" label="Developer" labelPosition="left" />
+            {DEVELOPER_ITEMS.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={classes.link}
+              >
+                <item.icon size={16} />
+                <span>{item.label}</span>
+                <IconExternalLink size={12} style={{ marginLeft: 'auto', opacity: 0.5 }} />
+              </a>
+            ))}
+          </ul>
+        </div>
         <div className={classes.content}>{children}</div>
       </Group>
     </MainLayout>
