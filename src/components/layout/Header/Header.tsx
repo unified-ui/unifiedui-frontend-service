@@ -23,14 +23,13 @@ export const Header: FC = () => {
   const { account, logout, switchAccount } = useAuth();
   const { user, isSystemAdmin, organization, tenants, selectedTenant, selectTenant } = useIdentity();
   const branding = useBranding();
-  const { unreadCount } = useNotifications();
+  const { unreadCount, isDrawerOpen, openDrawer, closeDrawer } = useNotifications();
   const isDark = colorScheme === 'dark';
   const [userDropdownOpened, setUserDropdownOpened] = useState(false);
   const [isTenantDialogOpen, setIsTenantDialogOpen] = useState(false);
   const [isOrgDialogOpen, setIsOrgDialogOpen] = useState(false);
   const [orgDialogDismissed, setOrgDialogDismissed] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
   const userAccountRef = useRef<HTMLDivElement>(null);
 
   const handleOpenCommandPalette = useCallback(() => setIsCommandPaletteOpen(true), []);
@@ -123,7 +122,7 @@ export const Header: FC = () => {
           variant="subtle"
           size="lg"
           radius="xl"
-          onClick={() => setIsNotificationDrawerOpen(true)}
+          onClick={() => openDrawer()}
           aria-label="Notifications"
           className={classes.bellIcon}
         >
@@ -276,8 +275,8 @@ export const Header: FC = () => {
       />
 
       <NotificationDrawer
-        opened={isNotificationDrawerOpen}
-        onClose={() => setIsNotificationDrawerOpen(false)}
+        opened={isDrawerOpen}
+        onClose={closeDrawer}
       />
     </header>
   );

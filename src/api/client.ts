@@ -153,7 +153,7 @@ import type {
 
 // Import enums as values (not type-only)
 import { FavoriteResourceTypeEnum } from './types';
-import { PermissionError } from './errors';
+import { ApiError, PermissionError } from './errors';
 
 // ========== API Client Configuration ==========
 
@@ -225,7 +225,10 @@ export class UnifiedUIAPIClient {
           const isMutation = method !== 'GET';
           throw PermissionError.fromResponse(errorData, !isMutation);
         }
-        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+        const rawDetail = errorData.detail || errorData.message;
+        const detail = typeof rawDetail === 'string' ? rawDetail : undefined;
+        const message = detail || `HTTP ${response.status}: ${response.statusText}`;
+        throw new ApiError(response.status, response.statusText, message, detail, errorData, `${this.baseURL}${path}`, method);
       }
 
       // Handle 204 No Content
@@ -244,10 +247,17 @@ export class UnifiedUIAPIClient {
 
       return data;
     } catch (error) {
-      if (this.onError && error instanceof Error && !options?.silent) {
-        this.onError(error);
+      if (error instanceof PermissionError || error instanceof ApiError) {
+        if (this.onError && !options?.silent) {
+          this.onError(error);
+        }
+        throw error;
       }
-      throw error;
+      const wrapped = new ApiError(0, 'Network Error', error instanceof Error ? error.message : String(error), undefined, undefined, `${this.baseURL}${path}`, method);
+      if (this.onError && !options?.silent) {
+        this.onError(wrapped);
+      }
+      throw wrapped;
     }
   }
 
@@ -933,7 +943,10 @@ export class UnifiedUIAPIClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+      const rawDetail = errorData.detail || errorData.message;
+      const detail = typeof rawDetail === 'string' ? rawDetail : undefined;
+      const message = detail || `HTTP ${response.status}: ${response.statusText}`;
+      throw new ApiError(response.status, response.statusText, message, detail, errorData, `${this.baseURL}/api/v1/platform-service/tenants/${tenantId}/files`, 'POST');
     }
 
     return response.json();
@@ -1003,7 +1016,10 @@ export class UnifiedUIAPIClient {
           const isMutation = method !== 'GET';
           throw PermissionError.fromResponse(errorData, !isMutation);
         }
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        const rawDetail = errorData.message || errorData.detail;
+        const detail = typeof rawDetail === 'string' ? rawDetail : undefined;
+        const message = detail || `HTTP ${response.status}: ${response.statusText}`;
+        throw new ApiError(response.status, response.statusText, message, detail, errorData, `${this.getAgentServiceURL()}${path}`, method);
       }
 
       if (response.status === 204) {
@@ -1021,10 +1037,17 @@ export class UnifiedUIAPIClient {
 
       return data;
     } catch (error) {
-      if (this.onError && error instanceof Error && !options?.silent) {
-        this.onError(error);
+      if (error instanceof PermissionError || error instanceof ApiError) {
+        if (this.onError && !options?.silent) {
+          this.onError(error);
+        }
+        throw error;
       }
-      throw error;
+      const wrapped = new ApiError(0, 'Network Error', error instanceof Error ? error.message : String(error), undefined, undefined, `${this.getAgentServiceURL()}${path}`, method);
+      if (this.onError && !options?.silent) {
+        this.onError(wrapped);
+      }
+      throw wrapped;
     }
   }
 
@@ -1230,12 +1253,15 @@ export class UnifiedUIAPIClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      const rawDetail = errorData.message || errorData.detail;
+      const detail = typeof rawDetail === 'string' ? rawDetail : undefined;
+      const message = detail || `HTTP ${response.status}: ${response.statusText}`;
+      throw new ApiError(response.status, response.statusText, message, detail, errorData, `${this.getAgentServiceURL()}/api/v1/agent-service/tenants/${tenantId}/conversation/messages`, 'POST');
     }
 
     const reader = response.body?.getReader();
     if (!reader) {
-      throw new Error('Response body is not readable');
+      throw new ApiError(0, 'Stream Error', 'Response body is not readable');
     }
 
     const decoder = new TextDecoder();

@@ -1,9 +1,10 @@
 import type { FC } from 'react';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Drawer, Text, ActionIcon, Tooltip, Group, Stack, Button } from '@mantine/core';
-import { IconX, IconCheck, IconTrash, IconBellOff } from '@tabler/icons-react';
+import { Drawer, Text, ActionIcon, Tooltip, Group, Stack, Button, CopyButton, Spoiler } from '@mantine/core';
+import { IconX, IconCheck, IconTrash, IconBellOff, IconCopy } from '@tabler/icons-react';
 import { useNotifications } from '../../../contexts/useNotifications';
+import type { NotificationEntry } from '../../../contexts/NotificationContext';
 import classes from './NotificationDrawer.module.css';
 
 interface NotificationDrawerProps {
@@ -21,6 +22,58 @@ function formatRelativeTime(timestamp: number): string {
   const days = Math.floor(hours / 24);
   return `${days}d ago`;
 }
+
+function formatRawJson(raw: unknown): string {
+  try {
+    return JSON.stringify(raw, null, 2);
+  } catch {
+    return String(raw);
+  }
+}
+
+const NotificationDetails: FC<{ notification: NotificationEntry; t: (key: string) => string }> = ({
+  notification,
+  t,
+}) => {
+  const hasRequestInfo = notification.method || notification.url;
+  const hasRawJson = notification.rawJson !== undefined && notification.rawJson !== null;
+
+  if (!hasRequestInfo && !hasRawJson) return null;
+
+  const rawJsonStr = hasRawJson ? formatRawJson(notification.rawJson) : '';
+
+  return (
+    <div className={classes.detailsSection} onClick={(e) => e.stopPropagation()}>
+      {hasRequestInfo && (
+        <Text className={classes.requestInfo} size="xs">
+          {notification.method} {notification.url}
+        </Text>
+      )}
+      {hasRawJson && (
+        <Spoiler maxHeight={0} showLabel={t('notifications.showDetails')} hideLabel={t('notifications.hideDetails')}>
+          <div className={classes.rawJsonContainer}>
+            <CopyButton value={rawJsonStr}>
+              {({ copied, copy }) => (
+                <Tooltip label={copied ? t('notifications.copied') : t('notifications.copyDetails')}>
+                  <ActionIcon
+                    className={classes.copyButton}
+                    variant="subtle"
+                    color={copied ? 'teal' : 'gray'}
+                    size="xs"
+                    onClick={copy}
+                  >
+                    {copied ? <IconCheck size={12} /> : <IconCopy size={12} />}
+                  </ActionIcon>
+                </Tooltip>
+              )}
+            </CopyButton>
+            <pre className={classes.rawJson}>{rawJsonStr}</pre>
+          </div>
+        </Spoiler>
+      )}
+    </div>
+  );
+};
 
 export const NotificationDrawer: FC<NotificationDrawerProps> = ({ opened, onClose }) => {
   const { t } = useTranslation('common');
@@ -41,6 +94,7 @@ export const NotificationDrawer: FC<NotificationDrawerProps> = ({ opened, onClos
       size={380}
       title={t('notifications.title')}
       withCloseButton
+      zIndex={300}
     >
       <div className={classes.drawer}>
         <div className={classes.drawerHeader}>
@@ -92,8 +146,9 @@ export const NotificationDrawer: FC<NotificationDrawerProps> = ({ opened, onClos
                     style={{ backgroundColor: `var(--mantine-color-${notification.color}-6)` }}
                   />
                   <div className={classes.notificationContent}>
-                    <Text className={classes.notificationTitle}>{notification.title}</Text>
-                    <Text className={classes.notificationMessage}>{notification.message}</Text>
+                    <Text className={classes.notificationTitle} size="sm" fw={700}>{notification.title}</Text>
+                    <Text className={classes.notificationMessage} size="xs">{notification.message}</Text>
+                    <NotificationDetails notification={notification} t={t} />
                     <Text className={classes.notificationTime}>{formatRelativeTime(notification.timestamp)}</Text>
                   </div>
                   <Tooltip label={t('notifications.dismiss')}>

@@ -3,7 +3,7 @@ import type { ReactNode, FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth';
 import { UnifiedUIAPIClient } from '../api/client';
-import { PermissionError } from '../api/errors';
+import { ApiError, PermissionError } from '../api/errors';
 import type { TenantResponse, IdentityUser, TenantPermissionEnum, OrganizationContextResponse } from '../api/types';
 import { notifications } from '@mantine/notifications';
 import { AuthProviderInternal, useAuthContext } from './AuthContext';
@@ -40,9 +40,11 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
   const { user, isLoading, setUser, setIsLoading } = useAuthContext();
   const { tenants, selectedTenant, selectedTenantRoles, setTenantsWithRoles, selectTenant } = useTenantContext();
   const { apiClient, setApiClient } = useApiClient();
-  const { addNotification } = useNotifications();
+  const { addNotification, openDrawer } = useNotifications();
   const addNotificationRef = useRef(addNotification);
   addNotificationRef.current = addNotification;
+  const openDrawerRef = useRef(openDrawer);
+  openDrawerRef.current = openDrawer;
   const [organization, setOrganization] = useState<OrganizationContextResponse | null>(null);
   const [isSystemAdmin, setIsSystemAdmin] = useState(false);
 
@@ -61,19 +63,34 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
             const message = error.requiredRoles.length > 0
               ? `${t('accessDenied.requiredRoles')}: ${error.requiredRoles.join(', ')}`
               : t('permissionDenied');
-            notifications.show({ title, message, color: 'orange', position: 'top-right' });
+            notifications.show({ title, message, color: 'orange', position: 'top-right', onClick: () => openDrawerRef.current() });
             addNotificationRef.current({ title, message, color: 'orange' });
             return;
           }
           console.error('API Error:', error);
+          if (error instanceof ApiError) {
+            const title = error.status > 0 ? `${error.status} ${error.statusText}` : error.statusText;
+            const message = error.detail || t('unexpectedError');
+            notifications.show({ title, message, color: 'red', position: 'top-right', onClick: () => openDrawerRef.current() });
+            addNotificationRef.current({
+              title,
+              message,
+              color: 'red',
+              status: error.status,
+              url: error.url,
+              method: error.method,
+              rawJson: error.raw,
+            });
+            return;
+          }
           const title = t('error');
           const message = error.message || t('unexpectedError');
-          notifications.show({ title, message, color: 'red', position: 'top-right' });
+          notifications.show({ title, message, color: 'red', position: 'top-right', onClick: () => openDrawerRef.current() });
           addNotificationRef.current({ title, message, color: 'red' });
         },
         onSuccess: (message) => {
           const title = t('success');
-          notifications.show({ title, message, color: 'green', position: 'top-right' });
+          notifications.show({ title, message, color: 'green', position: 'top-right', onClick: () => openDrawerRef.current() });
           addNotificationRef.current({ title, message, color: 'green' });
         },
       });

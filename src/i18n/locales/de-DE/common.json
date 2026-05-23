@@ -137,7 +137,11 @@
     "markAllRead": "Alle als gelesen markieren",
     "clearAll": "Alle löschen",
     "empty": "Keine Benachrichtigungen",
-    "dismiss": "Entfernen"
+    "dismiss": "Entfernen",
+    "showDetails": "Details anzeigen",
+    "hideDetails": "Details ausblenden",
+    "copyDetails": "Antwort kopieren",
+    "copied": "Kopiert!"
   },
   "userSettings": {
     "title": "Benutzereinstellungen",

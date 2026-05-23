@@ -137,6 +137,10 @@
     "markAllRead": "Mark all as read",
     "clearAll": "Clear all",
     "empty": "No notifications",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "showDetails": "Show details",
+    "hideDetails": "Hide details",
+    "copyDetails": "Copy response",
+    "copied": "Copied!"
   }
 }

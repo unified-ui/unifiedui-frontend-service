@@ -11,11 +11,18 @@ export interface NotificationEntry {
   color: string;
   timestamp: number;
   read: boolean;
+  status?: number;
+  url?: string;
+  method?: string;
+  rawJson?: unknown;
 }
 
 export interface NotificationContextValue {
   notifications: NotificationEntry[];
   unreadCount: number;
+  isDrawerOpen: boolean;
+  openDrawer: () => void;
+  closeDrawer: () => void;
   addNotification: (entry: Omit<NotificationEntry, 'id' | 'timestamp' | 'read'>) => void;
   markAllAsRead: () => void;
   markAsRead: (id: string) => void;
@@ -52,6 +59,10 @@ interface NotificationProviderProps {
 
 export const NotificationProvider: FC<NotificationProviderProps> = ({ children }) => {
   const [notifications, setNotifications] = useState<NotificationEntry[]>(() => loadNotifications());
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const openDrawer = useCallback(() => setIsDrawerOpen(true), []);
+  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
 
   const persist = useCallback(
     (updated: NotificationEntry[]) => {
@@ -118,13 +129,16 @@ export const NotificationProvider: FC<NotificationProviderProps> = ({ children }
     () => ({
       notifications,
       unreadCount,
+      isDrawerOpen,
+      openDrawer,
+      closeDrawer,
       addNotification,
       markAllAsRead,
       markAsRead,
       removeNotification,
       clearAll,
     }),
-    [notifications, unreadCount, addNotification, markAllAsRead, markAsRead, removeNotification, clearAll],
+    [notifications, unreadCount, isDrawerOpen, openDrawer, closeDrawer, addNotification, markAllAsRead, markAsRead, removeNotification, clearAll],
   );
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;

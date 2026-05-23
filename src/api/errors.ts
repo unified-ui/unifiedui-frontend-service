@@ -1,3 +1,31 @@
+export class ApiError extends Error {
+  readonly status: number;
+  readonly statusText: string;
+  readonly detail?: string;
+  readonly raw?: unknown;
+  readonly url?: string;
+  readonly method?: string;
+
+  constructor(
+    status: number,
+    statusText: string,
+    message: string,
+    detail?: string,
+    raw?: unknown,
+    url?: string,
+    method?: string,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.statusText = statusText;
+    this.detail = detail;
+    this.raw = raw;
+    this.url = url;
+    this.method = method;
+  }
+}
+
 export class PermissionError extends Error {
   readonly statusCode: number;
   readonly errorCode: string;
