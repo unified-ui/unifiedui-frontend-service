@@ -483,17 +483,17 @@ export const WorkflowDetailsPage: FC = () => {
   }, [fetchAgent, refreshWorkflows, closeDialog]);
 
   // ---- Computed ----
+  const agentServiceHost = import.meta.env.VITE_AGENT_SERVICE_URL || 'http://localhost:8085';
+
   const postEndpointUrl = useMemo(() => {
     if (!selectedTenant) return '';
-    const host = "{YOUR-AGENT-SERVICE-HOST}";
-    return `${host}/api/v1/agent-service/tenants/${selectedTenant.id}/traces`;
-  }, [selectedTenant]);
+    return `${agentServiceHost}/api/v1/agent-service/tenants/${selectedTenant.id}/traces`;
+  }, [selectedTenant, agentServiceHost]);
 
   const putEndpointUrl = useMemo(() => {
     if (!selectedTenant || !agentId) return '';
-    const host = "{YOUR-AGENT-SERVICE-HOST}";
-    return `${host}/api/v1/agent-service/tenants/${selectedTenant.id}/workflows/${agentId}/traces/import`;
-  }, [selectedTenant, agentId]);
+    return `${agentServiceHost}/api/v1/agent-service/tenants/${selectedTenant.id}/workflows/${agentId}/traces/import`;
+  }, [selectedTenant, agentId, agentServiceHost]);
 
   const n8nConfig = useMemo(() => {
     if (!agent || agent.type !== 'N8N') return null;

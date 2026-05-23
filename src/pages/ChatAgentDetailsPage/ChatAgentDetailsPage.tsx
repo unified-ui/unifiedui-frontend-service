@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Stack,
@@ -12,24 +12,19 @@ import {
   Center,
   Alert,
   ActionIcon,
-  Paper,
   SimpleGrid,
   Code,
-  CopyButton,
   Tooltip,
   Tabs,
 } from '@mantine/core';
 import {
   IconAlertCircle,
   IconArrowLeft,
-  IconCheck,
   IconChartBar,
   IconCode,
-  IconCopy,
   IconEdit,
   IconInfoCircle,
   IconMessage,
-  IconShieldLock,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import {
@@ -46,6 +41,7 @@ import { useDialogParams } from '../../hooks';
 import type { ChatAgentResponse } from '../../api/types';
 import { PermissionError } from '../../api/errors';
 import { AnalyticsTab } from './AnalyticsTab';
+import { EmbedTab } from './EmbedTab';
 import classes from './ChatAgentDetailsPage.module.css';
 
 type PageTab = 'overview' | 'analytics' | 'embed';
@@ -105,18 +101,6 @@ export const ChatAgentDetailsPage: FC = () => {
   useEffect(() => {
     void load();
   }, [load]);
-
-  const embedSnippet = useMemo(() => {
-    if (!agent) return '';
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://your-unifiedui-domain';
-    return `<iframe
-  src="${origin}/embed/chat/${agent.id}"
-  width="420"
-  height="600"
-  style="border:0;border-radius:12px;"
-  title="${agent.name}"
-></iframe>`;
-  }, [agent]);
 
   const handleChatWithAgent = useCallback((): void => {
     if (!agent) return;
@@ -196,13 +180,6 @@ export const ChatAgentDetailsPage: FC = () => {
             </Tooltip>
           </Group>
           <Group gap="sm">
-            <Button
-              variant="light"
-              leftSection={<IconShieldLock size={16} />}
-              onClick={() => { setEditTab('iam'); openDialog('edit'); }}
-            >
-              Manage Access
-            </Button>
             <Button
               leftSection={<IconMessage size={16} />}
               onClick={handleChatWithAgent}
@@ -318,21 +295,7 @@ export const ChatAgentDetailsPage: FC = () => {
         </Tabs.Panel>
 
         <Tabs.Panel value="embed" className={classes.tabPanel}>
-          <Paper withBorder p="md" radius="md" className={classes.embedSection}>
-            <Group justify="space-between" mb="sm">
-              <Text fw={600}>Embed Snippet</Text>
-              <CopyButton value={embedSnippet}>
-                {({ copied, copy }) => (
-                  <Tooltip label={copied ? 'Copied!' : 'Copy'}>
-                    <ActionIcon variant="light" onClick={copy}>
-                      {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
-                    </ActionIcon>
-                  </Tooltip>
-                )}
-              </CopyButton>
-            </Group>
-            <Code block>{embedSnippet}</Code>
-          </Paper>
+          <EmbedTab agent={agent} />
         </Tabs.Panel>
       </Tabs>
 

@@ -99,8 +99,12 @@ export const ChatAgentsPage: FC = () => {
     navigate(`/chat-agents/${id}`);
   }, [navigate]);
 
+  const handleOpenChat = useCallback((id: string) => {
+    navigate(`/conversations?agent=${id}&selected=${id}`);
+  }, [navigate]);
+
   const handleEmbedSetup = useCallback((id: string) => {
-    navigate(`/chat-agents/${id}/embed-chat`);
+    navigate(`/chat-agents/${id}?tab=embed`);
   }, [navigate]);
 
   const renderIcon = useCallback(() => (
@@ -139,6 +143,7 @@ export const ChatAgentsPage: FC = () => {
         onStatusChange={handleStatusChange}
         onRowClick={handleOpen}
         onOpen={handleOpen}
+        onOpenChat={handleOpenChat}
         onEdit={handleEdit}
         onManageAccess={handleManageAccess}
         onDuplicate={handleDuplicate}

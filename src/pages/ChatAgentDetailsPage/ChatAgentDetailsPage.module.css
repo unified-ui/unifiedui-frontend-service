@@ -35,14 +35,3 @@
 .tabPanel {
   padding-top: var(--spacing-xl);
 }
-
-.embedSection pre {
-  padding: var(--mantine-spacing-sm);
-  background: var(--mantine-color-gray-1);
-  border-radius: var(--mantine-radius-sm);
-  overflow-x: auto;
-}
-
-[data-mantine-color-scheme="dark"] .embedSection pre {
-  background: var(--mantine-color-dark-6);
-}

@@ -19,7 +19,6 @@ const WorkflowDetailsPage = lazy(() => import('../pages/WorkflowDetailsPage').th
 const ChatWidgetsPage = lazy(() => import('../pages/ChatWidgetsPage').then(m => ({ default: m.ChatWidgetsPage })));
 const WidgetDesignerPage = lazy(() => import('../pages/WidgetDesignerPage').then(m => ({ default: m.WidgetDesignerPage })));
 const EmbedChatPage = lazy(() => import('../pages/EmbedChatPage').then(m => ({ default: m.EmbedChatPage })));
-const HowEmbedChatPage = lazy(() => import('../pages/HowEmbedChatPage').then(m => ({ default: m.HowEmbedChatPage })));
 const TracingDialogDevelopmentPage = lazy(() => import('../pages/TracingDialogDevelopmentPage').then(m => ({ default: m.TracingDialogDevelopmentPage })));
 const ExternalAppsPage = lazy(() => import('../pages/ExternalAppsPage').then(m => ({ default: m.ExternalAppsPage })));
 const ExternalAppPage = lazy(() => import('../pages/ExternalAppPage').then(m => ({ default: m.ExternalAppPage })));
@@ -52,7 +51,6 @@ export const AppRoutes = () => {
             <Route path="/user/settings" element={<ProtectedRoute><UserSettingsPage /></ProtectedRoute>} />
             <Route path="/chat-agents" element={<ProtectedRoute><ChatAgentsPage /></ProtectedRoute>} />
             <Route path="/chat-agents/:id" element={<ProtectedRoute><ChatAgentDetailsPage /></ProtectedRoute>} />
-            <Route path="/chat-agents/:id/embed-chat" element={<ProtectedRoute><HowEmbedChatPage /></ProtectedRoute>} />
             <Route path="/conversations/:conversationId?" element={<ProtectedRoute><ConversationsPage /></ProtectedRoute>} />
             <Route path="/workflows" element={<ProtectedRoute><WorkflowsPage /></ProtectedRoute>} />
             <Route path="/workflows/:agentId" element={<ProtectedRoute><WorkflowDetailsPage /></ProtectedRoute>} />

@@ -199,9 +199,9 @@ export const IntegrationDialog: FC<IntegrationDialogProps> = ({
   defaultTab = 'post',
   allowApiKeys = true,
 }) => {
-  const baseUrl = "{YOUR-AGENT-SERVICE-HOST}";
-  const postEndpoint = `${baseUrl}/api/v1/agent-service/tenants/${tenantId}/traces`;
-  const putEndpoint = `${baseUrl}/api/v1/agent-service/tenants/${tenantId}/workflows/${agentId}/traces/import`;
+  const agentServiceHost = import.meta.env.VITE_AGENT_SERVICE_URL || 'http://localhost:8085';
+  const postEndpoint = `${agentServiceHost}/api/v1/agent-service/tenants/${tenantId}/traces`;
+  const putEndpoint = `${agentServiceHost}/api/v1/agent-service/tenants/${tenantId}/workflows/${agentId}/traces/import`;
 
   const postJson = useMemo(() => buildPostSampleJson(agentId), [agentId]);
   const putJson = useMemo(() => buildPutSampleJson(agentId), [agentId]);

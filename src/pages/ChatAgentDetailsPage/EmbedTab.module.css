@@ -1,11 +1,3 @@
-.scrollWrapper {
-  max-height: calc(100vh - 180px);
-  min-height: 200px;
-  overflow-y: auto;
-  padding-right: var(--spacing-md);
-  padding-bottom: var(--spacing-md);
-}
-
 .configRow {
   display: flex;
   gap: var(--spacing-md);
