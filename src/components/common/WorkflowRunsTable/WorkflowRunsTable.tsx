@@ -23,6 +23,8 @@ import {
 } from '@tabler/icons-react';
 import type { WorkflowRunResponse } from '../../../api/types';
 import type { UnifiedUIAPIClient } from '../../../api/client';
+import { PermissionError } from '../../../api/errors';
+import { AccessDeniedBanner } from '../AccessDeniedBanner';
 import classes from './WorkflowRunsTable.module.css';
 
 interface WorkflowRunsTableProps {
@@ -94,6 +96,7 @@ export const WorkflowRunsTable: FC<WorkflowRunsTableProps> = ({
   const [hasMore, setHasMore] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState<PermissionError | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const [autoRefresh, setAutoRefresh] = useState(false);
@@ -125,8 +128,10 @@ export const WorkflowRunsTable: FC<WorkflowRunsTableProps> = ({
         }
         nextCursorRef.current = response.nextCursor ?? null;
         setHasMore(!!response.nextCursor && response.runs.length > 0);
-      } catch {
-        // Error handled by API client onError
+      } catch (error) {
+        if (error instanceof PermissionError) {
+          setPermissionError(error);
+        }
       } finally {
         setIsLoading(false);
         setIsLoadingMore(false);
@@ -254,6 +259,13 @@ export const WorkflowRunsTable: FC<WorkflowRunsTableProps> = ({
 
   return (
     <div className={classes.container}>
+      {permissionError ? (
+        <AccessDeniedBanner
+          requiredRoles={permissionError.requiredRoles}
+          userRoles={permissionError.userRoles}
+        />
+      ) : (
+        <>
       <Group className={classes.toolbar} justify="space-between">
         <Group gap="sm">
           <Select
@@ -386,6 +398,8 @@ export const WorkflowRunsTable: FC<WorkflowRunsTableProps> = ({
             )}
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

@@ -23,12 +23,13 @@ import {
   IconStarFilled,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { EntityAvatar } from '../../components/common';
+import { EntityAvatar, AccessDeniedBanner } from '../../components/common';
 import type { EntityAvatarType } from '../../components/common';
 import { useIdentity, useFavorites, useRecentVisits, useSidebarData } from '../../contexts';
 import { usePermissions } from '../../hooks/usePermissions';
 import { FavoriteResourceTypeEnum } from '../../api/types';
 import type { DashboardStatsResponse, RecentVisitResponse } from '../../api/types';
+import { PermissionError } from '../../api/errors';
 import { DelayedTooltip } from '../../components/common';
 import classes from './DashboardPage.module.css';
 
@@ -179,6 +180,7 @@ export const DashboardPage: FC = () => {
 
   const [stats, setStats] = useState<DashboardStatsResponse | null>(null);
   const [isStatsLoading, setIsStatsLoading] = useState(true);
+  const [statsPermissionError, setStatsPermissionError] = useState<PermissionError | null>(null);
   const [showSkeleton, setShowSkeleton] = useState(false);
   const [showAllFavorites, setShowAllFavorites] = useState(false);
   const [recentVisitsFilter, setRecentVisitsFilter] = useState<string>('all');
@@ -203,11 +205,16 @@ export const DashboardPage: FC = () => {
 
     const fetchStats = async () => {
       setIsStatsLoading(true);
+      setStatsPermissionError(null);
       try {
         const data = await apiClient.getDashboardStats(selectedTenant.id);
         setStats(data);
       } catch (error) {
-        console.error('Failed to load dashboard stats:', error);
+        if (error instanceof PermissionError) {
+          setStatsPermissionError(error);
+        } else {
+          console.error('Failed to load dashboard stats:', error);
+        }
       } finally {
         setIsStatsLoading(false);
       }
@@ -386,6 +393,13 @@ export const DashboardPage: FC = () => {
         </div>
 
         <Stack gap="lg">
+          {statsPermissionError && (
+            <AccessDeniedBanner
+              requiredRoles={statsPermissionError.requiredRoles}
+              compact
+            />
+          )}
+
           <div className={classes.statsGrid}>
             {STAT_CARDS.map(({ key, icon: Icon, color, iconColor, route }) => {
               const entityStats = stats?.[key];

@@ -123,6 +123,22 @@
     "title": "Kein Zugriff",
     "message": "Sie haben keinen Zugriff auf eine Organisation oder einen Mandanten. Bitte kontaktieren Sie Ihren Administrator."
   },
+  "accessDenied": {
+    "title": "Zugriff verweigert",
+    "message": "Sie verfügen nicht über die erforderlichen Berechtigungen für diese Ressource.",
+    "requiredRoles": "Erforderliche Rollen",
+    "noCreatePermission": "Sie haben keine Berechtigung, {{resource}} zu erstellen.",
+    "readOnly": "Nur lesen — Änderungen erfordern Administratorzugriff."
+  },
+  "permissionDenied": "Sie haben keine Berechtigung, diese Aktion auszuführen.",
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "count": "{{count}} Benachrichtigung(en)",
+    "markAllRead": "Alle als gelesen markieren",
+    "clearAll": "Alle löschen",
+    "empty": "Keine Benachrichtigungen",
+    "dismiss": "Entfernen"
+  },
   "userSettings": {
     "title": "Benutzereinstellungen",
     "profile": "Profil",

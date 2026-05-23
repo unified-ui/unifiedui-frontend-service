@@ -11,6 +11,7 @@ import {
 } from '../../api/types';
 import { filesToAttachments } from '../../utils/fileUtils';
 import type { UnifiedUIAPIClient } from '../../api/client';
+import { PermissionError } from '../../api/errors';
 import { type ReActStreamState, useReActChat } from './useReActChat';
 
 const CONTEXT_DATA_PREFIX = 'ctx_';
@@ -197,12 +198,20 @@ export function useChat({
         setReactions(new Map());
       }
     } catch (error) {
-      console.error('Failed to load conversation:', error);
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to load conversation',
-        color: 'red',
-      });
+      if (error instanceof PermissionError) {
+        notifications.show({
+          title: 'Access Denied',
+          message: 'You do not have permission to view this conversation.',
+          color: 'orange',
+        });
+      } else {
+        console.error('Failed to load conversation:', error);
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to load conversation',
+          color: 'red',
+        });
+      }
       nav('/conversations');
     } finally {
       if (isLoadingMessages) setIsLoadingMessages(false);

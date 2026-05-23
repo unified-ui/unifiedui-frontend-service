@@ -37,12 +37,14 @@ import {
   ContentCard,
   DelayedTooltip,
   EntityAvatar,
+  AccessDeniedBanner,
 } from '../../components/common';
 import { EditChatAgentDialog } from '../../components/dialogs/EditChatAgentDialog';
 import type { EditDialogTab } from '../../components/dialogs/EditChatAgentDialog';
 import { useIdentity, useRecentVisits } from '../../contexts';
 import { useDialogParams } from '../../hooks';
 import type { ChatAgentResponse } from '../../api/types';
+import { PermissionError } from '../../api/errors';
 import { AnalyticsTab } from './AnalyticsTab';
 import classes from './ChatAgentDetailsPage.module.css';
 
@@ -74,11 +76,13 @@ export const ChatAgentDetailsPage: FC = () => {
   const [agent, setAgent] = useState<ChatAgentResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState<PermissionError | null>(null);
 
   const load = useCallback(async (): Promise<void> => {
     if (!id || !selectedTenant) return;
     setLoading(true);
     setError(null);
+    setPermissionError(null);
     try {
       const result = await apiClient.getChatAgent(selectedTenant.id, id);
       setAgent(result);
@@ -88,7 +92,11 @@ export const ChatAgentDetailsPage: FC = () => {
         resource_name: result.name,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load chat agent');
+      if (err instanceof PermissionError) {
+        setPermissionError(err);
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to load chat agent');
+      }
     } finally {
       setLoading(false);
     }
@@ -121,6 +129,24 @@ export const ChatAgentDetailsPage: FC = () => {
         <Center h="60vh">
           <Loader />
         </Center>
+      </MainLayout>
+    );
+  }
+
+  if (permissionError) {
+    return (
+      <MainLayout>
+        <Stack gap="md" p="md">
+          <Button
+            variant="subtle"
+            leftSection={<IconArrowLeft size={16} />}
+            onClick={() => navigate('/chat-agents')}
+            style={{ alignSelf: 'flex-start' }}
+          >
+            Back to Chat Agents
+          </Button>
+          <AccessDeniedBanner requiredRoles={permissionError.requiredRoles} />
+        </Stack>
       </MainLayout>
     );
   }

@@ -46,7 +46,10 @@ Every method calls `this.request<T>(method, path, body?, successMessage?, option
 3. Optionally adds `X-Use-Cache: false` (when `noCache: true`)
 4. Calls `fetch()` with JSON body
 5. On success: returns parsed JSON, optionally calls `onSuccess` callback
-6. On error: calls `onError` callback, throws Error with `detail` from response
+6. On error: calls `onError` callback, throws typed error
+   - **403 responses** → throws `PermissionError` (from `src/api/errors.ts`) with `requiredRoles`, `userRoles`, `errorCode` fields
+   - **Other errors** → throws `Error` with `detail` from response
+7. Global `onError` in `IdentityContext.tsx` suppresses 403 toasts — pages handle `PermissionError` inline via `AccessDeniedBanner`
 
 ### Options
 

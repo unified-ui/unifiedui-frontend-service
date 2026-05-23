@@ -34,7 +34,7 @@ import {
   IconSettings2,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip, Breadcrumbs, EntityAvatar, WorkflowRunsTable, ContentCard } from '../../components/common';
+import { SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip, Breadcrumbs, EntityAvatar, WorkflowRunsTable, ContentCard, AccessDeniedBanner } from '../../components/common';
 import type { TracesSortState, TraceDatePreset } from '../../components/common';
 import { TracingVisualDialog } from '../../components/tracing';
 import { EditWorkflowDialog } from '../../components/dialogs/EditWorkflowDialog';
@@ -47,6 +47,7 @@ import { useSidebarData } from '../../contexts/SidebarDataContext';
 import { useRecentVisits } from '../../contexts';
 import { useDelayedLoading, useDialogParams } from '../../hooks';
 import type { WorkflowResponse, FullTraceResponse, TracesListParams } from '../../api/types';
+import { PermissionError } from '../../api/errors';
 import classes from './WorkflowDetailsPage.module.css';
 
 // ============================================================================
@@ -96,6 +97,7 @@ export const WorkflowDetailsPage: FC = () => {
   const [agent, setAgent] = useState<WorkflowResponse | null>(null);
   const [agentLoading, setAgentLoading] = useState(true);
   const [agentError, setAgentError] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState<PermissionError | null>(null);
   const showAgentSkeleton = useDelayedLoading(agentLoading, 500);
 
   // ---- Tabs ----
@@ -158,11 +160,16 @@ export const WorkflowDetailsPage: FC = () => {
     if (!apiClient || !selectedTenant || !agentId) return;
     setAgentLoading(true);
     setAgentError(null);
+    setPermissionError(null);
     try {
       const data = await apiClient.getWorkflow(selectedTenant.id, agentId);
       setAgent(data);
-    } catch {
-      setAgentError('Failed to load workflow');
+    } catch (err) {
+      if (err instanceof PermissionError) {
+        setPermissionError(err);
+      } else {
+        setAgentError(err instanceof Error ? err.message : 'Failed to load workflow');
+      }
     } finally {
       setAgentLoading(false);
     }
@@ -509,7 +516,19 @@ export const WorkflowDetailsPage: FC = () => {
             { label: agent?.name || '' },
           ]} />
 
-          {agentError && !agentLoading && (
+          {permissionError && !agentLoading && (
+            <Stack py="xl" gap="md">
+              <AccessDeniedBanner requiredRoles={permissionError.requiredRoles} />
+              <Group>
+                <ActionIcon variant="subtle" onClick={() => navigate('/workflows')}>
+                  <IconArrowLeft size={20} />
+                </ActionIcon>
+                <Text c="dimmed">Back to Workflows</Text>
+              </Group>
+            </Stack>
+          )}
+
+          {agentError && !agentLoading && !permissionError && (
             <Stack py="xl" gap="md">
               <Alert icon={<IconAlertCircle size={16} />} title="Error" color="red">
                 {agentError}
@@ -523,7 +542,7 @@ export const WorkflowDetailsPage: FC = () => {
             </Stack>
           )}
 
-          {!agentError && (
+          {!agentError && !permissionError && (
             <>
           <div className={classes.header}>
             <Group gap="sm" mb="xs">

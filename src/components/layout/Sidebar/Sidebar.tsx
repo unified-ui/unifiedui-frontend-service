@@ -130,7 +130,7 @@ export const Sidebar: FC = () => {
   } = useSidebarData();
 
   const { isFavorite: checkFavorite, toggleFavorite } = useFavorites();
-  const { canCreate, isGlobalAdmin } = usePermissions();
+  const { canCreate } = usePermissions();
 
   const isEnvFlagEnabled = useCallback((flag?: string): boolean => {
     if (!flag) return true;
@@ -572,7 +572,6 @@ export const Sidebar: FC = () => {
 
         <Stack gap="xs" className={classes.navBottom}>
           {bottomNavItems
-            .filter(item => item.path !== '/admin' || isGlobalAdmin)
             .map(renderNavItem)}
         </Stack>
       </aside>

@@ -21,10 +21,12 @@ import {
   DateRangeFilter,
   defaultDateRange,
   computeRangeFromPreset,
+  AccessDeniedBanner,
   type DateRangeValue,
   type DateRangePreset,
 } from '../../components/common';
 import { useIdentity } from '../../contexts';
+import { usePermissions } from '../../hooks';
 import { useUrlState } from '../../hooks/useUrlState';
 import type {
   ChatAgentResponse,
@@ -43,6 +45,7 @@ interface AgentRow {
 
 export const AdminAnalyticsPage: FC = () => {
   const { apiClient, selectedTenant } = useIdentity();
+  const { isGlobalAdmin } = usePermissions();
   const { get, getAll, set: setUrl } = useUrlState();
 
   const [agentSearch, setAgentSearch] = useState<string>('');
@@ -205,6 +208,9 @@ export const AdminAnalyticsPage: FC = () => {
 
   return (
     <AdminLayout>
+      {!isGlobalAdmin ? (
+        <AccessDeniedBanner requiredRoles={['TENANT_GLOBAL_ADMIN']} />
+      ) : (
       <Stack gap={32}>
         <Group gap="xs">
           <IconChartBar size={28} />
@@ -311,6 +317,7 @@ export const AdminAnalyticsPage: FC = () => {
           </>
         )}
       </Stack>
+      )}
     </AdminLayout>
   );
 };

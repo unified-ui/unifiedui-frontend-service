@@ -9,7 +9,7 @@ import { msalConfig, authConfig } from './auth/authConfig';
 import { AuthProvider, LdapAuthProvider, DebugAuthProvider } from './auth';
 import { OidcAuthProvider, OidcAuthProviderUnconfigured } from './auth/OidcAuthProvider';
 import { theme } from './theme';
-import { IdentityProvider, SidebarDataProvider, AICapabilitiesProvider, FavoritesProvider, RecentVisitsProvider } from './contexts';
+import { IdentityProvider, SidebarDataProvider, AICapabilitiesProvider, FavoritesProvider, RecentVisitsProvider, NotificationProvider } from './contexts';
 import i18n from './i18n';
 import App from './App.tsx';
 
@@ -41,6 +41,7 @@ createRoot(document.getElementById('root')!).render(
             <LdapAuthProvider>
               <DebugAuthProvider>
                 <AuthProvider>
+                <NotificationProvider>
                 <IdentityProvider>
                   <AICapabilitiesProvider>
                     <FavoritesProvider>
@@ -52,6 +53,7 @@ createRoot(document.getElementById('root')!).render(
                     </FavoritesProvider>
                   </AICapabilitiesProvider>
                 </IdentityProvider>
+                </NotificationProvider>
               </AuthProvider>
               </DebugAuthProvider>
             </LdapAuthProvider>

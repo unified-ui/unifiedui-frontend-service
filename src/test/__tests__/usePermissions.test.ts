@@ -83,7 +83,7 @@ describe('usePermissions', () => {
   describe('canCreate', () => {
     const resourceTypes: Array<{ type: ResourceType; creatorRole: TenantPermissionEnum; adminRole: TenantPermissionEnum }> = [
       { type: 'chat-agents', creatorRole: TenantPermissionEnum.CHAT_AGENTS_CREATOR, adminRole: TenantPermissionEnum.CHAT_AGENTS_ADMIN },
-      { type: 'workflows', creatorRole: TenantPermissionEnum.AUTONOMOUS_AGENTS_CREATOR, adminRole: TenantPermissionEnum.AUTONOMOUS_AGENTS_ADMIN },
+      { type: 'workflows', creatorRole: TenantPermissionEnum.WORKFLOWS_CREATOR, adminRole: TenantPermissionEnum.WORKFLOWS_ADMIN },
       { type: 'chat-widgets', creatorRole: TenantPermissionEnum.CHAT_WIDGETS_CREATOR, adminRole: TenantPermissionEnum.CHAT_WIDGETS_ADMIN },
       { type: 'conversations', creatorRole: TenantPermissionEnum.CONVERSATIONS_CREATOR, adminRole: TenantPermissionEnum.CONVERSATIONS_ADMIN },
       { type: 'credentials', creatorRole: TenantPermissionEnum.CREDENTIALS_CREATOR, adminRole: TenantPermissionEnum.CREDENTIALS_ADMIN },

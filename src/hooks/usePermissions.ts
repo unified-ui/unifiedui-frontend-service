@@ -15,7 +15,7 @@ export type ResourceType =
 
 const CREATOR_ROLES: Record<ResourceType, TenantPermissionEnum> = {
   'chat-agents': TenantPermissionEnum.CHAT_AGENTS_CREATOR,
-  'workflows': TenantPermissionEnum.AUTONOMOUS_AGENTS_CREATOR,
+  'workflows': TenantPermissionEnum.WORKFLOWS_CREATOR,
   'chat-widgets': TenantPermissionEnum.CHAT_WIDGETS_CREATOR,
   'conversations': TenantPermissionEnum.CONVERSATIONS_CREATOR,
   'credentials': TenantPermissionEnum.CREDENTIALS_CREATOR,
@@ -27,7 +27,7 @@ const CREATOR_ROLES: Record<ResourceType, TenantPermissionEnum> = {
 
 const ADMIN_ROLES: Record<ResourceType, TenantPermissionEnum> = {
   'chat-agents': TenantPermissionEnum.CHAT_AGENTS_ADMIN,
-  'workflows': TenantPermissionEnum.AUTONOMOUS_AGENTS_ADMIN,
+  'workflows': TenantPermissionEnum.WORKFLOWS_ADMIN,
   'chat-widgets': TenantPermissionEnum.CHAT_WIDGETS_ADMIN,
   'conversations': TenantPermissionEnum.CONVERSATIONS_ADMIN,
   'credentials': TenantPermissionEnum.CREDENTIALS_ADMIN,

@@ -2,7 +2,6 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Center, Loader } from '@mantine/core';
 import { ProtectedRoute } from './ProtectedRoute';
-import { AdminProtectedRoute } from './AdminProtectedRoute';
 import { ChatSidebarProvider } from '../contexts';
 import { LoginPage } from '../pages/LoginPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
@@ -63,7 +62,7 @@ export const AppRoutes = () => {
             <Route path="/chat-agents/:agentId/develop" element={<ProtectedRoute><ReActAgentDeveloperPage /></ProtectedRoute>} />
             <Route path="/external-apps" element={<ProtectedRoute><ExternalAppsPage /></ProtectedRoute>} />
             <Route path="/external-apps/:id" element={<ProtectedRoute><ExternalAppPage /></ProtectedRoute>} />
-            <Route path="/admin" element={<AdminProtectedRoute><AdminAnalyticsPage /></AdminProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><AdminAnalyticsPage /></ProtectedRoute>} />
 
             {IS_DEV && (
               <Route path="/dev/tracing" element={<ProtectedRoute><TracingDialogDevelopmentPage /></ProtectedRoute>} />

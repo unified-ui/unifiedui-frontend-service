@@ -1,4 +1,5 @@
 import type { FC, ReactNode } from 'react';
+import { useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Divider, Group, Text, ThemeIcon } from '@mantine/core';
 import {
@@ -16,6 +17,7 @@ import {
   IconExternalLink,
 } from '@tabler/icons-react';
 import { MainLayout } from '../MainLayout';
+import { usePermissions } from '../../../hooks';
 import classes from './AdminLayout.module.css';
 
 interface ExternalLinkEntry {
@@ -87,9 +89,22 @@ const renderNavLink = (item: NavEntry, pathname: string, search: string): ReactN
   );
 };
 
+const ORG_ONLY_TABS = new Set(['org-iam', 'organization']);
+
 export const AdminLayout: FC<AdminLayoutProps> = ({ children }) => {
   const location = useLocation();
   const { pathname, search } = location;
+  const { hasOrgBypass } = usePermissions();
+
+  const filteredSettingsItems = useMemo(() => {
+    if (hasOrgBypass) return SETTINGS_ITEMS;
+    return SETTINGS_ITEMS.filter(item => {
+      const params = new URLSearchParams(item.to.split('?')[1] || '');
+      const tab = params.get('tab') ?? '';
+      return !ORG_ONLY_TABS.has(tab);
+    });
+  }, [hasOrgBypass]);
+
   return (
     <MainLayout>
       <Group align="flex-start" gap={0} className={classes.root}>
@@ -103,7 +118,7 @@ export const AdminLayout: FC<AdminLayoutProps> = ({ children }) => {
           <ul className={classes.sidebarNav}>
             {NAV_ITEMS.map((item) => renderNavLink(item, pathname, search))}
             <Divider my="xs" label="Settings" labelPosition="left" />
-            {SETTINGS_ITEMS.map((item) => renderNavLink(item, pathname, search))}
+            {filteredSettingsItems.map((item) => renderNavLink(item, pathname, search))}
             <Divider my="xs" label="Developer" labelPosition="left" />
             {DEVELOPER_ITEMS.map((item) => (
               <a

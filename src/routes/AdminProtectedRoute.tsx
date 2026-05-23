@@ -1,10 +1,11 @@
 import type { FC, ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
 import { Center, Loader } from '@mantine/core';
 import { useAuth } from '../auth';
 import { useIdentity } from '../contexts';
 import { usePermissions } from '../hooks/usePermissions';
 import { ProtectedRoute } from './ProtectedRoute';
+import { MainLayout } from '../components/layout/MainLayout';
+import { AccessDeniedBanner } from '../components/common';
 
 interface AdminProtectedRouteProps {
   children: ReactNode;
@@ -24,7 +25,13 @@ export const AdminProtectedRoute: FC<AdminProtectedRouteProps> = ({ children }) 
   }
 
   if (!isGlobalAdmin) {
-    return <Navigate to="/unauthorized" replace />;
+    return (
+      <ProtectedRoute>
+        <MainLayout>
+          <AccessDeniedBanner requiredRoles={['TENANT_GLOBAL_ADMIN']} />
+        </MainLayout>
+      </ProtectedRoute>
+    );
   }
 
   return <ProtectedRoute>{children}</ProtectedRoute>;

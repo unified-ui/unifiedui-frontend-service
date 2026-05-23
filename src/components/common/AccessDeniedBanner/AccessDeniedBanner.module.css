@@ -1,0 +1,7 @@
+.banner {
+  width: 100%;
+}
+
+.compact {
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+}

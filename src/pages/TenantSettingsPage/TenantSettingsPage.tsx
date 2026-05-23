@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Stack,
   Tabs,
@@ -42,7 +43,7 @@ import {
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { AdminLayout } from '../../components/layout/AdminLayout';
-import { ConfirmDeleteDialog, EditRolesDialog, OrganizationSettingsPanel, OrganizationAccessPanel } from '../../components/common';
+import { ConfirmDeleteDialog, EditRolesDialog, OrganizationSettingsPanel, OrganizationAccessPanel, AccessDeniedBanner } from '../../components/common';
 import { ManageTenantAccessTable, TENANT_ROLE_OPTIONS } from '../../components/common/ManageTenantAccessTable';
 import type { TenantPrincipalPermission } from '../../components/common/ManageTenantAccessTable';
 import { AddPrincipalDialog } from '../../components/common/AddPrincipalDialog';
@@ -102,8 +103,9 @@ interface TenantSettingsPageProps {
 
 export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main' }) => {
   const Shell = layout === 'admin' ? AdminLayout : MainLayout;
+  const { t } = useTranslation('common');
   const { apiClient, selectedTenant, refreshIdentity } = useIdentity();
-  const { isGlobalAdmin, canCreate, hasRole, hasOrgBypass } = usePermissions();
+  const { isGlobalAdmin, canCreate, hasOrgBypass } = usePermissions();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Read initial tab from URL, default to 'settings'
@@ -1055,12 +1057,19 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
 
             {/* Organisation Access (IAM) Tab */}
             <Tabs.Panel value="org-iam">
-              <OrganizationAccessPanel isOrgAdmin={hasOrgBypass} />
+              {hasOrgBypass ? (
+                <OrganizationAccessPanel isOrgAdmin={hasOrgBypass} />
+              ) : (
+                <AccessDeniedBanner requiredRoles={['ORGANISATION_GLOBAL_ADMIN', 'ORGANISATION_TENANT_ADMIN']} />
+              )}
             </Tabs.Panel>
 
             {/* Tenant Settings Tab */}
             <Tabs.Panel value="settings">
               <Stack gap="lg">
+                {!isGlobalAdmin && (
+                  <AccessDeniedBanner message={t('accessDenied.readOnly')} requiredRoles={[TenantPermissionEnum.TENANT_GLOBAL_ADMIN]} compact />
+                )}
                 <Paper p="lg" withBorder>
                   <form onSubmit={handleSaveTenant}>
                     <Stack gap="md">
@@ -1120,6 +1129,7 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
 
             {/* Access Management Tab */}
             <Tabs.Panel value="iam">
+              {isGlobalAdmin ? (
               <Stack gap="md">
                 <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
                   <Text size="sm">
@@ -1151,6 +1161,9 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
                   }}
                 />
               </Stack>
+              ) : (
+                <AccessDeniedBanner requiredRoles={[TenantPermissionEnum.TENANT_GLOBAL_ADMIN]} />
+              )}
             </Tabs.Panel>
 
             {/* Custom Groups Tab */}
@@ -1217,11 +1230,19 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
                           <Table.Tr>
                             <Table.Td colSpan={3}>
                               <Center py="xl">
-                                <Text c="dimmed">
-                                  {customGroupsSearch
-                                    ? 'No custom groups match your search.'
-                                    : 'No custom groups yet. Create one to get started.'}
-                                </Text>
+                                {!customGroupsSearch && !canCreate('custom-groups') ? (
+                                  <AccessDeniedBanner
+                                    message={t('accessDenied.noCreatePermission', { resource: 'Custom Groups' })}
+                                    requiredRoles={[TenantPermissionEnum.CUSTOM_GROUP_CREATOR, TenantPermissionEnum.CUSTOM_GROUPS_ADMIN]}
+                                    compact
+                                  />
+                                ) : (
+                                  <Text c="dimmed">
+                                    {customGroupsSearch
+                                      ? 'No custom groups match your search.'
+                                      : 'No custom groups yet. Create one to get started.'}
+                                  </Text>
+                                )}
                               </Center>
                             </Table.Td>
                           </Table.Tr>
@@ -1389,11 +1410,19 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
                           <Table.Tr>
                             <Table.Td colSpan={4}>
                               <Center py="xl">
-                                <Text c="dimmed">
-                                  {toolsSearch
-                                    ? 'No tools match your search.'
-                                    : 'No tools yet. Create one to get started.'}
-                                </Text>
+                                {!toolsSearch && !canCreate('tools') ? (
+                                  <AccessDeniedBanner
+                                    message={t('accessDenied.noCreatePermission', { resource: 'Tools' })}
+                                    requiredRoles={[TenantPermissionEnum.REACT_AGENT_CREATOR, TenantPermissionEnum.REACT_AGENT_ADMIN]}
+                                    compact
+                                  />
+                                ) : (
+                                  <Text c="dimmed">
+                                    {toolsSearch
+                                      ? 'No tools match your search.'
+                                      : 'No tools yet. Create one to get started.'}
+                                  </Text>
+                                )}
                               </Center>
                             </Table.Td>
                           </Table.Tr>
@@ -1446,6 +1475,7 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
                                         Manage Access
                                       </Menu.Item>
                                       )}
+                                      {(!tool.my_permission || tool.my_permission === 'ADMIN' || tool.my_permission === 'WRITE') && (
                                       <Menu.Item
                                         leftSection={<IconEdit size={14} />}
                                         onClick={(e) => {
@@ -1455,6 +1485,7 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
                                       >
                                         Edit Details
                                       </Menu.Item>
+                                      )}
                                       {(!tool.my_permission || tool.my_permission === 'ADMIN') && (
                                       <>
                                       <Menu.Divider />
@@ -1562,11 +1593,19 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
                           <Table.Tr>
                             <Table.Td colSpan={4}>
                               <Center py="xl">
-                                <Text c="dimmed">
-                                  {credentialsSearch
-                                    ? 'No credentials match your search.'
-                                    : 'No credentials yet. Create one to get started.'}
-                                </Text>
+                                {!credentialsSearch && !canCreate('credentials') ? (
+                                  <AccessDeniedBanner
+                                    message={t('accessDenied.noCreatePermission', { resource: 'Credentials' })}
+                                    requiredRoles={[TenantPermissionEnum.CREDENTIALS_CREATOR, TenantPermissionEnum.CREDENTIALS_ADMIN]}
+                                    compact
+                                  />
+                                ) : (
+                                  <Text c="dimmed">
+                                    {credentialsSearch
+                                      ? 'No credentials match your search.'
+                                      : 'No credentials yet. Create one to get started.'}
+                                  </Text>
+                                )}
                               </Center>
                             </Table.Td>
                           </Table.Tr>
@@ -1619,6 +1658,7 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
                                         Manage Access
                                       </Menu.Item>
                                       )}
+                                      {(!credential.my_permission || credential.my_permission === 'ADMIN' || credential.my_permission === 'WRITE') && (
                                       <Menu.Item
                                         leftSection={<IconEdit size={14} />}
                                         onClick={(e) => {
@@ -1628,6 +1668,7 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
                                       >
                                         Edit Details
                                       </Menu.Item>
+                                      )}
                                       {(!credential.my_permission || credential.my_permission === 'ADMIN') && (
                                       <>
                                       <Menu.Divider />
@@ -1704,7 +1745,7 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
                       style={{ maxWidth: 200 }}
                     />
                   </Group>
-                  {(isGlobalAdmin || hasRole(TenantPermissionEnum.TENANT_AI_MODELS_ADMIN)) && (
+                  {canCreate('tenant-ai-models') && (
                   <Button
                     leftSection={<IconBrain size={16} />}
                     onClick={() => openDialog('new-ai-model')}
@@ -1756,11 +1797,19 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
                           <Table.Tr>
                             <Table.Td colSpan={7}>
                               <Center py="xl">
-                                <Text c="dimmed">
-                                  {aiModelsSearch || aiModelsTypeFilter.length > 0 || aiModelsProviderFilter.length > 0
-                                    ? 'No AI models match your filters.'
-                                    : 'No AI models yet. Create one to get started.'}
-                                </Text>
+                                {!(aiModelsSearch || aiModelsTypeFilter.length > 0 || aiModelsProviderFilter.length > 0) && !canCreate('tenant-ai-models') ? (
+                                  <AccessDeniedBanner
+                                    message={t('accessDenied.noCreatePermission', { resource: 'AI Models' })}
+                                    requiredRoles={[TenantPermissionEnum.TENANT_AI_MODELS_ADMIN]}
+                                    compact
+                                  />
+                                ) : (
+                                  <Text c="dimmed">
+                                    {aiModelsSearch || aiModelsTypeFilter.length > 0 || aiModelsProviderFilter.length > 0
+                                      ? 'No AI models match your filters.'
+                                      : 'No AI models yet. Create one to get started.'}
+                                  </Text>
+                                )}
                               </Center>
                             </Table.Td>
                           </Table.Tr>

@@ -161,6 +161,7 @@ import type {
 
 // Import enums as values (not type-only)
 import { FavoriteResourceTypeEnum } from './types';
+import { PermissionError } from './errors';
 
 // ========== API Client Configuration ==========
 
@@ -228,6 +229,10 @@ export class UnifiedUIAPIClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        if (response.status === 403) {
+          const isMutation = method !== 'GET';
+          throw PermissionError.fromResponse(errorData, !isMutation);
+        }
         throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -1064,7 +1069,8 @@ export class UnifiedUIAPIClient {
     path: string,
     body?: unknown,
     successMessage?: string,
-    additionalHeaders?: Record<string, string>
+    additionalHeaders?: Record<string, string>,
+    options?: RequestOptions
   ): Promise<T> {
     try {
       const token = await this.getAccessToken();
@@ -1085,6 +1091,10 @@ export class UnifiedUIAPIClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        if (response.status === 403) {
+          const isMutation = method !== 'GET';
+          throw PermissionError.fromResponse(errorData, !isMutation);
+        }
         throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -1103,7 +1113,7 @@ export class UnifiedUIAPIClient {
 
       return data;
     } catch (error) {
-      if (this.onError && error instanceof Error) {
+      if (this.onError && error instanceof Error && !options?.silent) {
         this.onError(error);
       }
       throw error;

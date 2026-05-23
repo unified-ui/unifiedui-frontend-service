@@ -3,15 +3,17 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Group, TextInput, ActionIcon, Avatar, Text, Title, useMantineColorScheme, Stack, Paper, Button, Divider } from '@mantine/core';
-import { IconSearch, IconBrain, IconSun, IconMoon, IconLogout, IconPlus, IconBuilding, IconSwitchHorizontal, IconUser } from '@tabler/icons-react';
+import { IconSearch, IconBrain, IconSun, IconMoon, IconLogout, IconPlus, IconBuilding, IconSwitchHorizontal, IconUser, IconBell } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
 import { useIdentity } from '../../../contexts';
+import { useNotifications } from '../../../contexts/useNotifications';
 import { useKeyboardShortcuts } from '../../../hooks';
 import { APP_TITLE, SHOW_PLATFORM_SUBTITLE } from '../../../config';
 import { useBranding } from '../../../hooks/useBranding';
 import { CreateTenantDialog } from '../../dialogs';
 import { CreateOrganizationDialog } from '../../dialogs';
 import { CommandPalette, FilterableSelect } from '../../common';
+import { NotificationDrawer } from '../../common/NotificationDrawer';
 import classes from './Header.module.css';
 
 export const Header: FC = () => {
@@ -21,12 +23,14 @@ export const Header: FC = () => {
   const { account, logout, switchAccount } = useAuth();
   const { user, isSystemAdmin, organization, tenants, selectedTenant, selectTenant } = useIdentity();
   const branding = useBranding();
+  const { unreadCount } = useNotifications();
   const isDark = colorScheme === 'dark';
   const [userDropdownOpened, setUserDropdownOpened] = useState(false);
   const [isTenantDialogOpen, setIsTenantDialogOpen] = useState(false);
   const [isOrgDialogOpen, setIsOrgDialogOpen] = useState(false);
   const [orgDialogDismissed, setOrgDialogDismissed] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
   const userAccountRef = useRef<HTMLDivElement>(null);
 
   const handleOpenCommandPalette = useCallback(() => setIsCommandPaletteOpen(true), []);
@@ -115,6 +119,22 @@ export const Header: FC = () => {
       />
 
       <Group gap="md">
+        <ActionIcon
+          variant="subtle"
+          size="lg"
+          radius="xl"
+          onClick={() => setIsNotificationDrawerOpen(true)}
+          aria-label="Notifications"
+          className={classes.bellIcon}
+        >
+          <IconBell size={20} />
+          {unreadCount > 0 && (
+            <span className={classes.bellBadge}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </ActionIcon>
+
         <ActionIcon
           variant="subtle"
           size="lg"
@@ -253,6 +273,11 @@ export const Header: FC = () => {
       <CommandPalette
         open={isCommandPaletteOpen}
         onOpenChange={setIsCommandPaletteOpen}
+      />
+
+      <NotificationDrawer
+        opened={isNotificationDrawerOpen}
+        onClose={() => setIsNotificationDrawerOpen(false)}
       />
     </header>
   );
