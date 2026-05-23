@@ -1573,6 +1573,7 @@ export interface SearchResultItem {
   id: string;
   name: string;
   description?: string;
+  subtitle?: string;
   match_field: string;
   is_active?: boolean;
   tags: string[];

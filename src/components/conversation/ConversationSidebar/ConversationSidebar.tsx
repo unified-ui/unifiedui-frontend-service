@@ -62,6 +62,7 @@ export interface ConversationSidebarProps {
 type GroupMode = 'time' | 'chat-agent';
 
 interface GroupedConversations {
+  groupKey: string;
   label: string;
   conversations: ConversationResponse[];
 }
@@ -191,7 +192,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
 
   const getChatAgentName = (chatAgentId: string): string => {
     const app = chatAgents.find(a => a.id === chatAgentId);
-    return app?.name || 'Unknown Chat Agent';
+    return app?.name || t('conversations:unknownChatAgent');
   };
 
   const filteredConversations = useMemo(() => {
@@ -217,7 +218,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
       const result: GroupedConversations[] = [];
 
       if (pinned.length > 0) {
-        result.push({ label: t('conversations:pinned'), conversations: pinned });
+        result.push({ groupKey: 'pinned', label: t('conversations:pinned'), conversations: pinned });
       }
 
       const sortedGroups = Array.from(appGroups.entries()).sort((a, b) => {
@@ -228,6 +229,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
 
       sortedGroups.forEach(([appId, convs]) => {
         result.push({
+          groupKey: appId,
           label: getChatAgentName(appId),
           conversations: convs.sort((a, b) =>
             new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
@@ -275,7 +277,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
 
       return Object.entries(groups)
         .filter(([, convs]) => convs.length > 0)
-        .map(([label, convs]) => ({ label, conversations: convs }));
+        .map(([label, convs]) => ({ groupKey: label, label, conversations: convs }));
     }
   }, [filteredConversations, effectiveGroupMode, chatAgents, favoriteIds]);
 
@@ -412,7 +414,7 @@ export const ConversationSidebar: FC<ConversationSidebarProps> = ({
         ) : (
           <Stack gap={0}>
             {groupedConversations.map((group) => (
-              <div key={group.label} className={classes.group}>
+              <div key={group.groupKey} className={classes.group}>
                 <div className={classes.groupLabelWrapper}>
                   <Text size="xs" fw={800} className={classes.groupLabel}>
                     {group.label}

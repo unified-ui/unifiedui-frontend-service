@@ -65,6 +65,7 @@
   "groupByTime": "Zeit",
   "groupByAgent": "Agent",
   "pinned": "Angeheftet",
+  "unknownChatAgent": "Unbekannter Chat-Agent",
   "today": "Heute",
   "yesterday": "Gestern",
   "previous7Days": "Letzte 7 Tage",
