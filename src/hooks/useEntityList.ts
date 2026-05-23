@@ -17,7 +17,7 @@ interface UseEntityListConfig<TResponse> {
   errorMessage: string;
   listEntities: (tenantId: string, params: PaginationParams & OrderParams & FilterParams) => Promise<TResponse[]>;
   listTags: (tenantId: string, params: ResourceTagListParams) => Promise<TagSummary[]>;
-  updateEntity: (tenantId: string, id: string, data: { is_active: boolean }) => Promise<unknown>;
+  updateEntity?: (tenantId: string, id: string, data: { is_active: boolean }) => Promise<unknown>;
   deleteEntity: (tenantId: string, id: string) => Promise<void>;
   duplicateEntity?: (tenantId: string, id: string) => Promise<TResponse>;
   mapToTableItem: (entity: TResponse) => DataTableItem;
@@ -332,7 +332,7 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
     }
 
     try {
-      await updateEntity(selectedTenant.id, id, { is_active: isActive });
+      await updateEntity?.(selectedTenant.id, id, { is_active: isActive });
       setItems(prev => prev.map(item =>
         item.id === id ? { ...item, isActive } : item
       ));
@@ -374,7 +374,7 @@ export function useEntityList<TResponse>(config: UseEntityListConfig<TResponse>)
     if (!apiClient || !selectedTenant || !deactivateDialog.id) return;
 
     try {
-      await updateEntity(selectedTenant.id, deactivateDialog.id, { is_active: false });
+      await updateEntity?.(selectedTenant.id, deactivateDialog.id, { is_active: false });
       setItems(prev => prev.map(item =>
         item.id === deactivateDialog.id ? { ...item, isActive: false } : item
       ));

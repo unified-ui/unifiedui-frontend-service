@@ -1070,7 +1070,6 @@ export interface WorkflowResponse {
   description?: string;
   type: WorkflowTypeEnum;
   config: Record<string, unknown>;
-  is_active: boolean;
   allow_api_keys: boolean;
   last_full_import?: string;
   tags: TagSummary[];
@@ -1086,7 +1085,6 @@ export interface CreateWorkflowRequest {
   description?: string;
   type: WorkflowTypeEnum;
   config: Record<string, unknown>;
-  is_active?: boolean;
   allow_api_keys?: boolean;
 }
 
@@ -1094,7 +1092,6 @@ export interface UpdateWorkflowRequest {
   name?: string;
   description?: string;
   config?: Record<string, unknown>;
-  is_active?: boolean;
   allow_api_keys?: boolean;
 }
 
@@ -1145,7 +1142,6 @@ export interface ConversationResponse {
   chat_agent_id: string;
   name: string;
   description?: string;
-  is_active: boolean;
   ext_conversation_id?: string; // External conversation ID (e.g., Foundry conversation ID)
   created_at: string;
   updated_at: string;
@@ -1158,13 +1154,11 @@ export interface CreateConversationRequest {
   chat_agent_id: string;
   name: string;
   description?: string;
-  is_active?: boolean;
 }
 
 export interface UpdateConversationRequest {
   name?: string;
   description?: string;
-  is_active?: boolean;
 }
 
 export interface SetConversationPermissionRequest {
@@ -1245,7 +1239,6 @@ export interface ChatWidgetResponse {
   description?: string;
   type?: ChatWidgetTypeEnum;
   config: Record<string, unknown>;
-  is_active: boolean;
   tags: TagSummary[];
   created_at: string;
   updated_at: string;
@@ -1259,7 +1252,6 @@ export interface CreateChatWidgetRequest {
   description?: string;
   type?: ChatWidgetTypeEnum;
   config: Record<string, unknown>;
-  is_active?: boolean;
 }
 
 export interface UpdateChatWidgetRequest {
@@ -1267,7 +1259,6 @@ export interface UpdateChatWidgetRequest {
   description?: string;
   type?: ChatWidgetTypeEnum;
   config?: Record<string, unknown>;
-  is_active?: boolean;
 }
 
 export interface SetChatWidgetPermissionRequest {
@@ -1353,7 +1344,6 @@ export interface AIModelResponse {
   config: Record<string, unknown>;
   credential_id?: string;
   priority: number;
-  is_active: boolean;
   tags: TagSummary[];
   created_at: string;
   updated_at: string;
@@ -1370,7 +1360,6 @@ export interface CreateAIModelRequest {
   config?: Record<string, unknown>;
   credential_id?: string;
   priority?: number;
-  is_active?: boolean;
 }
 
 export interface UpdateAIModelRequest {
@@ -1380,7 +1369,6 @@ export interface UpdateAIModelRequest {
   config?: Record<string, unknown>;
   credential_id?: string;
   priority?: number;
-  is_active?: boolean;
 }
 
 // ========== External App Types ==========

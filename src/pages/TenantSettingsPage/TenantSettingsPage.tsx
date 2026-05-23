@@ -508,7 +508,7 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
         provider: aiModelsProviderFilter.length > 0 ? aiModelsProviderFilter.join(',') : undefined,
         order_by: 'name',
         order_direction: 'asc',
-        fields: 'id,name,type,provider,is_active,purpose_groups,description',
+        fields: 'id,name,type,provider,purpose_groups,description',
       });
 
       if (reset) {
@@ -1417,7 +1417,6 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
                           <Table.Th className={classes.colName}>Name</Table.Th>
                           <Table.Th className={classes.colTypeSmall}>Type</Table.Th>
                           <Table.Th className={classes.colType}>Provider</Table.Th>
-                          <Table.Th className={classes.colTypeSmall}>Status</Table.Th>
                           <Table.Th className={classes.colPurposeGroups}>Purpose Groups</Table.Th>
                           <Table.Th className={classes.colDescription}>Description</Table.Th>
                           <Table.Th className={classes.colActions}></Table.Th>
@@ -1489,11 +1488,6 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
                               <Table.Td>
                                 <Badge size="sm" variant="light" color={getAiModelProviderBadgeColor(model.provider)}>
                                   {model.provider.replace(/_/g, ' ')}
-                                </Badge>
-                              </Table.Td>
-                              <Table.Td>
-                                <Badge size="sm" variant="light" color={model.is_active ? 'green' : 'gray'}>
-                                  {model.is_active ? 'Active' : 'Inactive'}
                                 </Badge>
                               </Table.Td>
                               <Table.Td>

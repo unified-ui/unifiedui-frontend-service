@@ -593,13 +593,7 @@ export const WorkflowDetailsPage: FC = () => {
                       {tag.name}
                     </Badge>
                   ))}
-                  <Badge
-                    variant="dot"
-                    size="sm"
-                    color={agent.is_active ? 'green' : 'gray'}
-                  >
-                    {agent.is_active ? 'Active' : 'Inactive'}
-                  </Badge>
+
                 </>
               ) : null}
             </Group>

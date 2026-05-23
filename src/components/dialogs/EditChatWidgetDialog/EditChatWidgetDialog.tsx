@@ -11,10 +11,8 @@ import {
   Alert,
   Box,
   Text,
-  Badge,
   SegmentedControl,
   Divider,
-  Switch,
   Select,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
@@ -36,7 +34,6 @@ interface FormValues {
   description: string;
   type: string;
   tags: string[];
-  is_active: boolean;
   url: string;
 }
 
@@ -95,7 +92,6 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
       description: '',
       type: 'CHAT',
       tags: [],
-      is_active: true,
       url: '',
     },
     validate: {
@@ -118,7 +114,6 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
         description: data.description || '',
         type: data.type || 'CHAT',
         tags: data.tags?.map((t) => t.name) || [],
-        is_active: data.is_active,
         url: (data.config?.url as string) || '',
       });
       form.resetDirty();
@@ -179,13 +174,11 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
         name: string;
         description?: string;
         type: ChatWidgetTypeEnum;
-        is_active: boolean;
         config?: Record<string, unknown>;
       } = {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
         type: values.type as ChatWidgetTypeEnum,
-        is_active: values.is_active,
       };
 
       // For IFRAME type, save the URL in config
@@ -266,9 +259,6 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
               </Text>
               {chatWidget && (
                 <Group gap="xs">
-                  <Badge size="xs" variant="light" color={chatWidget.is_active ? 'green' : 'gray'}>
-                    {chatWidget.is_active ? 'Active' : 'Inactive'}
-                  </Badge>
                   <Text size="xs" c="dimmed">
                     {CHAT_WIDGET_TYPES.find((t) => t.value === chatWidget.type)?.label || chatWidget.type}
                   </Text>
@@ -381,14 +371,6 @@ export const EditChatWidgetDialog: FC<EditChatWidgetDialogProps> = ({
                   )}
                 </>
               )}
-
-              <Switch
-                label="Active"
-                description="Enable or disable this chat widget"
-                checked={form.values.is_active}
-                onChange={(e) => form.setFieldValue('is_active', e.currentTarget.checked)}
-                classNames={{ track: classes.switchTrack }}
-              />
 
               <TagInput
                 label="Tags"

@@ -443,7 +443,7 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
       });
       setAiModels(
         (Array.isArray(models) ? models : []).filter(
-          (m) => m.type === 'LLM_MODEL' && m.is_active,
+          (m) => m.type === 'LLM_MODEL',
         ),
       );
     } catch {
