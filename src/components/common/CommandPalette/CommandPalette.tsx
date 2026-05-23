@@ -274,7 +274,11 @@ export const CommandPalette: FC<CommandPaletteProps> = ({ open, onOpenChange }) 
         limit: SEARCH_LIMIT,
         offset: entityResults.length,
       });
-      setEntityResults(prev => [...prev, ...response.results]);
+      setEntityResults(prev => {
+        const existingIds = new Set(prev.map(r => `${r.type}-${r.id}`));
+        const newResults = response.results.filter(r => !existingIds.has(`${r.type}-${r.id}`));
+        return [...prev, ...newResults];
+      });
       setHasMoreEntities(response.results.length >= SEARCH_LIMIT);
     } catch (error) {
       console.error('Load more failed:', error);
