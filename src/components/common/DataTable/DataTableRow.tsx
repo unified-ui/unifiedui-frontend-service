@@ -222,6 +222,21 @@ export const DataTableRow: FC<DataTableRowProps> = ({
             </div>
           )}
 
+          {onOpenChat && (
+            <DelayedTooltip label="Open Chat" position="top">
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenChat(item.id);
+                }}
+              >
+                <IconMessage size={18} />
+              </ActionIcon>
+            </DelayedTooltip>
+          )}
+
           {!item.hideActions && (
           <Menu shadow="md" position="bottom-end" withinPortal>
           <Menu.Target>
