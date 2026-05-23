@@ -38,6 +38,7 @@ import {
   IconKey,
   IconShieldLock,
   IconBuilding,
+  IconBrain,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { AdminLayout } from '../../components/layout/AdminLayout';

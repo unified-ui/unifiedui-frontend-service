@@ -7,7 +7,6 @@ import {
   Loader,
   MultiSelect,
   SimpleGrid,
-  Stack,
   Table,
   Text,
   Title,
@@ -211,112 +210,116 @@ export const AdminAnalyticsPage: FC = () => {
       {!isGlobalAdmin ? (
         <AccessDeniedBanner requiredRoles={['TENANT_GLOBAL_ADMIN']} />
       ) : (
-      <Stack gap={32}>
-        <Group gap="xs">
-          <IconChartBar size={28} />
-          <Title order={2}>Analytics</Title>
-        </Group>
+      <div className={classes.pageLayout}>
+        <div className={classes.header}>
+          <Group gap="xs">
+            <IconChartBar size={28} />
+            <Title order={2}>Analytics</Title>
+          </Group>
 
-        <Group gap="md" align="flex-end" wrap="wrap">
-          <MultiSelect
-            data={multiSelectData}
-            value={selectedAgentIds}
-            onChange={handleSelectedAgents}
-            searchValue={agentSearch}
-            onSearchChange={setAgentSearch}
-            placeholder="Select agents"
-            clearable
-            searchable
-            filter={({ options }) => options}
-            className={classes.filter}
-          />
-          <DateRangeFilter value={range} onChange={setRange} />
-        </Group>
+          <Group gap="md" align="flex-end" wrap="wrap" mt="lg">
+            <MultiSelect
+              data={multiSelectData}
+              value={selectedAgentIds}
+              onChange={handleSelectedAgents}
+              searchValue={agentSearch}
+              onSearchChange={setAgentSearch}
+              placeholder="Select agents"
+              clearable
+              searchable
+              filter={({ options }) => options}
+              className={classes.filter}
+            />
+            <DateRangeFilter value={range} onChange={setRange} />
+          </Group>
+        </div>
 
-        {loading && (
-          <Center py="xl">
-            <Loader />
-          </Center>
-        )}
+        <div className={classes.scrollArea}>
+          {loading && (
+            <Center py="xl">
+              <Loader />
+            </Center>
+          )}
 
-        {error && (
-          <Alert color="red" icon={<IconAlertCircle size={16} />}>
-            {error}
-          </Alert>
-        )}
+          {error && (
+            <Alert color="red" icon={<IconAlertCircle size={16} />}>
+              {error}
+            </Alert>
+          )}
 
-        {!loading && !error && (
-          <>
-            <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
-              <KPICard
-                label="Messages"
-                value={aggregateMessages?.total_messages ?? 0}
-                icon={<IconMessage size={24} />}
-                color="blue"
-              />
-              <KPICard
-                label="Error Rate"
-                value={`${errorRate}%`}
-                icon={<IconAlertTriangle size={24} />}
-                color={Number(errorRate) > 5 ? 'red' : 'green'}
-                hint={
-                  aggregateMessages
-                    ? `${aggregateMessages.failed_count} / ${aggregateMessages.total_messages}`
-                    : undefined
-                }
-              />
-              <KPICard
-                label="Feedback Score"
-                value={feedbackScore}
-                icon={<IconThumbUp size={24} />}
-                color="teal"
-                hint={
-                  aggregateFeedback
-                    ? `${aggregateFeedback.thumbs_up} / ${aggregateFeedback.thumbs_down}`
-                    : undefined
-                }
-              />
-            </SimpleGrid>
+          {!loading && !error && (
+            <>
+              <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
+                <KPICard
+                  label="Messages"
+                  value={aggregateMessages?.total_messages ?? 0}
+                  icon={<IconMessage size={24} />}
+                  color="blue"
+                />
+                <KPICard
+                  label="Error Rate"
+                  value={`${errorRate}%`}
+                  icon={<IconAlertTriangle size={24} />}
+                  color={Number(errorRate) > 5 ? 'red' : 'green'}
+                  hint={
+                    aggregateMessages
+                      ? `${aggregateMessages.failed_count} / ${aggregateMessages.total_messages}`
+                      : undefined
+                  }
+                />
+                <KPICard
+                  label="Feedback Score"
+                  value={feedbackScore}
+                  icon={<IconThumbUp size={24} />}
+                  color="teal"
+                  hint={
+                    aggregateFeedback
+                      ? `${aggregateFeedback.thumbs_up} / ${aggregateFeedback.thumbs_down}`
+                      : undefined
+                  }
+                />
+              </SimpleGrid>
 
-            {agentRows.length > 1 && (
-              <Table striped highlightOnHover>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>Agent</Table.Th>
-                    <Table.Th>Messages</Table.Th>
-                    <Table.Th>Error Rate</Table.Th>
-                    <Table.Th>Feedback Score</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {agentRows.map((row) => {
-                    const rowErrorRate =
-                      row.messageStats && row.messageStats.total_messages > 0
-                        ? ((row.messageStats.failed_count / row.messageStats.total_messages) * 100).toFixed(1)
-                        : '0.0';
-                    const rowScore =
-                      row.feedbackStats?.score != null
-                        ? `${(row.feedbackStats.score * 100).toFixed(0)}%`
-                        : '—';
-                    return (
-                      <Table.Tr key={row.agent.id}>
-                        <Table.Td>
-                          <Text size="sm" fw={500}>{row.agent.name}</Text>
-                        </Table.Td>
-                        <Table.Td>{row.messageStats?.total_messages ?? '—'}</Table.Td>
-                        <Table.Td>{rowErrorRate}%</Table.Td>
-                        <Table.Td>{rowScore}</Table.Td>
-                      </Table.Tr>
-                    );
-                  })}
-                </Table.Tbody>
-              </Table>
-            )}
+              {agentRows.length > 1 && (
+                <Table striped highlightOnHover mt="xl">
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>Agent</Table.Th>
+                      <Table.Th>Messages</Table.Th>
+                      <Table.Th>Error Rate</Table.Th>
+                      <Table.Th>Feedback Score</Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {agentRows.map((row) => {
+                      const rowErrorRate =
+                        row.messageStats && row.messageStats.total_messages > 0
+                          ? ((row.messageStats.failed_count / row.messageStats.total_messages) * 100).toFixed(1)
+                          : '0.0';
+                      const rowScore =
+                        row.feedbackStats?.score != null
+                          ? `${(row.feedbackStats.score * 100).toFixed(0)}%`
+                          : '—';
+                      return (
+                        <Table.Tr key={row.agent.id}>
+                          <Table.Td>
+                            <Text size="sm" fw={500}>{row.agent.name}</Text>
+                          </Table.Td>
+                          <Table.Td>{row.messageStats?.total_messages ?? '—'}</Table.Td>
+                          <Table.Td>{rowErrorRate}%</Table.Td>
+                          <Table.Td>{rowScore}</Table.Td>
+                        </Table.Tr>
+                      );
+                    })}
+                  </Table.Tbody>
+                </Table>
+              )}
 
-            {aggregateFeedback && <FeedbackInsights stats={aggregateFeedback} />}
-          </>
-        )}
-      </Stack>
+              {aggregateFeedback && <FeedbackInsights stats={aggregateFeedback} />}
+            </>
+          )}
+        </div>
+      </div>
       )}
     </AdminLayout>
   );

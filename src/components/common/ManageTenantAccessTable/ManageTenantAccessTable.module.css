@@ -54,7 +54,6 @@
 }
 
 .tableScrollWrapper {
-  margin-right: calc(-1 * var(--spacing-md));
   overflow: hidden;
 }
 
@@ -63,7 +62,6 @@
   max-height: calc(100vh - 380px);
   min-height: 200px;
   overflow: auto;
-  padding-right: var(--spacing-md);
 }
 
 .tableHeader {
