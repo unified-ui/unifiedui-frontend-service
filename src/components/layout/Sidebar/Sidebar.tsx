@@ -5,7 +5,6 @@ import {
   IconHome, IconHomeFilled,
   IconMessages, IconMessageFilled,
   IconSparkles,
-  IconSettings, IconSettingsFilled,
   IconBrandWechat,
   IconRobot,
   IconAppWindow,
@@ -78,7 +77,6 @@ const mainNavItemsBottom: NavItem[] = [
 
 const bottomNavItems: NavItem[] = [
   { icon: IconShieldLock, labelKey: 'admin', path: '/admin' },
-  { icon: IconSettings, iconFilled: IconSettingsFilled, labelKey: 'settings', path: '/user/settings' },
 ];
 
 interface EntityConfig {
@@ -201,7 +199,7 @@ export const Sidebar: FC = () => {
       icon: <IconSparkles size={24} />,
       addButtonLabel: t('addChatAgent'),
       fetchData: () => fetchEntityData('chat-agents'),
-      getLink: (id) => `/conversations?chat-agent=${id}`,
+      getLink: (id) => `/chat-agents/${id}`,
     },
     'workflows': {
       title: t('workflows'),
