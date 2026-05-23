@@ -1385,12 +1385,27 @@ export interface UpdateAIModelRequest {
 
 // ========== External App Types ==========
 
+export type ExternalAppMode = 'url' | 'iframe';
+
+export interface ExternalAppUrlConfig {
+  mode: 'url';
+  url: string;
+  params: Record<string, string>;
+}
+
+export interface ExternalAppIframeConfig {
+  mode: 'iframe';
+  iframe_html: string;
+}
+
+export type ExternalAppConfig = ExternalAppUrlConfig | ExternalAppIframeConfig;
+
 export interface ExternalAppResponse {
   id: string;
   tenant_id: string;
   name: string;
   description?: string;
-  url: string;
+  config: ExternalAppConfig;
   image_url?: string;
   image_file_id?: string;
   tags: TagSummary[];
@@ -1404,7 +1419,7 @@ export interface ExternalAppResponse {
 export interface CreateExternalAppRequest {
   name: string;
   description?: string;
-  url: string;
+  config: ExternalAppConfig;
   image_url?: string;
   image_file_id?: string;
 }
@@ -1412,7 +1427,7 @@ export interface CreateExternalAppRequest {
 export interface UpdateExternalAppRequest {
   name?: string;
   description?: string;
-  url?: string;
+  config?: ExternalAppConfig;
   image_url?: string;
   image_file_id?: string;
 }

@@ -18,7 +18,21 @@
     "imageLabel": "Image",
     "uploadImage": "Upload Image",
     "changeImage": "Change Image",
-    "preview": "Preview"
+    "preview": "Preview",
+    "modeLabel": "Mode",
+    "modeUrl": "URL",
+    "modeIframe": "Iframe HTML",
+    "urlMustStartWithHttp": "URL must start with http:// or https://",
+    "paramsLabel": "Query Parameters",
+    "addParam": "Add Parameter",
+    "noParams": "No parameters. Add one to attach query string values to the URL.",
+    "paramKeyPlaceholder": "key",
+    "paramValuePlaceholder": "value",
+    "invalidParamKey": "Key may only contain letters, digits, '_' and '-'",
+    "iframeHtmlLabel": "Iframe HTML",
+    "iframeHtmlDescription": "Provide a raw <iframe ...></iframe> tag. Content will be sanitized server-side.",
+    "iframeHtmlPlaceholder": "<iframe src=\"https://...\" width=\"100%\" height=\"100%\"></iframe>",
+    "iframeHtmlMustContainIframe": "HTML must contain an <iframe> tag"
   },
   "editDialog": {
     "title": "Edit External App"

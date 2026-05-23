@@ -18,7 +18,21 @@
     "imageLabel": "Bild",
     "uploadImage": "Bild hochladen",
     "changeImage": "Bild ändern",
-    "preview": "Vorschau"
+    "preview": "Vorschau",
+    "modeLabel": "Modus",
+    "modeUrl": "URL",
+    "modeIframe": "Iframe-HTML",
+    "urlMustStartWithHttp": "URL muss mit http:// oder https:// beginnen",
+    "paramsLabel": "Query-Parameter",
+    "addParam": "Parameter hinzufügen",
+    "noParams": "Keine Parameter. Fügen Sie einen hinzu, um Query-String-Werte an die URL anzuhängen.",
+    "paramKeyPlaceholder": "Schlüssel",
+    "paramValuePlaceholder": "Wert",
+    "invalidParamKey": "Schlüssel darf nur Buchstaben, Ziffern, '_' und '-' enthalten",
+    "iframeHtmlLabel": "Iframe-HTML",
+    "iframeHtmlDescription": "Geben Sie ein rohes <iframe ...></iframe>-Tag an. Der Inhalt wird serverseitig bereinigt.",
+    "iframeHtmlPlaceholder": "<iframe src=\"https://...\" width=\"100%\" height=\"100%\"></iframe>",
+    "iframeHtmlMustContainIframe": "HTML muss ein <iframe>-Tag enthalten"
   },
   "editDialog": {
     "title": "Externe App bearbeiten"
