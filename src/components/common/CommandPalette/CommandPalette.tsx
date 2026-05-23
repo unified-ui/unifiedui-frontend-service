@@ -127,9 +127,6 @@ const getEntityRoute = (item: SearchResultItem): string => {
   }
   const baseRoute = ENTITY_LIST_ROUTES[item.type];
   if (!baseRoute) return '/';
-  if (item.type === 'chat_agent' && item.sub_type === 'REACT_AGENT') {
-    return `${baseRoute}/${item.id}/develop`;
-  }
   if (item.type === 'chat_agent') {
     return `/conversations?chat-agent=${item.id}&selected=${item.id}`;
   }

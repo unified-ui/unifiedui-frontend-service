@@ -24,8 +24,6 @@ const ROLE_DISPLAY_NAMES: Record<string, string> = {
   CUSTOM_GROUP_CREATOR: 'Custom Groups Creator',
   CHAT_WIDGETS_ADMIN: 'Chat Widgets Admin',
   CHAT_WIDGETS_CREATOR: 'Chat Widgets Creator',
-  REACT_AGENT_ADMIN: 'ReACT Agent Admin',
-  REACT_AGENT_CREATOR: 'ReACT Agent Creator',
   TENANT_AI_MODELS_ADMIN: 'AI Models Admin',
   EXTERNAL_APPS_ADMIN: 'External Apps Admin',
   EXTERNAL_APPS_CREATOR: 'External Apps Creator',

@@ -72,7 +72,6 @@ const CHAT_AGENT_TYPES = [
   { value: ChatAgentTypeEnum.MICROSOFT_FOUNDRY, label: 'Microsoft Foundry' },
   { value: MICROSOFT_FOUNDRY_PROXY, label: 'Microsoft Foundry API Proxy' },
   { value: ChatAgentTypeEnum.REST_API, label: 'REST API' },
-  { value: ChatAgentTypeEnum.REACT_AGENT, label: 'ReACT Agent' },
   { value: ChatAgentTypeEnum.LLM, label: 'LLM' },
 ];
 

@@ -58,12 +58,10 @@ const PROVIDERS = [
 ];
 
 const PURPOSE_GROUPS = [
-  { value: AIModelPurposeGroupEnum.REACT_AGENT, label: 'ReAct Agent' },
   { value: AIModelPurposeGroupEnum.DIRECT_CHAT, label: 'Direct Chat' },
   { value: AIModelPurposeGroupEnum.CONVERSATION_TITLE_GENERATION, label: 'Title Generation' },
   { value: AIModelPurposeGroupEnum.CONVERSATION_SUMMARIZATION, label: 'Conversation Summarization' },
   { value: AIModelPurposeGroupEnum.DESCRIPTION_GENERATION, label: 'Description Generation' },
-  { value: AIModelPurposeGroupEnum.TRACE_ANALYSIS, label: 'Trace Analysis' },
   { value: AIModelPurposeGroupEnum.GENERAL, label: 'General' },
 ];
 

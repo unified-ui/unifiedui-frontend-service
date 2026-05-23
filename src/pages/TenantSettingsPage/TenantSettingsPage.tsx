@@ -37,8 +37,6 @@ import {
   IconUserPlus,
   IconKey,
   IconShieldLock,
-  IconTool,
-  IconBrain,
   IconBuilding,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
@@ -53,8 +51,6 @@ import {
   EditCustomGroupDialog,
   CreateCredentialDialog,
   EditCredentialDialog,
-  CreateToolDialog,
-  EditToolDialog,
 } from '../../components/dialogs';
 import { AIModelDialog } from '../../components/dialogs/AIModelDialog';
 import type { EditDialogTab } from '../../components/dialogs';
@@ -63,25 +59,22 @@ import type {
   PrincipalTypeEnum,
   CustomGroupResponse,
   CredentialResponse,
-  ToolResponse,
   AIModelResponse,
 } from '../../api/types';
-import { TenantPermissionEnum, ToolTypeEnum, AIModelProviderEnum, AIModelTypeEnum } from '../../api/types';
+import { TenantPermissionEnum, AIModelProviderEnum, AIModelTypeEnum } from '../../api/types';
 import { useDelayedLoading, usePermissions, useDialogParams } from '../../hooks';
 import classes from './TenantSettingsPage.module.css';
 
-type TabValue = 'organization' | 'org-iam' | 'settings' | 'iam' | 'custom-groups' | 'tools' | 'credentials' | 'ai-models' | 'billing-and-licence';
+type TabValue = 'organization' | 'org-iam' | 'settings' | 'iam' | 'custom-groups' | 'credentials' | 'ai-models' | 'billing-and-licence';
 
-const TAB_VALUES: TabValue[] = ['organization', 'org-iam', 'settings', 'iam', 'custom-groups', 'tools', 'credentials', 'ai-models', 'billing-and-licence'];
+const TAB_VALUES: TabValue[] = ['organization', 'org-iam', 'settings', 'iam', 'custom-groups', 'credentials', 'ai-models', 'billing-and-licence'];
 const DEFAULT_TAB: TabValue = 'settings';
 
 const PURPOSE_GROUP_COLORS: Record<string, string> = {
-  REACT_AGENT: 'violet',
   DIRECT_CHAT: 'cyan',
   CONVERSATION_TITLE_GENERATION: 'blue',
   CONVERSATION_SUMMARIZATION: 'teal',
   DESCRIPTION_GENERATION: 'orange',
-  TRACE_ANALYSIS: 'pink',
   GENERAL: 'gray',
 };
 
@@ -199,39 +192,6 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
   const CREDENTIALS_PAGE_SIZE = 50;
   const credentialsLoadMoreRef = useRef<HTMLDivElement>(null);
 
-  // ===== Tools State =====
-  const [tools, setTools] = useState<ToolResponse[]>([]);
-  const [toolsLoading, setToolsLoading] = useState(false);
-  const [toolsLoadingMore, setToolsLoadingMore] = useState(false);
-  const [toolsError, setToolsError] = useState<string | null>(null);
-  const [toolsFetched, setToolsFetched] = useState(false);
-  const [toolsHasMore, setToolsHasMore] = useState(true);
-  const [toolsSkip, setToolsSkip] = useState(0);
-  const [toolsSearch, setToolsSearch] = useState('');
-  const [debouncedToolsSearch] = useDebouncedValue(toolsSearch, 400);
-  const [toolsTypeFilter, setToolsTypeFilter] = useState<string[]>([]);
-  const [isDeletingTool, setIsDeletingTool] = useState(false);
-
-  const TOOLS_PAGE_SIZE = 50;
-  const toolsLoadMoreRef = useRef<HTMLDivElement>(null);
-
-  // Tool type options for filter
-  const TOOL_TYPE_OPTIONS = [
-    { value: ToolTypeEnum.MCP_SERVER, label: 'MCP Server' },
-    { value: ToolTypeEnum.OPENAPI_DEFINITION, label: 'OpenAPI Definition' },
-  ];
-
-  const getToolTypeBadgeColor = (type: string): string => {
-    switch (type) {
-      case ToolTypeEnum.MCP_SERVER:
-        return 'blue';
-      case ToolTypeEnum.OPENAPI_DEFINITION:
-        return 'orange';
-      default:
-        return 'gray';
-    }
-  };
-
   // ===== AI Models State =====
   const [aiModels, setAiModels] = useState<AIModelResponse[]>([]);
   const [aiModelsLoading, setAiModelsLoading] = useState(false);
@@ -251,7 +211,6 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
 
   const showCustomGroupsSkeleton = useDelayedLoading(customGroupsLoading && !customGroupsFetched);
   const showCredentialsSkeleton = useDelayedLoading(credentialsLoading && !credentialsFetched);
-  const showToolsSkeleton = useDelayedLoading(toolsLoading && !toolsFetched);
   const showAiModelsSkeleton = useDelayedLoading(aiModelsLoading && !aiModelsFetched);
 
   const AI_MODEL_TYPE_OPTIONS = [
@@ -525,79 +484,6 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
     return () => observer.disconnect();
   }, [credentialsHasMore, credentialsLoadingMore, handleLoadMoreCredentials]);
 
-  // ===== Fetch Tools =====
-  const fetchTools = useCallback(async (reset = false) => {
-    if (!apiClient || !selectedTenant) return;
-
-    const isInitialFetch = reset || !toolsFetched;
-    if (isInitialFetch) {
-      setToolsLoading(true);
-    } else {
-      setToolsLoadingMore(true);
-    }
-    setToolsError(null);
-
-    const skip = reset ? 0 : toolsSkip;
-
-    try {
-      const result = await apiClient.listTools(selectedTenant.id, {
-        skip,
-        limit: TOOLS_PAGE_SIZE,
-        name: debouncedToolsSearch || undefined,
-        type: toolsTypeFilter.length > 0 ? toolsTypeFilter.join(',') : undefined,
-        order_by: 'name',
-        order_direction: 'asc',
-        fields: 'id,name,type',
-      }) as ToolResponse[];
-
-      if (reset) {
-        setTools(result);
-        setToolsSkip(TOOLS_PAGE_SIZE);
-      } else {
-        // Append new tools, avoiding duplicates
-        setTools((prev) => {
-          const existingIds = new Set(prev.map(t => t.id));
-          const uniqueNewTools = result.filter(t => !existingIds.has(t.id));
-          return [...prev, ...uniqueNewTools];
-        });
-        setToolsSkip((prev) => prev + TOOLS_PAGE_SIZE);
-      }
-
-      setToolsHasMore(result.length === TOOLS_PAGE_SIZE);
-      setToolsFetched(true);
-    } catch {
-      setToolsError('Failed to load tools');
-    } finally {
-      setToolsLoading(false);
-      setToolsLoadingMore(false);
-    }
-  }, [apiClient, selectedTenant, toolsFetched, toolsSkip, debouncedToolsSearch, toolsTypeFilter]);
-
-  // Handler for loading more tools (infinite scroll)
-  const handleLoadMoreTools = useCallback(() => {
-    if (!toolsLoadingMore && toolsHasMore) {
-      fetchTools(false);
-    }
-  }, [fetchTools, toolsLoadingMore, toolsHasMore]);
-
-  // Intersection observer for infinite scroll (tools)
-  useEffect(() => {
-    if (!toolsLoadMoreRef.current || !handleLoadMoreTools || !toolsHasMore || toolsLoadingMore) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && toolsHasMore && !toolsLoadingMore) {
-          handleLoadMoreTools();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    observer.observe(toolsLoadMoreRef.current);
-
-    return () => observer.disconnect();
-  }, [toolsHasMore, toolsLoadingMore, handleLoadMoreTools]);
-
   // ===== Fetch AI Models =====
   const fetchAIModels = useCallback(async (reset = false) => {
     if (!apiClient || !selectedTenant) return;
@@ -677,16 +563,13 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
     if (activeTab === 'custom-groups' && !customGroupsFetched) {
       fetchCustomGroups();
     }
-    if (activeTab === 'tools' && !toolsFetched) {
-      fetchTools(true);
-    }
     if (activeTab === 'credentials' && !credentialsFetched) {
       fetchCredentials(true);
     }
     if (activeTab === 'ai-models' && !aiModelsFetched) {
       fetchAIModels(true);
     }
-  }, [activeTab, principalsFetched, customGroupsFetched, toolsFetched, credentialsFetched, aiModelsFetched, fetchPrincipals, fetchCustomGroups, fetchTools, fetchCredentials, fetchAIModels]);
+  }, [activeTab, principalsFetched, customGroupsFetched, credentialsFetched, aiModelsFetched, fetchPrincipals, fetchCustomGroups, fetchCredentials, fetchAIModels]);
 
   // Re-fetch principals when search or filters change
   useEffect(() => {
@@ -708,13 +591,6 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
       fetchCredentials(true);
     }
   }, [debouncedCredentialsSearch]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Re-fetch tools when search or type filter changes
-  useEffect(() => {
-    if (activeTab === 'tools' && toolsFetched) {
-      fetchTools(true);
-    }
-  }, [debouncedToolsSearch, toolsTypeFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Re-fetch AI models when search or filters change
   useEffect(() => {
@@ -932,34 +808,6 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
     fetchCredentials(true);
   };
 
-  // ===== Tool Handlers =====
-  const handleDeleteTool = async () => {
-    if (!apiClient || !selectedTenant || !selectedId) return;
-
-    setIsDeletingTool(true);
-    try {
-      await apiClient.deleteTool(selectedTenant.id, selectedId);
-      closeDialog();
-      await fetchTools(true);
-    } catch {
-      // Error handled by API client
-    } finally {
-      setIsDeletingTool(false);
-    }
-  };
-
-  const handleOpenEditTool = (toolId: string, tab: EditDialogTab = 'details') => {
-    openDialog('edit-tool', { selectedId: toolId, dialogTab: tab });
-  };
-
-  const handleCloseEditTool = () => {
-    closeDialog();
-  };
-
-  const handleToolEditSuccess = () => {
-    fetchTools(true);
-  };
-
   // ===== AI Model Handlers =====
   const handleDeleteAiModel = async () => {
     if (!apiClient || !selectedTenant || !selectedId) return;
@@ -1037,9 +885,6 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
             </Tabs.Tab>
             <Tabs.Tab value="ai-models" leftSection={<IconBrain size={18} />}>
               AI Models
-            </Tabs.Tab>
-            <Tabs.Tab value="tools" leftSection={<IconTool size={18} />}>
-              Tools
             </Tabs.Tab>
             <Tabs.Tab value="credentials" leftSection={<IconKey size={18} />}>
               Credentials
@@ -1323,199 +1168,6 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
                     {customGroupsHasMore && (
                       <div ref={customGroupsLoadMoreRef} className={classes.loadMoreTrigger}>
                         {customGroupsLoadingMore && (
-                          <Center py="sm">
-                            <Loader size="sm" />
-                          </Center>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Stack>
-            </Tabs.Panel>
-
-            {/* Tools Tab */}
-            <Tabs.Panel value="tools">
-              <Stack gap="md">
-                <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
-                  <Text size="sm">
-                    Manage tools for ReACT agents. Tools can be MCP servers or OpenAPI definitions
-                    that agents use to interact with external services.
-                  </Text>
-                </Alert>
-
-                {/* Toolbar */}
-                <Group justify="space-between">
-                  <Group gap="sm" style={{ flex: 1, maxWidth: 500 }}>
-                    <TextInput
-                      placeholder="Search tools..."
-                      leftSection={<IconSearch size={16} />}
-                      value={toolsSearch}
-                      onChange={(e) => setToolsSearch(e.currentTarget.value)}
-                      style={{ flex: 1 }}
-                    />
-                    <MultiSelect
-                      placeholder="All Types"
-                      data={TOOL_TYPE_OPTIONS}
-                      value={toolsTypeFilter}
-                      onChange={setToolsTypeFilter}
-                      clearable
-                      style={{ width: 220 }}
-                    />
-                  </Group>
-                  {canCreate('tools') && (
-                  <Button
-                    leftSection={<IconTool size={16} />}
-                    onClick={() => openDialog('new-tool')}
-                  >
-                    Create Tool
-                  </Button>
-                  )}
-                </Group>
-
-                {/* Table */}
-                <div className={classes.tableScrollWrapper}>
-                  <div className={classes.tableScrollArea}>
-                  <div className={classes.tableWrapper}>
-                    <Table striped highlightOnHover>
-                      <Table.Thead className={classes.tableHeader}>
-                        <Table.Tr>
-                          <Table.Th className={classes.colName}>Name</Table.Th>
-                          <Table.Th className={classes.colType}>Type</Table.Th>
-                          <Table.Th className={classes.colDescription}>Description</Table.Th>
-                          <Table.Th className={classes.colActions}></Table.Th>
-                        </Table.Tr>
-                      </Table.Thead>
-                      <Table.Tbody>
-                        {toolsLoading && !toolsFetched ? (
-                          showToolsSkeleton ? (
-                            <>
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <Table.Tr key={i}>
-                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
-                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
-                                  <Table.Td><Skeleton height={16} radius="sm" /></Table.Td>
-                                  <Table.Td><Skeleton height={16} width={60} radius="sm" /></Table.Td>
-                                </Table.Tr>
-                              ))}
-                            </>
-                          ) : null
-                        ) : toolsError ? (
-                          <Table.Tr>
-                            <Table.Td colSpan={4}>
-                              <Alert color="red">{toolsError}</Alert>
-                            </Table.Td>
-                          </Table.Tr>
-                        ) : tools.length === 0 ? (
-                          <Table.Tr>
-                            <Table.Td colSpan={4}>
-                              <Center py="xl">
-                                {!toolsSearch && !canCreate('tools') ? (
-                                  <AccessDeniedBanner
-                                    message={t('accessDenied.noCreatePermission', { resource: 'Tools' })}
-                                    requiredRoles={[TenantPermissionEnum.REACT_AGENT_CREATOR, TenantPermissionEnum.REACT_AGENT_ADMIN]}
-                                    compact
-                                  />
-                                ) : (
-                                  <Text c="dimmed">
-                                    {toolsSearch
-                                      ? 'No tools match your search.'
-                                      : 'No tools yet. Create one to get started.'}
-                                  </Text>
-                                )}
-                              </Center>
-                            </Table.Td>
-                          </Table.Tr>
-                        ) : (
-                          tools.map((tool) => (
-                            <Table.Tr
-                              key={tool.id}
-                              className={classes.customGroupRow}
-                              onClick={() => handleOpenEditTool(tool.id, 'details')}
-                            >
-                              <Table.Td>
-                                <Group gap="sm">
-                                  <div className={classes.groupIcon}>
-                                    <IconTool size={16} />
-                                  </div>
-                                  <Text fw={500}>{tool.name}</Text>
-                                </Group>
-                              </Table.Td>
-                              <Table.Td>
-                                <Badge size="sm" variant="light" color={getToolTypeBadgeColor(tool.type)}>
-                                  {tool.type === 'MCP_SERVER' ? 'MCP Server' : 'OpenAPI Definition'}
-                                </Badge>
-                              </Table.Td>
-                              <Table.Td>
-                                <Text size="sm" c="dimmed" lineClamp={1}>
-                                  {tool.description || '-'}
-                                </Text>
-                              </Table.Td>
-                              <Table.Td>
-                                <Group gap={0} justify="flex-end">
-                                  <Menu position="bottom-end" withinPortal shadow="md">
-                                    <Menu.Target>
-                                      <ActionIcon
-                                        variant="subtle"
-                                        color="gray"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <IconDots size={16} />
-                                      </ActionIcon>
-                                    </Menu.Target>
-                                    <Menu.Dropdown>
-                                      {(!tool.my_permission || tool.my_permission === 'ADMIN') && (
-                                      <Menu.Item
-                                        leftSection={<IconShieldLock size={14} />}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleOpenEditTool(tool.id, 'iam');
-                                        }}
-                                      >
-                                        Manage Access
-                                      </Menu.Item>
-                                      )}
-                                      {(!tool.my_permission || tool.my_permission === 'ADMIN' || tool.my_permission === 'WRITE') && (
-                                      <Menu.Item
-                                        leftSection={<IconEdit size={14} />}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleOpenEditTool(tool.id, 'details');
-                                        }}
-                                      >
-                                        Edit Details
-                                      </Menu.Item>
-                                      )}
-                                      {(!tool.my_permission || tool.my_permission === 'ADMIN') && (
-                                      <>
-                                      <Menu.Divider />
-                                      <Menu.Item
-                                        color="red"
-                                        leftSection={<IconTrash size={14} />}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          openDialog('delete-tool', { selectedId: tool.id });
-                                        }}
-                                      >
-                                        Delete
-                                      </Menu.Item>
-                                      </>
-                                      )}
-                                    </Menu.Dropdown>
-                                  </Menu>
-                                </Group>
-                              </Table.Td>
-                            </Table.Tr>
-                          ))
-                        )}
-                      </Table.Tbody>
-                    </Table>
-                  </div>
-
-                    {/* Infinite scroll trigger element */}
-                    {toolsHasMore && (
-                      <div ref={toolsLoadMoreRef} className={classes.loadMoreTrigger}>
-                        {toolsLoadingMore && (
                           <Center py="sm">
                             <Loader size="sm" />
                           </Center>
@@ -2043,30 +1695,6 @@ export const TenantSettingsPage: FC<TenantSettingsPageProps> = ({ layout = 'main
         itemName={credentials.find(c => c.id === selectedId)?.name}
         itemType="Credential"
         isLoading={isDeletingCredential}
-      />
-
-      <CreateToolDialog
-        opened={dialog === 'new-tool'}
-        onClose={closeDialog}
-        onSuccess={() => fetchTools(true)}
-      />
-
-      <EditToolDialog
-        opened={dialog === 'edit-tool' && !!selectedId}
-        onClose={handleCloseEditTool}
-        toolId={selectedId}
-        activeTab={(dialogTab as EditDialogTab) || 'details'}
-        onTabChange={(tab) => setDialogTab(tab)}
-        onSuccess={handleToolEditSuccess}
-      />
-
-      <ConfirmDeleteDialog
-        opened={dialog === 'delete-tool' && !!selectedId}
-        onClose={closeDialog}
-        onConfirm={handleDeleteTool}
-        itemName={tools.find(t => t.id === selectedId)?.name}
-        itemType="Tool"
-        isLoading={isDeletingTool}
       />
 
       <AIModelDialog

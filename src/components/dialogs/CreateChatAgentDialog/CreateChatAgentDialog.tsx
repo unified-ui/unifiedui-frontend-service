@@ -1264,7 +1264,7 @@ export const CreateChatAgentDialog: FC<CreateChatAgentDialogProps> = ({
               </Box>
             </Box>
 
-            {form.values.type && form.values.type !== ChatAgentTypeEnum.REACT_AGENT && (
+            {form.values.type && (
               <>
                 <Divider />
                 <GreetingMessagesInput

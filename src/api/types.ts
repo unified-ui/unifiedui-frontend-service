@@ -15,8 +15,6 @@ export const TenantPermissionEnum = {
   CUSTOM_GROUPS_ADMIN: 'CUSTOM_GROUPS_ADMIN',
   CHAT_WIDGETS_ADMIN: 'CHAT_WIDGETS_ADMIN',
   CHAT_WIDGETS_CREATOR: 'CHAT_WIDGETS_CREATOR',
-  REACT_AGENT_ADMIN: 'REACT_AGENT_ADMIN',
-  REACT_AGENT_CREATOR: 'REACT_AGENT_CREATOR',
   TENANT_AI_MODELS_ADMIN: 'TENANT_AI_MODELS_ADMIN',
   EXTERNAL_APPS_ADMIN: 'EXTERNAL_APPS_ADMIN',
   EXTERNAL_APPS_CREATOR: 'EXTERNAL_APPS_CREATOR',
@@ -44,7 +42,6 @@ export const ChatAgentTypeEnum = {
   N8N: 'N8N',
   MICROSOFT_FOUNDRY: 'MICROSOFT_FOUNDRY',
   REST_API: 'REST_API',
-  REACT_AGENT: 'REACT_AGENT',
   LLM: 'LLM',
 } as const;
 
@@ -139,15 +136,6 @@ export const CredentialTypeEnum = {
 } as const;
 
 export type CredentialTypeEnum = typeof CredentialTypeEnum[keyof typeof CredentialTypeEnum];
-
-// ========== Tool Type Enum ==========
-
-export const ToolTypeEnum = {
-  MCP_SERVER: 'MCP_SERVER',
-  OPENAPI_DEFINITION: 'OPENAPI_DEFINITION',
-} as const;
-
-export type ToolTypeEnum = typeof ToolTypeEnum[keyof typeof ToolTypeEnum];
 
 // ========== N8N Chat Agent Config Types ==========
 
@@ -1008,13 +996,6 @@ export interface ChatAgentResponse {
   created_by?: string;
   updated_by?: string;
   my_permission?: string;
-  current_version?: number;
-  ai_model_ids?: string[];
-  system_prompt?: string | null;
-  tool_ids?: string[];
-  security_prompt?: string | null;
-  tool_use_prompt?: string | null;
-  response_prompt?: string | null;
   greeting_messages?: string[];
 }
 
@@ -1025,13 +1006,6 @@ export interface CreateChatAgentRequest {
   config?: Record<string, unknown>;
   is_active?: boolean;
   embed_allowed_origins?: string;
-  current_version?: number;
-  ai_model_ids?: string[];
-  system_prompt?: string | null;
-  tool_ids?: string[];
-  security_prompt?: string | null;
-  tool_use_prompt?: string | null;
-  response_prompt?: string | null;
   greeting_messages?: string[];
 }
 
@@ -1049,35 +1023,6 @@ export interface SetChatAgentPermissionRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
   role: PermissionActionEnum;
-}
-
-export interface UpdateReActAgentVersionRequest {
-  ai_model_ids?: string[];
-  system_prompt?: string | null;
-  tool_ids?: string[];
-  security_prompt?: string | null;
-  tool_use_prompt?: string | null;
-  response_prompt?: string | null;
-  greeting_messages?: string[];
-  config?: Record<string, unknown>;
-}
-
-export interface ReActAgentVersionResponse {
-  id: string;
-  chat_agent_id: string;
-  version: number;
-  ai_model_ids: string[];
-  system_prompt: string | null;
-  tool_ids: string[];
-  security_prompt: string | null;
-  tool_use_prompt: string | null;
-  response_prompt: string | null;
-  greeting_messages: string[];
-  config: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
-  created_by: string | null;
-  updated_by: string | null;
 }
 
 // ========== Unified Principal Response Types ==========
@@ -1366,49 +1311,6 @@ export interface DeletePrincipalRoleRequest {
   role: PermissionActionEnum;
 }
 
-// ========== Tool Types ==========
-
-export interface ToolResponse {
-  id: string;
-  tenant_id: string;
-  name: string;
-  description?: string;
-  type: ToolTypeEnum;
-  config: Record<string, unknown>;
-  credential_id?: string;
-  is_active: boolean;
-  tags: TagSummary[];
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-  updated_by?: string;
-  my_permission?: string;
-}
-
-export interface CreateToolRequest {
-  name: string;
-  description?: string;
-  type: ToolTypeEnum;
-  config?: Record<string, unknown>;
-  credential_id?: string;
-  is_active?: boolean;
-}
-
-export interface UpdateToolRequest {
-  name?: string;
-  description?: string;
-  type?: ToolTypeEnum;
-  config?: Record<string, unknown>;
-  credential_id?: string;
-  is_active?: boolean;
-}
-
-export interface SetToolPermissionRequest {
-  principal_id: string;
-  principal_type: PrincipalTypeEnum;
-  role: PermissionActionEnum;
-}
-
 // ========== AI Model Types ==========
 
 export const AIModelTypeEnum = {
@@ -1431,11 +1333,9 @@ export const AIModelProviderEnum = {
 export type AIModelProviderEnum = typeof AIModelProviderEnum[keyof typeof AIModelProviderEnum];
 
 export const AIModelPurposeGroupEnum = {
-  REACT_AGENT: 'REACT_AGENT',
   CONVERSATION_TITLE_GENERATION: 'CONVERSATION_TITLE_GENERATION',
   CONVERSATION_SUMMARIZATION: 'CONVERSATION_SUMMARIZATION',
   DESCRIPTION_GENERATION: 'DESCRIPTION_GENERATION',
-  TRACE_ANALYSIS: 'TRACE_ANALYSIS',
   GENERAL: 'GENERAL',
   DIRECT_CHAT: 'DIRECT_CHAT',
 } as const;
@@ -1593,7 +1493,6 @@ export interface TestConnectionResponse {
 export interface AICapabilitiesResponse {
   title_generation: boolean;
   description_generation: boolean;
-  trace_analysis: boolean;
   summarization: boolean;
 }
 

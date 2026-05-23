@@ -65,14 +65,6 @@ import type {
   CreateChatWidgetRequest,
   UpdateChatWidgetRequest,
   SetChatWidgetPermissionRequest,
-  // Tool Types
-  ToolResponse,
-  CreateToolRequest,
-  UpdateToolRequest,
-  SetToolPermissionRequest,
-  // ReACT Agent Version Types
-  UpdateReActAgentVersionRequest,
-  ReActAgentVersionResponse,
   // Custom Group Types
   CustomGroupResponse,
   CreateCustomGroupRequest,
@@ -680,90 +672,6 @@ export class UnifiedUIAPIClient {
       { principal_id: principalId, principal_type: principalType, role },
       'Permission removed successfully'
     );
-  }
-
-  // ========== Tool Endpoints ==========
-
-  async listTools(
-    tenantId: string,
-    params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
-    options?: RequestOptions
-  ): Promise<ToolResponse[] | QuickListItemResponse[]> {
-    const query = this.buildQueryString(params || {});
-    return this.request<ToolResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/tools${query}`, undefined, undefined, options);
-  }
-
-  async getTool(tenantId: string, toolId: string): Promise<ToolResponse> {
-    return this.request<ToolResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}`);
-  }
-
-  async createTool(tenantId: string, data: CreateToolRequest): Promise<ToolResponse> {
-    return this.request<ToolResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/tools`, data, 'Tool created successfully');
-  }
-
-  async updateTool(tenantId: string, toolId: string, data: UpdateToolRequest): Promise<ToolResponse> {
-    return this.request<ToolResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}`, data, 'Tool updated successfully');
-  }
-
-  async deleteTool(tenantId: string, toolId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}`, undefined, 'Tool deleted successfully');
-  }
-
-  // ========== Tool Permissions ==========
-
-  async getToolPrincipals(tenantId: string, toolId: string): Promise<ResourcePrincipalsResponse> {
-    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}/principals`);
-  }
-
-  async setToolPermission(tenantId: string, toolId: string, data: SetToolPermissionRequest): Promise<PrincipalWithRolesResponse> {
-    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}/principals`, data, 'Permission added successfully');
-  }
-
-  async deleteToolPermission(
-    tenantId: string,
-    toolId: string,
-    principalId: string,
-    principalType: PrincipalTypeEnum,
-    role: PermissionActionEnum
-  ): Promise<void> {
-    return this.request<void>(
-      'DELETE',
-      `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}/principals`,
-      { principal_id: principalId, principal_type: principalType, role },
-      'Permission removed successfully'
-    );
-  }
-
-  // ========== Tool Tags ==========
-
-  async listToolTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
-    return this.listResourceTypeTags(tenantId, 'tools', params);
-  }
-
-  async getToolTags(tenantId: string, toolId: string): Promise<ResourceTagsResponse> {
-    return this.getResourceTags(tenantId, 'tools', toolId);
-  }
-
-  async setToolTags(tenantId: string, toolId: string, tags: string[]): Promise<ResourceTagsResponse> {
-    return this.setResourceTags(tenantId, 'tools', toolId, { tags });
-  }
-
-  // ========== Chat Agent Version Methods (REACT_AGENT) ==========
-
-  async updateChatAgentVersion(tenantId: string, chatAgentId: string, data: UpdateReActAgentVersionRequest): Promise<ChatAgentResponse> {
-    return this.request<ChatAgentResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions`, data);
-  }
-
-  async listChatAgentVersions(tenantId: string, chatAgentId: string, skip = 0, limit = 50): Promise<ReActAgentVersionResponse[]> {
-    return this.request<ReActAgentVersionResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions?skip=${skip}&limit=${limit}`);
-  }
-
-  async getChatAgentVersion(tenantId: string, chatAgentId: string, version: number): Promise<ReActAgentVersionResponse> {
-    return this.request<ReActAgentVersionResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions/${version}`);
-  }
-
-  async restoreChatAgentVersion(tenantId: string, chatAgentId: string, version: number): Promise<ChatAgentResponse> {
-    return this.request<ChatAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions/${version}/restore`);
   }
 
   // ========== Custom Group Endpoints ==========

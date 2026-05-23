@@ -9,7 +9,6 @@ export type ResourceType =
   | 'conversations'
   | 'credentials'
   | 'custom-groups'
-  | 'tools'
   | 'tenant-ai-models'
   | 'external-apps';
 
@@ -20,7 +19,6 @@ const CREATOR_ROLES: Record<ResourceType, TenantPermissionEnum> = {
   'conversations': TenantPermissionEnum.CONVERSATIONS_CREATOR,
   'credentials': TenantPermissionEnum.CREDENTIALS_CREATOR,
   'custom-groups': TenantPermissionEnum.CUSTOM_GROUP_CREATOR,
-  'tools': TenantPermissionEnum.REACT_AGENT_CREATOR,
   'tenant-ai-models': TenantPermissionEnum.TENANT_AI_MODELS_ADMIN,
   'external-apps': TenantPermissionEnum.EXTERNAL_APPS_CREATOR,
 };
@@ -32,7 +30,6 @@ const ADMIN_ROLES: Record<ResourceType, TenantPermissionEnum> = {
   'conversations': TenantPermissionEnum.CONVERSATIONS_ADMIN,
   'credentials': TenantPermissionEnum.CREDENTIALS_ADMIN,
   'custom-groups': TenantPermissionEnum.CUSTOM_GROUPS_ADMIN,
-  'tools': TenantPermissionEnum.REACT_AGENT_ADMIN,
   'tenant-ai-models': TenantPermissionEnum.TENANT_AI_MODELS_ADMIN,
   'external-apps': TenantPermissionEnum.EXTERNAL_APPS_ADMIN,
 };

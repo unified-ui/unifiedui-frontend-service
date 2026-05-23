@@ -11,7 +11,6 @@ import tracingEN from './locales/en-US/tracing.json';
 import credentialsEN from './locales/en-US/credentials.json';
 import tokenEN from './locales/en-US/token.json';
 import widgetDesignerEN from './locales/en-US/widgetDesigner.json';
-import reactAgentEN from './locales/en-US/reactAgent.json';
 import sidebarEN from './locales/en-US/sidebar.json';
 import widgetsEN from './locales/en-US/widgets.json';
 import externalAppsEN from './locales/en-US/externalApps.json';
@@ -31,7 +30,6 @@ i18n
         credentials: credentialsEN,
         token: tokenEN,
         widgetDesigner: widgetDesignerEN,
-        reactAgent: reactAgentEN,
         sidebar: sidebarEN,
         widgets: widgetsEN,
         externalApps: externalAppsEN,

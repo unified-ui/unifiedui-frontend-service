@@ -8,7 +8,6 @@ import {
   IconSettings, IconSettingsFilled,
   IconBrandWechat,
   IconRobot,
-  IconBrain,
   IconAppWindow,
   IconShieldLock,
 } from '@tabler/icons-react';
@@ -48,10 +47,8 @@ const mainNavItemsTop: NavItem[] = [
     path: '/chat-agents',
     hasDataList: true,
     entityType: 'chat-agents',
-    matchFn: (pathname, search) =>
-      (pathname === '/chat-agents' || pathname.startsWith('/chat-agents/')) &&
-      !search.includes('type=REACT_AGENT') &&
-      !pathname.endsWith('/develop'),
+    matchFn: (pathname) =>
+      pathname === '/chat-agents' || pathname.startsWith('/chat-agents/'),
   },
   { icon: IconRobot, labelKey: 'workflows', path: '/workflows', hasDataList: true, entityType: 'workflows' },
   {
@@ -76,17 +73,6 @@ const mainNavItemsBottom: NavItem[] = [
       pathname === '/chat-widgets' ||
       pathname.startsWith('/chat-widgets/') ||
       pathname.startsWith('/widget-designer/'),
-  },
-  {
-    icon: IconBrain,
-    labelKey: 'reactAgents',
-    path: '/chat-agents?type=REACT_AGENT',
-    visible: false,
-    requiredResourceAccess: 'tools',
-    envFlag: 'VITE_SHOW_RE_ACT_AGENT_DEVELOPMENT_PAGE',
-    matchFn: (pathname, search) =>
-      (pathname === '/chat-agents' && search.includes('type=REACT_AGENT')) ||
-      pathname.endsWith('/develop'),
   },
 ];
 
