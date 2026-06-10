@@ -47,7 +47,6 @@ interface FormValues {
   name: string;
   description: string;
   tags: string[];
-  is_active: boolean;
   allow_api_keys: boolean;
   // N8N Config
   n8n_api_version: string;
@@ -115,7 +114,6 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
       name: '',
       description: '',
       tags: [],
-      is_active: true,
       allow_api_keys: false,
       n8n_api_version: 'v1',
       n8n_workflow_endpoint: '',
@@ -233,7 +231,6 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
         name: data.name,
         description: data.description || '',
         tags: data.tags?.map((t) => t.name) || [],
-        is_active: data.is_active,
         allow_api_keys: data.allow_api_keys,
         n8n_api_version: (config.api_version as string) || 'v1',
         n8n_workflow_endpoint: (config.workflow_endpoint as string) || '',
@@ -327,7 +324,6 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
       await apiClient.updateWorkflow(selectedTenant.id, workflowId, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
-        is_active: values.is_active,
         allow_api_keys: values.allow_api_keys,
         config,
       });
@@ -419,9 +415,6 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
               </Text>
               {workflow && (
                 <Group gap="xs">
-                  <Badge size="xs" variant="light" color={workflow.is_active ? 'green' : 'gray'}>
-                    {workflow.is_active ? 'Active' : 'Inactive'}
-                  </Badge>
                   <Text size="xs" c="dimmed">
                     Workflow
                   </Text>
@@ -501,13 +494,6 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
                 <Badge size="lg" variant="light" color="blue">
                   {workflow?.type || 'Unknown'}
                 </Badge>
-                <Switch
-                  label="Active"
-                  description="Enable or disable this workflow"
-                  checked={form.values.is_active}
-                  onChange={(e) => form.setFieldValue('is_active', e.currentTarget.checked)}
-                  classNames={{ track: classes.switchTrack }}
-                />
                 <Switch
                   label="Allow API Keys"
                   description="When enabled, this agent can be accessed using API key authentication"

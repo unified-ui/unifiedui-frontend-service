@@ -65,14 +65,6 @@ import type {
   CreateChatWidgetRequest,
   UpdateChatWidgetRequest,
   SetChatWidgetPermissionRequest,
-  // Tool Types
-  ToolResponse,
-  CreateToolRequest,
-  UpdateToolRequest,
-  SetToolPermissionRequest,
-  // ReACT Agent Version Types
-  UpdateReActAgentVersionRequest,
-  ReActAgentVersionResponse,
   // Custom Group Types
   CustomGroupResponse,
   CreateCustomGroupRequest,
@@ -107,6 +99,7 @@ import type {
   SyncRecentVisitsRequest,
   // Agent Service Types
   GetMessagesResponse,
+  MessageWithContextResponse,
   SearchMessagesResponse,
   MessageResponse,
   SendMessageRequest,
@@ -152,10 +145,15 @@ import type {
   HealthCheckResponse,
   PrincipalTypeEnum,
   PermissionActionEnum,
+  UpsertMessageFeedbackRequest,
+  MessageFeedbackResponse,
+  FeedbackStatsBatchResponse,
+  MessageStatsResponse,
 } from './types';
 
 // Import enums as values (not type-only)
 import { FavoriteResourceTypeEnum } from './types';
+import { ApiError, PermissionError } from './errors';
 
 // ========== API Client Configuration ==========
 
@@ -223,7 +221,14 @@ export class UnifiedUIAPIClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+        if (response.status === 403) {
+          const isMutation = method !== 'GET';
+          throw PermissionError.fromResponse(errorData, !isMutation);
+        }
+        const rawDetail = errorData.detail || errorData.message;
+        const detail = typeof rawDetail === 'string' ? rawDetail : undefined;
+        const message = detail || `HTTP ${response.status}: ${response.statusText}`;
+        throw new ApiError(response.status, response.statusText, message, detail, errorData, `${this.baseURL}${path}`, method);
       }
 
       // Handle 204 No Content
@@ -242,10 +247,17 @@ export class UnifiedUIAPIClient {
 
       return data;
     } catch (error) {
-      if (this.onError && error instanceof Error && !options?.silent) {
-        this.onError(error);
+      if (error instanceof PermissionError || error instanceof ApiError) {
+        if (this.onError && !options?.silent) {
+          this.onError(error);
+        }
+        throw error;
       }
-      throw error;
+      const wrapped = new ApiError(0, 'Network Error', error instanceof Error ? error.message : String(error), undefined, undefined, `${this.baseURL}${path}`, method);
+      if (this.onError && !options?.silent) {
+        this.onError(wrapped);
+      }
+      throw wrapped;
     }
   }
 
@@ -672,90 +684,6 @@ export class UnifiedUIAPIClient {
     );
   }
 
-  // ========== Tool Endpoints ==========
-
-  async listTools(
-    tenantId: string,
-    params?: PaginationParams & OrderParams & FilterParams & FieldSelectParams & { view?: 'quick-list' },
-    options?: RequestOptions
-  ): Promise<ToolResponse[] | QuickListItemResponse[]> {
-    const query = this.buildQueryString(params || {});
-    return this.request<ToolResponse[] | QuickListItemResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/tools${query}`, undefined, undefined, options);
-  }
-
-  async getTool(tenantId: string, toolId: string): Promise<ToolResponse> {
-    return this.request<ToolResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}`);
-  }
-
-  async createTool(tenantId: string, data: CreateToolRequest): Promise<ToolResponse> {
-    return this.request<ToolResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/tools`, data, 'Tool created successfully');
-  }
-
-  async updateTool(tenantId: string, toolId: string, data: UpdateToolRequest): Promise<ToolResponse> {
-    return this.request<ToolResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}`, data, 'Tool updated successfully');
-  }
-
-  async deleteTool(tenantId: string, toolId: string): Promise<void> {
-    return this.request<void>('DELETE', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}`, undefined, 'Tool deleted successfully');
-  }
-
-  // ========== Tool Permissions ==========
-
-  async getToolPrincipals(tenantId: string, toolId: string): Promise<ResourcePrincipalsResponse> {
-    return this.request<ResourcePrincipalsResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}/principals`);
-  }
-
-  async setToolPermission(tenantId: string, toolId: string, data: SetToolPermissionRequest): Promise<PrincipalWithRolesResponse> {
-    return this.request<PrincipalWithRolesResponse>('PUT', `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}/principals`, data, 'Permission added successfully');
-  }
-
-  async deleteToolPermission(
-    tenantId: string,
-    toolId: string,
-    principalId: string,
-    principalType: PrincipalTypeEnum,
-    role: PermissionActionEnum
-  ): Promise<void> {
-    return this.request<void>(
-      'DELETE',
-      `/api/v1/platform-service/tenants/${tenantId}/tools/${toolId}/principals`,
-      { principal_id: principalId, principal_type: principalType, role },
-      'Permission removed successfully'
-    );
-  }
-
-  // ========== Tool Tags ==========
-
-  async listToolTypeTags(tenantId: string, params?: ResourceTagListParams): Promise<ResourceTypeTagsResponse> {
-    return this.listResourceTypeTags(tenantId, 'tools', params);
-  }
-
-  async getToolTags(tenantId: string, toolId: string): Promise<ResourceTagsResponse> {
-    return this.getResourceTags(tenantId, 'tools', toolId);
-  }
-
-  async setToolTags(tenantId: string, toolId: string, tags: string[]): Promise<ResourceTagsResponse> {
-    return this.setResourceTags(tenantId, 'tools', toolId, { tags });
-  }
-
-  // ========== Chat Agent Version Methods (REACT_AGENT) ==========
-
-  async updateChatAgentVersion(tenantId: string, chatAgentId: string, data: UpdateReActAgentVersionRequest): Promise<ChatAgentResponse> {
-    return this.request<ChatAgentResponse>('PATCH', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions`, data);
-  }
-
-  async listChatAgentVersions(tenantId: string, chatAgentId: string, skip = 0, limit = 50): Promise<ReActAgentVersionResponse[]> {
-    return this.request<ReActAgentVersionResponse[]>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions?skip=${skip}&limit=${limit}`);
-  }
-
-  async getChatAgentVersion(tenantId: string, chatAgentId: string, version: number): Promise<ReActAgentVersionResponse> {
-    return this.request<ReActAgentVersionResponse>('GET', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions/${version}`);
-  }
-
-  async restoreChatAgentVersion(tenantId: string, chatAgentId: string, version: number): Promise<ChatAgentResponse> {
-    return this.request<ChatAgentResponse>('POST', `/api/v1/platform-service/tenants/${tenantId}/chat-agents/${chatAgentId}/versions/${version}/restore`);
-  }
-
   // ========== Custom Group Endpoints ==========
 
   async listCustomGroups(tenantId: string, params?: PaginationParams & FieldSelectParams & { name?: string }): Promise<CustomGroupResponse[]> {
@@ -1015,7 +943,10 @@ export class UnifiedUIAPIClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+      const rawDetail = errorData.detail || errorData.message;
+      const detail = typeof rawDetail === 'string' ? rawDetail : undefined;
+      const message = detail || `HTTP ${response.status}: ${response.statusText}`;
+      throw new ApiError(response.status, response.statusText, message, detail, errorData, `${this.baseURL}/api/v1/platform-service/tenants/${tenantId}/files`, 'POST');
     }
 
     return response.json();
@@ -1059,7 +990,8 @@ export class UnifiedUIAPIClient {
     path: string,
     body?: unknown,
     successMessage?: string,
-    additionalHeaders?: Record<string, string>
+    additionalHeaders?: Record<string, string>,
+    options?: RequestOptions
   ): Promise<T> {
     try {
       const token = await this.getAccessToken();
@@ -1080,7 +1012,14 @@ export class UnifiedUIAPIClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        if (response.status === 403) {
+          const isMutation = method !== 'GET';
+          throw PermissionError.fromResponse(errorData, !isMutation);
+        }
+        const rawDetail = errorData.message || errorData.detail;
+        const detail = typeof rawDetail === 'string' ? rawDetail : undefined;
+        const message = detail || `HTTP ${response.status}: ${response.statusText}`;
+        throw new ApiError(response.status, response.statusText, message, detail, errorData, `${this.getAgentServiceURL()}${path}`, method);
       }
 
       if (response.status === 204) {
@@ -1098,10 +1037,17 @@ export class UnifiedUIAPIClient {
 
       return data;
     } catch (error) {
-      if (this.onError && error instanceof Error) {
-        this.onError(error);
+      if (error instanceof PermissionError || error instanceof ApiError) {
+        if (this.onError && !options?.silent) {
+          this.onError(error);
+        }
+        throw error;
       }
-      throw error;
+      const wrapped = new ApiError(0, 'Network Error', error instanceof Error ? error.message : String(error), undefined, undefined, `${this.getAgentServiceURL()}${path}`, method);
+      if (this.onError && !options?.silent) {
+        this.onError(wrapped);
+      }
+      throw wrapped;
     }
   }
 
@@ -1119,6 +1065,20 @@ export class UnifiedUIAPIClient {
     return this.agentServiceRequest<GetMessagesResponse>(
       'GET',
       `/api/v1/agent-service/tenants/${tenantId}/conversation/messages${query}`
+    );
+  }
+
+  /**
+   * Get a single message together with its preceding user message.
+   */
+  async getMessageWithContext(
+    tenantId: string,
+    conversationId: string,
+    messageId: string
+  ): Promise<MessageWithContextResponse> {
+    return this.agentServiceRequest<MessageWithContextResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}/with-context`
     );
   }
 
@@ -1293,12 +1253,15 @@ export class UnifiedUIAPIClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      const rawDetail = errorData.message || errorData.detail;
+      const detail = typeof rawDetail === 'string' ? rawDetail : undefined;
+      const message = detail || `HTTP ${response.status}: ${response.statusText}`;
+      throw new ApiError(response.status, response.statusText, message, detail, errorData, `${this.getAgentServiceURL()}/api/v1/agent-service/tenants/${tenantId}/conversation/messages`, 'POST');
     }
 
     const reader = response.body?.getReader();
     if (!reader) {
-      throw new Error('Response body is not readable');
+      throw new ApiError(0, 'Stream Error', 'Response body is not readable');
     }
 
     const decoder = new TextDecoder();
@@ -1834,6 +1797,75 @@ export class UnifiedUIAPIClient {
       'POST',
       `/api/v1/agent-service/tenants/${tenantId}/ai/trace-chat`,
       data
+    );
+  }
+
+  async upsertMessageFeedback(
+    tenantId: string,
+    conversationId: string,
+    messageId: string,
+    data: UpsertMessageFeedbackRequest
+  ): Promise<MessageFeedbackResponse> {
+    return this.request<MessageFeedbackResponse>(
+      'POST',
+      `/api/v1/platform-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}/feedback`,
+      data
+    );
+  }
+
+  async getMessageFeedback(
+    tenantId: string,
+    conversationId: string,
+    messageId: string
+  ): Promise<MessageFeedbackResponse> {
+    return this.request<MessageFeedbackResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}/feedback`
+    );
+  }
+
+  async deleteMessageFeedback(
+    tenantId: string,
+    conversationId: string,
+    messageId: string
+  ): Promise<void> {
+    return this.request<void>(
+      'DELETE',
+      `/api/v1/platform-service/tenants/${tenantId}/conversations/${conversationId}/messages/${messageId}/feedback`
+    );
+  }
+
+  async getFeedbackStats(
+    tenantId: string,
+    params?: { chatAgentIds?: string[]; from?: string; to?: string }
+  ): Promise<FeedbackStatsBatchResponse> {
+    const sp = new URLSearchParams();
+    if (params?.chatAgentIds && params.chatAgentIds.length > 0) {
+      sp.set('chat_agent_id', params.chatAgentIds.join(','));
+    }
+    if (params?.from) sp.set('from', params.from);
+    if (params?.to) sp.set('to', params.to);
+    const q = sp.toString();
+    return this.request<FeedbackStatsBatchResponse>(
+      'GET',
+      `/api/v1/platform-service/tenants/${tenantId}/feedback/stats${q ? `?${q}` : ''}`
+    );
+  }
+
+  async getMessageStats(
+    tenantId: string,
+    params?: { chatAgentIds?: string[]; from?: string; to?: string }
+  ): Promise<MessageStatsResponse> {
+    const sp = new URLSearchParams();
+    if (params?.chatAgentIds && params.chatAgentIds.length > 0) {
+      sp.set('chat_agent_id', params.chatAgentIds.join(','));
+    }
+    if (params?.from) sp.set('from', params.from);
+    if (params?.to) sp.set('to', params.to);
+    const q = sp.toString();
+    return this.agentServiceRequest<MessageStatsResponse>(
+      'GET',
+      `/api/v1/agent-service/tenants/${tenantId}/messages/stats${q ? `?${q}` : ''}`
     );
   }
 }

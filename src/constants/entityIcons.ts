@@ -5,7 +5,6 @@ import {
   IconMessageChatbot,
   IconAppWindow,
   IconKey,
-  IconTool,
   IconCpu,
   IconUsersGroup,
   IconUser,
@@ -18,7 +17,6 @@ export type EntityIconType =
   | 'chat-widget'
   | 'external-app'
   | 'credential'
-  | 'tool'
   | 'ai-model'
   | 'custom-group'
   | 'principal';
@@ -30,7 +28,6 @@ export const ENTITY_ICONS: Record<EntityIconType, typeof IconSparkles> = {
   'chat-widget': IconMessageChatbot,
   'external-app': IconAppWindow,
   'credential': IconKey,
-  'tool': IconTool,
   'ai-model': IconCpu,
   'custom-group': IconUsersGroup,
   'principal': IconUser,
@@ -43,7 +40,6 @@ export const ENTITY_ICON_COLORS: Record<EntityIconType, string> = {
   'chat-widget': '#e64980',
   'external-app': '#40c057',
   'credential': '#fd7e14',
-  'tool': '#fab005',
   'ai-model': '#4c6ef5',
   'custom-group': '#12b886',
   'principal': '#868e96',

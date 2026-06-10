@@ -50,7 +50,6 @@ export const ChatWidgetsPage: FC = () => {
     description: widget.description,
     type: CHAT_WIDGET_TYPE_LABELS[widget.type || ''] || widget.type || 'Chat',
     tags: widget.tags?.map(tag => tag.name) || [],
-    isActive: widget.is_active,
     my_permission: widget.my_permission,
   }), []);
 
@@ -63,12 +62,6 @@ export const ChatWidgetsPage: FC = () => {
   const listTags = useCallback(
     (tenantId: string, params: Parameters<NonNullable<typeof apiClient>['listChatWidgetTypeTags']>[1]) =>
       apiClient!.listChatWidgetTypeTags(tenantId, params),
-    [apiClient]
-  );
-
-  const updateEntity = useCallback(
-    (tenantId: string, id: string, data: { is_active: boolean }) =>
-      apiClient!.updateChatWidget(tenantId, id, data),
     [apiClient]
   );
 
@@ -89,11 +82,10 @@ export const ChatWidgetsPage: FC = () => {
     errorMessage: 'Failed to load chat widgets',
     listEntities,
     listTags,
-    updateEntity,
     deleteEntity,
     duplicateEntity,
     mapToTableItem,
-  }), [listEntities, listTags, updateEntity, deleteEntity, duplicateEntity, mapToTableItem]);
+  }), [listEntities, listTags, deleteEntity, duplicateEntity, mapToTableItem]);
 
   const {
     items, isLoading, isLoadingMore, hasMore, error, searchValue, sortBy, filters,

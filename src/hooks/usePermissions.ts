@@ -8,31 +8,31 @@ export type ResourceType =
   | 'chat-widgets'
   | 'conversations'
   | 'credentials'
-  | 'custom-groups'
   | 'tools'
+  | 'custom-groups'
   | 'tenant-ai-models'
   | 'external-apps';
 
 const CREATOR_ROLES: Record<ResourceType, TenantPermissionEnum> = {
   'chat-agents': TenantPermissionEnum.CHAT_AGENTS_CREATOR,
-  'workflows': TenantPermissionEnum.AUTONOMOUS_AGENTS_CREATOR,
+  'workflows': TenantPermissionEnum.WORKFLOWS_CREATOR,
   'chat-widgets': TenantPermissionEnum.CHAT_WIDGETS_CREATOR,
   'conversations': TenantPermissionEnum.CONVERSATIONS_CREATOR,
   'credentials': TenantPermissionEnum.CREDENTIALS_CREATOR,
+  'tools': TenantPermissionEnum.TENANT_AI_MODELS_ADMIN,
   'custom-groups': TenantPermissionEnum.CUSTOM_GROUP_CREATOR,
-  'tools': TenantPermissionEnum.REACT_AGENT_CREATOR,
   'tenant-ai-models': TenantPermissionEnum.TENANT_AI_MODELS_ADMIN,
   'external-apps': TenantPermissionEnum.EXTERNAL_APPS_CREATOR,
 };
 
 const ADMIN_ROLES: Record<ResourceType, TenantPermissionEnum> = {
   'chat-agents': TenantPermissionEnum.CHAT_AGENTS_ADMIN,
-  'workflows': TenantPermissionEnum.AUTONOMOUS_AGENTS_ADMIN,
+  'workflows': TenantPermissionEnum.WORKFLOWS_ADMIN,
   'chat-widgets': TenantPermissionEnum.CHAT_WIDGETS_ADMIN,
   'conversations': TenantPermissionEnum.CONVERSATIONS_ADMIN,
   'credentials': TenantPermissionEnum.CREDENTIALS_ADMIN,
+  'tools': TenantPermissionEnum.TENANT_AI_MODELS_ADMIN,
   'custom-groups': TenantPermissionEnum.CUSTOM_GROUPS_ADMIN,
-  'tools': TenantPermissionEnum.REACT_AGENT_ADMIN,
   'tenant-ai-models': TenantPermissionEnum.TENANT_AI_MODELS_ADMIN,
   'external-apps': TenantPermissionEnum.EXTERNAL_APPS_ADMIN,
 };

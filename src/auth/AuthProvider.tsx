@@ -6,6 +6,8 @@ import { loginRequest } from './authConfig';
 import type { IdentityProviderType } from './authConfig';
 import { useLdapAuth } from './useLdapAuth';
 import { useOidcAuth } from './useOidcAuth';
+import { useDebugAuth } from './useDebugAuth';
+import type { DebugLoginParams } from './useDebugAuth';
 
 const ACTIVE_PROVIDER_KEY = 'active_auth_provider';
 
@@ -16,6 +18,7 @@ interface AuthContextType {
   activeProvider: IdentityProviderType | null;
   loginWithProvider: (provider: IdentityProviderType) => Promise<void>;
   loginWithCredentials: (username: string, password: string) => Promise<void>;
+  loginWithDebugBackdoor: (params: DebugLoginParams) => Promise<void>;
   logout: () => Promise<void>;
   switchAccount: () => Promise<void>;
   getAccessToken: () => Promise<string | null>;
@@ -46,22 +49,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const msalIsAuthenticated = useIsAuthenticated();
   const ldapAuth = useLdapAuth();
   const oidcAuth = useOidcAuth();
+  const debugAuth = useDebugAuth();
 
   const msalIsLoading = inProgress !== 'none';
 
   const effectiveProvider = useMemo((): IdentityProviderType | null => {
     if (activeProvider) return activeProvider;
+    if (debugAuth.isAuthenticated) return 'debug';
     if (ldapAuth.isAuthenticated) return 'ldap';
     if (oidcAuth.isAuthenticated) return 'oidc';
     if (msalIsAuthenticated) return 'microsoft';
     return null;
-  }, [activeProvider, ldapAuth.isAuthenticated, oidcAuth.isAuthenticated, msalIsAuthenticated]);
+  }, [activeProvider, debugAuth.isAuthenticated, ldapAuth.isAuthenticated, oidcAuth.isAuthenticated, msalIsAuthenticated]);
 
-  const isAuthenticated = msalIsAuthenticated || ldapAuth.isAuthenticated || oidcAuth.isAuthenticated;
-  const isLoading = msalIsLoading || oidcAuth.isLoading || ldapAuth.isLoading;
+  const isAuthenticated = msalIsAuthenticated || ldapAuth.isAuthenticated || oidcAuth.isAuthenticated || debugAuth.isAuthenticated;
+  const isLoading = msalIsLoading || oidcAuth.isLoading || ldapAuth.isLoading || debugAuth.isLoading;
 
   const account = useMemo((): AccountInfo | null => {
     switch (effectiveProvider) {
+      case 'debug':
+        return debugAuth.account;
       case 'ldap':
         return ldapAuth.account;
       case 'oidc':
@@ -69,11 +76,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       case 'microsoft':
         return accounts[0] || null;
       default:
+        if (debugAuth.account) return debugAuth.account;
         if (ldapAuth.account) return ldapAuth.account;
         if (oidcAuth.account) return oidcAuth.account;
         return accounts[0] || null;
     }
-  }, [effectiveProvider, ldapAuth.account, oidcAuth.account, accounts]);
+  }, [effectiveProvider, debugAuth.account, ldapAuth.account, oidcAuth.account, accounts]);
 
   const loginWithProvider = useCallback(async (provider: IdentityProviderType) => {
     sessionStorage.setItem(ACTIVE_PROVIDER_KEY, provider);
@@ -102,9 +110,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     await ldapAuth.loginWithCredentials(username, password);
   }, [ldapAuth]);
 
+  const loginWithDebugBackdoor = useCallback(async (params: DebugLoginParams) => {
+    sessionStorage.setItem(ACTIVE_PROVIDER_KEY, 'debug');
+    setActiveProvider('debug');
+    await debugAuth.login(params);
+  }, [debugAuth]);
+
   const logout = useCallback(async () => {
     sessionStorage.removeItem(ACTIVE_PROVIDER_KEY);
     switch (effectiveProvider) {
+      case 'debug':
+        await debugAuth.logout();
+        break;
       case 'ldap':
         await ldapAuth.logout();
         break;
@@ -121,7 +138,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         break;
     }
     setActiveProvider(null);
-  }, [effectiveProvider, ldapAuth, oidcAuth, instance]);
+  }, [effectiveProvider, debugAuth, ldapAuth, oidcAuth, instance]);
 
   const switchAccount = useCallback(async () => {
     if (effectiveProvider === 'microsoft') {
@@ -140,6 +157,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const getAccessToken = useCallback(async (): Promise<string | null> => {
     switch (effectiveProvider) {
+      case 'debug':
+        return debugAuth.getAccessToken();
       case 'ldap':
         return ldapAuth.getAccessToken();
       case 'oidc':
@@ -167,7 +186,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       default:
         return null;
     }
-  }, [effectiveProvider, ldapAuth, oidcAuth, msalIsAuthenticated, accounts, instance]);
+  }, [effectiveProvider, debugAuth, ldapAuth, oidcAuth, msalIsAuthenticated, accounts, instance]);
 
   const getFoundryToken = useCallback(async (): Promise<string | null> => {
     if (effectiveProvider !== 'microsoft' || !msalIsAuthenticated || accounts.length === 0) return null;
@@ -197,6 +216,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     activeProvider: effectiveProvider,
     loginWithProvider,
     loginWithCredentials,
+    loginWithDebugBackdoor,
     logout,
     switchAccount,
     getAccessToken,

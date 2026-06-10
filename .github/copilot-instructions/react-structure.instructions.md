@@ -157,6 +157,7 @@ src/
 | `EntityDetailsForm`       | Generic entity detail form                                                                                                               |
 | `GenerateWithAIButton`    | Button that triggers AI-powered content generation                                                                                       |
 | `MarkdownRenderer`        | Renders markdown content with syntax highlighting                                                                                        |
+| `AccessDeniedBanner`      | Orange alert banner for 403 Permission Denied states (props: `requiredRoles`, `message`, `compact`)                                      |
 
 | `CommandPalette` | Global command palette (cmdk, `⌘K` shortcut) |
 | `PermissionGate` | Declarative permission-based rendering (hide/disable by role or resource permission) |

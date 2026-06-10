@@ -7,3 +7,6 @@ export { ChatSidebarProvider, useChatSidebar } from './ChatSidebarContext';
 export { AICapabilitiesProvider, useAICapabilities } from './AICapabilitiesContext';
 export { FavoritesProvider, useFavorites } from './FavoritesContext';
 export { RecentVisitsProvider, useRecentVisits } from './RecentVisitsContext';
+export { NotificationProvider } from './NotificationContext';
+export type { NotificationEntry, NotificationContextValue } from './NotificationContext';
+export { useNotifications } from './useNotifications';

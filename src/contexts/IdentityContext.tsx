@@ -1,13 +1,15 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode, FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth';
 import { UnifiedUIAPIClient } from '../api/client';
+import { ApiError, PermissionError } from '../api/errors';
 import type { TenantResponse, IdentityUser, TenantPermissionEnum, OrganizationContextResponse } from '../api/types';
 import { notifications } from '@mantine/notifications';
 import { AuthProviderInternal, useAuthContext } from './AuthContext';
 import { TenantProvider, useTenantContext } from './TenantContext';
 import { ApiClientProvider, useApiClient } from './ApiClientContext';
+import { useNotifications } from './useNotifications';
 
 interface IdentityContextType {
   user: IdentityUser | null;
@@ -38,6 +40,11 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
   const { user, isLoading, setUser, setIsLoading } = useAuthContext();
   const { tenants, selectedTenant, selectedTenantRoles, setTenantsWithRoles, selectTenant } = useTenantContext();
   const { apiClient, setApiClient } = useApiClient();
+  const { addNotification, openDrawer } = useNotifications();
+  const addNotificationRef = useRef(addNotification);
+  addNotificationRef.current = addNotification;
+  const openDrawerRef = useRef(openDrawer);
+  openDrawerRef.current = openDrawer;
   const [organization, setOrganization] = useState<OrganizationContextResponse | null>(null);
   const [isSystemAdmin, setIsSystemAdmin] = useState(false);
 
@@ -50,21 +57,41 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
           return token || '';
         },
         onError: (error) => {
+          if (error instanceof PermissionError) {
+            if (error.silent) return;
+            const title = t('accessDenied.title');
+            const message = error.requiredRoles.length > 0
+              ? `${t('accessDenied.requiredRoles')}: ${error.requiredRoles.join(', ')}`
+              : t('permissionDenied');
+            notifications.show({ title, message, color: 'orange', position: 'top-right', onClick: () => openDrawerRef.current() });
+            addNotificationRef.current({ title, message, color: 'orange' });
+            return;
+          }
           console.error('API Error:', error);
-          notifications.show({
-            title: t('error'),
-            message: error.message || t('unexpectedError'),
-            color: 'red',
-            position: 'top-right',
-          });
+          if (error instanceof ApiError) {
+            const title = error.status > 0 ? `${error.status} ${error.statusText}` : error.statusText;
+            const message = error.detail || t('unexpectedError');
+            notifications.show({ title, message, color: 'red', position: 'top-right', onClick: () => openDrawerRef.current() });
+            addNotificationRef.current({
+              title,
+              message,
+              color: 'red',
+              status: error.status,
+              url: error.url,
+              method: error.method,
+              rawJson: error.raw,
+            });
+            return;
+          }
+          const title = t('error');
+          const message = error.message || t('unexpectedError');
+          notifications.show({ title, message, color: 'red', position: 'top-right', onClick: () => openDrawerRef.current() });
+          addNotificationRef.current({ title, message, color: 'red' });
         },
         onSuccess: (message) => {
-          notifications.show({
-            title: t('success'),
-            message,
-            color: 'green',
-            position: 'top-right',
-          });
+          const title = t('success');
+          notifications.show({ title, message, color: 'green', position: 'top-right', onClick: () => openDrawerRef.current() });
+          addNotificationRef.current({ title, message, color: 'green' });
         },
       });
       client.setAgentServiceURL(AGENT_SERVICE_URL);

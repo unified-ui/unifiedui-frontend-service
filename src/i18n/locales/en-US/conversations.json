@@ -65,6 +65,7 @@
   "groupByTime": "Time",
   "groupByAgent": "Agent",
   "pinned": "Pinned",
+  "unknownChatAgent": "Unknown Chat Agent",
   "today": "Today",
   "yesterday": "Yesterday",
   "previous7Days": "Previous 7 days",

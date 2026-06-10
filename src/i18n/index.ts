@@ -12,10 +12,23 @@ import tracingEN from './locales/en-US/tracing.json';
 import credentialsEN from './locales/en-US/credentials.json';
 import tokenEN from './locales/en-US/token.json';
 import widgetDesignerEN from './locales/en-US/widgetDesigner.json';
-import reactAgentEN from './locales/en-US/reactAgent.json';
 import sidebarEN from './locales/en-US/sidebar.json';
 import widgetsEN from './locales/en-US/widgets.json';
 import externalAppsEN from './locales/en-US/externalApps.json';
+
+import commonDE from './locales/de-DE/common.json';
+import dashboardDE from './locales/de-DE/dashboard.json';
+import loginDE from './locales/de-DE/login.json';
+import headerDE from './locales/de-DE/header.json';
+import conversationsDE from './locales/de-DE/conversations.json';
+import settingsDE from './locales/de-DE/settings.json';
+import tracingDE from './locales/de-DE/tracing.json';
+import credentialsDE from './locales/de-DE/credentials.json';
+import tokenDE from './locales/de-DE/token.json';
+import widgetDesignerDE from './locales/de-DE/widgetDesigner.json';
+import sidebarDE from './locales/de-DE/sidebar.json';
+import widgetsDE from './locales/de-DE/widgets.json';
+import externalAppsDE from './locales/de-DE/externalApps.json';
 
 const resources = {
   'en-US': {
@@ -29,10 +42,24 @@ const resources = {
     credentials: credentialsEN,
     token: tokenEN,
     widgetDesigner: widgetDesignerEN,
-    reactAgent: reactAgentEN,
     sidebar: sidebarEN,
     widgets: widgetsEN,
     externalApps: externalAppsEN,
+  },
+  'de-DE': {
+    common: commonDE,
+    dashboard: dashboardDE,
+    login: loginDE,
+    header: headerDE,
+    conversations: conversationsDE,
+    settings: settingsDE,
+    tracing: tracingDE,
+    credentials: credentialsDE,
+    token: tokenDE,
+    widgetDesigner: widgetDesignerDE,
+    sidebar: sidebarDE,
+    widgets: widgetsDE,
+    externalApps: externalAppsDE,
   },
 };
 
@@ -43,7 +70,7 @@ i18n
     resources,
     fallbackLng: 'en-US',
     defaultNS: 'common',
-    ns: ['common', 'dashboard', 'login', 'header', 'conversations', 'settings', 'tracing', 'credentials', 'token', 'widgetDesigner', 'reactAgent', 'sidebar', 'widgets', 'externalApps'],
+    ns: ['common', 'dashboard', 'login', 'header', 'conversations', 'settings', 'tracing', 'credentials', 'token', 'widgetDesigner', 'sidebar', 'widgets', 'externalApps'],
     interpolation: {
       escapeValue: false,
     },

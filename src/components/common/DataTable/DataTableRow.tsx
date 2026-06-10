@@ -27,6 +27,7 @@ import {
   IconStar,
   IconStarFilled,
   IconCode,
+  IconMessage,
 } from '@tabler/icons-react';
 import classes from './DataTable.module.css';
 
@@ -51,6 +52,7 @@ interface DataTableRowProps {
   onShare?: (id: string) => void;
   onManageAccess?: (id: string) => void;
   onDuplicate?: (id: string) => void;
+  onOpenChat?: (id: string) => void;
   onEmbedSetup?: (id: string) => void;
   onIntegrationPrompt?: (id: string) => void;
   onPin?: (id: string, isPinned: boolean) => void;
@@ -75,6 +77,7 @@ export const DataTableRow: FC<DataTableRowProps> = ({
   onShare: _onShare,
   onManageAccess,
   onDuplicate,
+  onOpenChat,
   onEmbedSetup,
   onIntegrationPrompt,
   onPin,
@@ -219,6 +222,21 @@ export const DataTableRow: FC<DataTableRowProps> = ({
             </div>
           )}
 
+          {onOpenChat && (
+            <DelayedTooltip label="Open Chat" position="top">
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenChat(item.id);
+                }}
+              >
+                <IconMessage size={18} />
+              </ActionIcon>
+            </DelayedTooltip>
+          )}
+
           {!item.hideActions && (
           <Menu shadow="md" position="bottom-end" withinPortal>
           <Menu.Target>
@@ -237,6 +255,17 @@ export const DataTableRow: FC<DataTableRowProps> = ({
             >
               Open
             </Menu.Item>
+            {onOpenChat && (
+              <Menu.Item
+                leftSection={<IconMessage size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenChat(item.id);
+                }}
+              >
+                Open Chat
+              </Menu.Item>
+            )}
             {(!hasPermission || canWriteItem) && (
               <Menu.Item
                 leftSection={<IconEdit size={14} />}

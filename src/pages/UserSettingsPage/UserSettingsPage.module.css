@@ -1,0 +1,45 @@
+.scrollContainer {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.page {
+  padding: 24px 32px;
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.sectionHeader {
+  margin-bottom: 8px;
+}
+
+.field {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-light, rgba(0, 0, 0, 0.06));
+}
+
+.field:last-child {
+  border-bottom: none;
+}
+
+.fieldLabel {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+}
+
+.fieldValue {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-sm);
+  word-break: break-all;
+}
+
+[data-mantine-color-scheme="dark"] .field {
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+}

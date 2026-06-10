@@ -25,7 +25,7 @@ export interface ChatViewProps {
   onCancelStream?: () => void;
   onEditMessage?: (messageId: string, content: string) => Promise<void>;
   onDeleteMessage?: (messageId: string) => Promise<void>;
-  onReaction?: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string) => Promise<void>;
+  onReaction?: (messageId: string, reaction: 'thumbs_up' | 'thumbs_down', feedbackText?: string, reasons?: string[]) => Promise<void>;
   onRetry?: (messageId: string) => void;
   onViewTrace?: (messageId: string) => void;
   reactions?: Map<string, ReactionResponse>;

@@ -3,15 +3,17 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Group, TextInput, ActionIcon, Avatar, Text, Title, useMantineColorScheme, Stack, Paper, Button, Divider } from '@mantine/core';
-import { IconSearch, IconBrain, IconSun, IconMoon, IconLogout, IconPlus, IconBuilding, IconSwitchHorizontal } from '@tabler/icons-react';
+import { IconSearch, IconBrain, IconSun, IconMoon, IconLogout, IconPlus, IconBuilding, IconSwitchHorizontal, IconUser, IconBell } from '@tabler/icons-react';
 import { useAuth } from '../../../auth';
 import { useIdentity } from '../../../contexts';
+import { useNotifications } from '../../../contexts/useNotifications';
 import { useKeyboardShortcuts } from '../../../hooks';
 import { APP_TITLE, SHOW_PLATFORM_SUBTITLE } from '../../../config';
 import { useBranding } from '../../../hooks/useBranding';
 import { CreateTenantDialog } from '../../dialogs';
 import { CreateOrganizationDialog } from '../../dialogs';
 import { CommandPalette, FilterableSelect } from '../../common';
+import { NotificationDrawer } from '../../common/NotificationDrawer';
 import classes from './Header.module.css';
 
 export const Header: FC = () => {
@@ -21,6 +23,7 @@ export const Header: FC = () => {
   const { account, logout, switchAccount } = useAuth();
   const { user, isSystemAdmin, organization, tenants, selectedTenant, selectTenant } = useIdentity();
   const branding = useBranding();
+  const { unreadCount, isDrawerOpen, openDrawer, closeDrawer } = useNotifications();
   const isDark = colorScheme === 'dark';
   const [userDropdownOpened, setUserDropdownOpened] = useState(false);
   const [isTenantDialogOpen, setIsTenantDialogOpen] = useState(false);
@@ -119,6 +122,22 @@ export const Header: FC = () => {
           variant="subtle"
           size="lg"
           radius="xl"
+          onClick={() => openDrawer()}
+          aria-label="Notifications"
+          className={classes.bellIcon}
+        >
+          <IconBell size={20} />
+          {unreadCount > 0 && (
+            <span className={classes.bellBadge}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </ActionIcon>
+
+        <ActionIcon
+          variant="subtle"
+          size="lg"
+          radius="xl"
           onClick={() => toggleColorScheme()}
           aria-label={isDark ? t('switchToLight') : t('switchToDark')}
           title={isDark ? t('switchToLight') : t('switchToDark')}
@@ -202,6 +221,18 @@ export const Header: FC = () => {
                 <Divider />
 
                 <Button
+                  leftSection={<IconUser size={16} />}
+                  variant="subtle"
+                  fullWidth
+                  onClick={() => {
+                    setUserDropdownOpened(false);
+                    navigate('/user/settings');
+                  }}
+                >
+                  {t('mySettings')}
+                </Button>
+
+                <Button
                   leftSection={<IconSwitchHorizontal size={16} />}
                   variant="subtle"
                   fullWidth
@@ -241,6 +272,11 @@ export const Header: FC = () => {
       <CommandPalette
         open={isCommandPaletteOpen}
         onOpenChange={setIsCommandPaletteOpen}
+      />
+
+      <NotificationDrawer
+        opened={isDrawerOpen}
+        onClose={closeDrawer}
       />
     </header>
   );

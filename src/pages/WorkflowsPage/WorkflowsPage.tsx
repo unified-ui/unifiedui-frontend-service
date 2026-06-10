@@ -37,7 +37,6 @@ export const WorkflowsPage: FC = () => {
     description: agent.description,
     type: agent.type,
     tags: agent.tags?.map(tag => tag.name) || [],
-    isActive: agent.is_active,
     my_permission: agent.my_permission,
   }), []);
 
@@ -50,12 +49,6 @@ export const WorkflowsPage: FC = () => {
   const listTags = useCallback(
     (tenantId: string, params: Parameters<NonNullable<typeof apiClient>['listWorkflowTypeTags']>[1]) =>
       apiClient!.listWorkflowTypeTags(tenantId, params),
-    [apiClient]
-  );
-
-  const updateEntity = useCallback(
-    (tenantId: string, id: string, data: { is_active: boolean }) =>
-      apiClient!.updateWorkflow(tenantId, id, data),
     [apiClient]
   );
 
@@ -76,12 +69,11 @@ export const WorkflowsPage: FC = () => {
     errorMessage: 'Failed to load workflows',
     listEntities,
     listTags,
-    updateEntity,
     deleteEntity,
     duplicateEntity,
     mapToTableItem,
     refreshSidebar: refreshWorkflows,
-  }), [listEntities, listTags, updateEntity, deleteEntity, duplicateEntity, mapToTableItem, refreshWorkflows]);
+  }), [listEntities, listTags, deleteEntity, duplicateEntity, mapToTableItem, refreshWorkflows]);
 
   const {
     items, isLoading, isLoadingMore, hasMore, error, searchValue, sortBy, filters,

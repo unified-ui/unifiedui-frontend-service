@@ -24,6 +24,7 @@ interface DataTableProps {
   onShare?: (id: string) => void;
   onManageAccess?: (id: string) => void;
   onDuplicate?: (id: string) => void;
+  onOpenChat?: (id: string) => void;
   onEmbedSetup?: (id: string) => void;
   onIntegrationPrompt?: (id: string) => void;
   onPin?: (id: string, isPinned: boolean) => void;
@@ -64,6 +65,7 @@ export const DataTable: FC<DataTableProps> = ({
   onShare,
   onManageAccess,
   onDuplicate,
+  onOpenChat,
   onEmbedSetup,
   onIntegrationPrompt,
   onPin,
@@ -404,6 +406,7 @@ export const DataTable: FC<DataTableProps> = ({
                     onShare={onShare}
                     onManageAccess={onManageAccess}
                     onDuplicate={onDuplicate}
+                    onOpenChat={onOpenChat}
                     onEmbedSetup={onEmbedSetup}
                     onIntegrationPrompt={onIntegrationPrompt}
                     onPin={onPin}

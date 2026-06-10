@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Loader, Stack, Text, Paper, Grid, TextInput, PasswordInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconBrain, IconLogout, IconArrowLeft } from '@tabler/icons-react';
+import { IconBrain, IconLogout, IconArrowLeft, IconBug } from '@tabler/icons-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../auth';
 import { enabledProviders } from '../../auth/authConfig';
@@ -10,6 +10,7 @@ import type { IdentityProviderType } from '../../auth/authConfig';
 import { useIdentity } from '../../contexts';
 import { useBranding } from '../../hooks/useBranding';
 import { SHOW_PLATFORM_SUBTITLE } from '../../config';
+import { DebugBackdoorDialog } from './DebugBackdoorDialog';
 import classes from './LoginPage.module.css';
 
 const MicrosoftIcon = () => (
@@ -78,6 +79,7 @@ const PROVIDER_DISPLAY_NAMES: Record<IdentityProviderType, string> = {
   saml: 'SAML',
   okta: 'Okta',
   oidc: 'OIDC Zitadel',
+  debug: 'Debug',
 };
 
 interface IdpButtonConfig {
@@ -107,6 +109,8 @@ export const LoginPage = () => {
   const [ldapUsername, setLdapUsername] = useState('');
   const [ldapPassword, setLdapPassword] = useState('');
   const [ldapError, setLdapError] = useState<string | null>(null);
+  const [debugDialogOpen, setDebugDialogOpen] = useState(false);
+  const debugBackdoorEnabled = enabledProviders.includes('debug');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -441,9 +445,28 @@ export const LoginPage = () => {
                 );
               })
             )}
+            {debugBackdoorEnabled && !showLdapForm && (
+              <button
+                type="button"
+                className={classes.authButton}
+                onClick={() => setDebugDialogOpen(true)}
+                style={{
+                  borderColor: '#facc15',
+                  color: '#facc15',
+                }}
+              >
+                <IconBug size={20} />
+                <span>Debug Backdoor Login</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      <DebugBackdoorDialog
+        opened={debugDialogOpen}
+        onClose={() => setDebugDialogOpen(false)}
+      />
 
       {/* ═══════ Right Panel ═══════ */}
       <div

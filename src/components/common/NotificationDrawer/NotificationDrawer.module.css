@@ -1,0 +1,140 @@
+.drawer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.drawerActions {
+  display: flex;
+  gap: var(--mantine-spacing-xs);
+}
+
+.notificationList {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+}
+
+.notificationItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-sm);
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.notificationItem:hover {
+  background-color: var(--mantine-color-default-hover);
+}
+
+.unread {
+  background-color: light-dark(
+    var(--mantine-color-blue-0),
+    rgba(34, 139, 230, 0.08)
+  );
+}
+
+.colorIndicator {
+  width: 4px;
+  min-height: 100%;
+  border-radius: 2px;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+.notificationContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.notificationTitle {
+  font-weight: 700;
+  font-size: var(--mantine-font-size-md);
+  line-height: 1.4;
+}
+
+.notificationMessage {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.notificationTime {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+  margin-top: 4px;
+}
+
+.dismissButton {
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.notificationItem:hover .dismissButton {
+  opacity: 1;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--mantine-spacing-xl);
+  color: var(--mantine-color-dimmed);
+}
+
+.detailsSection {
+  margin-top: 4px;
+}
+
+.requestInfo {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: 10px;
+  color: var(--mantine-color-dimmed);
+  line-height: 1.4;
+  word-break: break-all;
+  margin-top: var(--mantine-spacing-sm);
+}
+
+.rawJsonContainer {
+  position: relative;
+  margin-top: 4px;
+}
+
+.copyButton {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 1;
+}
+
+.rawJson {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: 10px;
+  line-height: 1.4;
+  margin: 0;
+  padding: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-sm);
+  background-color: light-dark(
+    var(--mantine-color-gray-1),
+    var(--mantine-color-dark-6)
+  );
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+}

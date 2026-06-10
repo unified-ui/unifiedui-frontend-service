@@ -9,15 +9,14 @@ import { CreateChatAgentDialog, EditChatAgentDialog } from '../../components/dia
 import { useIdentity, useSidebarData, useFavorites } from '../../contexts';
 import { useEntityList, usePermissions } from '../../hooks';
 import type { ChatAgentResponse } from '../../api/types';
-import { ChatAgentTypeEnum, FavoriteResourceTypeEnum } from '../../api/types';
+import { FavoriteResourceTypeEnum } from '../../api/types';
 
 const SORT_STORAGE_KEY = 'unified-ui:sort:chat-agents';
 
 export const ChatAgentsPage: FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const typeFilter = searchParams.get('type') as ChatAgentTypeEnum | null;
-  const isReactView = typeFilter === ChatAgentTypeEnum.REACT_AGENT;
+  const typeFilter = searchParams.get('type') as string | null;
   const { apiClient } = useIdentity();
   const { refreshChatAgents } = useSidebarData();
   const { isFavorite: checkFavorite, toggleFavorite } = useFavorites();
@@ -97,20 +96,15 @@ export const ChatAgentsPage: FC = () => {
   } = useEntityList<ChatAgentResponse>(config);
 
   const handleOpen = useCallback((id: string) => {
-    if (isReactView) {
-      navigate(`/chat-agents/${id}/develop`);
-    } else {
-      const agent = rawDataRef.current.get(id);
-      if (agent?.type === 'REACT_AGENT') {
-        navigate(`/chat-agents/${id}/develop`);
-      } else {
-        navigate(`/conversations?agent=${id}&selected=${id}`);
-      }
-    }
-  }, [navigate, rawDataRef, isReactView]);
+    navigate(`/chat-agents/${id}`);
+  }, [navigate]);
+
+  const handleOpenChat = useCallback((id: string) => {
+    navigate(`/conversations?agent=${id}&selected=${id}`);
+  }, [navigate]);
 
   const handleEmbedSetup = useCallback((id: string) => {
-    navigate(`/chat-agents/${id}/embed-chat`);
+    navigate(`/chat-agents/${id}?tab=embed`);
   }, [navigate]);
 
   const renderIcon = useCallback(() => (
@@ -123,11 +117,9 @@ export const ChatAgentsPage: FC = () => {
   return (
     <MainLayout>
       <PageHeader
-        title={isReactView ? 'ReACT Agents' : 'Chat Agents'}
-        description={isReactView
-          ? 'Manage your ReACT agents. Configure reasoning, tools, and multi-agent orchestration.'
-          : 'Manage your AI chat agents. Create, configure, and deploy conversational agents for your use cases.'}
-        actionLabel={isReactView ? 'Create ReACT Agent' : 'Create Chat Agent'}
+        title={'Chat Agents'}
+        description={'Manage your AI chat agents. Create, configure, and deploy conversational agents for your use cases.'}
+        actionLabel={'Create Chat Agent'}
         onAction={canCreateChatAgent ? () => setIsCreateDialogOpen(true) : undefined}
       />
 
@@ -138,9 +130,9 @@ export const ChatAgentsPage: FC = () => {
         hasMore={hasMore}
         error={error}
         showStatus={true}
-        searchPlaceholder={isReactView ? 'Search ReACT agents...' : 'Search chat agents...'}
-        emptyMessage={isReactView ? 'No ReACT agents found' : 'No chat agents found'}
-        emptyActionLabel={isReactView ? 'Create ReACT Agent' : 'Create Chat Agent'}
+        searchPlaceholder={'Search chat agents...'}
+        emptyMessage={'No chat agents found'}
+        emptyActionLabel={'Create Chat Agent'}
         onEmptyAction={canCreateChatAgent ? () => setIsCreateDialogOpen(true) : undefined}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
@@ -151,6 +143,7 @@ export const ChatAgentsPage: FC = () => {
         onStatusChange={handleStatusChange}
         onRowClick={handleOpen}
         onOpen={handleOpen}
+        onOpenChat={handleOpenChat}
         onEdit={handleEdit}
         onManageAccess={handleManageAccess}
         onDuplicate={handleDuplicate}
@@ -168,7 +161,6 @@ export const ChatAgentsPage: FC = () => {
         opened={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onSuccess={handleCreateSuccess}
-        defaultType={isReactView ? ChatAgentTypeEnum.REACT_AGENT : undefined}
       />
 
       <EditChatAgentDialog
@@ -186,7 +178,7 @@ export const ChatAgentsPage: FC = () => {
         onClose={handleDeleteClose}
         onConfirm={handleDeleteConfirm}
         itemName={deleteDialog.name}
-        itemType={isReactView ? 'ReACT Agent' : 'Chat Agent'}
+        itemType={'Chat Agent'}
         isLoading={isDeleting}
       />
 
@@ -195,7 +187,7 @@ export const ChatAgentsPage: FC = () => {
         onClose={handleDeactivateClose}
         onConfirm={handleDeactivateConfirm}
         type="warning"
-        title={isReactView ? 'Deactivate ReACT Agent' : 'Deactivate Chat Agent'}
+        title={'Deactivate Chat Agent'}
         message={<>Are you sure you want to deactivate <strong>{deactivateDialog.name}</strong>? It will no longer be available until reactivated.</>}
         confirmLabel="Deactivate"
         cancelLabel="Cancel"

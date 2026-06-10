@@ -376,6 +376,45 @@ const { isGlobalAdmin, canCreate, hasRole, hasOrgBypass, isOrgGlobalAdmin } =
 | `hasRole(role)`           | `true` if user has a specific `TenantPermissionEnum` role                     |
 | `hasAnyRole(roles)`       | `true` if user has at least one of the given roles                            |
 
+### 403 Access Denied Pattern
+
+When a fetch operation fails with 403, use `AccessDeniedBanner` instead of generic error states or toasts.
+
+| Context                | Pattern                                                                                                                          |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **Detail pages**       | Catch `PermissionError` in fetch callback, store in `permissionError` state, render `AccessDeniedBanner` instead of page content |
+| **Settings tabs**      | Check role/permission before rendering tab content; show `AccessDeniedBanner` in else branch                                     |
+| **Empty states**       | When `!canCreate(...)` and list is empty, show `AccessDeniedBanner` instead of "Create one to get started"                       |
+| **Dashboard**          | Show `AccessDeniedBanner` within the specific section that returned 403                                                          |
+| **Chat/conversations** | Show orange notification via `notifications.show()` for 403, then redirect                                                       |
+
+Global 403 toasts are suppressed in `IdentityContext.tsx` `onError` handler (`PermissionError` instances are skipped). Pages handle 403s inline via `AccessDeniedBanner` or targeted notifications.
+
+```tsx
+// Detail page pattern
+const [permissionError, setPermissionError] = useState<PermissionError | null>(
+  null,
+);
+
+try {
+  const data = await apiClient.getResource(tenantId, id);
+  setResource(data);
+} catch (err) {
+  if (err instanceof PermissionError) {
+    setPermissionError(err);
+  } else {
+    setError(err instanceof Error ? err.message : "Failed to load");
+  }
+}
+
+// In JSX — render before generic error block
+{
+  permissionError && !loading && (
+    <AccessDeniedBanner requiredRoles={permissionError.requiredRoles} />
+  );
+}
+```
+
 ### List Pages — Gating Create Buttons
 
 ```tsx

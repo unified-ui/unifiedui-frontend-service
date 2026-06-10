@@ -65,11 +65,14 @@ export const EntityAvatar: FC<EntityAvatarProps> = ({ entityType, size = 'sm', c
     <Avatar
       size={avatarSize}
       radius="sm"
-      color="gray"
-      variant="light"
-      style={colors ? { backgroundColor: colors.bg } : undefined}
+      color={colors ? undefined : 'gray'}
+      variant={colors ? 'transparent' : 'light'}
+      style={colors ? {
+        backgroundColor: colors.bg,
+        color: colors.fg,
+      } : undefined}
     >
-      <Icon size={iconSize} stroke={1.5} style={colors ? { color: colors.fg } : undefined} />
+      <Icon size={iconSize} stroke={1.5} />
     </Avatar>
   );
 };

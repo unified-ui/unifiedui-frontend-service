@@ -5,8 +5,8 @@ export const TenantPermissionEnum = {
   TENANT_GLOBAL_ADMIN: 'TENANT_GLOBAL_ADMIN',
   CHAT_AGENTS_ADMIN: 'CHAT_AGENTS_ADMIN',
   CHAT_AGENTS_CREATOR: 'CHAT_AGENTS_CREATOR',
-  AUTONOMOUS_AGENTS_ADMIN: 'AUTONOMOUS_AGENTS_ADMIN',
-  AUTONOMOUS_AGENTS_CREATOR: 'AUTONOMOUS_AGENTS_CREATOR',
+  WORKFLOWS_ADMIN: 'WORKFLOWS_ADMIN',
+  WORKFLOWS_CREATOR: 'WORKFLOWS_CREATOR',
   CONVERSATIONS_ADMIN: 'CONVERSATIONS_ADMIN',
   CONVERSATIONS_CREATOR: 'CONVERSATIONS_CREATOR',
   CREDENTIALS_ADMIN: 'CREDENTIALS_ADMIN',
@@ -15,8 +15,6 @@ export const TenantPermissionEnum = {
   CUSTOM_GROUPS_ADMIN: 'CUSTOM_GROUPS_ADMIN',
   CHAT_WIDGETS_ADMIN: 'CHAT_WIDGETS_ADMIN',
   CHAT_WIDGETS_CREATOR: 'CHAT_WIDGETS_CREATOR',
-  REACT_AGENT_ADMIN: 'REACT_AGENT_ADMIN',
-  REACT_AGENT_CREATOR: 'REACT_AGENT_CREATOR',
   TENANT_AI_MODELS_ADMIN: 'TENANT_AI_MODELS_ADMIN',
   EXTERNAL_APPS_ADMIN: 'EXTERNAL_APPS_ADMIN',
   EXTERNAL_APPS_CREATOR: 'EXTERNAL_APPS_CREATOR',
@@ -44,7 +42,6 @@ export const ChatAgentTypeEnum = {
   N8N: 'N8N',
   MICROSOFT_FOUNDRY: 'MICROSOFT_FOUNDRY',
   REST_API: 'REST_API',
-  REACT_AGENT: 'REACT_AGENT',
   LLM: 'LLM',
 } as const;
 
@@ -140,15 +137,6 @@ export const CredentialTypeEnum = {
 
 export type CredentialTypeEnum = typeof CredentialTypeEnum[keyof typeof CredentialTypeEnum];
 
-// ========== Tool Type Enum ==========
-
-export const ToolTypeEnum = {
-  MCP_SERVER: 'MCP_SERVER',
-  OPENAPI_DEFINITION: 'OPENAPI_DEFINITION',
-} as const;
-
-export type ToolTypeEnum = typeof ToolTypeEnum[keyof typeof ToolTypeEnum];
-
 // ========== N8N Chat Agent Config Types ==========
 
 export const N8NApiVersionEnum = {
@@ -189,11 +177,33 @@ export const FoundryApiVersionEnum = {
 
 export type FoundryApiVersionEnum = typeof FoundryApiVersionEnum[keyof typeof FoundryApiVersionEnum];
 
+export const FoundryAuthTypeEnum = {
+  ENTRA_ID_USER_TOKEN: 'ENTRA_ID_USER_TOKEN',
+  ENTRA_ID_APP_REGISTRATION: 'ENTRA_ID_APP_REGISTRATION',
+  API_KEY: 'API_KEY',
+  CUSTOM_REST_API: 'CUSTOM_REST_API',
+} as const;
+
+export type FoundryAuthTypeEnum = typeof FoundryAuthTypeEnum[keyof typeof FoundryAuthTypeEnum];
+
+export const FoundryCustomRestApiAuthTypeEnum = {
+  API_KEY: 'API_KEY',
+  USER_TOKEN: 'USER_TOKEN',
+  ENTRA_ID_APP_REGISTRATION: 'ENTRA_ID_APP_REGISTRATION',
+} as const;
+
+export type FoundryCustomRestApiAuthTypeEnum = typeof FoundryCustomRestApiAuthTypeEnum[keyof typeof FoundryCustomRestApiAuthTypeEnum];
+
 export interface FoundryChatAgentConfig {
   agent_type: FoundryAgentTypeEnum;
   api_version: FoundryApiVersionEnum;
   project_endpoint: string;
   agent_name: string;
+  auth_type?: FoundryAuthTypeEnum;
+  credential_id?: string;
+  custom_rest_api_endpoint?: string;
+  custom_rest_api_auth_type?: FoundryCustomRestApiAuthTypeEnum;
+  custom_rest_api_api_key_header?: string;
 }
 
 // ========== REST API Chat Agent Config Types ==========
@@ -315,6 +325,11 @@ export interface GetMessagesResponse {
   hasMore: boolean;
 }
 
+export interface MessageWithContextResponse {
+  message: MessageResponse;
+  userMessage?: MessageResponse;
+}
+
 export interface SearchMessagesResponse {
   messages: MessageResponse[];
 }
@@ -387,6 +402,7 @@ export interface BulkReactionsResponse {
 export interface UpsertReactionRequest {
   reaction: ReactionType;
   feedbackText?: string;
+  reasons?: string[];
 }
 
 export interface EditMessageRequest {
@@ -972,6 +988,9 @@ export interface ChatAgentResponse {
   description?: string;
   type: ChatAgentTypeEnum;
   config: Record<string, unknown>;
+  ai_model_ids?: string[];
+  tool_ids?: string[];
+  system_prompt?: string;
   is_active: boolean;
   embed_allowed_origins?: string;
   tags: TagSummary[];
@@ -980,13 +999,6 @@ export interface ChatAgentResponse {
   created_by?: string;
   updated_by?: string;
   my_permission?: string;
-  current_version?: number;
-  ai_model_ids?: string[];
-  system_prompt?: string | null;
-  tool_ids?: string[];
-  security_prompt?: string | null;
-  tool_use_prompt?: string | null;
-  response_prompt?: string | null;
   greeting_messages?: string[];
 }
 
@@ -997,13 +1009,6 @@ export interface CreateChatAgentRequest {
   config?: Record<string, unknown>;
   is_active?: boolean;
   embed_allowed_origins?: string;
-  current_version?: number;
-  ai_model_ids?: string[];
-  system_prompt?: string | null;
-  tool_ids?: string[];
-  security_prompt?: string | null;
-  tool_use_prompt?: string | null;
-  response_prompt?: string | null;
   greeting_messages?: string[];
 }
 
@@ -1021,35 +1026,6 @@ export interface SetChatAgentPermissionRequest {
   principal_id: string;
   principal_type: PrincipalTypeEnum;
   role: PermissionActionEnum;
-}
-
-export interface UpdateReActAgentVersionRequest {
-  ai_model_ids?: string[];
-  system_prompt?: string | null;
-  tool_ids?: string[];
-  security_prompt?: string | null;
-  tool_use_prompt?: string | null;
-  response_prompt?: string | null;
-  greeting_messages?: string[];
-  config?: Record<string, unknown>;
-}
-
-export interface ReActAgentVersionResponse {
-  id: string;
-  chat_agent_id: string;
-  version: number;
-  ai_model_ids: string[];
-  system_prompt: string | null;
-  tool_ids: string[];
-  security_prompt: string | null;
-  tool_use_prompt: string | null;
-  response_prompt: string | null;
-  greeting_messages: string[];
-  config: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
-  created_by: string | null;
-  updated_by: string | null;
 }
 
 // ========== Unified Principal Response Types ==========
@@ -1097,7 +1073,6 @@ export interface WorkflowResponse {
   description?: string;
   type: WorkflowTypeEnum;
   config: Record<string, unknown>;
-  is_active: boolean;
   allow_api_keys: boolean;
   last_full_import?: string;
   tags: TagSummary[];
@@ -1113,7 +1088,6 @@ export interface CreateWorkflowRequest {
   description?: string;
   type: WorkflowTypeEnum;
   config: Record<string, unknown>;
-  is_active?: boolean;
   allow_api_keys?: boolean;
 }
 
@@ -1121,7 +1095,6 @@ export interface UpdateWorkflowRequest {
   name?: string;
   description?: string;
   config?: Record<string, unknown>;
-  is_active?: boolean;
   allow_api_keys?: boolean;
 }
 
@@ -1172,7 +1145,6 @@ export interface ConversationResponse {
   chat_agent_id: string;
   name: string;
   description?: string;
-  is_active: boolean;
   ext_conversation_id?: string; // External conversation ID (e.g., Foundry conversation ID)
   created_at: string;
   updated_at: string;
@@ -1185,13 +1157,11 @@ export interface CreateConversationRequest {
   chat_agent_id: string;
   name: string;
   description?: string;
-  is_active?: boolean;
 }
 
 export interface UpdateConversationRequest {
   name?: string;
   description?: string;
-  is_active?: boolean;
 }
 
 export interface SetConversationPermissionRequest {
@@ -1272,7 +1242,6 @@ export interface ChatWidgetResponse {
   description?: string;
   type?: ChatWidgetTypeEnum;
   config: Record<string, unknown>;
-  is_active: boolean;
   tags: TagSummary[];
   created_at: string;
   updated_at: string;
@@ -1286,7 +1255,6 @@ export interface CreateChatWidgetRequest {
   description?: string;
   type?: ChatWidgetTypeEnum;
   config: Record<string, unknown>;
-  is_active?: boolean;
 }
 
 export interface UpdateChatWidgetRequest {
@@ -1294,7 +1262,6 @@ export interface UpdateChatWidgetRequest {
   description?: string;
   type?: ChatWidgetTypeEnum;
   config?: Record<string, unknown>;
-  is_active?: boolean;
 }
 
 export interface SetChatWidgetPermissionRequest {
@@ -1338,49 +1305,6 @@ export interface DeletePrincipalRoleRequest {
   role: PermissionActionEnum;
 }
 
-// ========== Tool Types ==========
-
-export interface ToolResponse {
-  id: string;
-  tenant_id: string;
-  name: string;
-  description?: string;
-  type: ToolTypeEnum;
-  config: Record<string, unknown>;
-  credential_id?: string;
-  is_active: boolean;
-  tags: TagSummary[];
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-  updated_by?: string;
-  my_permission?: string;
-}
-
-export interface CreateToolRequest {
-  name: string;
-  description?: string;
-  type: ToolTypeEnum;
-  config?: Record<string, unknown>;
-  credential_id?: string;
-  is_active?: boolean;
-}
-
-export interface UpdateToolRequest {
-  name?: string;
-  description?: string;
-  type?: ToolTypeEnum;
-  config?: Record<string, unknown>;
-  credential_id?: string;
-  is_active?: boolean;
-}
-
-export interface SetToolPermissionRequest {
-  principal_id: string;
-  principal_type: PrincipalTypeEnum;
-  role: PermissionActionEnum;
-}
-
 // ========== AI Model Types ==========
 
 export const AIModelTypeEnum = {
@@ -1403,11 +1327,9 @@ export const AIModelProviderEnum = {
 export type AIModelProviderEnum = typeof AIModelProviderEnum[keyof typeof AIModelProviderEnum];
 
 export const AIModelPurposeGroupEnum = {
-  REACT_AGENT: 'REACT_AGENT',
   CONVERSATION_TITLE_GENERATION: 'CONVERSATION_TITLE_GENERATION',
   CONVERSATION_SUMMARIZATION: 'CONVERSATION_SUMMARIZATION',
   DESCRIPTION_GENERATION: 'DESCRIPTION_GENERATION',
-  TRACE_ANALYSIS: 'TRACE_ANALYSIS',
   GENERAL: 'GENERAL',
   DIRECT_CHAT: 'DIRECT_CHAT',
 } as const;
@@ -1425,7 +1347,6 @@ export interface AIModelResponse {
   config: Record<string, unknown>;
   credential_id?: string;
   priority: number;
-  is_active: boolean;
   tags: TagSummary[];
   created_at: string;
   updated_at: string;
@@ -1442,7 +1363,6 @@ export interface CreateAIModelRequest {
   config?: Record<string, unknown>;
   credential_id?: string;
   priority?: number;
-  is_active?: boolean;
 }
 
 export interface UpdateAIModelRequest {
@@ -1452,17 +1372,31 @@ export interface UpdateAIModelRequest {
   config?: Record<string, unknown>;
   credential_id?: string;
   priority?: number;
-  is_active?: boolean;
 }
 
 // ========== External App Types ==========
+
+export type ExternalAppMode = 'url' | 'iframe';
+
+export interface ExternalAppUrlConfig {
+  mode: 'url';
+  url: string;
+  params: Record<string, string>;
+}
+
+export interface ExternalAppIframeConfig {
+  mode: 'iframe';
+  iframe_html: string;
+}
+
+export type ExternalAppConfig = ExternalAppUrlConfig | ExternalAppIframeConfig;
 
 export interface ExternalAppResponse {
   id: string;
   tenant_id: string;
   name: string;
   description?: string;
-  url: string;
+  config: ExternalAppConfig;
   image_url?: string;
   image_file_id?: string;
   tags: TagSummary[];
@@ -1476,7 +1410,7 @@ export interface ExternalAppResponse {
 export interface CreateExternalAppRequest {
   name: string;
   description?: string;
-  url: string;
+  config: ExternalAppConfig;
   image_url?: string;
   image_file_id?: string;
 }
@@ -1484,7 +1418,7 @@ export interface CreateExternalAppRequest {
 export interface UpdateExternalAppRequest {
   name?: string;
   description?: string;
-  url?: string;
+  config?: ExternalAppConfig;
   image_url?: string;
   image_file_id?: string;
 }
@@ -1643,6 +1577,7 @@ export interface SearchResultItem {
   id: string;
   name: string;
   description?: string;
+  subtitle?: string;
   match_field: string;
   is_active?: boolean;
   tags: string[];
@@ -1754,4 +1689,87 @@ export interface TenantPrincipalsQueryParams {
   is_active?: boolean;
   order_by?: 'display_name';
   order_direction?: 'asc' | 'desc';
+}
+
+export interface UpsertMessageFeedbackRequest {
+  rating: 'THUMBS_UP' | 'THUMBS_DOWN';
+  reasons?: string[];
+  comment?: string | null;
+}
+
+export interface MessageFeedbackResponse {
+  id: string;
+  tenant_id: string;
+  conversation_id: string;
+  message_id: string;
+  user_id: string;
+  rating: 'THUMBS_UP' | 'THUMBS_DOWN';
+  reasons: string[];
+  comment: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReasonBreakdownEntry {
+  reason: string;
+  count: number;
+}
+
+export interface RecentFeedbackEntry {
+  message_id: string;
+  conversation_id: string;
+  rating: string;
+  reasons: string[];
+  comment: string | null;
+  created_at: string;
+  chat_agent_id?: string | null;
+  chat_agent_name?: string | null;
+}
+
+export interface FeedbackTimelineEntry {
+  created_at: string;
+  delta: number;
+  cumulative: number;
+}
+
+export interface FeedbackStatsResponse {
+  total_feedbacks: number;
+  thumbs_up: number;
+  thumbs_down: number;
+  score: number | null;
+  reason_breakdown: ReasonBreakdownEntry[];
+  recent_negative: RecentFeedbackEntry[];
+  timeline: FeedbackTimelineEntry[];
+}
+
+export interface FeedbackStatsPerAgent {
+  chat_agent_id: string;
+  chat_agent_name: string | null;
+  total_feedbacks: number;
+  thumbs_up: number;
+  thumbs_down: number;
+  score: number | null;
+}
+
+export interface FeedbackStatsBatchResponse {
+  aggregate: FeedbackStatsResponse;
+  per_agent: FeedbackStatsPerAgent[];
+}
+
+export interface MessageStatsAggregate {
+  total_messages: number;
+  success_count: number;
+  failed_count: number;
+}
+
+export interface MessageStatsPerAgent {
+  chat_agent_id: string;
+  total_messages: number;
+  success_count: number;
+  failed_count: number;
+}
+
+export interface MessageStatsResponse {
+  aggregate: MessageStatsAggregate;
+  per_agent: MessageStatsPerAgent[];
 }

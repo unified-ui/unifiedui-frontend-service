@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { FC } from 'react';
 import {
   Modal, TextInput, Textarea, Select, Button, Group, Stack,
-  Text, NumberInput, Switch, MultiSelect, Alert, LoadingOverlay, Divider, Box,
+  Text, NumberInput, MultiSelect, Alert, LoadingOverlay, Divider, Box,
   ActionIcon, Tooltip, Autocomplete,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
@@ -38,7 +38,6 @@ interface FormValues {
   config: Record<string, string>;
   credential_id: string;
   priority: number;
-  is_active: boolean;
   tags: string[];
 }
 
@@ -58,12 +57,10 @@ const PROVIDERS = [
 ];
 
 const PURPOSE_GROUPS = [
-  { value: AIModelPurposeGroupEnum.REACT_AGENT, label: 'ReAct Agent' },
   { value: AIModelPurposeGroupEnum.DIRECT_CHAT, label: 'Direct Chat' },
   { value: AIModelPurposeGroupEnum.CONVERSATION_TITLE_GENERATION, label: 'Title Generation' },
   { value: AIModelPurposeGroupEnum.CONVERSATION_SUMMARIZATION, label: 'Conversation Summarization' },
   { value: AIModelPurposeGroupEnum.DESCRIPTION_GENERATION, label: 'Description Generation' },
-  { value: AIModelPurposeGroupEnum.TRACE_ANALYSIS, label: 'Trace Analysis' },
   { value: AIModelPurposeGroupEnum.GENERAL, label: 'General' },
 ];
 
@@ -117,7 +114,6 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
       config: {},
       credential_id: '',
       priority: 0,
-      is_active: true,
       tags: [],
     },
     validate: {
@@ -161,7 +157,6 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
         config: model.config as Record<string, string>,
         credential_id: model.credential_id || '',
         priority: model.priority,
-        is_active: model.is_active,
         tags: model.tags?.map((t) => t.name) || [],
       });
       form.resetDirty();
@@ -170,7 +165,8 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [apiClient, selectedTenant, modelId, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiClient, selectedTenant, modelId]);
 
   useEffect(() => {
     if (opened) {
@@ -183,7 +179,8 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
         form.reset();
       }
     }
-  }, [opened, isEdit, fetchCredentials, fetchModel, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opened, isEdit, fetchCredentials, fetchModel]);
 
   useEffect(() => {
     if (opened) {
@@ -204,7 +201,6 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
           config: values.config,
           credential_id: values.credential_id || undefined,
           priority: values.priority,
-          is_active: values.is_active,
         });
         await apiClient.setAIModelTags(selectedTenant.id, modelId, values.tags);
       } else {
@@ -217,7 +213,6 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
           config: values.config,
           credential_id: values.credential_id || undefined,
           priority: values.priority,
-          is_active: values.is_active,
         });
         if (values.tags.length > 0) {
           await apiClient.setAIModelTags(selectedTenant.id, created.id, values.tags);
@@ -482,14 +477,6 @@ export const AIModelDialog: FC<AIModelDialogProps> = ({
               max={100}
               {...form.getInputProps('priority')}
             />
-            <div>
-              <Text size="sm" fw={500} mb={4}>Active</Text>
-              <Switch
-                checked={form.values.is_active}
-                onChange={(e) => form.setFieldValue('is_active', e.currentTarget.checked)}
-                label={form.values.is_active ? 'Enabled' : 'Disabled'}
-              />
-            </div>
           </Group>
 
           <TagInput

@@ -122,5 +122,25 @@
   "unauthorized": {
     "title": "No Access",
     "message": "You do not have access to any organization or tenant. Please contact your administrator."
+  },
+  "accessDenied": {
+    "title": "Access Denied",
+    "message": "You do not have the required permissions to access this resource.",
+    "requiredRoles": "Required roles",
+    "noCreatePermission": "You do not have permission to create {{resource}}.",
+    "readOnly": "Read-only — modifying this section requires admin access."
+  },
+  "permissionDenied": "You do not have permission to perform this action.",
+  "notifications": {
+    "title": "Notifications",
+    "count": "{{count}} notification(s)",
+    "markAllRead": "Mark all as read",
+    "clearAll": "Clear all",
+    "empty": "No notifications",
+    "dismiss": "Dismiss",
+    "showDetails": "Show details",
+    "hideDetails": "Hide details",
+    "copyDetails": "Copy response",
+    "copied": "Copied!"
   }
 }

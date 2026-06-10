@@ -127,9 +127,6 @@ const getEntityRoute = (item: SearchResultItem): string => {
   }
   const baseRoute = ENTITY_LIST_ROUTES[item.type];
   if (!baseRoute) return '/';
-  if (item.type === 'chat_agent' && item.sub_type === 'REACT_AGENT') {
-    return `${baseRoute}/${item.id}/develop`;
-  }
   if (item.type === 'chat_agent') {
     return `/conversations?chat-agent=${item.id}&selected=${item.id}`;
   }
@@ -277,7 +274,11 @@ export const CommandPalette: FC<CommandPaletteProps> = ({ open, onOpenChange }) 
         limit: SEARCH_LIMIT,
         offset: entityResults.length,
       });
-      setEntityResults(prev => [...prev, ...response.results]);
+      setEntityResults(prev => {
+        const existingIds = new Set(prev.map(r => `${r.type}-${r.id}`));
+        const newResults = response.results.filter(r => !existingIds.has(`${r.type}-${r.id}`));
+        return [...prev, ...newResults];
+      });
       setHasMoreEntities(response.results.length >= SEARCH_LIMIT);
     } catch (error) {
       console.error('Load more failed:', error);
@@ -395,6 +396,7 @@ export const CommandPalette: FC<CommandPaletteProps> = ({ open, onOpenChange }) 
                     return (
                       <Command.Item
                         key={`message-${msg.id}`}
+                        value={`message-${msg.id}`}
                         className={classes.item}
                         onSelect={() => handleSelectMessage(msg)}
                       >
@@ -424,6 +426,7 @@ export const CommandPalette: FC<CommandPaletteProps> = ({ open, onOpenChange }) 
                     return (
                       <Command.Item
                         key={`${item.type}-${item.id}`}
+                        value={`${item.type}-${item.id}`}
                         className={classes.item}
                         onSelect={() => handleSelectResult(item)}
                       >
@@ -434,6 +437,9 @@ export const CommandPalette: FC<CommandPaletteProps> = ({ open, onOpenChange }) 
                           <DelayedTooltip label={item.name}>
                             <div className={classes.itemName}>{item.name}</div>
                           </DelayedTooltip>
+                          {item.subtitle && (
+                            <div className={classes.itemSubtitle}>{item.subtitle}</div>
+                          )}
                           {item.description && (
                             <DelayedTooltip label={item.description}>
                               <div className={classes.itemDescription}>{item.description}</div>
