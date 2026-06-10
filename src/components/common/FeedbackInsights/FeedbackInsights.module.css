@@ -1,0 +1,35 @@
+.reasonBadge {
+  cursor: default;
+  text-transform: capitalize;
+}
+
+.section {
+  width: 100%;
+}
+
+.sectionTitle {
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.table {
+  width: 100%;
+}
+
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:hover {
+  background-color: var(--mantine-color-default-hover);
+}
+
+.feedbackBlock {
+  background: var(--mantine-color-red-light);
+  border-left: 3px solid var(--mantine-color-red-6);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+}

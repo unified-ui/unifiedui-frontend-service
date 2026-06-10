@@ -5,11 +5,10 @@ import {
   IconHome, IconHomeFilled,
   IconMessages, IconMessageFilled,
   IconSparkles,
-  IconSettings, IconSettingsFilled,
   IconBrandWechat,
   IconRobot,
-  IconBrain,
   IconAppWindow,
+  IconShieldLock,
 } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSidebarData, useFavorites, type EntityType } from '../../../contexts';
@@ -47,10 +46,8 @@ const mainNavItemsTop: NavItem[] = [
     path: '/chat-agents',
     hasDataList: true,
     entityType: 'chat-agents',
-    matchFn: (pathname, search) =>
-      (pathname === '/chat-agents' || pathname.startsWith('/chat-agents/')) &&
-      !search.includes('type=REACT_AGENT') &&
-      !pathname.endsWith('/develop'),
+    matchFn: (pathname) =>
+      pathname === '/chat-agents' || pathname.startsWith('/chat-agents/'),
   },
   { icon: IconRobot, labelKey: 'workflows', path: '/workflows', hasDataList: true, entityType: 'workflows' },
   {
@@ -76,21 +73,10 @@ const mainNavItemsBottom: NavItem[] = [
       pathname.startsWith('/chat-widgets/') ||
       pathname.startsWith('/widget-designer/'),
   },
-  {
-    icon: IconBrain,
-    labelKey: 'reactAgents',
-    path: '/chat-agents?type=REACT_AGENT',
-    visible: false,
-    requiredResourceAccess: 'tools',
-    envFlag: 'VITE_SHOW_RE_ACT_AGENT_DEVELOPMENT_PAGE',
-    matchFn: (pathname, search) =>
-      (pathname === '/chat-agents' && search.includes('type=REACT_AGENT')) ||
-      pathname.endsWith('/develop'),
-  },
 ];
 
 const bottomNavItems: NavItem[] = [
-  { icon: IconSettings, iconFilled: IconSettingsFilled, labelKey: 'settings', path: '/tenant-settings?tab=iam' },
+  { icon: IconShieldLock, labelKey: 'admin', path: '/admin' },
 ];
 
 interface EntityConfig {
@@ -213,7 +199,7 @@ export const Sidebar: FC = () => {
       icon: <IconSparkles size={24} />,
       addButtonLabel: t('addChatAgent'),
       fetchData: () => fetchEntityData('chat-agents'),
-      getLink: (id) => `/conversations?chat-agent=${id}`,
+      getLink: (id) => `/chat-agents/${id}`,
     },
     'workflows': {
       title: t('workflows'),
@@ -569,7 +555,8 @@ export const Sidebar: FC = () => {
         </Stack>
 
         <Stack gap="xs" className={classes.navBottom}>
-          {bottomNavItems.map(renderNavItem)}
+          {bottomNavItems
+            .map(renderNavItem)}
         </Stack>
       </aside>
 

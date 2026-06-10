@@ -11,17 +11,18 @@ const LoginTokenPage = lazy(() => import('../pages/LoginTokenPage').then(m => ({
 const DashboardPage = lazy(() => import('../pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const TenantSettingsPage = lazy(() => import('../pages/TenantSettingsPage').then(m => ({ default: m.TenantSettingsPage })));
 const ChatAgentsPage = lazy(() => import('../pages/ChatAgentsPage').then(m => ({ default: m.ChatAgentsPage })));
+const ChatAgentDetailsPage = lazy(() => import('../pages/ChatAgentDetailsPage').then(m => ({ default: m.ChatAgentDetailsPage })));
+const UserSettingsPage = lazy(() => import('../pages/UserSettingsPage').then(m => ({ default: m.UserSettingsPage })));
 const ConversationsPage = lazy(() => import('../pages/ConversationsPage').then(m => ({ default: m.ConversationsPage })));
 const WorkflowsPage = lazy(() => import('../pages/WorkflowsPage').then(m => ({ default: m.WorkflowsPage })));
 const WorkflowDetailsPage = lazy(() => import('../pages/WorkflowDetailsPage').then(m => ({ default: m.WorkflowDetailsPage })));
 const ChatWidgetsPage = lazy(() => import('../pages/ChatWidgetsPage').then(m => ({ default: m.ChatWidgetsPage })));
 const WidgetDesignerPage = lazy(() => import('../pages/WidgetDesignerPage').then(m => ({ default: m.WidgetDesignerPage })));
-const ReActAgentDeveloperPage = lazy(() => import('../pages/ReActAgentDeveloperPage').then(m => ({ default: m.ReActAgentDeveloperPage })));
 const EmbedChatPage = lazy(() => import('../pages/EmbedChatPage').then(m => ({ default: m.EmbedChatPage })));
-const HowEmbedChatPage = lazy(() => import('../pages/HowEmbedChatPage').then(m => ({ default: m.HowEmbedChatPage })));
 const TracingDialogDevelopmentPage = lazy(() => import('../pages/TracingDialogDevelopmentPage').then(m => ({ default: m.TracingDialogDevelopmentPage })));
 const ExternalAppsPage = lazy(() => import('../pages/ExternalAppsPage').then(m => ({ default: m.ExternalAppsPage })));
 const ExternalAppPage = lazy(() => import('../pages/ExternalAppPage').then(m => ({ default: m.ExternalAppPage })));
+const AdminAnalyticsPage = lazy(() => import('../pages/AdminAnalyticsPage').then(m => ({ default: m.AdminAnalyticsPage })));
 
 const IS_DEV = import.meta.env.DEV;
 
@@ -45,17 +46,19 @@ export const AppRoutes = () => {
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
             <Route path="/home" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-            <Route path="/tenant-settings" element={<ProtectedRoute><TenantSettingsPage /></ProtectedRoute>} />
+            <Route path="/tenant-settings" element={<Navigate to="/admin/settings?tab=iam" replace />} />
+            <Route path="/admin/settings" element={<ProtectedRoute><TenantSettingsPage layout="admin" /></ProtectedRoute>} />
+            <Route path="/user/settings" element={<ProtectedRoute><UserSettingsPage /></ProtectedRoute>} />
             <Route path="/chat-agents" element={<ProtectedRoute><ChatAgentsPage /></ProtectedRoute>} />
-            <Route path="/chat-agents/:id/embed-chat" element={<ProtectedRoute><HowEmbedChatPage /></ProtectedRoute>} />
+            <Route path="/chat-agents/:id" element={<ProtectedRoute><ChatAgentDetailsPage /></ProtectedRoute>} />
             <Route path="/conversations/:conversationId?" element={<ProtectedRoute><ConversationsPage /></ProtectedRoute>} />
             <Route path="/workflows" element={<ProtectedRoute><WorkflowsPage /></ProtectedRoute>} />
             <Route path="/workflows/:agentId" element={<ProtectedRoute><WorkflowDetailsPage /></ProtectedRoute>} />
             <Route path="/chat-widgets" element={<ProtectedRoute><ChatWidgetsPage /></ProtectedRoute>} />
             <Route path="/widget-designer/:widgetId" element={<ProtectedRoute><WidgetDesignerPage /></ProtectedRoute>} />
-            <Route path="/chat-agents/:agentId/develop" element={<ProtectedRoute><ReActAgentDeveloperPage /></ProtectedRoute>} />
             <Route path="/external-apps" element={<ProtectedRoute><ExternalAppsPage /></ProtectedRoute>} />
             <Route path="/external-apps/:id" element={<ProtectedRoute><ExternalAppPage /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><AdminAnalyticsPage /></ProtectedRoute>} />
 
             {IS_DEV && (
               <Route path="/dev/tracing" element={<ProtectedRoute><TracingDialogDevelopmentPage /></ProtectedRoute>} />

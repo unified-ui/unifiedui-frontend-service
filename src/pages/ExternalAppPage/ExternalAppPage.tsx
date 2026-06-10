@@ -45,14 +45,37 @@ export const ExternalAppPage: FC = () => {
 
   return (
     <MainLayout noPadding>
-      <iframe
-        src={app.url}
-        title={app.name}
-        className={classes.iframe}
-        sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads"
-        referrerPolicy="no-referrer"
-        loading="lazy"
-      />
+      {app.config?.mode === 'iframe' ? (
+        <div
+          className={classes.iframe}
+          dangerouslySetInnerHTML={{ __html: app.config.iframe_html }}
+        />
+      ) : (
+        <iframe
+          src={buildAssembledUrl(app)}
+          title={app.name}
+          className={classes.iframe}
+          sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads"
+          referrerPolicy="no-referrer"
+          loading="lazy"
+        />
+      )}
     </MainLayout>
   );
+};
+
+const buildAssembledUrl = (app: ExternalAppResponse): string => {
+  if (app.config?.mode !== 'url') return '';
+  const { url, params } = app.config;
+  if (!params || Object.keys(params).length === 0) return url;
+  try {
+    const u = new URL(url);
+    Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
+    return u.toString();
+  } catch {
+    const qs = Object.entries(params)
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join('&');
+    return url.includes('?') ? `${url}&${qs}` : `${url}?${qs}`;
+  }
 };

@@ -1,0 +1,21 @@
+{
+  "home": "Startseite",
+  "chats": "Chats",
+  "agents": "Agenten",
+  "reactAgents": "ReACT-Agenten",
+  "workflows": "Workflows",
+  "widgets": "Widgets",
+  "apps": "Apps",
+  "settings": "Einstellungen",
+  "admin": "Admin",
+  "chatAgents": "Chat-Agenten",
+  "addChatAgent": "Chat-Agent hinzufügen",
+  "addWorkflow": "Workflow hinzufügen",
+  "chatWidgets": "Chat-Widgets",
+  "addChatWidget": "Chat-Widget hinzufügen",
+  "externalApps": "Externe Apps",
+  "addExternalApp": "Externe App hinzufügen",
+  "conversations": "Konversationen",
+  "newConversation": "Neue Konversation",
+  "failedToLoadConversations": "Konversationen konnten nicht geladen werden"
+}

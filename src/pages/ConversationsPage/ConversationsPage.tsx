@@ -154,7 +154,7 @@ export const ConversationsPage: FC = () => {
 
   const handleEmbedSetup = useCallback(() => {
     if (convList.selectedChatAgentId) {
-      navigate(`/chat-agents/${convList.selectedChatAgentId}/embed-chat`);
+      navigate(`/chat-agents/${convList.selectedChatAgentId}?tab=embed`);
     }
   }, [convList.selectedChatAgentId, navigate]);
 

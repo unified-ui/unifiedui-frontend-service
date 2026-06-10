@@ -34,7 +34,7 @@ import {
   IconSettings2,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
-import { SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip, Breadcrumbs, EntityAvatar, WorkflowRunsTable, ContentCard } from '../../components/common';
+import { SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip, Breadcrumbs, EntityAvatar, WorkflowRunsTable, ContentCard, AccessDeniedBanner } from '../../components/common';
 import type { TracesSortState, TraceDatePreset } from '../../components/common';
 import { TracingVisualDialog } from '../../components/tracing';
 import { EditWorkflowDialog } from '../../components/dialogs/EditWorkflowDialog';
@@ -47,6 +47,7 @@ import { useSidebarData } from '../../contexts/SidebarDataContext';
 import { useRecentVisits } from '../../contexts';
 import { useDelayedLoading, useDialogParams } from '../../hooks';
 import type { WorkflowResponse, FullTraceResponse, TracesListParams } from '../../api/types';
+import { PermissionError } from '../../api/errors';
 import classes from './WorkflowDetailsPage.module.css';
 
 // ============================================================================
@@ -96,6 +97,7 @@ export const WorkflowDetailsPage: FC = () => {
   const [agent, setAgent] = useState<WorkflowResponse | null>(null);
   const [agentLoading, setAgentLoading] = useState(true);
   const [agentError, setAgentError] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState<PermissionError | null>(null);
   const showAgentSkeleton = useDelayedLoading(agentLoading, 500);
 
   // ---- Tabs ----
@@ -158,11 +160,16 @@ export const WorkflowDetailsPage: FC = () => {
     if (!apiClient || !selectedTenant || !agentId) return;
     setAgentLoading(true);
     setAgentError(null);
+    setPermissionError(null);
     try {
       const data = await apiClient.getWorkflow(selectedTenant.id, agentId);
       setAgent(data);
-    } catch {
-      setAgentError('Failed to load workflow');
+    } catch (err) {
+      if (err instanceof PermissionError) {
+        setPermissionError(err);
+      } else {
+        setAgentError(err instanceof Error ? err.message : 'Failed to load workflow');
+      }
     } finally {
       setAgentLoading(false);
     }
@@ -180,6 +187,7 @@ export const WorkflowDetailsPage: FC = () => {
         resource_name: agent.name,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agent?.id]);
 
   useEffect(() => {
@@ -475,17 +483,17 @@ export const WorkflowDetailsPage: FC = () => {
   }, [fetchAgent, refreshWorkflows, closeDialog]);
 
   // ---- Computed ----
+  const agentServiceHost = import.meta.env.VITE_AGENT_SERVICE_URL || 'http://localhost:8085';
+
   const postEndpointUrl = useMemo(() => {
     if (!selectedTenant) return '';
-    const host = "{YOUR-AGENT-SERVICE-HOST}";
-    return `${host}/api/v1/agent-service/tenants/${selectedTenant.id}/traces`;
-  }, [selectedTenant]);
+    return `${agentServiceHost}/api/v1/agent-service/tenants/${selectedTenant.id}/traces`;
+  }, [selectedTenant, agentServiceHost]);
 
   const putEndpointUrl = useMemo(() => {
     if (!selectedTenant || !agentId) return '';
-    const host = "{YOUR-AGENT-SERVICE-HOST}";
-    return `${host}/api/v1/agent-service/tenants/${selectedTenant.id}/workflows/${agentId}/traces/import`;
-  }, [selectedTenant, agentId]);
+    return `${agentServiceHost}/api/v1/agent-service/tenants/${selectedTenant.id}/workflows/${agentId}/traces/import`;
+  }, [selectedTenant, agentId, agentServiceHost]);
 
   const n8nConfig = useMemo(() => {
     if (!agent || agent.type !== 'N8N') return null;
@@ -508,7 +516,19 @@ export const WorkflowDetailsPage: FC = () => {
             { label: agent?.name || '' },
           ]} />
 
-          {agentError && !agentLoading && (
+          {permissionError && !agentLoading && (
+            <Stack py="xl" gap="md">
+              <AccessDeniedBanner requiredRoles={permissionError.requiredRoles} />
+              <Group>
+                <ActionIcon variant="subtle" onClick={() => navigate('/workflows')}>
+                  <IconArrowLeft size={20} />
+                </ActionIcon>
+                <Text c="dimmed">Back to Workflows</Text>
+              </Group>
+            </Stack>
+          )}
+
+          {agentError && !agentLoading && !permissionError && (
             <Stack py="xl" gap="md">
               <Alert icon={<IconAlertCircle size={16} />} title="Error" color="red">
                 {agentError}
@@ -522,7 +542,7 @@ export const WorkflowDetailsPage: FC = () => {
             </Stack>
           )}
 
-          {!agentError && (
+          {!agentError && !permissionError && (
             <>
           <div className={classes.header}>
             <Group gap="sm" mb="xs">
@@ -573,13 +593,7 @@ export const WorkflowDetailsPage: FC = () => {
                       {tag.name}
                     </Badge>
                   ))}
-                  <Badge
-                    variant="dot"
-                    size="sm"
-                    color={agent.is_active ? 'green' : 'gray'}
-                  >
-                    {agent.is_active ? 'Active' : 'Inactive'}
-                  </Badge>
+
                 </>
               ) : null}
             </Group>
@@ -614,9 +628,7 @@ export const WorkflowDetailsPage: FC = () => {
               >
                 Details
               </Tabs.Tab>
-            </Tabs.List>
-
-            <Tabs.Panel value="traces" className={classes.tabPanel}>
+            </Tabs.List>            <Tabs.Panel value="traces" className={classes.tabPanel}>
                 {n8nConfig?.webhook_url && (
                   <Group gap="sm" mb="sm" justify="flex-end">
                     {autoRefresh && (

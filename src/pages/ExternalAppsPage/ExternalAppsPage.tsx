@@ -182,7 +182,7 @@ export const ExternalAppsPage: FC = () => {
                 <Tooltip label={app.name} disabled={app.name.length < 30} position="top" withArrow>
                   <Text fw={500} lineClamp={1}>{app.name}</Text>
                 </Tooltip>
-                {(isAdmin || app.my_permission) && (
+                {(isAdmin || app.my_permission === 'ADMIN' || app.my_permission === 'WRITE') && (
                   <Menu position="bottom-end" withinPortal>
                     <Menu.Target>
                       <ActionIcon

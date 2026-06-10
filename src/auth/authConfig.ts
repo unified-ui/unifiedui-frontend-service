@@ -1,9 +1,9 @@
 import type { PopupRequest } from "@azure/msal-browser";
 
-export type IdentityProviderType = 'microsoft' | 'google' | 'aws_cognito' | 'ldap' | 'kerberos' | 'saml' | 'okta' | 'oidc';
+export type IdentityProviderType = 'microsoft' | 'google' | 'aws_cognito' | 'ldap' | 'kerberos' | 'saml' | 'okta' | 'oidc' | 'debug';
 
 export const ALL_IDENTITY_PROVIDERS: IdentityProviderType[] = [
-  'microsoft', 'google', 'aws_cognito', 'ldap', 'kerberos', 'saml', 'okta', 'oidc',
+  'microsoft', 'google', 'aws_cognito', 'ldap', 'kerberos', 'saml', 'okta', 'oidc', 'debug',
 ];
 
 export interface AuthConfig {
@@ -30,6 +30,10 @@ export interface AuthConfig {
   ldap?: {
     apiBaseUrl: string;
   };
+  debug?: {
+    enabled: boolean;
+    secret: string;
+  };
 }
 
 const MSAL_CLIENT_ID = import.meta.env.VITE_MSAL_CLIENT_ID || '';
@@ -49,6 +53,9 @@ const OIDC_REDIRECT_URI = import.meta.env.VITE_OIDC_REDIRECT_URI || '';
 const OIDC_SCOPE = import.meta.env.VITE_OIDC_SCOPE || 'openid profile email';
 
 const LDAP_API_BASE_URL = import.meta.env.VITE_LDAP_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+const DEBUG_BACK_DOOR_ENABLED = import.meta.env.VITE_ENABLE_DEBUG_BACK_DOOR === 'true';
+const DEBUG_BACK_DOOR_SECRET = import.meta.env.VITE_DEBUG_BACK_DOOR_SECRET || '';
 
 export const authConfig: AuthConfig = {
   microsoft: MSAL_CLIENT_ID
@@ -84,6 +91,12 @@ export const authConfig: AuthConfig = {
   ldap: {
     apiBaseUrl: LDAP_API_BASE_URL,
   },
+  debug: DEBUG_BACK_DOOR_ENABLED
+    ? {
+        enabled: true,
+        secret: DEBUG_BACK_DOOR_SECRET,
+      }
+    : undefined,
 };
 
 export const enabledProviders: IdentityProviderType[] = (() => {
@@ -93,6 +106,7 @@ export const enabledProviders: IdentityProviderType[] = (() => {
   if (authConfig.awsCognito) providers.push('aws_cognito');
   if (authConfig.oidc) providers.push('oidc');
   if (authConfig.ldap) providers.push('ldap');
+  if (authConfig.debug?.enabled) providers.push('debug');
   return providers;
 })();
 

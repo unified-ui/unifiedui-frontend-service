@@ -138,6 +138,7 @@ export const FilterableSelect: FC<FilterableSelectProps> = ({
           value={filter}
           onChange={(event) => handleFilterChange(event.currentTarget.value)}
           placeholder={filterPlaceholder}
+          styles={{ input: { marginLeft: -2 } }}
         />
         <Combobox.Options>
           <ScrollArea.Autosize mah={200}>

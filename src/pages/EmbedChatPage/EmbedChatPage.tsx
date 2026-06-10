@@ -72,7 +72,7 @@ export const EmbedChatPage: FC = () => {
   }, [apiClient, selectedTenant, agentId]);
 
   const handleNavigate = useCallback((_path: string) => {
-    const match = _path.match(/\/conversations\/(.+)/);
+    const match = _path.match(/\/conversations\/([^?]+)/);
     if (match) {
       setConversationId(match[1]);
     }

@@ -1,6 +1,8 @@
 export { PageHeader } from './PageHeader';
 export { EntityAvatar } from './EntityAvatar';
 export type { EntityAvatarType } from './EntityAvatar';
+export { AccessDeniedBanner } from './AccessDeniedBanner';
+export type { AccessDeniedBannerProps } from './AccessDeniedBanner';
 export { Breadcrumbs } from './Breadcrumbs';
 export type { BreadcrumbItem } from './Breadcrumbs';
 export { DataTable, DataTableRow, DataTableToolbar } from './DataTable';
@@ -46,4 +48,9 @@ export { EndpointSuggestInput } from './EndpointSuggestInput';
 export type { EndpointSuggestInputProps } from './EndpointSuggestInput';
 export { UnifiedDialog } from './UnifiedDialog';
 export { ModelTestButton } from './ModelTestButton';
+export { NotificationDrawer } from './NotificationDrawer';
 export { WidgetErrorBoundary } from './WidgetErrorBoundary';
+export { KPICard } from './KPICard';
+export { FeedbackInsights } from './FeedbackInsights';
+export { DateRangeFilter, computeRangeFromPreset, defaultDateRange } from './DateRangeFilter';
+export type { DateRangeValue, DateRangePreset } from './DateRangeFilter';

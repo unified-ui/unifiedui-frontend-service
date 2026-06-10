@@ -6,15 +6,16 @@ import { MsalProvider } from '@azure/msal-react';
 import { PublicClientApplication } from '@azure/msal-browser';
 import { I18nextProvider } from 'react-i18next';
 import { msalConfig, authConfig } from './auth/authConfig';
-import { AuthProvider, LdapAuthProvider } from './auth';
+import { AuthProvider, LdapAuthProvider, DebugAuthProvider } from './auth';
 import { OidcAuthProvider, OidcAuthProviderUnconfigured } from './auth/OidcAuthProvider';
 import { theme } from './theme';
-import { IdentityProvider, SidebarDataProvider, AICapabilitiesProvider, FavoritesProvider, RecentVisitsProvider } from './contexts';
+import { IdentityProvider, SidebarDataProvider, AICapabilitiesProvider, FavoritesProvider, RecentVisitsProvider, NotificationProvider } from './contexts';
 import i18n from './i18n';
 import App from './App.tsx';
 
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
+import '@mantine/charts/styles.css';
 
 import './styles/variables.css';
 import './index.css';
@@ -38,7 +39,9 @@ createRoot(document.getElementById('root')!).render(
         <MsalProvider instance={msalInstance}>
           <OidcWrapper>
             <LdapAuthProvider>
-              <AuthProvider>
+              <DebugAuthProvider>
+                <AuthProvider>
+                <NotificationProvider>
                 <IdentityProvider>
                   <AICapabilitiesProvider>
                     <FavoritesProvider>
@@ -50,7 +53,9 @@ createRoot(document.getElementById('root')!).render(
                     </FavoritesProvider>
                   </AICapabilitiesProvider>
                 </IdentityProvider>
+                </NotificationProvider>
               </AuthProvider>
+              </DebugAuthProvider>
             </LdapAuthProvider>
           </OidcWrapper>
         </MsalProvider>

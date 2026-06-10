@@ -45,8 +45,8 @@ export const TENANT_ROLE_OPTIONS: { value: TenantPermissionEnum; label: string; 
   { value: 'CONVERSATIONS_ADMIN', label: 'Conversations Admin', description: 'Manage all conversations', category: 'Conversations' },
   { value: 'CONVERSATIONS_CREATOR', label: 'Conversations Creator', description: 'Create new conversations', category: 'Conversations' },
   // Workflows
-  { value: 'AUTONOMOUS_AGENTS_ADMIN', label: 'Workflows Admin', description: 'Manage all workflows', category: 'Workflows' },
-  { value: 'AUTONOMOUS_AGENTS_CREATOR', label: 'Workflows Creator', description: 'Create new workflows', category: 'Workflows' },
+  { value: 'WORKFLOWS_ADMIN', label: 'Workflows Admin', description: 'Manage all workflows', category: 'Workflows' },
+  { value: 'WORKFLOWS_CREATOR', label: 'Workflows Creator', description: 'Create new workflows', category: 'Workflows' },
   // Chat Widgets
   { value: 'CHAT_WIDGETS_ADMIN', label: 'Chat Widgets Admin', description: 'Manage all chat widgets', category: 'Chat Widgets' },
   { value: 'CHAT_WIDGETS_CREATOR', label: 'Chat Widgets Creator', description: 'Create new chat widgets', category: 'Chat Widgets' },
@@ -57,14 +57,14 @@ const ROLE_PRIORITY: Record<string, number> = {
   TENANT_GLOBAL_ADMIN: 100,
   // Admins
   CHAT_AGENTS_ADMIN: 50,
-  AUTONOMOUS_AGENTS_ADMIN: 50,
+  WORKFLOWS_ADMIN: 50,
   CONVERSATIONS_ADMIN: 50,
   CREDENTIALS_ADMIN: 50,
   CUSTOM_GROUPS_ADMIN: 50,
   CHAT_WIDGETS_ADMIN: 50,
   // Creators
   CHAT_AGENTS_CREATOR: 25,
-  AUTONOMOUS_AGENTS_CREATOR: 25,
+  WORKFLOWS_CREATOR: 25,
   CONVERSATIONS_CREATOR: 25,
   CREDENTIALS_CREATOR: 25,
   CUSTOM_GROUP_CREATOR: 25,

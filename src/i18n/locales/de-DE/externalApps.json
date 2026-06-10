@@ -1,0 +1,42 @@
+{
+  "title": "Externe Apps",
+  "description": "Verwalten Sie externe Anwendungen, die in Ihren Mandanten integriert sind.",
+  "addApp": "App hinzufügen",
+  "editApp": "App bearbeiten",
+  "deleteApp": "App löschen",
+  "noApps": "Noch keine externen Apps konfiguriert.",
+  "noAppsDescription": "Fügen Sie Ihre erste externe App hinzu.",
+  "openApp": "App öffnen",
+  "entityName": "Externe App",
+  "createDialog": {
+    "title": "Externe App hinzufügen",
+    "namePlaceholder": "z.B. Mein Dashboard",
+    "urlPlaceholder": "z.B. https://app.example.com",
+    "imageUrlPlaceholder": "z.B. https://example.com/logo.png",
+    "urlLabel": "URL",
+    "imageUrlLabel": "Bild-URL",
+    "imageLabel": "Bild",
+    "uploadImage": "Bild hochladen",
+    "changeImage": "Bild ändern",
+    "preview": "Vorschau",
+    "modeLabel": "Modus",
+    "modeUrl": "URL",
+    "modeIframe": "Iframe-HTML",
+    "urlMustStartWithHttp": "URL muss mit http:// oder https:// beginnen",
+    "paramsLabel": "Query-Parameter",
+    "addParam": "Parameter hinzufügen",
+    "noParams": "Keine Parameter. Fügen Sie einen hinzu, um Query-String-Werte an die URL anzuhängen.",
+    "paramKeyPlaceholder": "Schlüssel",
+    "paramValuePlaceholder": "Wert",
+    "invalidParamKey": "Schlüssel darf nur Buchstaben, Ziffern, '_' und '-' enthalten",
+    "iframeHtmlLabel": "Iframe-HTML",
+    "iframeHtmlDescription": "Geben Sie ein rohes <iframe ...></iframe>-Tag an. Der Inhalt wird serverseitig bereinigt.",
+    "iframeHtmlPlaceholder": "<iframe src=\"https://...\" width=\"100%\" height=\"100%\"></iframe>",
+    "iframeHtmlMustContainIframe": "HTML muss ein <iframe>-Tag enthalten"
+  },
+  "editDialog": {
+    "title": "Externe App bearbeiten"
+  },
+  "deleteConfirmMessage": "Möchten Sie \"{{name}}\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+  "loadFailed": "Externe Apps konnten nicht geladen werden"
+}

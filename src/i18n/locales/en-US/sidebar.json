@@ -7,6 +7,7 @@
   "widgets": "Widgets",
   "apps": "Apps",
   "settings": "Settings",
+  "admin": "Admin",
   "chatAgents": "Chat Agents",
   "addChatAgent": "Add Chat Agent",
   "addWorkflow": "Add Workflow",

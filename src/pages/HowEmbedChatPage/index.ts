@@ -1,1 +1,0 @@
-export { HowEmbedChatPage } from './HowEmbedChatPage';

@@ -7,7 +7,6 @@ export const TYPE_COLORS: Record<string, string> = {
   'N8N': 'orange',
   'MICROSOFT FOUNDRY': 'blue',
   'REST API': 'cyan',
-  'REACT AGENT': 'violet',
 
   // Workflow Type
   'WORKFLOW': 'green',

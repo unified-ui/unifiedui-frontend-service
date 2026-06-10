@@ -1,0 +1,69 @@
+{
+  "yesno": {
+    "yes": "Ja",
+    "no": "Nein"
+  },
+  "survey": {
+    "questionOf": "Frage {{current}} von {{total}}",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "submit": "Absenden",
+    "otherAnswer": "Andere Antwort...",
+    "submitted": "Umfrage abgesendet"
+  },
+  "form": {
+    "submit": "Absenden",
+    "submitted": "Formular abgesendet",
+    "selectPlaceholder": "Option auswählen...",
+    "chooseFile": "Datei auswählen...",
+    "addRow": "Zeile hinzufügen",
+    "required": "Dieses Feld ist erforderlich",
+    "minLength": "Mindestens {{min}} Zeichen erforderlich",
+    "maxLength": "Maximal {{max}} Zeichen erlaubt",
+    "min": "Wert muss mindestens {{min}} betragen",
+    "max": "Wert darf höchstens {{max}} betragen",
+    "pattern": "Ungültiges Format",
+    "email": "Ungültige E-Mail-Adresse",
+    "url": "Ungültige URL",
+    "minSelections": "Mindestens {{min}} Optionen auswählen",
+    "maxSelections": "Höchstens {{max}} Optionen auswählen"
+  },
+  "iframe": {
+    "submitted": "Daten abgesendet",
+    "noUrl": "Keine URL für dieses Widget konfiguriert.",
+    "submitBlockedTitle": "Absenden nicht erlaubt",
+    "submitBlockedMessage": "Nur das neueste Widget kann Eingaben entgegennehmen."
+  },
+  "sidebar": {
+    "title": "Widgets",
+    "noWidgets": "Keine benutzerdefinierten Widgets in dieser Konversation.",
+    "submitted": "Abgesendet",
+    "pending": "Ausstehend",
+    "formView": "Formular",
+    "jsonView": "JSON",
+    "notSubmitted": "Noch nicht abgesendet.",
+    "showWidgets": "Widgets anzeigen",
+    "hideWidgets": "Widgets ausblenden"
+  },
+  "supportedWidgets": "Unterstützte Widgets",
+  "supportedWidgetsPlaceholder": "Widgets auswählen, die dieser Agent verwenden kann...",
+  "supportedWidgetsDescription": "Standard- und benutzerdefinierte Widgets, die im Chat gerendert werden können.",
+  "standardWidgetDialog": {
+    "exampleLabel": "Beispiel",
+    "promptLabel": "LLM-Prompt"
+  },
+  "widgetInfo": {
+    "title": "Widget-Prompt-Anleitung",
+    "description": "Verwenden Sie das folgende Format im Prompt Ihres Agenten, um interaktive Widgets im Chat auszulösen.",
+    "copy": "Beispiel kopieren",
+    "copied": "Kopiert!",
+    "formatTitle": "Tag-Format",
+    "formatDescription": "Das LLM muss dieses Tag in seiner Antwort ausgeben, um ein Widget auszulösen:",
+    "yesnoTitle": "Ja/Nein-Widget",
+    "yesnoDescription": "Zeigt zwei Schaltflächen (Ja/Nein) an. Die Auswahl des Benutzers wird als Nachricht gesendet.",
+    "surveyTitle": "Umfrage-Widget",
+    "surveyDescription": "Umfrage mit mehreren Fragen, Optionen und optionalen Freitextantworten.",
+    "customTitle": "Benutzerdefiniertes Widget",
+    "customDescription": "Löst ein registriertes benutzerdefiniertes Widget (Formular oder iFrame) anhand seiner ID aus."
+  }
+}

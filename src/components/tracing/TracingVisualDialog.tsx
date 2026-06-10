@@ -3,17 +3,15 @@
  */
 
 import { type FC, useEffect, useState } from 'react';
-import { Modal, Group, Text, Badge, ActionIcon, Box, Stack, Button } from '@mantine/core';
-import { IconChartDots, IconX, IconSparkles } from '@tabler/icons-react';
+import { Modal, Group, Text, Badge, ActionIcon, Box, Stack } from '@mantine/core';
+import { IconChartDots, IconX } from '@tabler/icons-react';
 import type { FullTraceResponse } from '../../api/types';
 import { TracingProvider, useTracing } from './TracingContext';
 import { TracingSubHeader } from './TracingSubHeader';
 import { TracingCanvasView } from './TracingCanvasView';
 import { TracingHierarchyView } from './TracingHierarchyView';
 import { TracingDataSection } from './TracingDataSection';
-import { TraceAnalysisPanel } from './TraceAnalysisPanel';
 import { TraceChatPanel } from './TraceChatPanel';
-import { useAICapabilities } from '../../contexts';
 import classes from './TracingVisualDialog.module.css';
 
 // ============================================================================
@@ -37,13 +35,11 @@ interface DialogContentProps {
 
 const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
   const { selectedTrace, hierarchyVisible, chatVisible } = useTracing();
-  const { capabilities } = useAICapabilities();
 
   // Panel sizes (percentages)
   const [canvasHeight, setCanvasHeight] = useState(75); // 75% canvas, 25% data section
   const [hierarchyWidth, setHierarchyWidth] = useState(20); // 20% hierarchy width
   const [chatWidth, setChatWidth] = useState(20); // 20% chat width
-  const [analysisPanelOpened, setAnalysisPanelOpened] = useState(false);
 
   const sidePanelTotalWidth = (hierarchyVisible ? hierarchyWidth : 0) + (chatVisible ? chatWidth : 0);
 
@@ -141,16 +137,6 @@ const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
           </Box>
         </Group>
         <Group gap="sm">
-          {capabilities?.trace_analysis && (
-            <Button
-              variant="light"
-              size="compact-sm"
-              leftSection={<IconSparkles size={16} />}
-              onClick={() => setAnalysisPanelOpened(true)}
-            >
-              Summarize with AI
-            </Button>
-          )}
           <ActionIcon variant="subtle" size="lg" onClick={onClose}>
             <IconX size={20} />
           </ActionIcon>
@@ -226,15 +212,6 @@ const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
           </Box>
         )}
       </Group>
-
-      {capabilities?.trace_analysis && (
-        <TraceAnalysisPanel
-          opened={analysisPanelOpened}
-          onClose={() => setAnalysisPanelOpened(false)}
-          traceId={selectedTrace?.id}
-          nodes={(selectedTrace?.nodes || []) as unknown as Record<string, unknown>[]}
-        />
-      )}
     </Stack>
   );
 };
