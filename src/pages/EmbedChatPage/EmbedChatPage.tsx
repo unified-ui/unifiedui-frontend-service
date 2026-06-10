@@ -3,10 +3,9 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Center, Text, Loader, Button, Box, ActionIcon, UnstyledButton, useMantineColorScheme } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useMsal } from '@azure/msal-react';
 import { IconMessageCircle, IconPlus, IconSun, IconMoon } from '@tabler/icons-react';
 import { useAuth } from '../../auth';
-import { loginRequest } from '../../auth/authConfig';
+import { enabledProviders } from '../../auth/authConfig';
 import { useIdentity } from '../../contexts';
 import { ChatView, ChatHeader, ChatEmptyState } from '../../components/chat';
 import { TracingProvider, TracingSidebar, TracingVisualDialog } from '../../components/tracing';
@@ -23,8 +22,7 @@ export const EmbedChatPage: FC = () => {
   const tenantIdParam = searchParams.get('tenantId');
   const themeParam = searchParams.get('theme');
 
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
-  const { instance } = useMsal();
+  const { isAuthenticated, isLoading: isAuthLoading, loginWithProvider } = useAuth();
   const { apiClient, selectedTenant, selectTenant, getFoundryToken, isLoading: isIdentityLoading } = useIdentity();
   const { colorScheme, setColorScheme } = useMantineColorScheme();
 
@@ -79,12 +77,15 @@ export const EmbedChatPage: FC = () => {
   }, []);
 
   const handlePopupLogin = useCallback(async () => {
+    const provider = enabledProviders.includes('microsoft') ? 'microsoft' : enabledProviders[0];
+    if (!provider) return;
+
     try {
-      await instance.loginPopup({ scopes: loginRequest.scopes });
+      await loginWithProvider(provider);
     } catch (err) {
-      console.error('Popup login failed:', err);
+      console.error('Login failed:', err);
     }
-  }, [instance]);
+  }, [loginWithProvider]);
 
   const handleToggleColorScheme = useCallback(() => {
     setColorScheme(colorScheme === 'dark' ? 'light' : 'dark');
@@ -95,6 +96,7 @@ export const EmbedChatPage: FC = () => {
     tenantId: selectedTenant?.id,
     conversationId,
   });
+  const { setMessagesRef } = tracing;
 
   const chat = useChat({
     apiClient,
@@ -121,8 +123,8 @@ export const EmbedChatPage: FC = () => {
   }, [chat, widgetCache]);
 
   useEffect(() => {
-    tracing.setMessagesRef(chat.messages);
-  }, [chat.messages, tracing.setMessagesRef]);
+    setMessagesRef(chat.messages);
+  }, [chat.messages, setMessagesRef]);
 
   if (!agentId) {
     return (

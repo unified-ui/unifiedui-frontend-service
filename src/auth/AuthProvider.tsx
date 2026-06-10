@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, useMemo } from 'react
 import type { ReactNode } from 'react';
 import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import type { AccountInfo } from '@azure/msal-browser';
-import { loginRequest } from './authConfig';
+import { authConfig, enabledProviders, loginRequest } from './authConfig';
 import type { IdentityProviderType } from './authConfig';
 import { useLdapAuth } from './useLdapAuth';
 import { useOidcAuth } from './useOidcAuth';
@@ -40,29 +40,60 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+type MicrosoftAuthState = {
+  instance: ReturnType<typeof useMsal>['instance'] | null;
+  accounts: AccountInfo[];
+  inProgress: string;
+  isAuthenticated: boolean;
+};
+
+const disabledMicrosoftAuth: MicrosoftAuthState = {
+  instance: null,
+  accounts: [],
+  inProgress: 'none',
+  isAuthenticated: false,
+};
+
+const AuthProviderWithMsal = ({ children }: AuthProviderProps) => {
+  const { instance, accounts, inProgress } = useMsal();
+  const isAuthenticated = useIsAuthenticated();
+
+  return (
+    <AuthProviderCore
+      microsoftAuth={{ instance, accounts, inProgress, isAuthenticated }}
+    >
+      {children}
+    </AuthProviderCore>
+  );
+};
+
+const AuthProviderCore = ({
+  children,
+  microsoftAuth,
+}: AuthProviderProps & { microsoftAuth: MicrosoftAuthState }) => {
   const [activeProvider, setActiveProvider] = useState<IdentityProviderType | null>(
-    () => sessionStorage.getItem(ACTIVE_PROVIDER_KEY) as IdentityProviderType | null
+    () => {
+      const stored = sessionStorage.getItem(ACTIVE_PROVIDER_KEY) as IdentityProviderType | null;
+      return stored && enabledProviders.includes(stored) ? stored : null;
+    }
   );
 
-  const { instance, accounts, inProgress } = useMsal();
-  const msalIsAuthenticated = useIsAuthenticated();
   const ldapAuth = useLdapAuth();
   const oidcAuth = useOidcAuth();
   const debugAuth = useDebugAuth();
 
-  const msalIsLoading = inProgress !== 'none';
+  const msalIsLoading = microsoftAuth.inProgress !== 'none';
 
   const effectiveProvider = useMemo((): IdentityProviderType | null => {
-    if (activeProvider) return activeProvider;
+    if (activeProvider && enabledProviders.includes(activeProvider)) return activeProvider;
     if (debugAuth.isAuthenticated) return 'debug';
     if (ldapAuth.isAuthenticated) return 'ldap';
     if (oidcAuth.isAuthenticated) return 'oidc';
-    if (msalIsAuthenticated) return 'microsoft';
+    if (microsoftAuth.isAuthenticated) return 'microsoft';
     return null;
-  }, [activeProvider, debugAuth.isAuthenticated, ldapAuth.isAuthenticated, oidcAuth.isAuthenticated, msalIsAuthenticated]);
+  }, [activeProvider, debugAuth.isAuthenticated, ldapAuth.isAuthenticated, oidcAuth.isAuthenticated, microsoftAuth.isAuthenticated]);
 
-  const isAuthenticated = msalIsAuthenticated || ldapAuth.isAuthenticated || oidcAuth.isAuthenticated || debugAuth.isAuthenticated;
+  const isAuthenticated = microsoftAuth.isAuthenticated || ldapAuth.isAuthenticated || oidcAuth.isAuthenticated || debugAuth.isAuthenticated;
   const isLoading = msalIsLoading || oidcAuth.isLoading || ldapAuth.isLoading || debugAuth.isLoading;
 
   const account = useMemo((): AccountInfo | null => {
@@ -74,16 +105,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       case 'oidc':
         return oidcAuth.account;
       case 'microsoft':
-        return accounts[0] || null;
+        return microsoftAuth.accounts[0] || null;
       default:
         if (debugAuth.account) return debugAuth.account;
         if (ldapAuth.account) return ldapAuth.account;
         if (oidcAuth.account) return oidcAuth.account;
-        return accounts[0] || null;
+        return microsoftAuth.accounts[0] || null;
     }
-  }, [effectiveProvider, debugAuth.account, ldapAuth.account, oidcAuth.account, accounts]);
+  }, [effectiveProvider, debugAuth.account, ldapAuth.account, oidcAuth.account, microsoftAuth.accounts]);
 
   const loginWithProvider = useCallback(async (provider: IdentityProviderType) => {
+    if (!enabledProviders.includes(provider)) {
+      throw new Error(`Identity provider "${provider}" is not configured`);
+    }
+
     sessionStorage.setItem(ACTIVE_PROVIDER_KEY, provider);
     setActiveProvider(provider);
 
@@ -94,15 +129,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         await oidcAuth.login();
         break;
       case 'microsoft':
-      default:
+        if (!microsoftAuth.instance) return;
         try {
-          await instance.loginRedirect({ scopes: loginRequest.scopes });
+          await microsoftAuth.instance.loginRedirect({ scopes: loginRequest.scopes });
         } catch (error) {
           console.error('Login failed:', error);
         }
         break;
+      default:
+        break;
     }
-  }, [oidcAuth, instance]);
+  }, [oidcAuth, microsoftAuth.instance]);
 
   const loginWithCredentials = useCallback(async (username: string, password: string) => {
     sessionStorage.setItem(ACTIVE_PROVIDER_KEY, 'ldap');
@@ -129,21 +166,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         await oidcAuth.logout();
         break;
       case 'microsoft':
-      default:
+        if (!microsoftAuth.instance) break;
         try {
-          await instance.logoutRedirect();
+          await microsoftAuth.instance.logoutRedirect();
         } catch (error) {
           console.error('Logout failed:', error);
         }
         break;
+      default:
+        break;
     }
     setActiveProvider(null);
-  }, [effectiveProvider, debugAuth, ldapAuth, oidcAuth, instance]);
+  }, [effectiveProvider, debugAuth, ldapAuth, oidcAuth, microsoftAuth.instance]);
 
   const switchAccount = useCallback(async () => {
-    if (effectiveProvider === 'microsoft') {
+    if (effectiveProvider === 'microsoft' && microsoftAuth.instance) {
       try {
-        await instance.loginRedirect({
+        await microsoftAuth.instance.loginRedirect({
           scopes: loginRequest.scopes,
           prompt: 'select_account',
         });
@@ -153,7 +192,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } else {
       await logout();
     }
-  }, [effectiveProvider, instance, logout]);
+  }, [effectiveProvider, microsoftAuth.instance, logout]);
 
   const getAccessToken = useCallback(async (): Promise<string | null> => {
     switch (effectiveProvider) {
@@ -164,18 +203,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       case 'oidc':
         return oidcAuth.getAccessToken();
       case 'microsoft': {
-        if (!msalIsAuthenticated || accounts.length === 0) return null;
+        if (!microsoftAuth.instance || !microsoftAuth.isAuthenticated || microsoftAuth.accounts.length === 0) return null;
         try {
-          const response = await instance.acquireTokenSilent({
+          const response = await microsoftAuth.instance.acquireTokenSilent({
             scopes: loginRequest.scopes,
-            account: accounts[0],
+            account: microsoftAuth.accounts[0],
           });
           return response.accessToken;
         } catch {
           try {
-            const response = await instance.acquireTokenPopup({
+            const response = await microsoftAuth.instance.acquireTokenPopup({
               scopes: loginRequest.scopes,
-              account: accounts[0],
+              account: microsoftAuth.accounts[0],
             });
             return response.accessToken;
           } catch {
@@ -186,28 +225,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       default:
         return null;
     }
-  }, [effectiveProvider, debugAuth, ldapAuth, oidcAuth, msalIsAuthenticated, accounts, instance]);
+  }, [effectiveProvider, debugAuth, ldapAuth, oidcAuth, microsoftAuth]);
 
   const getFoundryToken = useCallback(async (): Promise<string | null> => {
-    if (effectiveProvider !== 'microsoft' || !msalIsAuthenticated || accounts.length === 0) return null;
+    if (effectiveProvider !== 'microsoft' || !microsoftAuth.instance || !microsoftAuth.isAuthenticated || microsoftAuth.accounts.length === 0) return null;
     try {
-      const response = await instance.acquireTokenSilent({
+      const response = await microsoftAuth.instance.acquireTokenSilent({
         scopes: ['https://ai.azure.com/.default'],
-        account: accounts[0],
+        account: microsoftAuth.accounts[0],
       });
       return response.accessToken;
     } catch {
       try {
-        const response = await instance.acquireTokenPopup({
+        const response = await microsoftAuth.instance.acquireTokenPopup({
           scopes: ['https://ai.azure.com/.default'],
-          account: accounts[0],
+          account: microsoftAuth.accounts[0],
         });
         return response.accessToken;
       } catch {
         return null;
       }
     }
-  }, [effectiveProvider, msalIsAuthenticated, accounts, instance]);
+  }, [effectiveProvider, microsoftAuth]);
 
   const value: AuthContextType = {
     isAuthenticated,
@@ -225,3 +264,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export const AuthProvider = ({ children }: AuthProviderProps) =>
+  authConfig.microsoft ? (
+    <AuthProviderWithMsal>{children}</AuthProviderWithMsal>
+  ) : (
+    <AuthProviderCore microsoftAuth={disabledMicrosoftAuth}>
+      {children}
+    </AuthProviderCore>
+  );
