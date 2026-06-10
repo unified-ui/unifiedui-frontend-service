@@ -48,7 +48,7 @@ export const AnalyticsTab: FC<AnalyticsTabProps> = ({ chatAgentId }) => {
   }, [range, setUrl]);
 
   const load = useCallback(async (): Promise<void> => {
-    if (!selectedTenant) return;
+    if (!apiClient || !selectedTenant) return;
     setLoading(true);
     setError(null);
     try {

@@ -988,6 +988,9 @@ export interface ChatAgentResponse {
   description?: string;
   type: ChatAgentTypeEnum;
   config: Record<string, unknown>;
+  ai_model_ids?: string[];
+  tool_ids?: string[];
+  system_prompt?: string;
   is_active: boolean;
   embed_allowed_origins?: string;
   tags: TagSummary[];
@@ -1496,6 +1499,7 @@ export interface TestConnectionResponse {
 export interface AICapabilitiesResponse {
   title_generation: boolean;
   description_generation: boolean;
+  trace_analysis: boolean;
   summarization: boolean;
 }
 

@@ -262,7 +262,6 @@ export const WorkflowRunsTable: FC<WorkflowRunsTableProps> = ({
       {permissionError ? (
         <AccessDeniedBanner
           requiredRoles={permissionError.requiredRoles}
-          userRoles={permissionError.userRoles}
         />
       ) : (
         <>

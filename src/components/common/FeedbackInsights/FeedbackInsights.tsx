@@ -66,7 +66,7 @@ export const FeedbackInsights: FC<FeedbackInsightsProps> = ({ stats }) => {
 
   const openDrawerForFeedback = useCallback(
     async (fb: RecentFeedbackEntry): Promise<void> => {
-      if (!selectedTenant) return;
+      if (!apiClient || !selectedTenant) return;
       setSelectedFeedback(fb);
       setDrawerOpen(true);
       setDrawerLoading(true);

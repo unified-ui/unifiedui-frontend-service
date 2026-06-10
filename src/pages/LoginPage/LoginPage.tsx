@@ -79,6 +79,7 @@ const PROVIDER_DISPLAY_NAMES: Record<IdentityProviderType, string> = {
   saml: 'SAML',
   okta: 'Okta',
   oidc: 'OIDC Zitadel',
+  debug: 'Debug',
 };
 
 interface IdpButtonConfig {

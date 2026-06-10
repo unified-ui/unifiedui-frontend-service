@@ -75,7 +75,7 @@ export const ChatAgentDetailsPage: FC = () => {
   const [permissionError, setPermissionError] = useState<PermissionError | null>(null);
 
   const load = useCallback(async (): Promise<void> => {
-    if (!id || !selectedTenant) return;
+    if (!apiClient || !id || !selectedTenant) return;
     setLoading(true);
     setError(null);
     setPermissionError(null);
@@ -234,7 +234,7 @@ export const ChatAgentDetailsPage: FC = () => {
         </Tabs.List>
 
         <Tabs.Panel value="overview" className={classes.tabPanel}>
-          <ContentCard title="Info">
+          <ContentCard title="Info" icon={<IconInfoCircle size={18} />}>
             <SimpleGrid cols={{ base: 1, sm: 2 }}>
               <Stack gap={2}>
                 <Text size="xs" c="dimmed">Type</Text>

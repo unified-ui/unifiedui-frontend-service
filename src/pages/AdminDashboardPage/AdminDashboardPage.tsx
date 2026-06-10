@@ -21,17 +21,17 @@ import { Link } from 'react-router-dom';
 import { AdminLayout } from '../../components/layout/AdminLayout';
 import { KPICard } from '../../components/common';
 import { useIdentity } from '../../contexts';
-import type { FeedbackStatsResponse, MessageStatsResponse } from '../../api/types';
+import type { FeedbackStatsResponse, MessageStatsAggregate } from '../../api/types';
 
 export const AdminDashboardPage: FC = () => {
   const { apiClient, selectedTenant } = useIdentity();
-  const [messageStats, setMessageStats] = useState<MessageStatsResponse | null>(null);
+  const [messageStats, setMessageStats] = useState<MessageStatsAggregate | null>(null);
   const [feedbackStats, setFeedbackStats] = useState<FeedbackStatsResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async (): Promise<void> => {
-    if (!selectedTenant) return;
+    if (!apiClient || !selectedTenant) return;
     setLoading(true);
     setError(null);
     try {
@@ -39,8 +39,8 @@ export const AdminDashboardPage: FC = () => {
         apiClient.getMessageStats(selectedTenant.id),
         apiClient.getFeedbackStats(selectedTenant.id),
       ]);
-      setMessageStats(msgs);
-      setFeedbackStats(fb);
+      setMessageStats(msgs.aggregate);
+      setFeedbackStats(fb.aggregate);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
     } finally {

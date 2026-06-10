@@ -75,7 +75,7 @@ export const AdminAnalyticsPage: FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!selectedTenant) return;
+    if (!apiClient || !selectedTenant) return;
     let cancelled = false;
     void apiClient
       .listChatAgents(selectedTenant.id, {
@@ -101,7 +101,7 @@ export const AdminAnalyticsPage: FC = () => {
   }, [apiClient, selectedTenant, debouncedAgentSearch]);
 
   useEffect(() => {
-    if (!selectedTenant || selectedAgentIds.length === 0) return;
+    if (!apiClient || !selectedTenant || selectedAgentIds.length === 0) return;
     const missing = selectedAgentIds.filter((id) => !agentLookup.has(id));
     if (missing.length === 0) return;
     let cancelled = false;
@@ -138,7 +138,7 @@ export const AdminAnalyticsPage: FC = () => {
   }, []);
 
   const load = useCallback(async (): Promise<void> => {
-    if (!selectedTenant) return;
+    if (!apiClient || !selectedTenant) return;
     setLoading(true);
     setError(null);
     try {
