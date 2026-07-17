@@ -71,7 +71,7 @@ export const ConversationsPage: FC = () => {
     setCurrentConversation: convList.setCurrentConversation,
     setConversations: convList.setConversations,
     setSelectedChatAgentId: convList.setSelectedChatAgentId,
-    onRefreshTraces: tracing.refreshTraces,
+    onRefreshTraces: tracing.refreshTracesWithRetry,
     onMessageSent: handleTrackChatAgent,
   });
 
@@ -219,7 +219,10 @@ export const ConversationsPage: FC = () => {
       initialNodeReferenceId={tracing.selectedNodeReferenceId}
       onNodeReferenceIdChange={tracing.handleNodeReferenceIdChange}
     >
-      <TracingSidebar onOpenFullscreen={tracing.handleOpenTracingFullscreen} />
+      <TracingSidebar
+        onOpenFullscreen={tracing.handleOpenTracingFullscreen}
+        onRefresh={tracing.refreshTraces}
+      />
     </TracingProvider>
   ) : undefined;
 
@@ -420,6 +423,7 @@ export const ConversationsPage: FC = () => {
           opened={tracing.tracingDialogOpen}
           onClose={() => tracing.setTracingDialogOpen(false)}
           traces={tracing.traces}
+          onRefresh={tracing.refreshTraces}
         />
       )}
     </MainLayout>

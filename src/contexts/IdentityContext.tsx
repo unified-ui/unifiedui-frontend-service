@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import type { ReactNode, FC } from 'react';
+import type { ReactNode, FC, MouseEvent as ReactMouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth';
 import { UnifiedUIAPIClient } from '../api/client';
@@ -29,6 +29,18 @@ const IdentityContext = createContext<IdentityContextType | undefined>(undefined
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const AGENT_SERVICE_URL = import.meta.env.VITE_AGENT_SERVICE_URL || 'http://localhost:8085';
+
+function createToastClickHandler(
+  action: () => void
+): (event: ReactMouseEvent<HTMLDivElement>) => void {
+  return (event: ReactMouseEvent<HTMLDivElement>) => {
+    const target = event.target;
+    if (target instanceof Element && target.closest('.mantine-Notification-closeButton')) {
+      return;
+    }
+    action();
+  };
+}
 
 interface IdentityProviderProps {
   children: ReactNode;
@@ -63,7 +75,7 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
             const message = error.requiredRoles.length > 0
               ? `${t('accessDenied.requiredRoles')}: ${error.requiredRoles.join(', ')}`
               : t('permissionDenied');
-            notifications.show({ title, message, color: 'orange', position: 'top-right', onClick: () => openDrawerRef.current() });
+            notifications.show({ title, message, color: 'orange', position: 'top-right', onClick: createToastClickHandler(() => openDrawerRef.current()) });
             addNotificationRef.current({ title, message, color: 'orange' });
             return;
           }
@@ -71,7 +83,7 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
           if (error instanceof ApiError) {
             const title = error.status > 0 ? `${error.status} ${error.statusText}` : error.statusText;
             const message = error.detail || t('unexpectedError');
-            notifications.show({ title, message, color: 'red', position: 'top-right', onClick: () => openDrawerRef.current() });
+            notifications.show({ title, message, color: 'red', position: 'top-right', onClick: createToastClickHandler(() => openDrawerRef.current()) });
             addNotificationRef.current({
               title,
               message,
@@ -85,12 +97,12 @@ const IdentityProviderInner: FC<IdentityProviderProps> = ({ children }) => {
           }
           const title = t('error');
           const message = error.message || t('unexpectedError');
-          notifications.show({ title, message, color: 'red', position: 'top-right', onClick: () => openDrawerRef.current() });
+          notifications.show({ title, message, color: 'red', position: 'top-right', onClick: createToastClickHandler(() => openDrawerRef.current()) });
           addNotificationRef.current({ title, message, color: 'red' });
         },
         onSuccess: (message) => {
           const title = t('success');
-          notifications.show({ title, message, color: 'green', position: 'top-right', onClick: () => openDrawerRef.current() });
+          notifications.show({ title, message, color: 'green', position: 'top-right', onClick: createToastClickHandler(() => openDrawerRef.current()) });
           addNotificationRef.current({ title, message, color: 'green' });
         },
       });

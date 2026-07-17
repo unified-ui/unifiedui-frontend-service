@@ -20,13 +20,15 @@ import classes from './TracingSidebar.module.css';
 interface TracingSidebarProps {
   /** Callback when fullscreen button is clicked */
   onOpenFullscreen?: () => void;
+  /** Callback to refresh traces */
+  onRefresh?: () => void | Promise<void>;
 }
 
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
-export const TracingSidebar: FC<TracingSidebarProps> = ({ onOpenFullscreen }) => {
+export const TracingSidebar: FC<TracingSidebarProps> = ({ onOpenFullscreen, onRefresh }) => {
   return (
     <div className={classes.container}>
       <TracingHierarchyView
@@ -35,6 +37,7 @@ export const TracingSidebar: FC<TracingSidebarProps> = ({ onOpenFullscreen }) =>
         showHeader={true}
         showDataPanels={true}
         onOpenFullscreen={onOpenFullscreen}
+        onRefresh={onRefresh}
       />
     </div>
   );

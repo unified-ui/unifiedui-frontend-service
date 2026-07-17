@@ -14,7 +14,7 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { LineChart } from '@mantine/charts';
-import { IconThumbDown, IconUser, IconRobot, IconChartLine } from '@tabler/icons-react';
+import { IconThumbDown, IconThumbUp, IconUser, IconRobot, IconChartLine } from '@tabler/icons-react';
 import type { FeedbackStatsResponse, RecentFeedbackEntry } from '../../../api/types';
 import { useIdentity } from '../../../contexts';
 import classes from './FeedbackInsights.module.css';
@@ -44,11 +44,19 @@ export const FeedbackInsights: FC<FeedbackInsightsProps> = ({ stats }) => {
   const [assistantMessage, setAssistantMessage] = useState<string | null>(null);
   const [selectedFeedback, setSelectedFeedback] = useState<RecentFeedbackEntry | null>(null);
   const [page, setPage] = useState<number>(1);
+  const [positivePage, setPositivePage] = useState<number>(1);
 
   const totalPages = Math.ceil(stats.recent_negative.length / PAGE_SIZE);
   const paginatedItems = useMemo(
     () => stats.recent_negative.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
     [stats.recent_negative, page]
+  );
+
+  const recentPositive = useMemo(() => stats.recent_positive ?? [], [stats.recent_positive]);
+  const totalPositivePages = Math.ceil(recentPositive.length / PAGE_SIZE);
+  const paginatedPositiveItems = useMemo(
+    () => recentPositive.slice((positivePage - 1) * PAGE_SIZE, positivePage * PAGE_SIZE),
+    [recentPositive, positivePage]
   );
 
   const chartData = useMemo(() => {
@@ -191,6 +199,64 @@ export const FeedbackInsights: FC<FeedbackInsightsProps> = ({ stats }) => {
             {totalPages > 1 && (
               <Group justify="center" mt="md">
                 <Pagination value={page} onChange={setPage} total={totalPages} size="sm" />
+              </Group>
+            )}
+          </div>
+        )}
+
+        {recentPositive.length > 0 && (
+          <div>
+            <Text className={classes.sectionTitle}>
+              <IconThumbUp size={16} />
+              Positive Feedbacks ({recentPositive.length})
+            </Text>
+            <Table striped highlightOnHover className={classes.table}>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th style={{ width: 170 }}>Date</Table.Th>
+                  <Table.Th style={{ width: 200 }}>Chat Agent</Table.Th>
+                  <Table.Th>Reasons</Table.Th>
+                  <Table.Th>Comment</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {paginatedPositiveItems.map((fb) => (
+                  <Table.Tr
+                    key={`${fb.message_id}-${fb.created_at}`}
+                    className={classes.clickableRow}
+                    onClick={() => {
+                      void openDrawerForFeedback(fb);
+                    }}
+                  >
+                    <Table.Td style={{ whiteSpace: 'nowrap' }}>{formatDateTime(fb.created_at)}</Table.Td>
+                    <Table.Td>
+                      <Text size="sm" lineClamp={1}>
+                        {fb.chat_agent_name ?? '—'}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      {fb.reasons.length > 0 ? (
+                        <Group gap={4} wrap="wrap">
+                          {fb.reasons.map((r) => (
+                            <Badge key={r} size="xs" variant="outline" color="teal">
+                              {r.replaceAll('_', ' ')}
+                            </Badge>
+                          ))}
+                        </Group>
+                      ) : (
+                        <Text size="xs" c="dimmed">—</Text>
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm" lineClamp={2}>{fb.comment || '—'}</Text>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+            {totalPositivePages > 1 && (
+              <Group justify="center" mt="md">
+                <Pagination value={positivePage} onChange={setPositivePage} total={totalPositivePages} size="sm" />
               </Group>
             )}
           </div>
