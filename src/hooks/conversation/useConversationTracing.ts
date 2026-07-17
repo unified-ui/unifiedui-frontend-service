@@ -19,6 +19,7 @@ interface UseConversationTracingReturn {
   handleNodeReferenceIdChange: (referenceId: string | null) => void;
   setMessagesRef: (messages: MessageResponse[]) => void;
   refreshTraces: () => Promise<void>;
+  refreshTracesWithRetry: () => Promise<void>;
   handleToggleTracingSidebar: () => void;
   handleViewTrace: (extMessageId: string) => Promise<void>;
   handleOpenTracingFullscreen: () => void;
@@ -42,6 +43,9 @@ export function useConversationTracing({
     messagesRef.current = messages;
   }, []);
 
+  const tracesRef = useRef<FullTraceResponse[]>([]);
+  tracesRef.current = traces;
+
   const refreshTraces = useCallback(async () => {
     if (!apiClient || !tenantId || !conversationId) return;
     try {
@@ -49,6 +53,28 @@ export function useConversationTracing({
       setTraces(tracesData.traces || []);
     } catch (error) {
       console.error('Failed to refresh traces:', error);
+    }
+  }, [apiClient, tenantId, conversationId]);
+
+  const refreshTracesWithRetry = useCallback(async () => {
+    if (!apiClient || !tenantId || !conversationId) return;
+
+    const RETRY_ATTEMPTS = 8;
+    const RETRY_DELAY_MS = 1500;
+    const previousCount = tracesRef.current.length;
+
+    for (let attempt = 0; attempt < RETRY_ATTEMPTS; attempt++) {
+      try {
+        const tracesData = await apiClient.getConversationTraces(tenantId, conversationId);
+        const nextTraces = tracesData.traces || [];
+        setTraces(nextTraces);
+        if (nextTraces.length > previousCount) {
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to refresh traces (retry):', error);
+      }
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
     }
   }, [apiClient, tenantId, conversationId]);
 
@@ -174,6 +200,7 @@ export function useConversationTracing({
     handleNodeReferenceIdChange,
     setMessagesRef,
     refreshTraces,
+    refreshTracesWithRetry,
     handleToggleTracingSidebar,
     handleViewTrace,
     handleOpenTracingFullscreen,

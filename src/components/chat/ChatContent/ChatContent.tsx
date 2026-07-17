@@ -553,6 +553,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
   const [editContent, setEditContent] = useState(content);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [feedbackSentiment, setFeedbackSentiment] = useState<'positive' | 'negative'>('negative');
   const [persistedReasoningExpanded, setPersistedReasoningExpanded] = useState(false);
 
   const hasActiveReActSteps = !!reActState && reActState.reasoningSteps.length > 0;
@@ -753,7 +754,14 @@ const MessageBubble: FC<MessageBubbleProps> = ({
                       size="md"
                       variant="subtle"
                       color={activeReaction?.reaction === 'thumbs_up' ? 'teal' : 'gray'}
-                      onClick={() => onReaction(message.id, 'thumbs_up')}
+                      onClick={() => {
+                        if (activeReaction?.reaction === 'thumbs_up') {
+                          onReaction(message.id, 'thumbs_up');
+                        } else {
+                          setFeedbackSentiment('positive');
+                          setFeedbackDialogOpen(true);
+                        }
+                      }}
                     >
                       {activeReaction?.reaction === 'thumbs_up' ? <IconThumbUpFilled size={20} /> : <IconThumbUp size={20} />}
                     </ActionIcon>
@@ -767,6 +775,7 @@ const MessageBubble: FC<MessageBubbleProps> = ({
                         if (activeReaction?.reaction === 'thumbs_down') {
                           onReaction(message.id, 'thumbs_down');
                         } else {
+                          setFeedbackSentiment('negative');
                           setFeedbackDialogOpen(true);
                         }
                       }}
@@ -780,9 +789,15 @@ const MessageBubble: FC<MessageBubbleProps> = ({
           )}
           <FeedbackDialog
             opened={feedbackDialogOpen}
+            sentiment={feedbackSentiment}
             onClose={() => setFeedbackDialogOpen(false)}
             onSubmit={(feedbackText: string | undefined, reasons: string[] | undefined) => {
-              onReaction?.(message.id, 'thumbs_down', feedbackText, reasons);
+              onReaction?.(
+                message.id,
+                feedbackSentiment === 'positive' ? 'thumbs_up' : 'thumbs_down',
+                feedbackText,
+                reasons,
+              );
               setFeedbackDialogOpen(false);
             }}
           />

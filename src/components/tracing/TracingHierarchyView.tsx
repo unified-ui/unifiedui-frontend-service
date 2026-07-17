@@ -7,6 +7,7 @@ import {
   IconChevronDown,
   IconChevronRight,
   IconMaximize,
+  IconRefresh,
   IconCheck,
   IconX,
   IconLoader2,
@@ -324,6 +325,141 @@ const TraceRootItem: FC<TraceRootItemProps> = ({
 };
 
 // ============================================================================
+// CONVERSATION GROUP (multiple traces = one logical conversation)
+// ============================================================================
+
+const CONVERSATION_GROUP_KEY = 'conversation-group-root';
+
+interface ConversationGroupProps {
+  traces: FullTraceResponse[];
+  selectedTraceId: string | null;
+  selectedNodeId: string | null;
+  collapsedKeys: Set<string>;
+  onToggleGroup: (key: string) => void;
+  onSelectTrace: (traceId: string) => void;
+}
+
+const ConversationGroup: FC<ConversationGroupProps> = ({
+  traces,
+  selectedTraceId,
+  selectedNodeId,
+  collapsedKeys,
+  onToggleGroup,
+  onSelectTrace,
+}) => {
+  const groupExpanded = !collapsedKeys.has(CONVERSATION_GROUP_KEY);
+  const totalNodes = traces.reduce((sum, t) => sum + (t.nodes?.length ?? 0), 0);
+
+  return (
+    <>
+      <UnstyledButton
+        className={`${classes.treeItem} ${classes.traceRoot}`}
+        onClick={() => onToggleGroup(CONVERSATION_GROUP_KEY)}
+      >
+        <span className={classes.expandIcon}>
+          {groupExpanded ? <IconChevronDown size={14} /> : <IconChevronRight size={14} />}
+        </span>
+        <Badge size="xs" variant="light" color={getTypeBadgeColor('conversation')} className={classes.typeBadge}>
+          conversation
+        </Badge>
+        <DelayedTooltip label="Conversation">
+          <Text size="xs" className={classes.nodeName}>
+            Conversation
+          </Text>
+        </DelayedTooltip>
+        <Badge size="xs" variant="light" color="gray" className={classes.typeBadge}>
+          {traces.length}
+        </Badge>
+        <span className={classes.statusIcon}>
+          {getStatusIcon(totalNodes > 0 ? 'completed' : 'pending')}
+        </span>
+      </UnstyledButton>
+
+      {groupExpanded && (
+        <div className={classes.childrenContainer}>
+          <div className={classes.treeLine} style={{ left: '15px' }} />
+          {traces.map((trace, index) => {
+            const traceRootKey = `trace-root-${trace.id}`;
+            const isExpanded = !collapsedKeys.has(traceRootKey);
+            const isRootSelected = selectedTraceId === trace.id && selectedNodeId === null;
+
+            return (
+              <ExecutionSubGroup
+                key={trace.id}
+                trace={trace}
+                index={index}
+                isSelected={isRootSelected}
+                isExpanded={isExpanded}
+                onSelect={() => onSelectTrace(trace.id)}
+                onToggle={() => onToggleGroup(traceRootKey)}
+              />
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+};
+
+interface ExecutionSubGroupProps {
+  trace: FullTraceResponse;
+  index: number;
+  isSelected: boolean;
+  isExpanded: boolean;
+  onSelect: () => void;
+  onToggle: () => void;
+}
+
+const ExecutionSubGroup: FC<ExecutionSubGroupProps> = ({
+  trace,
+  index,
+  isSelected,
+  isExpanded,
+  onSelect,
+  onToggle,
+}) => {
+  const hasNodes = trace.nodes && trace.nodes.length > 0;
+  const label = `Message ${index + 1}`;
+
+  return (
+    <>
+      <UnstyledButton
+        className={`${classes.treeItem} ${isSelected ? classes.treeItemSelected : ''}`}
+        onClick={onSelect}
+      >
+        {hasNodes ? (
+          <span className={classes.expandIcon} onClick={(e) => { e.stopPropagation(); onToggle(); }}>
+            {isExpanded ? <IconChevronDown size={14} /> : <IconChevronRight size={14} />}
+          </span>
+        ) : (
+          <span className={classes.expandIconPlaceholder} />
+        )}
+        <Badge size="xs" variant="light" color={getTypeBadgeColor(trace.contextType || '')} className={classes.typeBadge}>
+          {trace.contextType === 'workflow' ? 'agent' : trace.contextType}
+        </Badge>
+        <DelayedTooltip label={trace.referenceName || label}>
+          <Text size="xs" className={classes.nodeName}>
+            {label}
+          </Text>
+        </DelayedTooltip>
+        <span className={classes.statusIcon}>
+          {getStatusIcon(trace.nodes?.[0]?.status || 'completed')}
+        </span>
+      </UnstyledButton>
+
+      {hasNodes && isExpanded && (
+        <div className={classes.childrenContainer}>
+          <div className={classes.treeLine} style={{ left: '15px' }} />
+          {trace.nodes.map((node) => (
+            <TreeItemWrapper key={node.id} node={node} depth={2} />
+          ))}
+        </div>
+      )}
+    </>
+  );
+};
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -338,6 +474,8 @@ interface TracingHierarchyViewProps {
   showDataPanels?: boolean;
   /** Callback for fullscreen button */
   onOpenFullscreen?: () => void;
+  /** Callback to refresh traces */
+  onRefresh?: () => void | Promise<void>;
 }
 
 export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
@@ -346,6 +484,7 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
   showHeader = true,
   showDataPanels = false,
   onOpenFullscreen,
+  onRefresh,
 }) => {
   const {
     traces,
@@ -360,6 +499,26 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [dataPanelsHeight, setDataPanelsHeight] = useState(DEFAULT_PANELS_HEIGHT);
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    if (!onRefresh || isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [onRefresh, isRefreshing]);
+
+  const orderedTraces = useMemo(
+    () =>
+      [...traces].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      ),
+    [traces]
+  );
 
   const handlePanelsResize = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -409,18 +568,33 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
       {showHeader && (
         <div className={classes.header}>
           <Text size="sm" fw={600}>Tracing Hierarchie</Text>
-          {onOpenFullscreen && (
-            <Tooltip label="Vollbild">
-              <ActionIcon
-                variant="subtle"
-                size="sm"
-                onClick={onOpenFullscreen}
-                className={classes.fullscreenButton}
-              >
-                <IconMaximize size={16} />
-              </ActionIcon>
-            </Tooltip>
-          )}
+          <div className={classes.headerActions}>
+            {onRefresh && (
+              <Tooltip label="Traces aktualisieren">
+                <ActionIcon
+                  variant="subtle"
+                  size="sm"
+                  onClick={handleRefresh}
+                  loading={isRefreshing}
+                  className={classes.fullscreenButton}
+                >
+                  <IconRefresh size={16} />
+                </ActionIcon>
+              </Tooltip>
+            )}
+            {onOpenFullscreen && (
+              <Tooltip label="Vollbild">
+                <ActionIcon
+                  variant="subtle"
+                  size="sm"
+                  onClick={onOpenFullscreen}
+                  className={classes.fullscreenButton}
+                >
+                  <IconMaximize size={16} />
+                </ActionIcon>
+              </Tooltip>
+            )}
+          </div>
         </div>
       )}
 
@@ -430,25 +604,39 @@ export const TracingHierarchyView: FC<TracingHierarchyViewProps> = ({
         style={showDataPanels ? { flex: 1, minHeight: TREE_MIN_HEIGHT } : undefined}
       >
         <div className={classes.treeContainer}>
-          {traces.map((trace) => {
-            const isRootSelected = selectedTrace?.id === trace.id && selectedNode === null;
-            const traceRootKey = `trace-root-${trace.id}`;
-            const isExpanded = !hierarchyCollapsed.has(traceRootKey);
+          {orderedTraces.length > 1 ? (
+            <ConversationGroup
+              traces={orderedTraces}
+              selectedTraceId={selectedTrace?.id ?? null}
+              selectedNodeId={selectedNode?.id ?? null}
+              collapsedKeys={hierarchyCollapsed}
+              onToggleGroup={toggleHierarchyCollapse}
+              onSelectTrace={(traceId) => {
+                selectTrace(traceId);
+                selectNode(null);
+              }}
+            />
+          ) : (
+            orderedTraces.map((trace) => {
+              const isRootSelected = selectedTrace?.id === trace.id && selectedNode === null;
+              const traceRootKey = `trace-root-${trace.id}`;
+              const isExpanded = !hierarchyCollapsed.has(traceRootKey);
 
-            return (
-              <TraceRootItem
-                key={trace.id}
-                trace={trace}
-                isSelected={isRootSelected}
-                isExpanded={isExpanded}
-                onSelect={() => {
-                  selectTrace(trace.id);
-                  selectNode(null);
-                }}
-                onToggle={() => toggleHierarchyCollapse(traceRootKey)}
-              />
-            );
-          })}
+              return (
+                <TraceRootItem
+                  key={trace.id}
+                  trace={trace}
+                  isSelected={isRootSelected}
+                  isExpanded={isExpanded}
+                  onSelect={() => {
+                    selectTrace(trace.id);
+                    selectNode(null);
+                  }}
+                  onToggle={() => toggleHierarchyCollapse(traceRootKey)}
+                />
+              );
+            })
+          )}
         </div>
       </ScrollArea>
 

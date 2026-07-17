@@ -29,6 +29,13 @@ interface TracingContextState {
   // Data
   traces: FullTraceResponse[];
   selectedTrace: FullTraceResponse | null;
+  /**
+   * All traces of the conversation merged into a single logical trace whose
+   * root nodes are the concatenation of every trace's root nodes ordered by
+   * creation time. Used by the canvas so multiple N8N executions render as one
+   * continuous conversation flow (like Foundry).
+   */
+  combinedTrace: FullTraceResponse | null;
   selectedNode: TraceNodeResponse | null;
 
   // UI State
@@ -80,6 +87,46 @@ const findNodeById = (
     }
   }
   return null;
+};
+
+// ============================================================================
+// Helper: Find node + owning trace across ALL traces
+// ============================================================================
+
+const findNodeAndTrace = (
+  traces: FullTraceResponse[],
+  nodeId: string
+): { trace: FullTraceResponse; node: TraceNodeResponse } | null => {
+  for (const trace of traces) {
+    const node = findNodeById(trace.nodes, nodeId);
+    if (node) {
+      return { trace, node };
+    }
+  }
+  return null;
+};
+
+// ============================================================================
+// Helper: Build a single combined trace from all conversation traces
+// ============================================================================
+
+const buildCombinedTrace = (
+  traces: FullTraceResponse[]
+): FullTraceResponse | null => {
+  if (traces.length === 0) return null;
+  if (traces.length === 1) return traces[0];
+
+  const ordered = [...traces].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+
+  const combinedNodes: TraceNodeResponse[] = ordered.flatMap((t) => t.nodes);
+
+  return {
+    ...ordered[0],
+    id: `combined-${ordered[0].id}`,
+    nodes: combinedNodes,
+  };
 };
 
 // ============================================================================
@@ -160,6 +207,9 @@ export const TracingProvider: FC<TracingProviderProps> = ({
   // Callback for centering on node (will be connected to canvas)
   const [, setCenterNodeId] = useState<string | null>(null);
 
+  // Combined trace: all conversation traces merged into one continuous flow
+  const combinedTrace = useMemo(() => buildCombinedTrace(traces), [traces]);
+
   // Effect: Sync selectedTrace when traces prop changes (e.g. after refresh)
   // This is needed because useState only uses initialTrace on first mount
   useEffect(() => {
@@ -220,14 +270,14 @@ export const TracingProvider: FC<TracingProviderProps> = ({
         setSelectedNode(null);
         return;
       }
-      if (!selectedTrace) return;
 
-      const node = findNodeById(selectedTrace.nodes, nodeId);
-      if (node) {
-        setSelectedNode(node);
+      const result = findNodeAndTrace(traces, nodeId);
+      if (result) {
+        setSelectedTrace(result.trace);
+        setSelectedNode(result.node);
       }
     },
-    [selectedTrace]
+    [traces]
   );
 
   const toggleHierarchyCollapse = useCallback((nodeId: string) => {
@@ -314,6 +364,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
     () => ({
       traces,
       selectedTrace,
+      combinedTrace,
       selectedNode,
       layoutDirection,
       hierarchyCollapsed,
@@ -335,6 +386,7 @@ export const TracingProvider: FC<TracingProviderProps> = ({
     [
       traces,
       selectedTrace,
+      combinedTrace,
       selectedNode,
       layoutDirection,
       hierarchyCollapsed,

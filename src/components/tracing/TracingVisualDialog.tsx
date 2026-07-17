@@ -23,6 +23,7 @@ interface TracingVisualDialogProps {
   onClose: () => void;
   traces: FullTraceResponse[];
   initialTraceId?: string;
+  onRefresh?: () => void | Promise<void>;
 }
 
 // ============================================================================
@@ -31,9 +32,10 @@ interface TracingVisualDialogProps {
 
 interface DialogContentProps {
   onClose: () => void;
+  onRefresh?: () => void | Promise<void>;
 }
 
-const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
+const DialogContent: FC<DialogContentProps> = ({ onClose, onRefresh }) => {
   const { selectedTrace, hierarchyVisible, chatVisible } = useTracing();
 
   // Panel sizes (percentages)
@@ -190,7 +192,7 @@ const DialogContent: FC<DialogContentProps> = ({ onClose }) => {
             className={classes.hierarchyContainer}
             style={{ width: `${hierarchyWidth}%` }}
           >
-            <TracingHierarchyView />
+            <TracingHierarchyView onRefresh={onRefresh} />
           </Box>
         )}
 
@@ -225,6 +227,7 @@ export const TracingVisualDialog: FC<TracingVisualDialogProps> = ({
   onClose,
   traces,
   initialTraceId,
+  onRefresh,
 }) => {
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -283,7 +286,7 @@ export const TracingVisualDialog: FC<TracingVisualDialogProps> = ({
       }}
     >
       <TracingProvider traces={traces} initialTraceId={initialTraceId}>
-        <DialogContent onClose={onClose} />
+        <DialogContent onClose={onClose} onRefresh={onRefresh} />
       </TracingProvider>
     </Modal>
   );
