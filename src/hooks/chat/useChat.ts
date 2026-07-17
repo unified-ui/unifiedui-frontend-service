@@ -394,9 +394,7 @@ export function useChat({
           }).concat(completedMessage);
         });
 
-        setTimeout(() => {
-          onRefreshTraces();
-        }, 1500);
+        void onRefreshTraces();
       },
       (title: string) => {
         if (!activeConversationId) return;

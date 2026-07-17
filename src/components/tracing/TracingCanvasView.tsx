@@ -797,7 +797,7 @@ const createColumnBasedLayout = (
 
 export const TracingCanvasView: FC = () => {
   const {
-    selectedTrace,
+    combinedTrace,
     selectedNode,
     layoutDirection,
     selectNode,
@@ -838,14 +838,14 @@ export const TracingCanvasView: FC = () => {
   // Calculate layout when trace, direction, layoutVersion changes
   // NICHT bei collapsedNodes-Änderung (nur visuell filtern)
   useEffect(() => {
-    if (!selectedTrace) {
+    if (!combinedTrace) {
       setNodes([]);
       setEdges([]);
       return;
     }
 
     const { nodes: layoutNodes, edges: layoutEdges } = createColumnBasedLayout(
-      selectedTrace,
+      combinedTrace,
       layoutDirection,
       selectedNode?.id || null,
       (nodeId) => selectNode(nodeId),
@@ -880,7 +880,7 @@ export const TracingCanvasView: FC = () => {
 
     setNodes(layoutNodes);
     setEdges(highlightedEdges);
-  }, [selectedTrace, layoutDirection, selectedNode, selectNode, setNodes, setEdges, collapsedNodes, handleToggleCollapse, layoutVersion, selectedEdgeId]);
+  }, [combinedTrace, layoutDirection, selectedNode, selectNode, setNodes, setEdges, collapsedNodes, handleToggleCollapse, layoutVersion, selectedEdgeId]);
 
   // Fit view on load
   const onInit = useCallback((instance: ReactFlowInstance) => {
@@ -924,7 +924,7 @@ export const TracingCanvasView: FC = () => {
     }
   }, []);
 
-  if (!selectedTrace) {
+  if (!combinedTrace) {
     return (
       <div className={classes.emptyContainer}>
         <p>Kein Trace ausgewählt</p>

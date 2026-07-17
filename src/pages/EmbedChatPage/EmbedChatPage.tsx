@@ -109,7 +109,7 @@ export const EmbedChatPage: FC = () => {
     setCurrentConversation,
     setConversations,
     setSelectedChatAgentId,
-    onRefreshTraces: tracing.refreshTraces,
+    onRefreshTraces: tracing.refreshTracesWithRetry,
     onNavigate: handleNavigate,
   });
 
@@ -203,7 +203,10 @@ export const EmbedChatPage: FC = () => {
       initialNodeReferenceId={tracing.selectedNodeReferenceId}
       onNodeReferenceIdChange={tracing.handleNodeReferenceIdChange}
     >
-      <TracingSidebar onOpenFullscreen={tracing.handleOpenTracingFullscreen} />
+      <TracingSidebar
+        onOpenFullscreen={tracing.handleOpenTracingFullscreen}
+        onRefresh={tracing.refreshTraces}
+      />
     </TracingProvider>
   ) : undefined;
 
@@ -268,6 +271,7 @@ export const EmbedChatPage: FC = () => {
           opened={tracing.tracingDialogOpen}
           onClose={() => tracing.setTracingDialogOpen(false)}
           traces={tracing.traces}
+          onRefresh={tracing.refreshTraces}
         />
       )}
     </Box>

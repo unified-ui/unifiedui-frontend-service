@@ -73,6 +73,8 @@
   "older": "Older",
   "feedbackTitle": "What went wrong?",
   "feedbackDescription": "Help us improve by describing what was wrong with this response.",
+  "feedbackTitlePositive": "What went well?",
+  "feedbackDescriptionPositive": "Help us improve by describing what was helpful about this response.",
   "feedbackPlaceholder": "Describe what was not helpful or incorrect...",
   "submitFeedback": "Submit Feedback",
   "selectChatAgent": "Select Chat Agent",

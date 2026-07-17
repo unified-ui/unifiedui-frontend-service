@@ -73,6 +73,8 @@
   "older": "Älter",
   "feedbackTitle": "Was war falsch?",
   "feedbackDescription": "Helfen Sie uns, indem Sie beschreiben, was an dieser Antwort falsch war.",
+  "feedbackTitlePositive": "Was war gut?",
+  "feedbackDescriptionPositive": "Helfen Sie uns, indem Sie beschreiben, was an dieser Antwort hilfreich war.",
   "feedbackPlaceholder": "Beschreiben Sie, was nicht hilfreich oder falsch war...",
   "submitFeedback": "Feedback absenden",
   "selectChatAgent": "Chat-Agent auswählen",

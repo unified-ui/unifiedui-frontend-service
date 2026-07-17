@@ -1739,6 +1739,7 @@ export interface FeedbackStatsResponse {
   score: number | null;
   reason_breakdown: ReasonBreakdownEntry[];
   recent_negative: RecentFeedbackEntry[];
+  recent_positive?: RecentFeedbackEntry[];
   timeline: FeedbackTimelineEntry[];
 }
 
