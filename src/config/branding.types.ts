@@ -20,6 +20,11 @@ export interface LoginBranding {
   buttonBorderColor: string;
   /** Auth button hover background */
   buttonHoverBg: string;
+  /**
+   * Show the displayName text next to the logo (default true).
+   * Set to false when the logo itself is a wordmark that already contains the name.
+   */
+  showBrandText?: boolean;
 }
 
 // ─── App-Wide Branding ────────────────────────────────────────

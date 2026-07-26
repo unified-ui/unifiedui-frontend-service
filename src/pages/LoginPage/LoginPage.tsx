@@ -299,9 +299,11 @@ export const LoginPage = () => {
             </div>
           )}
           <div className={classes.brandTextWrapper}>
-            <span className={classes.brandName} style={{ color: branding.login.textColor }}>
-              {branding.displayName}
-            </span>
+            {branding.login.showBrandText !== false && (
+              <span className={classes.brandName} style={{ color: branding.login.textColor }}>
+                {branding.displayName}
+              </span>
+            )}
             {SHOW_PLATFORM_SUBTITLE && (
               <span className={classes.brandSubtitle} style={{ color: branding.login.textColor }}>
                 powered by unified-ui

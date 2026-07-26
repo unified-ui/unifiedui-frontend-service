@@ -140,4 +140,30 @@ function getBranding(slug: string): BrandingConfig {
   return deepMerge(DEFAULT_BRANDING, override);
 }
 
-export const activeBranding: BrandingConfig = getBranding(ACTIVE_BRANDING);
+/**
+ * Optional env override for the visible IdP buttons (comma-separated, e.g. "oidc,microsoft").
+ * Lets each installation preconfigure its login providers without a code change.
+ * Unknown values are ignored; an empty or fully invalid list falls back to the branding preset.
+ */
+const IDP_ENV_OVERRIDE: string = import.meta.env.VITE_ENABLED_IDPS || '';
+
+const ALL_IDPS: BrandingConfig['enabledIdps'] = [
+  'microsoft',
+  'google',
+  'aws_cognito',
+  'ldap',
+  'kerberos',
+  'saml',
+  'okta',
+  'oidc',
+];
+
+function applyIdpEnvOverride(branding: BrandingConfig): BrandingConfig {
+  if (!IDP_ENV_OVERRIDE) return branding;
+  const requested = IDP_ENV_OVERRIDE.split(',').map((s) => s.trim().toLowerCase());
+  const valid = ALL_IDPS.filter((idp) => requested.includes(idp));
+  if (valid.length === 0) return branding;
+  return { ...branding, enabledIdps: valid };
+}
+
+export const activeBranding: BrandingConfig = applyIdpEnvOverride(getBranding(ACTIVE_BRANDING));
