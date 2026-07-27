@@ -76,7 +76,7 @@
 }
 
 [data-mantine-color-scheme="dark"] .navItemActive {
-  background-color: rgba(33, 150, 243, 0.06) !important;
+  background-color: rgba(var(--color-primary-rgb), 0.06) !important;
   color: var(--color-primary-300) !important;
   border-image: var(--gradient-accent) 1 !important;
   border-left-width: 4px !important;

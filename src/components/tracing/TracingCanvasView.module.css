@@ -62,7 +62,7 @@
 .customNodeSelected {
   box-shadow: var(--shadow-md);
   border-width: 3px;
-  border-color: #1e88e5 !important; /* Primary blue - same as root chain arrows */
+  border-color: var(--color-primary-600) !important; /* Primary blue - same as root chain arrows */
 }
 
 .nodeIcon {

@@ -175,7 +175,7 @@
 }
 
 [data-mantine-color-scheme="dark"] .radioOptionSelected {
-  background-color: rgba(33, 150, 243, 0.1);
+  background-color: rgba(var(--color-primary-rgb), 0.1);
 }
 
 /* Role option styles - same as radioOption but for the new multi/single select */
@@ -203,5 +203,5 @@
 }
 
 [data-mantine-color-scheme="dark"] .roleOptionSelected {
-  background-color: rgba(33, 150, 243, 0.1);
+  background-color: rgba(var(--color-primary-rgb), 0.1);
 }

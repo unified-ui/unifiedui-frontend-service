@@ -50,5 +50,5 @@
 }
 
 [data-mantine-color-scheme="dark"] .roleOptionSelected {
-  background-color: rgba(33, 150, 243, 0.1);
+  background-color: rgba(var(--color-primary-rgb), 0.1);
 }
