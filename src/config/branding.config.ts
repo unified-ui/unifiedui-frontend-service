@@ -32,6 +32,7 @@ export const DEFAULT_BRANDING: BrandingConfig = {
   displayName: APP_TITLE,
   logoUrl: getAssetUrl('logo'),
   iconUrl: getAssetUrl('icon'),
+  heroImageUrl: null,
   faviconUrl: getAssetUrl('favicon'),
 
   login: {

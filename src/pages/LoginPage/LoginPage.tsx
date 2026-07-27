@@ -157,6 +157,7 @@ export const LoginPage = () => {
   };
 
   const heading = branding.login.heading ?? t('loginHeading', 'Sign in to access the app');
+  const heroImage = branding.heroImageUrl ?? branding.iconUrl ?? '/branding/default/icon.svg';
 
   // ── Authenticated state ────────────────────────────────────
   if (isAuthenticated) {
@@ -266,11 +267,7 @@ export const LoginPage = () => {
           style={{ background: branding.login.bgRight }}
         >
           <div className={classes.iconWrapper}>
-            {branding.iconUrl ? (
-              <img src={branding.iconUrl} alt="" className={classes.heroIcon} />
-            ) : (
-              <img src="/branding/default/icon.svg" alt="" className={classes.heroIcon} />
-            )}
+            <img src={heroImage} alt="" className={classes.heroIcon} />
           </div>
         </div>
       </div>
@@ -476,11 +473,7 @@ export const LoginPage = () => {
         style={{ background: branding.login.bgRight }}
       >
         <div className={classes.iconWrapper}>
-          {branding.iconUrl ? (
-            <img src={branding.iconUrl} alt="" className={classes.heroIcon} />
-          ) : (
-            <img src="/branding/default/icon.svg" alt="" className={classes.heroIcon} />
-          )}
+          <img src={heroImage} alt="" className={classes.heroIcon} />
         </div>
       </div>
     </div>
