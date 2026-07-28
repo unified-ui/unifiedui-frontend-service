@@ -1,0 +1,71 @@
+.page {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.content {
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+.todoPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--bg-paper);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.todoInput {
+  flex: 1;
+}
+
+.toolbar {
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.todoList {
+  min-height: 180px;
+}
+
+.todoItem {
+  min-height: 48px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+}
+
+.todoText,
+.completedText {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+}
+
+.completedText {
+  color: var(--text-disabled);
+  text-decoration: line-through;
+}
+
+.emptyState {
+  padding: var(--spacing-2xl) var(--spacing-md);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .todoPanel {
+    padding: var(--spacing-md);
+  }
+
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

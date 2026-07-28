@@ -1,9 +1,16 @@
 /// <reference types="vitest/config" />
+import path from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { customExtensionPlugin } from './vite/customExtensionPlugin'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), customExtensionPlugin()],
+  resolve: {
+    alias: {
+      '@unified-ui/custom-api': path.resolve(import.meta.dirname, 'src/extensions/index.ts'),
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',

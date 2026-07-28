@@ -35,6 +35,16 @@ const apps = await apiClient.listChatAgents(tenantId, { skip: 0, limit: 50 });
 
 Never create a new `UnifiedUIAPIClient` instance — always use the one from context.
 
+## Custom Service Client
+
+Deployment-specific services use `useCustomServiceClient()` from `@unified-ui/custom-api`; they must not add customer endpoints to `UnifiedUIAPIClient`.
+
+- Keep endpoint methods and DTOs in `custom/client/`.
+- Configure only the public base URL through a custom `VITE_*` variable.
+- Use `tenantScoped: true` only when the custom service expects `X-Tenant-ID`.
+- The client attaches the current bearer token and supports JSON, 204 responses, abort signals, and `CustomServiceError`.
+- Custom services must independently validate token scopes and tenant authorization.
+
 ---
 
 ## Request Flow

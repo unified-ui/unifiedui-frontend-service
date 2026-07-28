@@ -1,6 +1,7 @@
 # Custom
 .env*
 !.env.example
+/custom/
 
 # Custom branding assets (OSS users can override these)
 public/branding/default/icon.svg

@@ -11,6 +11,7 @@ import { OidcAuthProvider, OidcAuthProviderUnconfigured } from './auth/OidcAuthP
 import { theme } from './theme';
 import { IdentityProvider, SidebarDataProvider, AICapabilitiesProvider, FavoritesProvider, RecentVisitsProvider, NotificationProvider } from './contexts';
 import i18n from './i18n';
+import { initializeCustomExtension } from './extensions/registry';
 import App from './App.tsx';
 
 import '@mantine/core/styles.css';
@@ -21,6 +22,8 @@ import './styles/variables.css';
 import './index.css';
 
 const msalInstance = authConfig.microsoft ? new PublicClientApplication(msalConfig) : null;
+
+initializeCustomExtension(i18n);
 
 if (msalInstance) {
   msalInstance.initialize().then(() => {

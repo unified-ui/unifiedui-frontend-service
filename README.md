@@ -115,6 +115,10 @@ The app runs at `http://localhost:5173`
 
 > **See [TOOLING.md](TOOLING.md)** for the full tooling guide, pre-commit hooks, and CI details.
 
+### Custom Frontend Extensions
+
+Deployment-specific pages, sidebar items, UI slots, translations, and authenticated service clients can be supplied through an optional root-level `custom/` directory. See [CUSTOMIZATION.md](CUSTOMIZATION.md) and the compilable [custom.example](custom.example/) Todo extension.
+
 ---
 
 ## Configuration

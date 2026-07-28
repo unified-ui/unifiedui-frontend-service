@@ -130,6 +130,17 @@ src/
     └── theme.ts                # Mantine theme configuration
 ```
 
+Root-level extension folders:
+
+| Folder            | Purpose                                                                |
+| ----------------- | ---------------------------------------------------------------------- |
+| `custom/`         | Optional gitignored deployment-specific extension; requires `index.ts` |
+| `custom.example/` | Compilable Todo reference extension and upgrade compatibility fixture  |
+| `src/extensions/` | Stable extension manifest, registry, slots, hooks, and client facade   |
+| `vite/`           | Optional custom entry-point resolution for Vite builds                 |
+
+Custom pages must use `/custom/...` routes and import supported core integration points from `@unified-ui/custom-api`. See `CUSTOMIZATION.md`.
+
 ---
 
 ## Components Catalog
