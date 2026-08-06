@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Stack,
   Group,
@@ -32,6 +33,7 @@ import {
   IconHistory,
   IconKey,
   IconSettings2,
+  IconExternalLink,
 } from '@tabler/icons-react';
 import { MainLayout } from '../../components/layout/MainLayout';
 import { SecretField, TracesTable, ConfirmDeleteDialog, DelayedTooltip, Breadcrumbs, EntityAvatar, WorkflowRunsTable, ContentCard, AccessDeniedBanner } from '../../components/common';
@@ -47,6 +49,8 @@ import { useSidebarData } from '../../contexts/SidebarDataContext';
 import { useRecentVisits } from '../../contexts';
 import { useDelayedLoading, useDialogParams } from '../../hooks';
 import type { WorkflowResponse, FullTraceResponse, TracesListParams } from '../../api/types';
+import { WorkflowFormOpenModeEnum } from '../../api/types';
+import { openWorkflowForm } from '../../utils/workflowForm';
 import { PermissionError } from '../../api/errors';
 import classes from './WorkflowDetailsPage.module.css';
 
@@ -116,6 +120,7 @@ export const WorkflowDetailsPage: FC = () => {
 
   // ---- Dialog params ----
   const { dialog, dialogTab, openDialog, closeDialog, setDialogTab } = useDialogParams();
+  const { t } = useTranslation('common');
 
   // ---- Traces ----
   const [traces, setTraces] = useState<FullTraceResponse[]>([]);
@@ -476,11 +481,14 @@ export const WorkflowDetailsPage: FC = () => {
   }, [apiClient, selectedTenant, agentId, confirmRotateKey]);
 
   // ---- Edit ----
-  const handleEditSuccess = useCallback(() => {
-    closeDialog();
-    fetchAgent();
-    refreshWorkflows();
-  }, [fetchAgent, refreshWorkflows, closeDialog]);
+    const handleEditSuccess = useCallback((updatedWorkflow?: WorkflowResponse) => {
+      closeDialog();
+      if (updatedWorkflow) {
+        setAgent(updatedWorkflow);
+      }
+      fetchAgent();
+      refreshWorkflows();
+    }, [fetchAgent, refreshWorkflows, closeDialog]);
 
   // ---- Computed ----
   const agentServiceHost = import.meta.env.VITE_AGENT_SERVICE_URL || 'http://localhost:8085';
@@ -504,9 +512,23 @@ export const WorkflowDetailsPage: FC = () => {
       webhook_url?: string;
       default_body?: Record<string, unknown>;
       default_query_params?: Record<string, string>;
+      enable_form_trigger?: boolean;
+      form_trigger_url?: string;
+      form_open_mode?: WorkflowFormOpenModeEnum;
     };
     return cfg;
   }, [agent]);
+
+  const hasFormTrigger = n8nConfig?.enable_form_trigger === true && !!n8nConfig?.form_trigger_url;
+
+  const handleStartWorkflow = useCallback(() => {
+    if (hasFormTrigger) {
+      openWorkflowForm(n8nConfig?.form_trigger_url, n8nConfig?.form_open_mode);
+      handleStartWorkflowSuccess();
+      return;
+    }
+    openDialog('start-workflow');
+  }, [hasFormTrigger, n8nConfig, handleStartWorkflowSuccess, openDialog]);
 
   // ---- Render ----
   return (
@@ -629,7 +651,7 @@ export const WorkflowDetailsPage: FC = () => {
                 Details
               </Tabs.Tab>
             </Tabs.List>            <Tabs.Panel value="traces" className={classes.tabPanel}>
-                {n8nConfig?.webhook_url && (
+                {(hasFormTrigger || n8nConfig?.webhook_url) && (
                   <Group gap="sm" mb="sm" justify="flex-end">
                     {autoRefresh && (
                       <Tooltip label="Click to stop auto-refresh">
@@ -647,10 +669,10 @@ export const WorkflowDetailsPage: FC = () => {
                     <Button
                       size="xs"
                       variant="light"
-                      leftSection={<IconPlayerPlay size={14} />}
-                      onClick={() => openDialog('start-workflow')}
+                      leftSection={hasFormTrigger ? <IconExternalLink size={14} /> : <IconPlayerPlay size={14} />}
+                      onClick={handleStartWorkflow}
                     >
-                      Start Workflow
+                      {hasFormTrigger ? t('workflowOpenForm') : 'Start Workflow'}
                     </Button>
                   </Group>
                 )}
@@ -682,8 +704,11 @@ export const WorkflowDetailsPage: FC = () => {
                   agentId={agentId!}
                   agentType={agent.type}
                   onRunClick={handleRunClick}
-                  onStartWorkflow={() => openDialog('start-workflow')}
-                  showStartWorkflow={!!n8nConfig?.webhook_url}
+                  onStartWorkflow={handleStartWorkflow}
+                  showStartWorkflow={hasFormTrigger || !!n8nConfig?.webhook_url}
+                  startWorkflowLabel={hasFormTrigger ? t('workflowOpenForm') : undefined}
+                  formTriggerUrl={hasFormTrigger ? n8nConfig?.form_trigger_url : undefined}
+                  formOpenMode={n8nConfig?.form_open_mode}
                   autoRefreshTrigger={runsAutoRefreshTrigger}
                 />
               </Tabs.Panel>
@@ -818,6 +843,26 @@ export const WorkflowDetailsPage: FC = () => {
                         readOnly
                         styles={{ input: { cursor: 'default' } }}
                       />
+                      {n8nConfig.enable_form_trigger && (
+                        <>
+                          <TextInput
+                            label={t('workflowFormTriggerUrl')}
+                            value={n8nConfig.form_trigger_url || '—'}
+                            readOnly
+                            styles={{ input: { cursor: 'default' } }}
+                          />
+                          <TextInput
+                            label={t('workflowFormOpenMode')}
+                            value={
+                              n8nConfig.form_open_mode === WorkflowFormOpenModeEnum.WINDOW
+                                ? t('workflowFormOpenModeWindow')
+                                : t('workflowFormOpenModeTab')
+                            }
+                            readOnly
+                            styles={{ input: { cursor: 'default' } }}
+                          />
+                        </>
+                      )}
                     </Stack>
                   </ContentCard>
                 )}

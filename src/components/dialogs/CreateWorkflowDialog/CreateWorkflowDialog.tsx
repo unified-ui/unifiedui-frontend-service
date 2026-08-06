@@ -26,6 +26,7 @@ import { GenerateWithAIButton } from '../../common/GenerateWithAIButton';
 import {
   WorkflowTypeEnum,
   CredentialTypeEnum,
+  WorkflowFormOpenModeEnum,
   type CredentialResponse,
   type N8NWorkflowConfig,
 } from '../../../api/types';
@@ -34,6 +35,7 @@ import type { KeyValuePair } from '../../common';
 import { TestConnectionType } from '../../../api/types';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
 import { N8NWorkflowBrowserDialog } from '../N8NWorkflowBrowserDialog';
+import { WorkflowFormTriggerFields } from '../WorkflowFormTriggerFields';
 
 const AUTONOMOUS_AGENT_TYPES = [
   { value: WorkflowTypeEnum.N8N, label: 'n8n' },
@@ -63,6 +65,9 @@ interface FormValues {
   n8n_webhook_url: string;
   n8n_default_body: string;
   n8n_default_query_params: KeyValuePair[];
+  n8n_enable_form_trigger: boolean;
+  n8n_form_trigger_url: string;
+  n8n_form_open_mode: string;
 }
 
 export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
@@ -95,6 +100,9 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
       n8n_webhook_url: '',
       n8n_default_body: '{}',
       n8n_default_query_params: [],
+      n8n_enable_form_trigger: false,
+      n8n_form_trigger_url: '',
+      n8n_form_open_mode: WorkflowFormOpenModeEnum.TAB,
     },
     validate: {
       name: (value) => {
@@ -152,6 +160,26 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
               return 'Invalid JSON';
             }
           }
+        }
+        return null;
+      },
+      n8n_form_trigger_url: (value, values) => {
+        if (values.type !== WorkflowTypeEnum.N8N || !values.n8n_enable_form_trigger) {
+          return null;
+        }
+        if (!value || value.trim().length === 0) {
+          return 'Production Form URL is required';
+        }
+        try {
+          const url = new URL(value.trim());
+          if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            return 'URL must start with http:// or https://';
+          }
+          if (!url.pathname.includes('/form/')) {
+            return 'URL must contain /form/ in the path';
+          }
+        } catch {
+          return 'Invalid URL';
         }
         return null;
       },
@@ -221,7 +249,11 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
           workflow_endpoint: values.n8n_workflow_endpoint.trim(),
           api_api_key_credential_id: values.n8n_api_api_key_credential_id,
         };
-        if (values.n8n_enable_start_workflow && values.n8n_webhook_url.trim()) {
+        if (values.n8n_enable_form_trigger) {
+          config.enable_form_trigger = true;
+          config.form_trigger_url = values.n8n_form_trigger_url.trim();
+          config.form_open_mode = values.n8n_form_open_mode as WorkflowFormOpenModeEnum;
+        } else if (values.n8n_enable_start_workflow && values.n8n_webhook_url.trim()) {
           config.webhook_url = values.n8n_webhook_url.trim();
           const bodyTrimmed = values.n8n_default_body.trim();
           if (bodyTrimmed && bodyTrimmed !== '{}') {
@@ -409,9 +441,10 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
                   description="Allow triggering the workflow via webhook with optional defaults"
                   checked={form.values.n8n_enable_start_workflow}
                   onChange={(e) => form.setFieldValue('n8n_enable_start_workflow', e.currentTarget.checked)}
+                  disabled={form.values.n8n_enable_form_trigger}
                 />
 
-                {form.values.n8n_enable_start_workflow && (
+                {form.values.n8n_enable_start_workflow && !form.values.n8n_enable_form_trigger && (
                   <>
                     <TextInput
                       label="Webhook URL"
@@ -458,6 +491,16 @@ export const CreateWorkflowDialog: FC<CreateWorkflowDialogProps> = ({
                     />
                   </>
                 )}
+
+                <WorkflowFormTriggerFields
+                  enabled={form.values.n8n_enable_form_trigger}
+                  url={form.values.n8n_form_trigger_url}
+                  urlError={form.errors.n8n_form_trigger_url}
+                  openMode={form.values.n8n_form_open_mode}
+                  onEnabledChange={(enabled) => form.setFieldValue('n8n_enable_form_trigger', enabled)}
+                  onUrlChange={(url) => form.setFieldValue('n8n_form_trigger_url', url)}
+                  onOpenModeChange={(mode) => form.setFieldValue('n8n_form_open_mode', mode)}
+                />
               </>
             )}
 

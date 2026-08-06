@@ -87,6 +87,13 @@ export type WorkflowTypeEnum = typeof WorkflowTypeEnum[keyof typeof WorkflowType
 
 // ========== Workflow Config Types ==========
 
+export const WorkflowFormOpenModeEnum = {
+  TAB: 'TAB',
+  WINDOW: 'WINDOW',
+} as const;
+
+export type WorkflowFormOpenModeEnum = typeof WorkflowFormOpenModeEnum[keyof typeof WorkflowFormOpenModeEnum];
+
 export interface N8NWorkflowConfig {
   api_version: string;
   workflow_endpoint: string;
@@ -94,6 +101,9 @@ export interface N8NWorkflowConfig {
   webhook_url?: string;
   default_body?: Record<string, unknown>;
   default_query_params?: Record<string, string>;
+  enable_form_trigger?: boolean;
+  form_trigger_url?: string;
+  form_open_mode?: WorkflowFormOpenModeEnum;
 }
 
 export const FavoriteResourceTypeEnum = {
