@@ -20,6 +20,11 @@ export interface LoginBranding {
   buttonBorderColor: string;
   /** Auth button hover background */
   buttonHoverBg: string;
+  /**
+   * Show the displayName text next to the logo (default true).
+   * Set to false when the logo itself is a wordmark that already contains the name.
+   */
+  showBrandText?: boolean;
 }
 
 // ─── App-Wide Branding ────────────────────────────────────────
@@ -59,8 +64,14 @@ export interface BrandingConfig {
   displayName: string;
   /** Small logo (top-left corner) — URL or path. null = use default icon */
   logoUrl: string | null;
-  /** Large icon/emblem (right panel of login) — URL or path. null = use default icon */
+  /** Large icon/emblem (app header, favicon fallback) — URL or path. null = use default icon */
   iconUrl: string | null;
+  /**
+   * Dedicated artwork for the login page's right panel.
+   * Falls back to iconUrl when null — set it when the hero should differ from
+   * the compact app icon (e.g. a wide wordmark or a subtle watermark).
+   */
+  heroImageUrl?: string | null;
   /** Browser favicon. null = keep default */
   faviconUrl: string | null;
 
