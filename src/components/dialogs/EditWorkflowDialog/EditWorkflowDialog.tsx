@@ -30,10 +30,11 @@ import { useEntityPermissions, usePermissions, useConfigSuggestions } from '../.
 import { ManageAccessTable, TagInput, AddPrincipalDialog, KeyValuePairsInput, ConnectionTestButton, FilterableSelect, EndpointSuggestInput } from '../../common';
 import type { KeyValuePair } from '../../common';
 import type { WorkflowResponse, PrincipalTypeEnum, CredentialResponse } from '../../../api/types';
-import { PermissionActionEnum, WorkflowTypeEnum, CredentialTypeEnum, TestConnectionType } from '../../../api/types';
+import { PermissionActionEnum, WorkflowTypeEnum, CredentialTypeEnum, TestConnectionType, WorkflowFormOpenModeEnum } from '../../../api/types';
 import type { SelectedPrincipal } from '../../common/AddPrincipalDialog/AddPrincipalDialog';
 import { CreateCredentialDialog } from '../CreateCredentialDialog';
 import { N8NWorkflowBrowserDialog } from '../N8NWorkflowBrowserDialog';
+import { WorkflowFormTriggerFields } from '../WorkflowFormTriggerFields';
 import { useFormDirtyGuard } from '../../../hooks';
 import classes from './EditWorkflowDialog.module.css';
 
@@ -56,6 +57,9 @@ interface FormValues {
   n8n_webhook_url: string;
   n8n_default_body: string;
   n8n_default_query_params: KeyValuePair[];
+  n8n_enable_form_trigger: boolean;
+  n8n_form_trigger_url: string;
+  n8n_form_open_mode: string;
 }
 
 export interface EditWorkflowDialogProps {
@@ -64,7 +68,7 @@ export interface EditWorkflowDialogProps {
   initialData?: WorkflowResponse | null;
   activeTab?: EditDialogTab;
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (workflow?: WorkflowResponse) => void;
   onTabChange?: (tab: EditDialogTab) => void;
 }
 
@@ -122,6 +126,9 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
       n8n_webhook_url: '',
       n8n_default_body: '{}',
       n8n_default_query_params: [],
+      n8n_enable_form_trigger: false,
+      n8n_form_trigger_url: '',
+      n8n_form_open_mode: WorkflowFormOpenModeEnum.TAB,
     },
     validate: {
       name: (value) => {
@@ -163,6 +170,26 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
               return 'Invalid JSON';
             }
           }
+        }
+        return null;
+      },
+      n8n_form_trigger_url: (value, values) => {
+        if (workflow?.type !== WorkflowTypeEnum.N8N || !values.n8n_enable_form_trigger) {
+          return null;
+        }
+        if (!value || value.trim().length === 0) {
+          return 'Production Form URL is required';
+        }
+        try {
+          const url = new URL(value.trim());
+          if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            return 'URL must start with http:// or https://';
+          }
+          if (!url.pathname.includes('/form/')) {
+            return 'URL must contain /form/ in the path';
+          }
+        } catch {
+          return 'Invalid URL';
         }
         return null;
       },
@@ -241,6 +268,9 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
         n8n_default_query_params: config.default_query_params
           ? Object.entries(config.default_query_params as Record<string, string>).map(([key, value]) => ({ key, value }))
           : [],
+        n8n_enable_form_trigger: !!config.enable_form_trigger,
+        n8n_form_trigger_url: (config.form_trigger_url as string) || '',
+        n8n_form_open_mode: (config.form_open_mode as string) || WorkflowFormOpenModeEnum.TAB,
       });
       form.resetDirty();
     },
@@ -303,7 +333,11 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
           workflow_endpoint: values.n8n_workflow_endpoint.trim(),
           api_api_key_credential_id: values.n8n_api_api_key_credential_id,
         };
-        if (values.n8n_enable_start_workflow && values.n8n_webhook_url.trim()) {
+        if (values.n8n_enable_form_trigger) {
+          config.enable_form_trigger = true;
+          config.form_trigger_url = values.n8n_form_trigger_url.trim();
+          config.form_open_mode = values.n8n_form_open_mode;
+        } else if (values.n8n_enable_start_workflow && values.n8n_webhook_url.trim()) {
           config.webhook_url = values.n8n_webhook_url.trim();
           const bodyTrimmed = values.n8n_default_body.trim();
           if (bodyTrimmed && bodyTrimmed !== '{}') {
@@ -321,7 +355,7 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
       }
 
       // Update workflow
-      await apiClient.updateWorkflow(selectedTenant.id, workflowId, {
+      const updatedWorkflow = await apiClient.updateWorkflow(selectedTenant.id, workflowId, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
         allow_api_keys: values.allow_api_keys,
@@ -337,7 +371,7 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
       }
 
       form.resetDirty();
-      onSuccess?.();
+      onSuccess?.(updatedWorkflow);
       onClose();
     } catch (err) {
       console.error('Failed to update workflow:', err);
@@ -590,9 +624,10 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
                     description="Allow triggering the workflow via webhook with optional defaults"
                     checked={form.values.n8n_enable_start_workflow}
                     onChange={(e) => form.setFieldValue('n8n_enable_start_workflow', e.currentTarget.checked)}
+                    disabled={form.values.n8n_enable_form_trigger}
                   />
 
-                  {form.values.n8n_enable_start_workflow && (
+                  {form.values.n8n_enable_start_workflow && !form.values.n8n_enable_form_trigger && (
                     <>
                       <TextInput
                         label="Webhook URL"
@@ -639,6 +674,16 @@ export const EditWorkflowDialog: FC<EditWorkflowDialogProps> = ({
                       />
                     </>
                   )}
+
+                  <WorkflowFormTriggerFields
+                    enabled={form.values.n8n_enable_form_trigger}
+                    url={form.values.n8n_form_trigger_url}
+                    urlError={form.errors.n8n_form_trigger_url}
+                    openMode={form.values.n8n_form_open_mode}
+                    onEnabledChange={(enabled) => form.setFieldValue('n8n_enable_form_trigger', enabled)}
+                    onUrlChange={(url) => form.setFieldValue('n8n_form_trigger_url', url)}
+                    onOpenModeChange={(mode) => form.setFieldValue('n8n_form_open_mode', mode)}
+                  />
                 </>
               )}
 

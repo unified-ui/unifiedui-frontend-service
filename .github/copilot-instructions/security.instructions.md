@@ -92,6 +92,15 @@ localStorage.setItem("token", accessToken);
 - **NEVER** use `javascript:` or `data:` schemes in any URL, href, or src.
 - **ALWAYS** validate external URLs before opening them (check `https://` scheme).
 
+### Custom Extensions
+
+- Custom code is trusted build-time application code, not a runtime plugin sandbox.
+- Import core integration points only through `@unified-ui/custom-api`.
+- Custom routes are always protected and restricted to `/custom/...`.
+- Use `useCustomServiceClient()` for separate custom backends; never call raw `fetch()` from custom components.
+- Custom `VITE_*` variables may contain public URLs and feature flags only, never secrets.
+- A custom backend must validate bearer tokens, scopes, and tenant authorization independently.
+
 ### Correct Pattern
 
 ```tsx
