@@ -13,7 +13,7 @@
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-lg);
   border-bottom: 1px solid var(--border-light);
-  background: linear-gradient(to right, rgba(33, 150, 243, 0.04), transparent);
+  background: linear-gradient(to right, rgba(var(--color-primary-rgb), 0.04), transparent);
 }
 
 .headerClickable {
@@ -24,8 +24,8 @@
 .headerClickable:hover {
   background: linear-gradient(
     to right,
-    rgba(33, 150, 243, 0.08),
-    rgba(33, 150, 243, 0.02)
+    rgba(var(--color-primary-rgb), 0.08),
+    rgba(var(--color-primary-rgb), 0.02)
   );
 }
 
@@ -59,18 +59,18 @@
 [data-mantine-color-scheme="dark"] .card {
   background: #292929;
   border-color: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.12);
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.12);
 }
 
 [data-mantine-color-scheme="dark"] .header {
-  background: linear-gradient(to right, rgba(33, 150, 243, 0.08), transparent);
+  background: linear-gradient(to right, rgba(var(--color-primary-rgb), 0.08), transparent);
   border-bottom-color: rgba(255, 255, 255, 0.04);
 }
 
 [data-mantine-color-scheme="dark"] .headerClickable:hover {
   background: linear-gradient(
     to right,
-    rgba(33, 150, 243, 0.14),
-    rgba(33, 150, 243, 0.04)
+    rgba(var(--color-primary-rgb), 0.14),
+    rgba(var(--color-primary-rgb), 0.04)
   );
 }

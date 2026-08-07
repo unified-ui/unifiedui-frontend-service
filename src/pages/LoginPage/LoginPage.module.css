@@ -42,7 +42,7 @@
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #2196f3, #9c27b0);
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500));
   flex-shrink: 0;
 }
 

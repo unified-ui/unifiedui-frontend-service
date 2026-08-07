@@ -59,7 +59,7 @@
 }
 
 [data-mantine-color-scheme="dark"] .starterButton:hover {
-  background-color: rgba(33, 150, 243, 0.1);
+  background-color: rgba(var(--color-primary-rgb), 0.1);
   border-color: var(--color-primary-500);
   color: var(--color-primary-300);
 }
