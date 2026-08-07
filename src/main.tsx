@@ -9,6 +9,7 @@ import { msalConfig, authConfig } from './auth/authConfig';
 import { AuthProvider, LdapAuthProvider, DebugAuthProvider } from './auth';
 import { OidcAuthProvider, OidcAuthProviderUnconfigured } from './auth/OidcAuthProvider';
 import { theme } from './theme';
+import { colorSchemeManager } from './theme/colorSchemeManager';
 import { IdentityProvider, SidebarDataProvider, AICapabilitiesProvider, FavoritesProvider, RecentVisitsProvider, NotificationProvider } from './contexts';
 import i18n from './i18n';
 import { initializeCustomExtension } from './extensions/registry';
@@ -62,7 +63,7 @@ const app = (
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ColorSchemeScript defaultColorScheme="dark" />
-    <MantineProvider theme={theme} defaultColorScheme="dark">
+    <MantineProvider theme={theme} defaultColorScheme="dark" colorSchemeManager={colorSchemeManager}>
       <Notifications position="top-right" />
       <I18nextProvider i18n={i18n}>
         {msalInstance ? <MsalProvider instance={msalInstance}>{app}</MsalProvider> : app}
