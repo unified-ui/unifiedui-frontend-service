@@ -18,6 +18,7 @@ export { IntegrationDialog } from './IntegrationDialog';
 export { ImportTraceDialog } from './ImportTraceDialog';
 export { N8NWorkflowBrowserDialog } from './N8NWorkflowBrowserDialog';
 export { StartWorkflowDialog } from './StartWorkflowDialog';
+export { WorkflowFormTriggerFields } from './WorkflowFormTriggerFields';
 export { AIModelDialog } from './AIModelDialog';
 export { AnalyzeErrorDialog } from './AnalyzeErrorDialog';
 export { StandardWidgetPromptDialog } from './StandardWidgetPromptDialog';

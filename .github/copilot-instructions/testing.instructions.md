@@ -108,3 +108,11 @@ Add API mock handlers in `src/test/mocks/handlers.ts`. Use `http.get()`, `http.p
 5. Prefer `getByText`, `getByRole`, `getByPlaceholderText` over `querySelector`
 6. Run `npx vitest run` after writing tests to verify they pass
 7. Include a "no German strings" test for i18n-refactored components
+
+## Custom Extension Tests
+
+- Keep core extension tests in `src/test/__tests__/custom*.test.*`.
+- Test entry resolution with temporary directories for absent, valid, and malformed `custom/` states.
+- Test custom service clients with MSW, including bearer headers, tenant forwarding, 204 responses, errors, aborts, and unsafe URLs.
+- `custom.example/` is included in TypeScript checks and must remain compilable.
+- Verify `npm run build` both with no `custom/` directory and with the example copied to `custom/` when changing the extension contract.

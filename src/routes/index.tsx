@@ -6,6 +6,7 @@ import { ChatSidebarProvider } from '../contexts';
 import { LoginPage } from '../pages/LoginPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { UnauthorizedPage } from '../pages/UnauthorizedPage';
+import { getCustomRoutes } from '../extensions/registry';
 
 const LoginTokenPage = lazy(() => import('../pages/LoginTokenPage').then(m => ({ default: m.LoginTokenPage })));
 const DashboardPage = lazy(() => import('../pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
@@ -63,6 +64,14 @@ export const AppRoutes = () => {
             {IS_DEV && (
               <Route path="/dev/tracing" element={<ProtectedRoute><TracingDialogDevelopmentPage /></ProtectedRoute>} />
             )}
+
+            {getCustomRoutes().map(({ id, path, component: Component }) => (
+              <Route
+                key={id}
+                path={path}
+                element={<ProtectedRoute><Component /></ProtectedRoute>}
+              />
+            ))}
 
             <Route path="/" element={<Navigate to="/home" replace />}
             />

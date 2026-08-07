@@ -10,6 +10,7 @@ import {
   IconAppWindow,
   IconShieldLock,
 } from '@tabler/icons-react';
+import type { Icon } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSidebarData, useFavorites, type EntityType } from '../../../contexts';
 import { EntityAvatar } from '../../common';
@@ -22,11 +23,14 @@ import {
   CreateExternalAppDialog,
 } from '../../dialogs';
 import { FavoriteResourceTypeEnum } from '../../../api/types';
+import { CustomSlot } from '../../../extensions/CustomSlot';
+import { customTranslationNamespace, getCustomSidebarItems } from '../../../extensions/registry';
+import type { CustomSidebarItemDefinition } from '../../../extensions/types';
 import classes from './Sidebar.module.css';
 
 interface NavItem {
-  icon: typeof IconHome;
-  iconFilled?: typeof IconHomeFilled;
+  icon: Icon;
+  iconFilled?: Icon;
   labelKey: string;
   path: string;
   visible?: boolean;
@@ -35,7 +39,17 @@ interface NavItem {
   matchFn?: (pathname: string, search: string) => boolean;
   requiredResourceAccess?: ResourceType;
   envFlag?: string;
+  translationNamespace?: string;
 }
+
+const toNavItem = (item: CustomSidebarItemDefinition): NavItem => ({
+  icon: item.icon,
+  iconFilled: item.iconFilled,
+  labelKey: item.labelKey,
+  path: item.path,
+  matchFn: item.matchPath,
+  translationNamespace: customTranslationNamespace,
+});
 
 const mainNavItemsTop: NavItem[] = [
   { icon: IconHome, iconFilled: IconHomeFilled, labelKey: 'home', path: '/home' },
@@ -123,19 +137,33 @@ export const Sidebar: FC = () => {
   }, []);
 
   const visibleNavItemsTop = useMemo(
-    () => mainNavItemsTop.filter(item =>
-      (item.visible !== false) &&
-      isEnvFlagEnabled(item.envFlag) &&
-      (!item.requiredResourceAccess || canCreate(item.requiredResourceAccess))),
+    () => [
+      ...mainNavItemsTop.filter(item =>
+        (item.visible !== false) &&
+        isEnvFlagEnabled(item.envFlag) &&
+        (!item.requiredResourceAccess || canCreate(item.requiredResourceAccess))),
+      ...getCustomSidebarItems('primary').map(toNavItem),
+    ],
     [canCreate, isEnvFlagEnabled],
   );
 
   const visibleNavItemsBottom = useMemo(
-    () => mainNavItemsBottom.filter(item =>
-      (item.visible !== false) &&
-      isEnvFlagEnabled(item.envFlag) &&
-      (!item.requiredResourceAccess || canCreate(item.requiredResourceAccess))),
+    () => [
+      ...mainNavItemsBottom.filter(item =>
+        (item.visible !== false) &&
+        isEnvFlagEnabled(item.envFlag) &&
+        (!item.requiredResourceAccess || canCreate(item.requiredResourceAccess))),
+      ...getCustomSidebarItems('secondary').map(toNavItem),
+    ],
     [canCreate, isEnvFlagEnabled],
+  );
+
+  const visibleNavItemsFooter = useMemo(
+    () => [
+      ...getCustomSidebarItems('footer').map(toNavItem),
+      ...bottomNavItems,
+    ],
+    [],
   );
 
   const ENTITY_TO_FAVORITE_TYPE: Record<string, FavoriteResourceTypeEnum> = useMemo(() => ({
@@ -507,6 +535,9 @@ export const Sidebar: FC = () => {
       : location.pathname === item.path || location.pathname.startsWith(item.path + '/');
     const isEntityHovered = item.entityType === activeEntity;
     const isConversationsItem = item.path === '/conversations';
+    const label = item.translationNamespace
+      ? t(item.labelKey, { ns: item.translationNamespace })
+      : t(item.labelKey);
 
     const handleMouseEnter = () => {
       if (isConversationsItem) {
@@ -523,7 +554,7 @@ export const Sidebar: FC = () => {
     };
 
     return (
-      <Tooltip key={item.path} label={t(item.labelKey)} position="right" withArrow>
+      <Tooltip key={item.path} label={label} position="right" withArrow>
         <UnstyledButton
           onClick={() => navigate(item.path)}
           onMouseEnter={handleMouseEnter}
@@ -536,7 +567,7 @@ export const Sidebar: FC = () => {
             className={classes.navLabel}
             fw={isActive ? 700 : 400}
           >
-            {t(item.labelKey)}
+            {label}
           </Text>
         </UnstyledButton>
       </Tooltip>
@@ -550,13 +581,15 @@ export const Sidebar: FC = () => {
       <aside className={classes.sidebar}>
         <Stack gap="xs" className={classes.navMain}>
           {visibleNavItemsTop.map(renderNavItem)}
+          <CustomSlot name="sidebar-primary-end" />
           <Divider className={classes.navDivider} />
           {visibleNavItemsBottom.map(renderNavItem)}
+          <CustomSlot name="sidebar-secondary-end" />
         </Stack>
 
         <Stack gap="xs" className={classes.navBottom}>
-          {bottomNavItems
-            .map(renderNavItem)}
+          <CustomSlot name="sidebar-footer-start" />
+          {visibleNavItemsFooter.map(renderNavItem)}
         </Stack>
       </aside>
 

@@ -32,6 +32,8 @@ Read the relevant instruction file **before** working in that area.
 | [testing.instructions.md](./testing.instructions.md)                                     | Writing tests, running tests, understanding test patterns             |
 | [github-pipelines.instructions.md](./github-pipelines.instructions.md)                   | Working with CI/CD workflows, adding pipelines, coverage thresholds   |
 
+Custom frontend extensions use the optional root-level `custom/` manifest and the stable `@unified-ui/custom-api` facade. Read [CUSTOMIZATION.md](../CUSTOMIZATION.md) before changing that contract.
+
 ---
 
 ## Golden Rules

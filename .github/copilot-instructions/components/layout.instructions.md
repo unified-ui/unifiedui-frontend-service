@@ -159,6 +159,10 @@ Conversations use `order_by=updated_at, order_direction=desc` (most recently use
 
 Active nav item gets a blue left border (`border-left: 4px solid var(--color-primary-500)`) and bold label.
 
+### Custom Navigation
+
+The optional root `custom/index.ts` manifest may add navigation items to `primary`, `secondary`, or `footer`. Custom links must use `/custom/...`, are additive, and may not opt into core entity lists. Stable additive slots are available at `sidebar-primary-end`, `sidebar-secondary-end`, and `sidebar-footer-start`.
+
 ---
 
 ## PageContainer

@@ -20,11 +20,14 @@ import {
   IconRotateClockwise,
   IconClock,
   IconClockPause,
+  IconExternalLink,
 } from '@tabler/icons-react';
-import type { WorkflowRunResponse } from '../../../api/types';
+import { useTranslation } from 'react-i18next';
+import type { WorkflowRunResponse, WorkflowFormOpenModeEnum } from '../../../api/types';
 import type { UnifiedUIAPIClient } from '../../../api/client';
 import { PermissionError } from '../../../api/errors';
 import { AccessDeniedBanner } from '../AccessDeniedBanner';
+import { buildFormWaitingUrl, openWorkflowForm } from '../../../utils/workflowForm';
 import classes from './WorkflowRunsTable.module.css';
 
 interface WorkflowRunsTableProps {
@@ -35,6 +38,9 @@ interface WorkflowRunsTableProps {
   onRunClick: (executionId: string) => void;
   onStartWorkflow: () => void;
   showStartWorkflow: boolean;
+  startWorkflowLabel?: string;
+  formTriggerUrl?: string;
+  formOpenMode?: WorkflowFormOpenModeEnum;
   autoRefreshTrigger?: number;
 }
 
@@ -86,8 +92,12 @@ export const WorkflowRunsTable: FC<WorkflowRunsTableProps> = ({
   onRunClick,
   onStartWorkflow,
   showStartWorkflow,
+  startWorkflowLabel,
+  formTriggerUrl,
+  formOpenMode,
   autoRefreshTrigger,
 }) => {
+  const { t } = useTranslation('common');
   const [runs, setRuns] = useState<WorkflowRunResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -298,8 +308,13 @@ export const WorkflowRunsTable: FC<WorkflowRunsTableProps> = ({
             </ActionIcon>
           </Tooltip>
           {showStartWorkflow && (
-            <Button size="xs" variant="light" leftSection={<IconPlayerPlay size={14} />} onClick={onStartWorkflow}>
-              Start Workflow
+            <Button
+              size="xs"
+              variant="light"
+              leftSection={formTriggerUrl ? <IconExternalLink size={14} /> : <IconPlayerPlay size={14} />}
+              onClick={onStartWorkflow}
+            >
+              {startWorkflowLabel ?? 'Start Workflow'}
             </Button>
           )}
         </Group>
@@ -326,7 +341,7 @@ export const WorkflowRunsTable: FC<WorkflowRunsTableProps> = ({
                   <Table.Th>Started</Table.Th>
                   <Table.Th>Duration</Table.Th>
                   <Table.Th>Mode</Table.Th>
-                  <Table.Th style={{ width: 40 }} />
+                  <Table.Th style={{ width: formTriggerUrl ? 80 : 40 }} />
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -358,30 +373,47 @@ export const WorkflowRunsTable: FC<WorkflowRunsTableProps> = ({
                       </Text>
                     </Table.Td>
                     <Table.Td>
-                      <Menu position="bottom-end" withinPortal>
-                        <Menu.Target>
-                          <ActionIcon
-                            variant="subtle"
-                            color="gray"
-                            size="sm"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <IconDots size={16} />
-                          </ActionIcon>
-                        </Menu.Target>
-                        <Menu.Dropdown>
-                          <Menu.Item
-                            leftSection={<IconRotateClockwise size={14} />}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRetry(run.id);
-                            }}
-                            disabled={run.status !== 'error' || retryingId === run.id}
-                          >
-                            {retryingId === run.id ? 'Retrying...' : 'Re-Run'}
-                          </Menu.Item>
-                        </Menu.Dropdown>
-                      </Menu>
+                      <Group gap="xs" justify="flex-end" wrap="nowrap">
+                        {formTriggerUrl && (
+                          <Tooltip label={t('workflowOpenForm')}>
+                            <ActionIcon
+                              variant="subtle"
+                              color="gray"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openWorkflowForm(buildFormWaitingUrl(formTriggerUrl, run.id), formOpenMode);
+                              }}
+                            >
+                              <IconExternalLink size={16} />
+                            </ActionIcon>
+                          </Tooltip>
+                        )}
+                        <Menu position="bottom-end" withinPortal>
+                          <Menu.Target>
+                            <ActionIcon
+                              variant="subtle"
+                              color="gray"
+                              size="sm"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <IconDots size={16} />
+                            </ActionIcon>
+                          </Menu.Target>
+                          <Menu.Dropdown>
+                            <Menu.Item
+                              leftSection={<IconRotateClockwise size={14} />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRetry(run.id);
+                              }}
+                              disabled={run.status !== 'error' || retryingId === run.id}
+                            >
+                              {retryingId === run.id ? 'Retrying...' : 'Re-Run'}
+                            </Menu.Item>
+                          </Menu.Dropdown>
+                        </Menu>
+                      </Group>
                     </Table.Td>
                   </Table.Tr>
                 ))}
