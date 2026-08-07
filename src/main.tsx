@@ -10,6 +10,7 @@ import { AuthProvider, LdapAuthProvider, DebugAuthProvider } from './auth';
 import { OidcAuthProvider, OidcAuthProviderUnconfigured } from './auth/OidcAuthProvider';
 import { theme } from './theme';
 import { colorSchemeManager } from './theme/colorSchemeManager';
+import { applyThemeCssVariables } from './theme/cssVariables';
 import { applyDocumentBranding } from './config/documentBranding';
 import { IdentityProvider, SidebarDataProvider, AICapabilitiesProvider, FavoritesProvider, RecentVisitsProvider, NotificationProvider } from './contexts';
 import i18n from './i18n';
@@ -23,6 +24,7 @@ import '@mantine/charts/styles.css';
 import './styles/variables.css';
 import './index.css';
 
+applyThemeCssVariables();
 applyDocumentBranding();
 
 const msalInstance = authConfig.microsoft ? new PublicClientApplication(msalConfig) : null;

@@ -15,6 +15,8 @@
   --color-primary-700: #1976d2;
   --color-primary-800: #1565c0;
   --color-primary-900: #0d47a1;
+  /* RGB triple of --color-primary-500, for rgba() with custom alpha */
+  --color-primary-rgb: 33, 150, 243;
 
   /* ===== COLORS - SECONDARY ===== */
   --color-secondary-50: #f3e5f5;
@@ -196,9 +198,9 @@
   --border-error: var(--color-error-400);
 
   /* ===== INTERACTIVE STATES ===== */
-  --bg-hover: rgba(33, 150, 243, 0.1);
-  --bg-selected: rgba(33, 150, 243, 0.2);
-  --bg-selected-hover: rgba(33, 150, 243, 0.3);
+  --bg-hover: rgba(var(--color-primary-rgb), 0.1);
+  --bg-selected: rgba(var(--color-primary-rgb), 0.2);
+  --bg-selected-hover: rgba(var(--color-primary-rgb), 0.3);
 
   /* ===== ACCENT GRADIENT ===== */
   --gradient-accent: linear-gradient(

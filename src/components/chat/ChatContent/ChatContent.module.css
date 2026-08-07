@@ -59,7 +59,7 @@
 }
 
 [data-mantine-color-scheme="dark"] .messageWrapper.highlighted {
-  background-color: rgba(33, 150, 243, 0.1);
+  background-color: rgba(var(--color-primary-rgb), 0.1);
 }
 
 /* Flash animation for newly highlighted message */
@@ -74,10 +74,10 @@
 
 @keyframes highlightFlashDark {
   0% {
-    background-color: rgba(33, 150, 243, 0.3);
+    background-color: rgba(var(--color-primary-rgb), 0.3);
   }
   100% {
-    background-color: rgba(33, 150, 243, 0.1);
+    background-color: rgba(var(--color-primary-rgb), 0.1);
   }
 }
 
